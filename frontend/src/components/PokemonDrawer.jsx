@@ -180,8 +180,26 @@ async function fetchTypeEffectiveness(types) {
   return calculateTypeEffectiveness(typeData.filter(Boolean));
 }
 
+// A Smogon agrupa o que sobra em "Other"; não é uma habilidade, item, golpe nem spread de verdade.
 const topEntries = (record, count) =>
-  Object.entries(record ?? {}).sort(([, a], [, b]) => b - a).slice(0, count);
+  Object.entries(record ?? {})
+    .filter(([name]) => name.toLowerCase() !== 'other')
+    .sort(([, a], [, b]) => b - a)
+    .slice(0, count);
+
+// "Natureza:HP/Atk/Def/SpA/SpD/Spe", com seis valores de EV.
+const SPREAD_PATTERN = /^([A-Za-z]+):(\d+(?:\/\d+){5})$/;
+
+/** Spreads mais usadas, já decompostas; entradas fora do formato (como "Other") ficam de fora. */
+function topSpreads(record, count) {
+  return topEntries(record, Infinity)
+    .map(([key, pct]) => {
+      const match = SPREAD_PATTERN.exec(key);
+      return match && { key, nature: match[1], evs: match[2].split('/').map(Number), pct };
+    })
+    .filter(Boolean)
+    .slice(0, count);
+}
 
 /* ---------------------------------------------------------------- sub-componentes */
 
@@ -264,15 +282,15 @@ const UsageChip = memo(function UsageChip({ name, pct, onSelect }) {
   );
 });
 
-const SpreadCard = memo(function SpreadCard({ index, spreadKey, pct }) {
-  const [nature = 'Hardy', evs = '0/0/0/0/0/0'] = spreadKey.split(':');
-  const [hp, atk, def, spa, spd, spe] = evs.split('/');
+// `pct` já vem em percentual (os valores de `smogon.spreads` somam 100).
+const SpreadCard = memo(function SpreadCard({ index, nature, evs, pct }) {
+  const [hp, atk, def, spa, spd, spe] = evs;
   return (
     <div className="p-3 rounded-xl bg-[#FFFEFB]/80 border border-[#4A3B32]/10">
       <div className="flex items-center justify-between mb-1.5 text-xs font-bold text-[#2A2421]">
         <span>
           Build {index + 1}
-          <span className="ml-1 font-normal text-[10px] text-[#78614E]">({(pct * 100).toFixed(1)}%)</span>
+          <span className="ml-1 font-normal text-[10px] text-[#78614E]">({pct.toFixed(1)}%)</span>
         </span>
         <span className="px-2 py-0.5 rounded bg-[#829b72]/15 text-[#5B7856] text-[10px] font-mono">{nature}</span>
       </div>
@@ -435,6 +453,8 @@ export default function PokemonDrawer({ pokemonName, onClose, onSmogonDataFound 
   }, [moveset, learnMethod, movesetSearch]);
 
   const heroSources = useMemo(() => (detail ? spriteSources(detail, shiny) : []), [detail, shiny]);
+
+  const spreads = useMemo(() => topSpreads(smogon?.spreads, 2), [smogon]);
 
   /* ------------------------------------------------------------ estados vazios */
 
@@ -713,10 +733,8 @@ export default function PokemonDrawer({ pokemonName, onClose, onSmogonDataFound 
                     <h4 className="flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-[#2A2421]">
                       <Cpu className="w-4 h-4 text-[#829b72]" aria-hidden="true" /> Spreads EV
                     </h4>
-                    {topEntries(smogon.spreads, 2).length > 0 ? (
-                      topEntries(smogon.spreads, 2).map(([key, pct], index) => (
-                        <SpreadCard key={key} index={index} spreadKey={key} pct={pct} />
-                      ))
+                    {spreads.length > 0 ? (
+                      spreads.map(({ key, ...spread }, index) => <SpreadCard key={key} index={index} {...spread} />)
                     ) : (
                       <p className="text-[11px] italic text-[#78614E]">Nenhuma spread registrada.</p>
                     )}
