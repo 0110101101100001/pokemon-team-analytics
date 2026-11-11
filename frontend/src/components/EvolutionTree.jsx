@@ -136,7 +136,7 @@ function useChainSpecies(baseLayout) {
   return state.key === key ? state.speciesByName : null;
 }
 
-function EvolutionTree({ chain, currentSpecies, currentForm }) {
+function EvolutionTree({ chain, currentSpecies, currentForm, currentFormId }) {
   const uid = useId();
   const region = detectRegion(currentForm);
   const baseLayout = useMemo(() => layoutEvolutionChain(chain), [chain]);
@@ -146,10 +146,15 @@ function EvolutionTree({ chain, currentSpecies, currentForm }) {
     () => withEvolutionConditions(baseLayout, { region, form: currentForm }),
     [baseLayout, region, currentForm],
   );
-  const layout = useMemo(
-    () => (speciesByName ? applyRegionalLine(conditioned, speciesByName, region) : conditioned),
-    [conditioned, speciesByName, region],
-  );
+  const layout = useMemo(() => {
+    const resolved = speciesByName ? applyRegionalLine(conditioned, speciesByName, region) : conditioned;
+    if (!currentFormId) return resolved;
+    // O nó do Pokémon aberto mostra sempre a variedade aberta (Lycanroc Midnight, Mega, Totem…).
+    return {
+      ...resolved,
+      nodes: resolved.nodes.map((node) => (node.id === currentSpecies ? { ...node, spriteId: currentFormId } : node)),
+    };
+  }, [conditioned, speciesByName, region, currentSpecies, currentFormId]);
   const nodeById = useMemo(() => new Map(layout.nodes.map((n) => [n.id, n])), [layout]);
 
   if (region && !speciesByName) {

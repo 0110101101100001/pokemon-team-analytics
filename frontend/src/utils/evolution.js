@@ -226,15 +226,55 @@ export function selectEvolutionDetails(details = [], { region = null, form = nul
   return current.length > 0 ? current : selected;
 }
 
-/** Resolve as condições de cada aresta para a forma aberta. `region` vem de `detectRegion(form)`. */
+// Forma citada por todas as condições escolhidas, ou null se não citam nenhuma ou divergem.
+function sharedForm(details, field) {
+  const names = new Set(details.map((detail) => detail[field]?.name ?? null));
+  return names.size === 1 ? [...names][0] : null;
+}
+
+/**
+ * Resolve as condições de cada aresta para a forma aberta. `region` vem de `detectRegion(form)`.
+ * `fromForm`/`toForm` dizem que forma de cada ponta as condições pressupõem
+ * (Lycanroc Dusk aberto: rockruff-own-tempo → lycanroc-dusk).
+ */
 export function withEvolutionConditions(layout, { region = null, form = null } = {}) {
   return {
     ...layout,
-    edges: layout.edges.map(({ details, ...edge }) => ({
-      ...edge,
-      alternatives: describeEvolution(selectEvolutionDetails(details, { region, form })),
-    })),
+    edges: layout.edges.map(({ details, ...edge }) => {
+      const selected = selectEvolutionDetails(details, { region, form });
+      return {
+        ...edge,
+        alternatives: describeEvolution(selected),
+        fromForm: sharedForm(selected, 'required_pokemon_form'),
+        toForm: sharedForm(selected, 'evolved_pokemon_form'),
+      };
+    }),
   };
+}
+
+/**
+ * Forma que cada nó deve exibir, segundo as arestas da linha em vista.
+ * Arestas fora da linha não contam (Perrserker pressupõe Meowth de Galar, mas na linha base
+ * o Meowth exibido é o normal), e um nó com formas divergentes fica com o sprite padrão.
+ */
+function nodeForms(edges, inLine) {
+  const forms = new Map();
+  const assign = (id, form) => {
+    if (form) forms.set(id, forms.has(id) && forms.get(id) !== form ? null : form);
+  };
+  for (const edge of edges) {
+    if (!inLine.get(edge.to)) continue;
+    assign(edge.from, edge.fromForm);
+    assign(edge.to, edge.toForm);
+  }
+  return forms;
+}
+
+// Os campos de forma da PokéAPI apontam para /pokemon-form, cujo id não é o do sprite;
+// o id certo é o da variedade (/pokemon) com o mesmo nome. Formas só cosméticas não têm variedade.
+function formSpriteId(species, formName) {
+  const variety = species?.varieties?.find((v) => v.pokemon.name === formName);
+  return variety ? idFromUrl(variety.pokemon.url) : null;
 }
 
 // Variedades com o nome da região que não são formas regionais (pikachu-alola-cap, raticate-totem-alola).
@@ -316,10 +356,14 @@ function baseNodes(layout, speciesByName) {
 export function applyRegionalLine(layout, speciesByName, region) {
   const nodes = region ? regionalNodes(layout, speciesByName, region) : baseNodes(layout, speciesByName);
   const inLine = new Map(nodes.map((n) => [n.id, n.inLine]));
+  const forms = nodeForms(layout.edges, inLine);
 
   return {
     ...layout,
-    nodes: nodes.map(({ inLine: keep, ...node }) => ({ ...node, outOfLine: !keep })),
+    nodes: nodes.map(({ inLine: keep, ...node }) => {
+      const spriteId = formSpriteId(speciesByName.get(node.id), forms.get(node.id));
+      return { ...node, ...(spriteId && { spriteId }), outOfLine: !keep };
+    }),
     edges: layout.edges.map((edge) => ({ ...edge, outOfLine: !inLine.get(edge.to) })),
   };
 }

@@ -686,7 +686,12 @@ export default function PokemonDrawer({ pokemonName, onClose, onSmogonDataFound 
 
             <SectionCard title="Árvore Evolutiva">
               {evolutionChain ? (
-                <EvolutionTree chain={evolutionChain} currentSpecies={species?.name} currentForm={detail.name} />
+                <EvolutionTree
+                  chain={evolutionChain}
+                  currentSpecies={species?.name}
+                  currentForm={detail.name}
+                  currentFormId={detail.id}
+                />
               ) : (
                 <p className="text-xs text-[#78614E]">Sem dados evolutivos.</p>
               )}
