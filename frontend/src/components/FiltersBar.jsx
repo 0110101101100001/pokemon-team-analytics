@@ -9,7 +9,8 @@ const SEARCH_DEBOUNCE_MS = 250;
 const FIELD_CLASS =
   'h-10 w-full rounded-xl border border-[#F7F3EE]/30 bg-[#3E2A1F]/90 text-[#F7F3EE] [color-scheme:dark] shadow-inner transition-colors hover:border-[#F7F3EE]/50 focus:outline-none focus:ring-2 focus:ring-[#A4C294]/70 focus:border-[#A4C294]';
 const SELECT_CLASS = `${FIELD_CLASS} appearance-none pl-3 pr-9 text-xs font-serif font-semibold tracking-wide cursor-pointer`;
-const TEXT_INPUT_CLASS = `${FIELD_CLASS} pl-9 pr-3 text-sm font-serif placeholder:italic placeholder:text-[#F7F3EE]/75`;
+const TEXT_INPUT_BASE = `${FIELD_CLASS} pl-9 text-sm font-serif placeholder:italic placeholder:text-[#F7F3EE]/75`;
+const TEXT_INPUT_CLASS = `${TEXT_INPUT_BASE} pr-3`;
 const OPTION_CLASS = 'bg-[#2A1C14] text-[#F7F3EE] font-sans';
 
 // O placeholder é `hidden` e não `disabled`: uma opção disabled selecionada aparece a cinzento.
@@ -32,8 +33,13 @@ function HeaderSelect({ label, placeholder, onChange, className = 'sm:w-36 sm:sh
  * Campo com sugestões (datalist) para listas longas. As opções só são pedidas no primeiro foco.
  * Adiciona o filtro ao escolher uma sugestão ou ao pressionar Enter com um nome válido.
  */
+// O campo com datalist ganha uma seta nativa à direita, desenhada por cima do texto; fica escondida,
+// e o espaço à direita é reservado para o indicador de carregamento.
+const SUGGEST_INPUT_CLASS = `${TEXT_INPUT_BASE} pr-9 text-ellipsis [&::-webkit-calendar-picker-indicator]:!hidden`;
+
 const SuggestInput = memo(function SuggestInput({ id, label, placeholder, loadOptions, onPick }) {
   const [options, setOptions] = useState(null);
+  const [loading, setLoading] = useState(false);
   const [value, setValue] = useState('');
 
   const slugByLabel = useMemo(
@@ -42,9 +48,10 @@ const SuggestInput = memo(function SuggestInput({ id, label, placeholder, loadOp
   );
 
   const handleFocus = useCallback(() => {
-    if (options) return;
-    loadOptions().then(setOptions).catch(() => setOptions([]));
-  }, [options, loadOptions]);
+    if (options || loading) return;
+    setLoading(true);
+    loadOptions().then(setOptions).catch(() => setOptions([])).finally(() => setLoading(false));
+  }, [options, loading, loadOptions]);
 
   const commit = useCallback((raw) => {
     const slug = slugByLabel.get(raw.trim().toLowerCase());
@@ -70,8 +77,8 @@ const SuggestInput = memo(function SuggestInput({ id, label, placeholder, loadOp
   }, [commit, value]);
 
   return (
-    <label className="relative w-full">
-      <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[#F7F3EE]/85" aria-hidden="true" />
+    <label className="relative block w-full min-w-0">
+      <Search className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[#F7F3EE]/85" aria-hidden="true" />
       <input
         type="text"
         list={id}
@@ -79,11 +86,18 @@ const SuggestInput = memo(function SuggestInput({ id, label, placeholder, loadOp
         onFocus={handleFocus}
         onChange={handleChange}
         onKeyDown={handleKeyDown}
-        placeholder={options ? placeholder : `${placeholder.replace(/\.\.\.$/, '')} (carregando…)`}
+        placeholder={placeholder}
         aria-label={label}
+        aria-busy={loading}
         autoComplete="off"
-        className={TEXT_INPUT_CLASS}
+        className={SUGGEST_INPUT_CLASS}
       />
+      {loading && (
+        <Loader2
+          className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 animate-spin text-[#F7F3EE]/85"
+          aria-label="carregando sugestões"
+        />
+      )}
       <datalist id={id}>
         {options?.map((slug) => <option key={slug} value={formatSlug(slug)} />)}
       </datalist>
@@ -169,14 +183,14 @@ function AdvancedFiltersComponent({ eggGroups, onAddFilter }) {
         <SuggestInput
           id="ability-options"
           label="Filtrar por habilidade"
-          placeholder="Habilidade (ex.: Levitate)..."
+          placeholder="Habilidade (ex.: Levitate)"
           loadOptions={fetchAbilityNames}
           onPick={addAbility}
         />
         <SuggestInput
           id="move-options"
           label="Filtrar por golpe que aprende"
-          placeholder="Golpe (ex.: Earthquake)..."
+          placeholder="Golpe (ex.: Earthquake)"
           loadOptions={fetchMoveNames}
           onPick={addMove}
         />
