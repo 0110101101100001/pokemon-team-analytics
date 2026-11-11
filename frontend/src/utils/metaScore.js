@@ -40,15 +40,15 @@ export function metaWeights(teamSize) {
 
 // Multiplicador do score final para parceiros diretos ou do mesmo núcleo: até 2x com sinergia máxima.
 const CORE_MULTIPLIER = 1;
-// Núcleo partilhado mínimo para um par sem ligação direta contar como ligado.
+// Núcleo compartilhado mínimo para um par sem conexão direta contar como conectado.
 const SHARED_LINK_THRESHOLD = 0.4;
 
 // Lift = quantas vezes um par aparece junto acima do esperado pelo uso do parceiro.
 // Um par 8x mais frequente do que o acaso já conta como sinergia máxima.
 const LIFT_SATURATION = 8;
-// Quanto o núcleo partilhado completa a ligação direta entre dois Pokémon.
+// Quanto o núcleo compartilhado completa a conexão direta entre dois Pokémon.
 const SHARED_CORE_WEIGHT = 0.85;
-// No núcleo partilhado, peso do melhor parceiro em comum (o setter) face à sobreposição geral.
+// No núcleo compartilhado, peso do melhor parceiro em comum (o setter) face à sobreposição geral.
 const HUB_SHARE = 0.7;
 // Fração do que falta para a nota máxima que o núcleo do time (setter em comum) recupera.
 const CORE_BOOST = 0.5;
@@ -80,7 +80,7 @@ function buildAffinity(teammates, usageByName) {
   return affinity;
 }
 
-/** Indexa as linhas de `smogon_stats` de um tier e liga-as às entradas da Pokédex. */
+/** Indexa as linhas de `smogon_stats` de um tier e as liga às entradas da Pokédex. */
 export function buildMeta(rows, entries) {
   const usageByName = new Map(rows.map((row) => [row.name, Number(row.usage_percent) || 0]));
   const stats = new Map();
@@ -136,7 +136,7 @@ export function buildMetaProfile(team, meta) {
 
 // Dois Pokémon pertencem ao mesmo núcleo quando orbitam os mesmos parceiros.
 // O melhor parceiro em comum (ex.: Torkoal para Venusaur e Charizard) domina a nota;
-// a sobreposição geral (Jaccard ponderado) completa-a.
+// a sobreposição geral (Jaccard ponderado) a completa.
 function sharedCore(a, b) {
   let overlap = 0;
   let union = 0;
@@ -155,7 +155,7 @@ function sharedCore(a, b) {
   return HUB_SHARE * hub + (1 - HUB_SHARE) * jaccard;
 }
 
-// Ligação direta nos dois sentidos, completada pelo núcleo partilhado quando o par
+// Conexão direta nos dois sentidos, completada pelo núcleo compartilhado quando o par
 // não aparece nas listas (limitadas aos 10 principais) de nenhum dos dois.
 // `linked` marca parceiros diretos ou do mesmo núcleo forte.
 function pairSynergy(candidate, member) {
@@ -167,7 +167,7 @@ function pairSynergy(candidate, member) {
   };
 }
 
-// O núcleo mais forte que o candidato partilha com o time: um parceiro de suporte com
+// O núcleo mais forte que o candidato compartilha com o time: um parceiro de suporte com
 // afinidade alta dos dois lados, esteja ele já no time ou ainda por escolher.
 function teamCore(stat, cores) {
   let name = null;
@@ -220,7 +220,7 @@ function scoreUsage(stat, synergy, meta) {
 }
 
 // O candidato cobre uma ameaça quando aparece na lista de checks dessa ameaça.
-// O resultado é a fração (0–1) do peso total das ameaças da equipa que ele segura.
+// O resultado é a fração (0–1) do peso total das ameaças do time que ele segura.
 function scoreAnswers(stat, threats, meta) {
   let total = 0;
   let possible = 0;
@@ -238,7 +238,7 @@ function scoreAnswers(stat, threats, meta) {
 
 /**
  * Bónus de meta de um candidato: uso no tier, sinergia com o time e respostas às ameaças.
- * `multiplier` (1–2) aplica-se ao score final quando o candidato é parceiro direto
+ * `multiplier` (1–2) se aplica ao score final quando o candidato é parceiro direto
  * ou do mesmo núcleo de algum membro.
  */
 export function scoreMeta(candidate, metaProfile, meta) {

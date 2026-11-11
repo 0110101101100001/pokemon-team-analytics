@@ -64,7 +64,7 @@ def _names_at(sb: Client, tier: str, date: str) -> List[str]:
     summary="Pokémon com estatísticas da Smogon",
     description=(
         "Nomes (no formato da Smogon) de todos os Pokémon presentes em pelo menos um tier, "
-        "no mês mais recente de cada tier. Usado para o selo 'Smogon' da grelha. "
+        "no mês mais recente de cada tier. Usado para o selo 'Smogon' da grade. "
         "Resposta em cache durante 10 minutos."
     ),
 )

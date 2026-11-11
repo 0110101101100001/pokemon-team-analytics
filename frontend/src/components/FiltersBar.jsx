@@ -27,7 +27,7 @@ function HeaderSelect({ label, placeholder, onChange, className = 'sm:w-36 sm:sh
 
 /**
  * Campo com sugestões (datalist) para listas longas. As opções só são pedidas no primeiro foco.
- * Adiciona o filtro ao escolher uma sugestão ou ao carregar Enter com um nome válido.
+ * Adiciona o filtro ao escolher uma sugestão ou ao pressionar Enter com um nome válido.
  */
 const SuggestInput = memo(function SuggestInput({ id, label, placeholder, loadOptions, onPick }) {
   const [options, setOptions] = useState(null);
@@ -178,15 +178,15 @@ function AdvancedFiltersComponent({ eggGroups, onAddFilter }) {
         </HeaderSelect>
       </div>
       <p className="mt-2 font-hand text-base leading-tight text-[#F7F3EE]/70">
-        gerações somam-se (ou); tipos, habilidades, golpes e grupos de ovos têm de se cumprir todos (e).
+        gerações se somam (ou); tipos, habilidades, golpes e grupos de ovos precisam ser todos atendidos (e).
       </p>
     </div>
   );
 }
 
 const FILTER_STATUS_ICON = {
-  loading: <Loader2 className="w-3 h-3 animate-spin text-[#78614E]" aria-label="a carregar" />,
-  error: <TriangleAlert className="w-3 h-3 text-[#C15454]" aria-label="falhou a carregar; filtro ignorado" />,
+  loading: <Loader2 className="w-3 h-3 animate-spin text-[#78614E]" aria-label="carregando" />,
+  error: <TriangleAlert className="w-3 h-3 text-[#C15454]" aria-label="falha ao carregar; filtro ignorado" />,
 };
 
 function ActiveFiltersComponent({ activeFilters, filterStatus, onRemoveFilter }) {
@@ -202,7 +202,7 @@ function ActiveFiltersComponent({ activeFilters, filterStatus, onRemoveFilter })
         return (
           <div
             key={key}
-            title={failed ? 'Não foi possível carregar este filtro; está a ser ignorado.' : undefined}
+            title={failed ? 'Não foi possível carregar este filtro; está sendo ignorado.' : undefined}
             className={`flex items-center gap-1.5 pl-3 pr-1 py-1 rounded-full border text-xs font-serif font-medium shadow-xs ${
               failed
                 ? 'bg-[#C15454]/10 border-[#C15454]/40 text-[#9A3F3F]'

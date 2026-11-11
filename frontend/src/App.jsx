@@ -54,8 +54,8 @@ export default function App() {
     let active = true;
     // Espécies base + formas regionais/alternativas; Megas e Gigantamax ficam no drawer.
     // /pokemon?limit=2000 já traz todas as varieties num só pedido (evita 1025 pedidos a /pokemon-species).
-    // A lista da Smogon vem do backend próprio: não bloqueia a grelha e, se falhar,
-    // o selo continua a ser marcado pelo drawer como antes.
+    // A lista da Smogon vem do backend próprio: não bloqueia a grade e, se falhar,
+    // o selo continua sendo marcado pelo drawer como antes.
     const smogonNames = fetchSmogonNames().catch((err) => {
       console.warn("Selo Smogon indisponível:", err);
       return [];
@@ -98,7 +98,7 @@ export default function App() {
   const toggleAdvanced = useCallback(() => setAdvancedOpen((open) => !open), []);
 
   // Gerações: OR. Tipos, grupos de ovos, habilidades e golpes: AND.
-  // Filtros remotos ainda a carregar (ou que falharam) são ignorados até terem o Set de ids.
+  // Filtros remotos ainda carregando (ou que falharam) são ignorados até terem o Set de ids.
   const filteredList = useMemo(() => {
     const matchesSearch = createSearchMatcher(deferredSearchTerm);
     const gens = new Set();
@@ -178,8 +178,8 @@ export default function App() {
 
         <div className={`relative max-w-[1700px] mx-auto px-4 sm:px-6 lg:px-8 ${EASE} ${collapsed ? "py-2" : "py-4"}`}>
           {/*
-            Logótipo à esquerda, ações à direita e a barra de pesquisa/filtros como bloco central de largura limitada.
-            Abaixo de 2xl a barra desce para uma 2.ª linha, centrada; em 2xl as três zonas ficam numa grelha.
+            Logotipo à esquerda, ações à direita e a barra de pesquisa/filtros como bloco central de largura limitada.
+            Abaixo de 2xl a barra desce para uma 2ª linha, centrada; em 2xl as três zonas ficam numa grade.
           */}
           <div className="flex flex-wrap items-center gap-x-4 gap-y-3 2xl:grid 2xl:grid-cols-[auto_minmax(0,1fr)_auto] 2xl:gap-6">
             <div className="order-1 flex items-center gap-3 shrink-0">

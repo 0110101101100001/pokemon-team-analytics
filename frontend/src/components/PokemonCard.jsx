@@ -27,14 +27,14 @@ const TYPE_GRADIENTS = {
 };
 
 const MAX_TILT_DEG = 7;
-// 1 = o canto sob o rato afunda (convenção das cartas holográficas); -1 = o canto sob o rato aproxima-se.
+// 1 = o canto sob o mouse afunda (convenção das cartas holográficas); -1 = o canto sob o mouse se aproxima.
 const TILT_DIRECTION = 1;
 const STAGGER_STEP_MS = 45;
 
 const PAPER_VIGNETTE = 'radial-gradient(ellipse at 50% 28%, transparent 55%, rgba(120, 81, 50, 0.10))';
 const PAPER_DOTS = 'radial-gradient(rgba(120, 81, 50, 0.10) 1px, transparent 1px)';
 
-// Estilos 3D estáticos partilhados por todas as cartas: zero alocações por render.
+// Estilos 3D estáticos compartilhados por todas as cartas: zero alocações por render.
 const TILT_STYLE = {
   transform:
     'perspective(900px) rotateX(calc(var(--rx, 0) * 1deg)) rotateY(calc(var(--ry, 0) * 1deg)) translateY(calc(var(--lift, 0) * 1px))',
@@ -49,7 +49,7 @@ const GLARE_STYLE = {
     'radial-gradient(circle at var(--mx, 50%) var(--my, 50%), rgba(255, 255, 255, 0.55), rgba(255, 255, 255, 0) 60%)',
 };
 
-// 18 objetos de fundo partilhados pelas 1025 cartas, em vez de um por instância.
+// 18 objetos de fundo compartilhados pelas 1025 cartas, em vez de um por instância.
 const backgroundStyles = new Map();
 function backgroundStyleFor(type) {
   let style = backgroundStyles.get(type);
@@ -162,7 +162,7 @@ function PokemonCard({
             : 'border-[#4A3B32]/15 shadow-xs hover:border-[#829b72]/50 hover:shadow-card-hover'
         }`}
       >
-        {/* Camada de fundo: papel de caderno + gradiente do tipo + brilho que segue o rato */}
+        {/* Camada de fundo: papel de caderno + gradiente do tipo + brilho que segue o mouse */}
         <div
           aria-hidden="true"
           className="absolute inset-0 rounded-[inherit] overflow-hidden"

@@ -38,7 +38,7 @@ const PAD_BOTTOM = 6;
 const SPRITE_R = 28;
 const SPRITE_CY = SPRITE_R;
 const LABEL_SPAN = 0.68;
-const STAGE_LABELS = ['Forma base', '1.ª evolução', '2.ª evolução', '3.ª evolução'];
+const STAGE_LABELS = ['Forma base', '1ª evolução', '2ª evolução', '3ª evolução'];
 
 const nodeX = (stage) => PAD_X + stage * (NODE_W + GAP);
 const nodeY = (row) => PAD_TOP + row * ROW_H;
@@ -148,7 +148,7 @@ function EvolutionTree({ chain, currentSpecies, currentForm }) {
   if (region && !speciesByName) {
     return (
       <p className="py-6 text-center font-hand text-lg text-[#78614E] animate-pulse">
-        a traçar a linha de {REGIONS[region].label}...
+        traçando a linha de {REGIONS[region].label}...
       </p>
     );
   }
@@ -187,7 +187,7 @@ function EvolutionTree({ chain, currentSpecies, currentForm }) {
             className="absolute top-0 text-center text-[9px] font-bold uppercase tracking-[0.18em] text-[#78614E]/80"
             style={{ left: nodeX(stage), width: NODE_W }}
           >
-            {STAGE_LABELS[stage] ?? `${stage}.ª evolução`}
+            {STAGE_LABELS[stage] ?? `${stage}ª evolução`}
           </span>
         ))}
 
@@ -261,7 +261,7 @@ function EvolutionTree({ chain, currentSpecies, currentForm }) {
           {hasOutOfLine && (
             <span className="inline-flex items-center gap-1.5">
               <span className="w-3 h-3 rounded-full bg-[#785132]/25" aria-hidden="true" />
-              {region ? 'esbatido: não pertence a esta variante' : 'esbatido: só uma forma regional evolui para esta espécie'}
+              {region ? 'esmaecido: não pertence a esta variante' : 'esmaecido: só uma forma regional evolui para esta espécie'}
             </span>
           )}
         </p>

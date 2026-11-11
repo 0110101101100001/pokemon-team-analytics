@@ -6,10 +6,10 @@ export const filterKey = (filter) => `${filter.type}:${filter.value}`;
 const DEX_QUERY = /^(?:#|n[º°o]\.?\s*)?(\d+)$/i;
 
 /**
- * Converte o texto da pesquisa num predicado sobre as entradas da grelha.
+ * Converte o texto da pesquisa num predicado sobre as entradas da grade.
  * - Nome: "char", "mr mime" (espaços equivalem a hífens no slug).
  * - Número: "25", "#25", "Nº 25". Sem zeros à esquerda é prefixo (25 → 25, 250–259);
- *   com zeros à esquerda ("025") é o número exato. As formas partilham o número da espécie.
+ *   com zeros à esquerda ("025") é o número exato. As formas compartilham o número da espécie.
  */
 export function createSearchMatcher(rawTerm) {
   const term = rawTerm.trim().toLowerCase();

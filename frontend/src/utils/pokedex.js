@@ -4,7 +4,7 @@ const GEN_LIMITS = [151, 251, 386, 493, 649, 721, 809, 905, 1025];
 
 export const generationOf = (dexNumber) => GEN_LIMITS.findIndex((max) => dexNumber <= max) + 1;
 
-// Variedades que não entram na grelha: Mega/Primal e Gigantamax (vivem no seletor de formas do drawer),
+// Variedades que não entram na grade: Mega/Primal e Gigantamax (vivem no seletor de formas do drawer),
 // e duplicados cosméticos, de habilidade ou de montada.
 const EXCLUDED_FORMS = [
   /-(mega|primal)(-|$)/,
@@ -56,7 +56,7 @@ function resolveSpeciesId(formName, speciesIds) {
 /**
  * Junta a lista de Pokémon e o índice de tipos nas entradas da Pokédex.
  * Sem `species`, só entram as espécies base (#1–#1025). Com `species`, as formas alternativas
- * também entram: herdam o número da espécie (ficando logo a seguir a ela), mas têm o seu id,
+ * também entram: herdam o número da espécie (ficando logo depois dela), mas têm seu próprio id,
  * os seus tipos e a geração em que foram lançadas (Alola 7, Galar/Hisui 8, Paldea 9).
  */
 export function buildPokedexEntries({ pokemon, typeIndex, eggGroupIndex = null, species = null }) {

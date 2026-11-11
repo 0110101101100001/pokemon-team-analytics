@@ -66,11 +66,11 @@ const RELATIVE_STATS = {
 };
 
 const TRIGGER_BADGES = {
-  shed: { icon: 'party', text: 'Vaga na equipa e uma Poké Ball' },
-  spin: { icon: 'spin', text: 'Rodar no local' },
+  shed: { icon: 'party', text: 'Vaga no time e uma Poké Ball' },
+  spin: { icon: 'spin', text: 'Girar no lugar' },
   'tower-of-darkness': { icon: 'tower', text: 'Torre da Escuridão' },
   'tower-of-waters': { icon: 'tower', text: 'Torre das Águas' },
-  'three-critical-hits': { icon: 'move', text: '3 golpes críticos num combate' },
+  'three-critical-hits': { icon: 'move', text: '3 golpes críticos em uma batalha' },
   'take-damage': { icon: 'damage', text: 'Sofrer dano e atravessar o arco de pedra' },
   'recoil-damage': { icon: 'damage', text: '294 de dano de recuo acumulado' },
   'agile-style-move': { icon: 'move', text: 'Usar o ataque em estilo ágil 20x' },
@@ -105,8 +105,8 @@ export function parseEvolutionDetail(detail) {
   if (detail.relative_physical_stats != null) {
     badges.push({ icon: 'stats', text: RELATIVE_STATS[detail.relative_physical_stats] });
   }
-  if (detail.party_species) badges.push({ icon: 'party', text: `${titleCase(detail.party_species.name)} na equipa` });
-  if (detail.party_type) badges.push({ icon: 'party', text: `Tipo ${titleCase(detail.party_type.name)} na equipa` });
+  if (detail.party_species) badges.push({ icon: 'party', text: `${titleCase(detail.party_species.name)} no time` });
+  if (detail.party_type) badges.push({ icon: 'party', text: `Tipo ${titleCase(detail.party_type.name)} no time` });
   if (detail.needs_overworld_rain) badges.push({ icon: 'rain', text: 'Com chuva' });
   if (detail.turn_upside_down) badges.push({ icon: 'spin', text: 'Consola invertida' });
   if (TRIGGER_BADGES[trigger]) badges.push(TRIGGER_BADGES[trigger]);
@@ -136,7 +136,7 @@ export function describeEvolution(details = []) {
 }
 
 /**
- * Transforma a `chain` da PokéAPI num layout em grelha:
+ * Transforma a `chain` da PokéAPI num layout em grade:
  * `stage` é a coluna; `row` a linha (as folhas ocupam linhas inteiras,
  * os pais ficam centrados em relação aos filhos).
  */
@@ -208,9 +208,9 @@ const regionsOf = (species) =>
   Object.keys(REGIONS).filter((region) => regionalVariety(species, region));
 
 /**
- * Linha regional: um nó pertence-lhe se tem variante dessa região (zorua → zorua-hisui),
+ * Linha regional: um nó lhe pertence se tem variante dessa região (zorua → zorua-hisui),
  * se é espécie nova dessa geração (Perrserker, Sirfetch'd, Clodsire…) ou se é antecessor
- * de um nó da linha (bebés partilhados: Pichu, Mime Jr.).
+ * de um nó da linha (bebês compartilhados: Pichu, Mime Jr.).
  */
 function regionalNodes(layout, speciesByName, region) {
   const meta = REGIONS[region];

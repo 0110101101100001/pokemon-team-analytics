@@ -23,7 +23,7 @@ function buildRows(team) {
       multipliers,
       weak: multipliers.filter((value) => value > 1).length,
       resist: multipliers.filter((value) => value < 1).length,
-      // Membros cujos próprios tipos (STAB) acertam este tipo com super eficaz.
+      // Membros cujos próprios tipos (STAB) acertam este tipo com dano super efetivo.
       coverage: team.filter((member) => member.types.some((own) => effectiveness(own, [type]) > 1)).length,
     };
   });
@@ -52,7 +52,7 @@ function TeamTypeTable({ team }) {
               ))}
               <th scope="col" className={`${HEAD} border-l border-dashed border-[#78614E]/25 pt-2`}>Fracos</th>
               <th scope="col" className={`${HEAD} pt-2`}>Resist.</th>
-              <th scope="col" className={`${HEAD} pt-2 pr-3`} title="Membros que acertam este tipo com super eficaz usando STAB">Cobertura</th>
+              <th scope="col" className={`${HEAD} pt-2 pr-3`} title="Membros que acertam este tipo com dano super efetivo usando STAB">Cobertura</th>
             </tr>
           </thead>
           <tbody>
@@ -87,7 +87,7 @@ function TeamTypeTable({ team }) {
       </div>
       <p className="mt-2 font-serif text-[11px] italic text-smeargle-textDim/70">
         Células: dano recebido de cada tipo (vazio = 1x). Fracos/Resist.: quantos membros são fracos ou resistem (inclui imunidade).
-        Cobertura: quantos membros acertam esse tipo com super eficaz usando STAB.
+        Cobertura: quantos membros acertam esse tipo com dano super efetivo usando STAB.
       </p>
     </div>
   );

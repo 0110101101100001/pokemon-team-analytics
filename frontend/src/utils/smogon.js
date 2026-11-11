@@ -22,7 +22,7 @@ function smogonSlugs(name) {
 }
 
 /**
- * Cruza os nomes da Smogon com as entradas da grelha e devolve Map(entry.name → nome na Smogon).
+ * Cruza os nomes da Smogon com as entradas da grade e devolve Map(entry.name → nome na Smogon).
  * - Espécie base: casa pelo slug da espécie ("Landorus" → landorus-incarnate).
  * - Forma: casa pelo próprio slug ou por um prefixo mais longo do que a espécie
  *   ("Tauros-Paldea-Combat" → tauros-paldea-combat-breed), nunca pela espécie sozinha,

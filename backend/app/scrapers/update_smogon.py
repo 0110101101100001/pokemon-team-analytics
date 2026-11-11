@@ -38,7 +38,7 @@ DEFAULT_TIERS_GEN9: List[str] = [
     "gen9doublesou",
 ]
 
-# Linhas enviadas ao Supabase por pedido de upsert.
+# Linhas enviadas ao Supabase por requisição de upsert.
 UPSERT_BATCH_SIZE = 200
 REQUEST_TIMEOUT_S = 60
 

@@ -10,7 +10,7 @@ function PokemonGrid({
 }) {
   return (
     <section className="w-full">
-      {/* Grelha sempre com 100% do espaço, de 1 a 5 colunas dependendo do ecrã */}
+      {/* Grade sempre com 100% do espaço, de 1 a 5 colunas dependendo da tela */}
       <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4 lg:gap-5">
         {pokemonList.map(({ name, id, number, types }) => (
           <PokemonCard

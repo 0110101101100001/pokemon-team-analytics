@@ -423,7 +423,7 @@ export default function PokemonDrawer({ pokemonName, onClose, onSmogonDataFound 
         <div className="w-14 h-14 rounded-full bg-[#FFFEFB] border border-[#4A3B32]/20 flex items-center justify-center animate-pulse">
           <Zap className="w-6 h-6 text-[#829b72]" />
         </div>
-        <p className="text-sm font-medium text-[#78614E]">A carregar dados de campo...</p>
+        <p className="text-sm font-medium text-[#78614E]">Carregando dados de campo...</p>
       </div>
     );
   }
@@ -431,7 +431,7 @@ export default function PokemonDrawer({ pokemonName, onClose, onSmogonDataFound 
   if (!detail) {
     return (
       <div className="flex h-full flex-col items-center justify-center gap-4 bg-[#F7F3EE] p-6 text-center" style={PAPER_BG}>
-        <p className="text-sm font-medium text-[#78614E]">Não foi possível carregar «{formatFormName(pokemonName)}».</p>
+        <p className="text-sm font-medium text-[#78614E]">Não foi possível carregar “{formatFormName(pokemonName)}”.</p>
         <button type="button" onClick={onClose} className="px-4 py-2 rounded-xl bg-[#829b72] text-white text-xs font-bold">Fechar</button>
       </div>
     );
@@ -508,7 +508,7 @@ export default function PokemonDrawer({ pokemonName, onClose, onSmogonDataFound 
           </div>
         </div>
 
-        <nav className="flex gap-1 px-5" aria-label="Secções do Pokémon">
+        <nav className="flex gap-1 px-5" aria-label="Seções do Pokémon">
           {TABS.map(({ value, label, icon: Icon }) => {
             const active = activeTab === value;
             return (
@@ -654,7 +654,7 @@ export default function PokemonDrawer({ pokemonName, onClose, onSmogonDataFound 
             }
           >
             {smogonLoading ? (
-              <p className="p-8 text-center text-xs font-medium text-[#78614E] animate-pulse">A sincronizar estatísticas...</p>
+              <p className="p-8 text-center text-xs font-medium text-[#78614E] animate-pulse">Sincronizando estatísticas...</p>
             ) : smogon ? (
               <div className="space-y-4">
                 <div className="p-4 rounded-xl bg-[#FFFEFB]/80 border border-[#4A3B32]/10">

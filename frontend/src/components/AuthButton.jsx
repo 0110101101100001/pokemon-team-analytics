@@ -48,8 +48,8 @@ function AuthButton({ session, onOpen }) {
         type="button"
         onClick={handleSignOut}
         disabled={signingOut}
-        aria-label="Terminar sessão"
-        title="Terminar sessão"
+        aria-label="Sair"
+        title="Sair"
         className="rounded-lg p-1.5 text-[#F7F3EE]/80 transition-colors hover:bg-[#F7F3EE]/10 hover:text-[#F7F3EE] focus:outline-none focus-visible:ring-2 focus-visible:ring-[#A4C294]/70 disabled:cursor-wait"
       >
         {signingOut ? <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" /> : <LogOut className="h-4 w-4" aria-hidden="true" />}

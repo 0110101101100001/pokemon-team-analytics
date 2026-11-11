@@ -1,6 +1,6 @@
 import { memo } from 'react';
 
-/** Mancha de pincel decorativa. Posiciona-se com `className` (absolute/fixed + coordenadas). */
+/** Mancha de pincel decorativa. Posicione com `className` (absolute/fixed + coordenadas). */
 export const InkSplatter = memo(function InkSplatter({ className = '', color = '#829b72' }) {
   return (
     <svg aria-hidden="true" viewBox="0 0 200 200" className={`pointer-events-none select-none ${className}`}>
@@ -41,7 +41,7 @@ export const InkSplash = memo(function InkSplash({ className = '' }) {
   );
 });
 
-/** Bordo de papel rasgado para o fundo de um bloco; herda a cor via `text-*`. */
+/** Borda de papel rasgado para o fundo de um bloco; herda a cor via `text-*`. */
 export const TornEdge = memo(function TornEdge({ className = '' }) {
   return (
     <svg
@@ -58,7 +58,7 @@ export const TornEdge = memo(function TornEdge({ className = '' }) {
   );
 });
 
-/** Vinheta fixa nas margens do ecrã: profundidade de diário físico sem custo de layout. */
+/** Vinheta fixa nas margens da tela: profundidade de diário físico sem custo de layout. */
 export const PageVignette = memo(function PageVignette() {
   return (
     <div

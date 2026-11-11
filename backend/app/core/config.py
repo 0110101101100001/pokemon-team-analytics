@@ -15,7 +15,7 @@ ALLOWED_ORIGINS = [
     for o in os.getenv("ALLOWED_ORIGINS", "http://localhost:5173").split(",")
     if o.strip()
 ]
-# Tiers considerados para o selo "Smogon" da grelha; tiers sem dados são ignorados.
+# Tiers considerados para o selo "Smogon" da grade; tiers sem dados são ignorados.
 SMOGON_BADGE_TIERS = [
     t.strip()
     for t in os.getenv(

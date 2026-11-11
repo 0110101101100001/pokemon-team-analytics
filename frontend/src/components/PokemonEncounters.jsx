@@ -118,7 +118,7 @@ function PokemonEncounters({ pokemonId }) {
         <p className="text-xs text-[#78614E]">Não foi possível carregar os locais de encontro.</p>
       )}
       {status === 'ready' && groups.length === 0 && (
-        <p className="text-xs text-[#78614E]">Sem registos de encontro selvagem na PokéAPI.</p>
+        <p className="text-xs text-[#78614E]">Sem registros de encontro selvagem na PokéAPI.</p>
       )}
       {status === 'ready' && groups.length > 0 && (
         <div className="space-y-2">

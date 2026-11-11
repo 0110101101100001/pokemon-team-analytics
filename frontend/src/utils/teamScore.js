@@ -21,7 +21,7 @@ const hitsSuperEffective = (attackTypes, defenseType) =>
 
 const totalStats = (stats) => (stats ? Object.values(stats).reduce((sum, value) => sum + value, 0) : 0);
 
-/** Resume a equipa num perfil reutilizável para pontuar toda a pool numa só passagem. */
+/** Resume o time num perfil reutilizável para pontuar toda a pool numa só passagem. */
 export function buildTeamProfile(team) {
   const exposure = new Map(TYPE_NAMES.map((attack) => [attack, 0]));
   const resisted = new Set();
@@ -92,7 +92,7 @@ function scoreSynergy(candidate, profile) {
   return { score };
 }
 
-// Um counter resiste a um tipo que ameaça a equipa e devolve dano super eficaz com STAB.
+// Um counter resiste a um tipo que ameaça o time e devolve dano super efetivo com STAB.
 function scoreCounters(candidate, profile) {
   const countered = profile.threats.filter(
     (threat) => effectiveness(threat, candidate.types) < 1 && hitsSuperEffective(candidate.types, threat),
@@ -109,7 +109,7 @@ function scoreStats(candidate, profile) {
 }
 
 /**
- * Pontua um candidato contra o perfil da equipa e devolve o total com a decomposição.
+ * Pontua um candidato contra o perfil do time e devolve o total com a decomposição.
  * Com `meta` (dados da Smogon), soma uso no tier, pares frequentes e respostas às ameaças,
  * escala os tipos pelo tamanho do time e multiplica o total dos parceiros de núcleo.
  */
@@ -145,7 +145,7 @@ export function scoreCandidate(candidate, profile, meta = null) {
   };
 }
 
-/** Ordena a pool pelas melhores adições à equipa, ignorando espécies que já lá estão. */
+/** Ordena a pool pelas melhores adições ao time, ignorando espécies que já lá estão. */
 export function rankCandidates(team, pool, { limit = 10, meta = null } = {}) {
   if (team.length >= TEAM_SIZE) return [];
 
