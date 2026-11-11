@@ -100,8 +100,11 @@ No plano gratuito o Render suspende o serviço após 15 minutos sem tráfego, e 
 | `keep-alive.yml` | a cada 10 minutos | `GET /health` no Render, para o serviço não dormir | nenhum |
 | `smogon-sync.yml` | dia 2, 06:00 | `POST /api/admin/sync-smogon` e espera até todos os tiers estarem no mês anterior | `SUPABASE_JWT_SECRET` |
 | `supabase-keepalive.yml` | de 3 em 3 dias, 09:00 | consulta a tabela `smogon_stats` no Supabase | `SUPABASE_URL`, `SUPABASE_KEY` |
+| `keep-active.yml` | dia 1, 05:00 | commit vazio na `main`, para o GitHub não desativar os agendamentos | nenhum |
 
-Os secrets ficam em Settings > Secrets and variables > Actions. O GitHub desativa workflows agendados após 60 dias sem atividade no repositório.
+Os secrets ficam em Settings > Secrets and variables > Actions. Todos os workflows também podem ser disparados manualmente na aba Actions.
+
+O GitHub desativa workflows agendados após 60 dias sem atividade no repositório; o `keep-active.yml` evita isso com um commit vazio por mês, marcado com `[skip ci]` para não disparar deploy no Netlify.
 
 ## Dados da Smogon
 
@@ -144,7 +147,7 @@ frontend/
     hooks/           debounce, pontuação do team builder, header recolhível
     services/        PokéAPI, backend e Supabase
     utils/           filtros, evoluções, tabela de tipos, pontuação
-.github/workflows/   keep-alive e sincronização mensal
+.github/workflows/   keep-alives, sincronização mensal e commit de atividade
 netlify.toml         build e headers do frontend
 docker-compose.yml   backend local
 ```
