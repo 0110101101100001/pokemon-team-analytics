@@ -1,0 +1,30 @@
+# Dependências e artefactos de build (gerados dentro da imagem)
+node_modules
+dist
+build
+.cache
+.vite
+
+# Segredos e configuração local (passar VITE_* via --build-arg)
+.env
+.env.*
+!.env.example
+
+# Git / IDE / SO
+.git
+.gitignore
+.vscode
+.idea
+.DS_Store
+Thumbs.db
+
+# Logs e temporários
+*.log
+npm-debug.log*
+*.tmp
+*.bak
+
+# Docker e documentação
+Dockerfile
+.dockerignore
+README.md

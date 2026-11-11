@@ -1,0 +1,11 @@
+services:
+  backend:
+    build: ./backend
+    ports:
+      - "8000:8000"
+    env_file:
+      - ./backend/.env
+    environment:
+      - PYTHONUNBUFFERED=1
+    # O endpoint de sincronização e o scraper precisam de rede para acessar
+    # smogon.com e o Supabase. Não há dependência de outros serviços locais.

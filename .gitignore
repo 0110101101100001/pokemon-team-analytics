@@ -1,0 +1,90 @@
+# =============================================================================
+# Pokémon Team Analytics — .gitignore
+# =============================================================================
+
+# Ambiente virtual
+venv/
+.venv/
+env/
+ENV/
+env.bak/
+venv.bak/
+
+# Python / bytecode
+__pycache__/
+*.py[cod]
+*$py.class
+*.pyo
+*.pyd
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+
+# Pipenv / Poetry
+Pipfile.lock
+poetry.lock
+
+# Ambiente local e segredos (NUNCA commitar)
+.env
+.env.local
+.env.*.local
+.env.production
+.secrets
+
+# IDE / editores
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+Thumbs.db
+
+# Docker / build
+.dockerignore
+.docker/
+
+# Testes e cobertura
+.pytest_cache/
+.coverage
+htmlcov/
+.tox/
+.mypy_cache/
+.ruff_cache/
+
+# Logs
+*.log
+logs/
+
+# Frontend (ajustar conforme o framework usado)
+frontend/node_modules/
+frontend/.next/
+frontend/build/
+frontend/dist/
+frontend/.cache/
+frontend/*.local
+
+# Kubernetes / kustomize (se houver geração local)
+k8s/rendered/
+
+# Cache do scraper da Smogon (caso seja criado futuramente)
+scraper/cache/
+backend/scraper_cache/
+
+# Arquivos temporários
+*.tmp
+*.temp
+*.bak
+
+# =============================================================================
