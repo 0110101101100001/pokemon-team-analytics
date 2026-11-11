@@ -1,7 +1,13 @@
 from fastapi import FastAPI, Depends, HTTPException, BackgroundTasks
+from fastapi.middleware.cors import CORSMiddleware
 from supabase import create_client, Client
 
-from app.core.config import SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY, DEFAULT_TIER
+from app.core.config import (
+    ALLOWED_ORIGINS,
+    DEFAULT_TIER,
+    SUPABASE_SERVICE_ROLE_KEY,
+    SUPABASE_URL,
+)
 from app.core.security import verify_supabase_token
 from app.schemas.recommendation import RecommendRequest, RecommendResponse
 from app.scrapers.update_smogon import run_sync
@@ -12,6 +18,17 @@ app = FastAPI(
     title="Pokemon Team Analytics API",
     version="1.0.0",
     description="Microsserviço de recomendação de times de Pokémon com dados da Smogon e autenticação Supabase.",
+)
+
+# A autenticação vai no cabeçalho Authorization (sem cookies), por isso
+# allow_credentials fica desligado.
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=ALLOWED_ORIGINS,
+    allow_credentials=False,
+    allow_methods=["GET", "POST", "OPTIONS"],
+    allow_headers=["Authorization", "Content-Type", "Accept"],
+    max_age=600,
 )
 
 supabase: Client = create_client(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY)

@@ -1,5 +1,12 @@
+import { supabase } from './supabase';
+
 const POKEAPI_BASE = 'https://pokeapi.co/api/v2';
-const BACKEND_BASE = '/api';
+
+// VITE_API_URL é a origem do backend em produção (ex.: https://api.exemplo.com).
+// Sem ela, usa o caminho relativo /api, servido pelo proxy do Vite em desenvolvimento.
+// Aceita a variável com ou sem barra final e com ou sem o sufixo /api.
+const API_ORIGIN = (import.meta.env.VITE_API_URL ?? '').trim().replace(/\/+$/, '').replace(/\/api$/, '');
+const BACKEND_BASE = `${API_ORIGIN}/api`;
 
 const responseCache = new Map();
 
@@ -117,19 +124,27 @@ export async function fetchSmogonNames() {
   return data.names ?? [];
 }
 
+const LOGIN_REQUIRED = 'Não autorizado. Faça login no Supabase para receber recomendações.';
+
 export async function fetchTeamRecommendation(team, tier = 'gen9ou', limit = 5) {
+  // getSession renova o access token quando está expirado.
+  const { data } = await supabase.auth.getSession();
+  const token = data.session?.access_token;
+  if (!token) throw new Error(LOGIN_REQUIRED);
+
   const response = await fetch(`${BACKEND_BASE}/recommend`, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
       Accept: 'application/json',
+      Authorization: `Bearer ${token}`,
     },
     body: JSON.stringify({ team, tier, limit }),
   });
 
   if (!response.ok) {
     if (response.status === 401) {
-      throw new Error('Não autorizado. Faça login no Supabase para receber recomendações.');
+      throw new Error(LOGIN_REQUIRED);
     }
     if (response.status === 404) {
       throw new Error('Nenhuma estatística encontrada para este tier.');
