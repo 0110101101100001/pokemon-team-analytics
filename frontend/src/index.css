@@ -19,6 +19,15 @@
     background-attachment: fixed;
   }
 
+  /* Celular: uma só camada de pontos e sem fundo fixo (repinta a cada frame do scroll). */
+  @media (max-width: 767px) {
+    body {
+      background-image: radial-gradient(rgba(120, 81, 51, 0.6) 1px, transparent 1px);
+      background-size: 24px 24px;
+      background-attachment: scroll;
+    }
+  }
+
   * {
     box-sizing: border-box;
   }
@@ -43,6 +52,24 @@
 }
 
 @layer components {
+  /* Inclinação 3D e parallax dos cards: só com mouse. Em telas touch os cards ficam planos
+     (sem perspectiva nem uma camada de composição por card). */
+  @media (hover: hover) and (pointer: fine) {
+    .card-tilt {
+      transform: perspective(900px) rotateX(calc(var(--rx, 0) * 1deg)) rotateY(calc(var(--ry, 0) * 1deg)) translateY(calc(var(--lift, 0) * 1px));
+      transform-style: preserve-3d;
+    }
+    .card-layer-bg {
+      transform: translateZ(0);
+    }
+    .card-layer-near {
+      transform: translateZ(18px);
+    }
+    .card-layer-sprite {
+      transform: translateZ(48px) translate(calc(var(--ry, 0) * 1.2px), calc(var(--rx, 0) * -1.2px));
+    }
+  }
+
   .poke-type-badge {
     @apply inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-semibold tracking-wider uppercase transition-all duration-200 border border-white/60 shadow-sm;
   }
@@ -145,7 +172,7 @@
   }
 
   .glass-panel {
-    @apply bg-[#F5F0E6]/90 backdrop-blur-xl border border-[#5C4033]/20 shadow-panel;
+    @apply bg-[#F5F0E6]/90 md:backdrop-blur-xl border border-[#5C4033]/20 shadow-panel;
   }
 
   .status-gradient {

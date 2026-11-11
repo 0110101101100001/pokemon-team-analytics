@@ -110,14 +110,14 @@ export default function AuthModal({ open, onClose, onAuthChange }) {
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center bg-[#2A2421]/40 p-4 backdrop-blur-sm animate-fade-in"
+      className="fixed inset-0 z-50 flex items-center justify-center bg-[#2A2421]/55 p-4 md:bg-[#2A2421]/40 md:backdrop-blur-sm animate-fade-in"
       onMouseDown={(e) => e.target === e.currentTarget && onClose?.()}
     >
       <div
         role="dialog"
         aria-modal="true"
         aria-labelledby={`${ids}-title`}
-        className="relative w-full max-w-sm rounded-panel border border-[#78614E]/30 bg-[#FFFEFB]/85 p-7 shadow-panel backdrop-blur-xl animate-bubble-pop"
+        className="relative w-full max-w-sm rounded-panel border border-[#78614E]/30 bg-[#FFFEFB] p-7 shadow-lg md:bg-[#FFFEFB]/85 md:shadow-panel md:backdrop-blur-xl animate-bubble-pop"
       >
         <button
           type="button"

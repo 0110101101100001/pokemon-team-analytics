@@ -1,7 +1,10 @@
-import { memo, useCallback, useMemo, useState } from 'react';
+import { memo, useCallback, useEffect, useMemo, useState } from 'react';
 import { ChevronDown, Loader2, Search, SlidersHorizontal, TriangleAlert, X } from 'lucide-react';
 import { TYPE_NAMES, fetchAbilityNames, fetchMoveNames } from '../services/api';
 import { GENERATIONS, createFilter, eggGroupLabel, filterKey, formatSlug } from '../utils/filters';
+import { useDebouncedValue } from '../hooks/useDebouncedValue';
+
+const SEARCH_DEBOUNCE_MS = 250;
 
 const FIELD_CLASS =
   'h-10 w-full rounded-xl border border-[#F7F3EE]/30 bg-[#3E2A1F]/90 text-[#F7F3EE] [color-scheme:dark] shadow-inner transition-colors hover:border-[#F7F3EE]/50 focus:outline-none focus:ring-2 focus:ring-[#A4C294]/70 focus:border-[#A4C294]';
@@ -76,7 +79,7 @@ const SuggestInput = memo(function SuggestInput({ id, label, placeholder, loadOp
         onFocus={handleFocus}
         onChange={handleChange}
         onKeyDown={handleKeyDown}
-        placeholder={options ? placeholder : `${placeholder.replace(/\.\.\.$/, '')} (a carregar…)`}
+        placeholder={options ? placeholder : `${placeholder.replace(/\.\.\.$/, '')} (carregando…)`}
         aria-label={label}
         autoComplete="off"
         className={TEXT_INPUT_CLASS}
@@ -88,8 +91,14 @@ const SuggestInput = memo(function SuggestInput({ id, label, placeholder, loadOp
   );
 });
 
-function FiltersBar({ searchTerm, onSearchChange, onAddFilter, advancedOpen, advancedCount, onToggleAdvanced }) {
-  const handleSearch = useCallback((e) => onSearchChange(e.target.value), [onSearchChange]);
+function FiltersBar({ onSearchChange, onAddFilter, advancedOpen, advancedCount, onToggleAdvanced }) {
+  const [query, setQuery] = useState('');
+  // O campo responde a cada tecla; a lista só é refiltrada quando a digitação pausa.
+  // Esvaziar o campo propaga na hora, para limpar a busca sem esperar.
+  const debouncedQuery = useDebouncedValue(query, query ? SEARCH_DEBOUNCE_MS : 0);
+  useEffect(() => { onSearchChange(debouncedQuery); }, [debouncedQuery, onSearchChange]);
+
+  const handleSearch = useCallback((e) => setQuery(e.target.value), []);
 
   const handleSelect = useCallback((type) => (e) => {
     if (e.target.value) onAddFilter(createFilter(type, e.target.value));
@@ -105,7 +114,7 @@ function FiltersBar({ searchTerm, onSearchChange, onAddFilter, advancedOpen, adv
           className={TEXT_INPUT_CLASS}
           placeholder="Nome ou número (ex.: 25)..."
           aria-label="Pesquisar Pokémon por nome ou número da Pokédex"
-          value={searchTerm}
+          value={query}
           onChange={handleSearch}
         />
       </label>

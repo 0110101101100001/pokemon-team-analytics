@@ -1,13 +1,22 @@
 import { useEffect } from 'react';
 
+const EMBED_SRC = 'https://tenor.com/embed.js';
+const MASCOT_VISIBLE = '(min-width: 768px)';
+
 export default function SmeargleMascote({ className }) {
+  // O embed do Tenor é um script de terceiros pesado: só é carregado (uma vez) onde o mascote aparece.
   useEffect(() => {
-    const script = document.createElement('script');
-    script.type = 'text/javascript';
-    script.async = true;
-    script.src = 'https://tenor.com/embed.js';
-    document.head.appendChild(script);
-    return () => {};
+    const media = window.matchMedia(MASCOT_VISIBLE);
+    const loadEmbed = () => {
+      if (!media.matches || document.querySelector(`script[src="${EMBED_SRC}"]`)) return;
+      const script = document.createElement('script');
+      script.async = true;
+      script.src = EMBED_SRC;
+      document.head.appendChild(script);
+    };
+    loadEmbed();
+    media.addEventListener('change', loadEmbed);
+    return () => media.removeEventListener('change', loadEmbed);
   }, []);
 
   return (

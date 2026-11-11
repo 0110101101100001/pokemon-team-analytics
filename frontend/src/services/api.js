@@ -187,3 +187,75 @@ export const fetchMove = (moveUrlOrName) =>
 
 export const fetchTypeData = (typeName) =>
   cachedJson(`${POKEAPI_BASE}/type/${encodeURIComponent(typeName)}`).catch(() => null);
+
+/* ---------------------------------------------------------------- golpes e habilidades (textos) */
+
+// A PokéAPI grafa os códigos de idioma em minúsculas ("pt-br"), por isso a comparação ignora caixa.
+const LANGUAGE_PRIORITY = ['pt-br', 'pt', 'en'];
+
+// Os textos dos jogos trazem hifens opcionais e quebras de linha do layout original;
+// só as linhas em branco (parágrafos) são mantidas.
+const cleanGameText = (text) =>
+  text
+    .replace(/­/g, '')
+    .split(/\n\s*\n/)
+    .map((paragraph) => paragraph.replace(/\s+/g, ' ').trim())
+    .filter(Boolean)
+    .join('\n\n');
+
+/**
+ * Escolhe o texto em pt-BR, depois pt, depois inglês. Dentro do idioma vale a entrada mais
+ * recente (as listas vêm em ordem cronológica de jogo). `translated` é false quando só há inglês.
+ */
+function pickLocalized(entries, field) {
+  for (const language of LANGUAGE_PRIORITY) {
+    const entry = entries?.findLast((e) => e.language.name.toLowerCase() === language && e[field]);
+    if (entry) return { text: cleanGameText(entry[field]), translated: language !== 'en' };
+  }
+  return null;
+}
+
+/** "King's Shield" → "kings-shield", "As One (Glastrier)" → "as-one-glastrier"; slugs passam intactos. */
+export const toPokeApiSlug = (name) =>
+  name.toLowerCase().replace(/['’.:]/g, '').replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '');
+
+const fallbackName = (slug) => ({ text: slug.replace(/-/g, ' '), translated: false });
+
+/** Dados de um golpe prontos para exibição. Rejeita se o golpe não existir. */
+export async function fetchMoveInfo(slug) {
+  const data = await cachedJson(`${POKEAPI_BASE}/move/${encodeURIComponent(slug)}`);
+  // "$effect_chance" é o marcador da PokéAPI para a chance do efeito secundário.
+  const withChance = (entry) =>
+    entry && { ...entry, text: entry.text.replace(/\$effect_chance/g, data.effect_chance ?? '') };
+
+  return {
+    kind: 'move',
+    name: pickLocalized(data.names, 'name') ?? fallbackName(slug),
+    description: pickLocalized(data.flavor_text_entries, 'flavor_text'),
+    shortEffect: withChance(pickLocalized(data.effect_entries, 'short_effect')),
+    effect: withChance(pickLocalized(data.effect_entries, 'effect')),
+    type: data.type?.name ?? null,
+    damageClass: data.damage_class?.name ?? null,
+    power: data.power,
+    accuracy: data.accuracy,
+    pp: data.pp,
+    priority: data.priority,
+    effectChance: data.effect_chance,
+    target: data.target?.name ?? null,
+    generation: data.generation?.name ?? null,
+  };
+}
+
+/** Dados de uma habilidade prontos para exibição. Rejeita se a habilidade não existir. */
+export async function fetchAbilityInfo(slug) {
+  const data = await cachedJson(`${POKEAPI_BASE}/ability/${encodeURIComponent(slug)}`);
+  return {
+    kind: 'ability',
+    name: pickLocalized(data.names, 'name') ?? fallbackName(slug),
+    description: pickLocalized(data.flavor_text_entries, 'flavor_text'),
+    shortEffect: pickLocalized(data.effect_entries, 'short_effect'),
+    effect: pickLocalized(data.effect_entries, 'effect'),
+    generation: data.generation?.name ?? null,
+    pokemonCount: data.pokemon?.length ?? 0,
+  };
+}

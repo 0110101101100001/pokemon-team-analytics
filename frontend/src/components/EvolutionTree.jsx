@@ -93,7 +93,7 @@ const SpeciesNode = memo(function SpeciesNode({ node, current }) {
           width={48}
           height={48}
           loading="lazy"
-          className="object-contain drop-shadow-sm"
+          className="object-contain md:drop-shadow-sm"
         />
         {regional && (
           <span className="absolute -bottom-1.5 left-1/2 -translate-x-1/2 px-1.5 rounded-full bg-[#5B7856] text-[8px] font-bold uppercase tracking-wider text-[#F7F3EE] shadow-2xs">

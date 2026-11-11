@@ -34,16 +34,9 @@ const STAGGER_STEP_MS = 45;
 const PAPER_VIGNETTE = 'radial-gradient(ellipse at 50% 28%, transparent 55%, rgba(120, 81, 50, 0.10))';
 const PAPER_DOTS = 'radial-gradient(rgba(120, 81, 50, 0.10) 1px, transparent 1px)';
 
-// Estilos 3D estáticos compartilhados por todas as cartas: zero alocações por render.
-const TILT_STYLE = {
-  transform:
-    'perspective(900px) rotateX(calc(var(--rx, 0) * 1deg)) rotateY(calc(var(--ry, 0) * 1deg)) translateY(calc(var(--lift, 0) * 1px))',
-  transformStyle: 'preserve-3d',
-};
-const LAYER_NEAR = { transform: 'translateZ(18px)' };
-const LAYER_SPRITE = {
-  transform: 'translateZ(48px) translate(calc(var(--ry, 0) * 1.2px), calc(var(--rx, 0) * -1.2px))',
-};
+// A inclinação 3D e as camadas de parallax vivem em index.css (.card-tilt, .card-layer-*) e só valem
+// com mouse; em telas touch os cards ficam planos, sem perspectiva nem camadas de composição extras.
+// Estilo estático compartilhado por todas as cartas: zero alocações por render.
 const GLARE_STYLE = {
   background:
     'radial-gradient(circle at var(--mx, 50%) var(--my, 50%), rgba(255, 255, 255, 0.55), rgba(255, 255, 255, 0) 60%)',
@@ -58,7 +51,6 @@ function backgroundStyleFor(type) {
     style = {
       backgroundImage: `${PAPER_VIGNETTE}, ${PAPER_DOTS}, linear-gradient(180deg, ${from} 0%, ${to} 100%)`,
       backgroundSize: 'auto, 10px 10px, auto',
-      transform: 'translateZ(0)',
     };
     backgroundStyles.set(type, style);
   }
@@ -155,8 +147,7 @@ function PokemonCard({
         onPointerMove={handlePointerMove}
         onPointerLeave={handlePointerLeave}
         onPointerCancel={handlePointerLeave}
-        style={TILT_STYLE}
-        className={`group relative p-5 cursor-pointer select-none rounded-[1.6rem_1.3rem_1.6rem_1.2rem] border transition-[transform,box-shadow] duration-300 ease-out hover:[--lift:-6] hover:will-change-transform focus:outline-none focus-visible:ring-2 focus-visible:ring-[#829b72]/70 motion-reduce:transition-none ${
+        className={`card-tilt group relative p-5 cursor-pointer select-none rounded-[1.6rem_1.3rem_1.6rem_1.2rem] border transition-[transform,box-shadow] duration-300 ease-out hover:[--lift:-6] hover:will-change-transform focus:outline-none focus-visible:ring-2 focus-visible:ring-[#829b72]/70 motion-reduce:transition-none ${
           isSelected
             ? 'border-[#829b72] ring-2 ring-[#829b72] shadow-card [--lift:-4]'
             : 'border-[#4A3B32]/15 shadow-xs hover:border-[#829b72]/50 hover:shadow-card-hover'
@@ -165,18 +156,18 @@ function PokemonCard({
         {/* Camada de fundo: papel de caderno + gradiente do tipo + brilho que segue o mouse */}
         <div
           aria-hidden="true"
-          className="absolute inset-0 rounded-[inherit] overflow-hidden"
+          className="card-layer-bg absolute inset-0 rounded-[inherit] overflow-hidden"
           style={backgroundStyleFor(primaryType)}
         >
           <div
-            className="absolute inset-0 opacity-0 transition-opacity duration-300 group-hover:opacity-100 mix-blend-soft-light motion-reduce:hidden"
+            className="absolute inset-0 opacity-0 transition-opacity duration-300 group-hover:opacity-100 mix-blend-soft-light max-md:hidden motion-reduce:hidden"
             style={GLARE_STYLE}
           />
           <div className="absolute inset-0 rounded-[inherit] ring-1 ring-inset ring-white/50" />
         </div>
 
         {/* Camada média: número e selo Smogon */}
-        <div className="relative flex items-center justify-between mb-3" style={LAYER_NEAR}>
+        <div className="card-layer-near relative flex items-center justify-between mb-3">
           <span className="px-2.5 py-0.5 rounded-md bg-[#FFFEFB]/85 border border-[#4A3B32]/15 font-mono text-[10px] font-bold text-[#4A3B32] tracking-wider shadow-xs">
             Nº {String(number).padStart(3, '0')}
           </span>
@@ -189,7 +180,7 @@ function PokemonCard({
         </div>
 
         {/* Camada da frente: sprite com parallax */}
-        <div className="relative flex items-center justify-center h-40 w-full mb-3" style={LAYER_SPRITE}>
+        <div className="card-layer-sprite relative flex items-center justify-center h-40 w-full mb-3">
           <img
             src={thumbnailSpriteUrl(id ?? number)}
             alt={pokemon}
@@ -197,12 +188,12 @@ function PokemonCard({
             height={128}
             loading="lazy"
             decoding="async"
-            className="w-32 h-32 object-contain transition-transform duration-500 ease-out group-hover:scale-110 drop-shadow-[0_10px_12px_rgba(62,46,36,0.22)] motion-reduce:transform-none"
+            className="w-32 h-32 object-contain transition-transform duration-500 ease-out md:group-hover:scale-110 md:drop-shadow-[0_10px_12px_rgba(62,46,36,0.22)] motion-reduce:transform-none"
           />
         </div>
 
         {/* Camada média: nome e tipos */}
-        <div className="relative text-center space-y-2" style={LAYER_NEAR}>
+        <div className="card-layer-near relative text-center space-y-2">
           <h3 className="font-serif font-bold text-lg text-[#3E3A35] capitalize tracking-tight">
             {pokemon.replace(/-/g, ' ')}
           </h3>

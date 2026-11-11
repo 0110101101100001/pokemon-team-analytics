@@ -29,7 +29,7 @@ const TeamSprites = memo(function TeamSprites({ pokemons }) {
           title={formatSlug(pokemon.name)}
           className="h-9 w-9 rounded-full border border-[#78614E]/25 bg-[#FFFEFB] shadow-sm"
         >
-          <img src={thumbnailSpriteUrl(pokemon.id)} alt={formatSlug(pokemon.name)} loading="lazy" className="h-full w-full object-contain" />
+          <img src={thumbnailSpriteUrl(pokemon.id)} alt={formatSlug(pokemon.name)} width={36} height={36} loading="lazy" decoding="async" className="h-full w-full object-contain" />
         </li>
       ))}
     </ul>
@@ -197,14 +197,14 @@ export default function TeamManagerModal({ open, onClose, session, team = [], on
 
   return (
     <div
-      className="fixed inset-0 z-[60] flex items-center justify-center bg-[#2A2421]/40 p-4 backdrop-blur-sm animate-fade-in"
+      className="fixed inset-0 z-[60] flex items-center justify-center bg-[#2A2421]/55 p-4 md:bg-[#2A2421]/40 md:backdrop-blur-sm animate-fade-in"
       onMouseDown={(e) => e.target === e.currentTarget && onClose?.()}
     >
       <div
         role="dialog"
         aria-modal="true"
         aria-labelledby={`${ids}-title`}
-        className="relative flex max-h-[85vh] w-full max-w-md flex-col rounded-panel border border-[#78614E]/30 bg-[#FFFEFB]/85 p-7 shadow-panel backdrop-blur-xl animate-bubble-pop"
+        className="relative flex max-h-[85vh] w-full max-w-md flex-col rounded-panel border border-[#78614E]/30 bg-[#FFFEFB] p-7 shadow-lg md:bg-[#FFFEFB]/85 md:shadow-panel md:backdrop-blur-xl animate-bubble-pop"
       >
         <button
           type="button"
@@ -264,7 +264,7 @@ export default function TeamManagerModal({ open, onClose, session, team = [], on
               {status === 'loading' ? (
                 <p className="flex items-center justify-center gap-2 py-8 font-hand text-xl text-[#78614E]">
                   <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" />
-                  A folhear o caderno...
+                  Folheando o caderno...
                 </p>
               ) : teams.length === 0 ? (
                 <p className="flex flex-col items-center gap-2 py-8 text-center font-serif text-sm italic text-smeargle-textDim/70">

@@ -30,7 +30,7 @@ export const InkSplash = memo(function InkSplash({ className = '' }) {
   return (
     <span aria-hidden="true" className={`pointer-events-none absolute inset-0 -z-10 ${className}`}>
       <span
-        className="absolute inset-0 rounded-[46%_54%_38%_62%/58%_42%_60%_40%] bg-[#4A3B32]/40 backdrop-blur-[2px] shadow-[inset_0_0_14px_rgba(38,26,19,0.35)]"
+        className="absolute inset-0 rounded-[46%_54%_38%_62%/58%_42%_60%_40%] bg-[#4A3B32]/40 md:backdrop-blur-[2px] shadow-[inset_0_0_14px_rgba(38,26,19,0.35)]"
         style={SPLASH_GRAIN}
       />
       <span className="absolute -right-2.5 top-0.5 w-3 h-3 rounded-[60%_40%_55%_45%/45%_60%_40%_55%] bg-[#4A3B32]/45" />
@@ -63,7 +63,7 @@ export const PageVignette = memo(function PageVignette() {
   return (
     <div
       aria-hidden="true"
-      className="pointer-events-none fixed inset-0 z-30"
+      className="pointer-events-none fixed inset-0 z-30 hidden md:block"
       style={{
         background: 'radial-gradient(ellipse at center, transparent 58%, rgba(62, 46, 36, 0.16) 100%)',
         boxShadow: 'inset 0 0 96px rgba(62, 46, 36, 0.14)',

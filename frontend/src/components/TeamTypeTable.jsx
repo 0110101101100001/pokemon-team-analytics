@@ -47,7 +47,7 @@ function TeamTypeTable({ team }) {
               <th scope="col" className={`${HEAD} sticky left-0 bg-[#FFFEFB] pl-3 pt-2 text-left`}>Ataque</th>
               {team.map((member) => (
                 <th key={member.id} scope="col" className={`${HEAD} pt-1`} title={formatSlug(member.name)}>
-                  <img src={thumbnailSpriteUrl(member.id)} alt={formatSlug(member.name)} className="mx-auto h-9 w-9 object-contain" />
+                  <img src={thumbnailSpriteUrl(member.id)} alt={formatSlug(member.name)} width={36} height={36} loading="lazy" decoding="async" className="mx-auto h-9 w-9 object-contain" />
                 </th>
               ))}
               <th scope="col" className={`${HEAD} border-l border-dashed border-[#78614E]/25 pt-2`}>Fracos</th>

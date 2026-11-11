@@ -6,6 +6,7 @@ import PokemonTypeBadge, { TYPE_INK } from './PokemonTypeBadge';
 import PokemonEncounters from './PokemonEncounters';
 import EvolutionTree from './EvolutionTree';
 import PokemonCry from './PokemonCry';
+import MoveAbilityModal from './MoveAbilityModal';
 import { capitalize } from '../utils/typeColors';
 import {
   fetchEvolutionChain, fetchMove, fetchPokemonDetail, fetchPokemonSpecies,
@@ -91,10 +92,15 @@ const PAPER_BG = {
   backgroundSize: '14px 14px',
 };
 
-const GLASS_CARD = 'rounded-2xl border border-white/70 bg-white/55 backdrop-blur-md shadow-[0_8px_30px_-14px_rgba(62,46,36,0.25)]';
+const GLASS_CARD = 'rounded-2xl border border-white/70 bg-white/80 shadow-sm md:bg-white/55 md:backdrop-blur-md md:shadow-[0_8px_30px_-14px_rgba(62,46,36,0.25)]';
 const FIELD = 'h-9 px-3 rounded-xl border border-[#4A3B32]/20 bg-[#FFFEFB]/80 text-xs font-semibold text-[#2A2421] focus:outline-none focus:ring-1 focus:ring-[#829b72] cursor-pointer';
+// Habilidades e golpes que abrem o modal de detalhes.
+const CLICKABLE = 'transition-colors enabled:cursor-pointer enabled:hover:border-[#829b72]/70 enabled:hover:bg-[#F7F3EE] focus:outline-none focus-visible:ring-2 focus-visible:ring-[#829b72]/70';
 
 /* ---------------------------------------------------------------- helpers puros */
+
+// A Smogon lista "Nothing" e "Other" entre golpes e habilidades; não existem na PokéAPI.
+const isSmogonPlaceholder = (name) => /^(nothing|other)$/i.test(name);
 
 function formatFormName(formName) {
   if (!formName) return '';
@@ -188,6 +194,9 @@ const HeroSprite = memo(function HeroSprite({ sources, alt }) {
     <img
       src={src}
       alt={alt}
+      width={80}
+      height={80}
+      decoding="async"
       onError={() => setIndex((i) => (i + 1 < sources.length ? i + 1 : i))}
       className={`h-full w-full object-contain drop-shadow-[0_10px_14px_rgba(62,46,36,0.28)] ${animated ? '[image-rendering:pixelated] scale-[1.35]' : ''}`}
     />
@@ -240,13 +249,18 @@ const EffectivenessRow = memo(function EffectivenessRow({ types, multiplier, lab
   );
 });
 
-const UsageChip = memo(function UsageChip({ name, pct }) {
+const UsageChip = memo(function UsageChip({ name, pct, onSelect }) {
+  const Tag = onSelect ? 'button' : 'span';
+  const interactive = onSelect && { type: 'button', onClick: () => onSelect(name), disabled: isSmogonPlaceholder(name) };
   return (
-    <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-[#FFFEFB]/80 border border-[#4A3B32]/15 text-xs font-semibold capitalize">
+    <Tag
+      {...interactive}
+      className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-[#FFFEFB]/80 border border-[#4A3B32]/15 text-xs font-semibold capitalize ${onSelect ? CLICKABLE : ''}`}
+    >
       <span className="w-1.5 h-1.5 rounded-full bg-[#829b72]" aria-hidden="true" />
       <span className="text-[#2A2421]">{name}</span>
       <span className="text-[10px] font-bold text-[#78614E]">{pct.toFixed(1)}%</span>
-    </span>
+    </Tag>
   );
 });
 
@@ -294,6 +308,9 @@ export default function PokemonDrawer({ pokemonName, onClose, onSmogonDataFound 
   const [movesetSearch, setMovesetSearch] = useState('');
   const [learnMethod, setLearnMethod] = useState('level-up');
   const [selectedGen, setSelectedGen] = useState('gen9');
+
+  // Golpe ou habilidade aberto no modal de detalhes: { kind, name } | null
+  const [infoEntry, setInfoEntry] = useState(null);
 
   // Invalida respostas de troca de forma pendentes (troca rápida, mudança de Pokémon ou unmount).
   const formRequestRef = useRef(0);
@@ -406,6 +423,10 @@ export default function PokemonDrawer({ pokemonName, onClose, onSmogonDataFound 
 
   const toggleShiny = useCallback(() => setShiny((s) => !s), []);
 
+  const openAbility = useCallback((name) => setInfoEntry({ kind: 'ability', name }), []);
+  const openMove = useCallback((name) => setInfoEntry({ kind: 'move', name }), []);
+  const closeInfo = useCallback(() => setInfoEntry(null), []);
+
   const visibleMoves = useMemo(() => {
     const term = movesetSearch.trim().toLowerCase();
     return moveset
@@ -450,7 +471,7 @@ export default function PokemonDrawer({ pokemonName, onClose, onSmogonDataFound 
     <div className="relative flex h-full flex-col overflow-y-auto bg-[#F7F3EE]" style={PAPER_BG}>
       {/* Cabeçalho imersivo e fixo */}
       <header
-        className="sticky top-0 z-20 border-b border-[#4A3B32]/10 backdrop-blur-xl shadow-[0_10px_30px_-18px_rgba(62,46,36,0.35)]"
+        className="sticky top-0 z-20 border-b border-[#4A3B32]/10 shadow-sm md:backdrop-blur-xl md:shadow-[0_10px_30px_-18px_rgba(62,46,36,0.35)]"
         style={{ background: `linear-gradient(120deg, ${primaryInk.bg}F2 0%, #FFFEFBE6 60%, ${primaryInk.bg}CC 100%)` }}
       >
         <div className="flex items-center gap-4 px-5 pt-4 pb-3">
@@ -573,13 +594,15 @@ export default function PokemonDrawer({ pokemonName, onClose, onSmogonDataFound 
               <SectionCard icon={Egg} title="Habilidades & Morfologia">
                 <div className="flex flex-wrap gap-1.5">
                   {detail.abilities.map((a) => (
-                    <span
+                    <button
                       key={a.ability.name}
-                      className="px-2.5 py-1 rounded-lg bg-[#FFFEFB]/80 border border-[#4A3B32]/15 text-[11px] font-medium capitalize text-[#2A2421]"
+                      type="button"
+                      onClick={() => openAbility(a.ability.name)}
+                      className={`px-2.5 py-1 rounded-lg bg-[#FFFEFB]/80 border border-[#4A3B32]/15 text-[11px] font-medium capitalize text-[#2A2421] ${CLICKABLE}`}
                     >
                       {a.ability.name.replace(/-/g, ' ')}
                       {a.is_hidden && <span className="ml-1 text-[9px] font-bold text-[#78614E]">(oculta)</span>}
-                    </span>
+                    </button>
                   ))}
                 </div>
                 <div className="grid grid-cols-2 gap-2">
@@ -684,7 +707,7 @@ export default function PokemonDrawer({ pokemonName, onClose, onSmogonDataFound 
                         <SpreadCard key={key} index={index} spreadKey={key} pct={pct} />
                       ))
                     ) : (
-                      <p className="text-[11px] italic text-[#78614E]">Nenhuma spread registada.</p>
+                      <p className="text-[11px] italic text-[#78614E]">Nenhuma spread registrada.</p>
                     )}
                   </div>
 
@@ -692,7 +715,9 @@ export default function PokemonDrawer({ pokemonName, onClose, onSmogonDataFound 
                     <div>
                       <span className="block mb-2 text-xs font-bold uppercase tracking-wider text-[#78614E]">Habilidades principais</span>
                       <div className="flex flex-wrap gap-1.5">
-                        {topEntries(smogon.abilities, 3).map(([name, pct]) => <UsageChip key={name} name={name} pct={pct} />)}
+                        {topEntries(smogon.abilities, 3).map(([name, pct]) => (
+                          <UsageChip key={name} name={name} pct={pct} onSelect={openAbility} />
+                        ))}
                       </div>
                     </div>
                     <div>
@@ -708,15 +733,21 @@ export default function PokemonDrawer({ pokemonName, onClose, onSmogonDataFound 
                   <span className="block mb-2 text-xs font-bold uppercase tracking-wider text-[#78614E]">Movimentos populares</span>
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                     {topEntries(smogon.moves, 6).map(([name, pct]) => (
-                      <div key={name} className="flex items-center justify-between gap-3 p-2.5 rounded-xl bg-[#FFFEFB]/80 border border-[#4A3B32]/10">
+                      <button
+                        key={name}
+                        type="button"
+                        onClick={() => openMove(name)}
+                        disabled={isSmogonPlaceholder(name)}
+                        className={`flex items-center justify-between gap-3 p-2.5 rounded-xl bg-[#FFFEFB]/80 border border-[#4A3B32]/10 text-left ${CLICKABLE}`}
+                      >
                         <span className="text-xs font-bold capitalize text-[#2A2421]">{name.replace(/-/g, ' ')}</span>
-                        <div className="flex items-center gap-2 w-1/3">
+                        <span className="flex items-center gap-2 w-1/3">
                           <span className="w-8 text-right text-[10px] font-bold text-[#78614E]">{pct.toFixed(0)}%</span>
-                          <div className="flex-1 h-1.5 rounded-full bg-[#4A3B32]/10 overflow-hidden">
-                            <div className="h-full rounded-full bg-[#829b72]" style={{ width: `${Math.min(pct, 100)}%` }} />
-                          </div>
-                        </div>
-                      </div>
+                          <span className="flex-1 h-1.5 rounded-full bg-[#4A3B32]/10 overflow-hidden">
+                            <span className="block h-full rounded-full bg-[#829b72]" style={{ width: `${Math.min(pct, 100)}%` }} />
+                          </span>
+                        </span>
+                      </button>
                     ))}
                   </div>
                 </div>
@@ -786,7 +817,7 @@ export default function PokemonDrawer({ pokemonName, onClose, onSmogonDataFound 
                 </thead>
                 <tbody className="divide-y divide-[#4A3B32]/10">
                   {movesetLoading ? (
-                    <tr><td colSpan={7} className="py-8 text-center text-xs font-medium text-[#78614E] animate-pulse">A compilar o learnset...</td></tr>
+                    <tr><td colSpan={7} className="py-8 text-center text-xs font-medium text-[#78614E] animate-pulse">Compilando o learnset...</td></tr>
                   ) : visibleMoves.length === 0 ? (
                     <tr><td colSpan={7} className="py-8 text-center text-xs text-[#78614E]">Nenhum golpe para este filtro.</td></tr>
                   ) : (
@@ -795,7 +826,15 @@ export default function PokemonDrawer({ pokemonName, onClose, onSmogonDataFound 
                         <td className="py-2.5 px-3 text-xs font-semibold text-[#78614E]">
                           {move.learn_method === 'level-up' ? (move.level > 0 ? `Nv. ${move.level}` : 'Inicial') : move.learn_method === 'machine' ? 'TM/TR' : 'Ovo'}
                         </td>
-                        <td className="py-2.5 px-3 text-xs font-bold capitalize text-[#2A2421]">{move.name.replace(/-/g, ' ')}</td>
+                        <td className="py-2.5 px-3">
+                          <button
+                            type="button"
+                            onClick={() => openMove(move.name)}
+                            className="rounded text-left text-xs font-bold capitalize text-[#2A2421] underline decoration-dotted decoration-[#78614E]/50 underline-offset-4 cursor-pointer hover:text-[#5B7856] hover:decoration-[#5B7856] focus:outline-none focus-visible:ring-2 focus-visible:ring-[#829b72]/70"
+                          >
+                            {move.name.replace(/-/g, ' ')}
+                          </button>
+                        </td>
                         <td className="py-2.5 px-3"><PokemonTypeBadge type={move.type} /></td>
                         <td className="py-2.5 px-3 text-xs font-medium capitalize text-[#78614E]">{move.damage_class}</td>
                         <td className="py-2.5 px-3 text-right text-xs font-bold text-[#2A2421]">{move.power ?? '—'}</td>
@@ -810,6 +849,8 @@ export default function PokemonDrawer({ pokemonName, onClose, onSmogonDataFound 
           </SectionCard>
         )}
       </div>
+
+      {infoEntry && <MoveAbilityModal kind={infoEntry.kind} name={infoEntry.name} onClose={closeInfo} />}
     </div>
   );
 }

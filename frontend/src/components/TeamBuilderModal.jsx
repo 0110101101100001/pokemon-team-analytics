@@ -33,7 +33,7 @@ function describeReasons({ patched, newCoverage, countered, usage, partners = []
 }
 
 const Sprite = ({ pokemon, className }) => (
-  <img src={thumbnailSpriteUrl(pokemon.id)} alt="" loading="lazy" className={`object-contain ${className}`} />
+  <img src={thumbnailSpriteUrl(pokemon.id)} alt="" width={48} height={48} loading="lazy" decoding="async" className={`object-contain ${className}`} />
 );
 
 const TeamSlot = memo(function TeamSlot({ pokemon, onRemove }) {
@@ -148,14 +148,14 @@ export default function TeamBuilderModal({ onClose, team, onTeamChange, pool, se
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center bg-[#2A2421]/40 p-4 backdrop-blur-sm animate-fade-in"
+      className="fixed inset-0 z-50 flex items-center justify-center bg-[#2A2421]/55 p-4 md:bg-[#2A2421]/40 md:backdrop-blur-sm animate-fade-in"
       onMouseDown={(e) => e.target === e.currentTarget && onClose?.()}
     >
       <div
         role="dialog"
         aria-modal="true"
         aria-labelledby={`${ids}-title`}
-        className="relative flex max-h-[90vh] w-full max-w-3xl flex-col rounded-panel border border-[#78614E]/30 bg-[#FFFEFB]/90 p-6 shadow-panel backdrop-blur-xl animate-bubble-pop sm:p-7"
+        className="relative flex max-h-[90vh] w-full max-w-3xl flex-col rounded-panel border border-[#78614E]/30 bg-[#FFFEFB] p-6 shadow-lg md:bg-[#FFFEFB]/90 md:shadow-panel md:backdrop-blur-xl animate-bubble-pop sm:p-7"
       >
         <button
           type="button"

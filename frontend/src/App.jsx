@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo, useCallback, useDeferredValue } from "react";
+import { useState, useEffect, useMemo, useCallback } from "react";
 import PokemonGrid from "./components/PokemonGrid";
 import PokemonDrawer from "./components/PokemonDrawer";
 import FiltersBar, { ActiveFilters, AdvancedFilters } from "./components/FiltersBar";
@@ -26,14 +26,19 @@ const REMOTE_FILTERS = {
   move: fetchPokemonIdsLearningMove,
 };
 const ADVANCED_TYPES = new Set(["ability", "move", "eggGroup"]);
-const EASE = "transition-all duration-500 ease-[cubic-bezier(0.22,1,0.36,1)] motion-reduce:transition-none";
+const EASE = "transition-all duration-500 max-md:duration-200 ease-[cubic-bezier(0.22,1,0.36,1)] motion-reduce:transition-none";
+// Celular: fundo opaco e sombra curta (blur e sombras longas pesam no scroll). md+: vidro e sombra longa.
+const HEADER_SURFACE = {
+  collapsed: "bg-[#78614E] shadow-md md:bg-[#78614E]/88 md:backdrop-blur-xl md:shadow-[0_18px_40px_-20px_rgba(38,26,19,0.7)]",
+  expanded: "bg-[#78614E] shadow-md md:bg-[#78614E]/96 md:backdrop-blur-md md:shadow-lg",
+};
 
 export default function App() {
   const [pokemonList, setPokemonList] = useState([]);
   const [loading, setLoading] = useState(true);
   const [selectedPokemon, setSelectedPokemon] = useState(null);
+  // Vem do FiltersBar já com debounce: digitar não re-renderiza o App a cada tecla.
   const [searchTerm, setSearchTerm] = useState("");
-  const deferredSearchTerm = useDeferredValue(searchTerm);
   const [activeFilters, setActiveFilters] = useState([]);
   // filterKey → Set de ids (resolvido) | "loading" | "error"
   const [remoteFilterSets, setRemoteFilterSets] = useState({});
@@ -100,7 +105,7 @@ export default function App() {
   // Gerações: OR. Tipos, grupos de ovos, habilidades e golpes: AND.
   // Filtros remotos ainda carregando (ou que falharam) são ignorados até terem o Set de ids.
   const filteredList = useMemo(() => {
-    const matchesSearch = createSearchMatcher(deferredSearchTerm);
+    const matchesSearch = createSearchMatcher(searchTerm);
     const gens = new Set();
     const types = [];
     const eggGroups = [];
@@ -118,7 +123,7 @@ export default function App() {
       types.every((t) => p.types.includes(t)) &&
       eggGroups.every((g) => p.eggGroups.includes(g)) &&
       idSets.every((ids) => ids.has(p.id)));
-  }, [pokemonList, deferredSearchTerm, activeFilters, remoteFilterSets]);
+  }, [pokemonList, searchTerm, activeFilters, remoteFilterSets]);
 
   const filterStatus = useMemo(() => {
     const status = {};
@@ -147,9 +152,9 @@ export default function App() {
       <div className="min-h-screen flex items-center justify-center">
         <div className="flex flex-col items-center gap-3 animate-pulse">
           <div className="w-12 h-12 rounded-full bg-[#FFFEFB] flex items-center justify-center border-2 border-[#4A3B32]/20 shadow-sm">
-            <img src={officialSpriteUrl(SMEARGLE_ID)} alt="Smeargle" className="w-8 h-8 object-contain" />
+            <img src={officialSpriteUrl(SMEARGLE_ID)} alt="Smeargle" width={32} height={32} decoding="async" className="w-8 h-8 object-contain" />
           </div>
-          <p className="font-hand text-xl text-[#78614E]">A folhear o manual de campo...</p>
+          <p className="font-hand text-xl text-[#78614E]">Folheando o manual de campo...</p>
         </div>
       </div>
     );
@@ -168,13 +173,11 @@ export default function App() {
 
       <header
         className={`sticky top-0 z-40 text-[#F7F3EE] border-b border-[#261A13]/60 ${EASE} ${
-          collapsed
-            ? "bg-[#78614E]/88 backdrop-blur-xl shadow-[0_18px_40px_-20px_rgba(38,26,19,0.7)]"
-            : "bg-[#78614E]/96 backdrop-blur-md shadow-lg"
+          collapsed ? HEADER_SURFACE.collapsed : HEADER_SURFACE.expanded
         }`}
       >
-        <InkSplatter className="absolute -top-6 right-[8%] w-36 h-36 opacity-[0.14] mix-blend-multiply rotate-12" color="#2A1C14" />
-        <InkSplatter className="absolute -bottom-10 left-[22%] w-24 h-24 opacity-[0.16] -rotate-45" color="#A4C294" />
+        <InkSplatter className="hidden md:block absolute -top-6 right-[8%] w-36 h-36 opacity-[0.14] mix-blend-multiply rotate-12" color="#2A1C14" />
+        <InkSplatter className="hidden md:block absolute -bottom-10 left-[22%] w-24 h-24 opacity-[0.16] -rotate-45" color="#A4C294" />
 
         <div className={`relative max-w-[1700px] mx-auto px-4 sm:px-6 lg:px-8 ${EASE} ${collapsed ? "py-2" : "py-4"}`}>
           {/*
@@ -183,7 +186,7 @@ export default function App() {
           */}
           <div className="flex flex-wrap items-center gap-x-4 gap-y-3 2xl:grid 2xl:grid-cols-[auto_minmax(0,1fr)_auto] 2xl:gap-6">
             <div className="order-1 flex items-center gap-3 shrink-0">
-              <div className={`shrink-0 overflow-hidden ${EASE} ${collapsed ? "w-0 opacity-0 -mr-4" : "w-16 opacity-100"}`}>
+              <div className={`hidden shrink-0 overflow-hidden md:block ${EASE} ${collapsed ? "w-0 opacity-0 -mr-4" : "w-16 opacity-100"}`}>
                 <SmeargleMascote />
               </div>
               <div className={`relative isolate min-w-0 ${EASE} ${collapsed ? "px-3 py-1" : "px-4 py-2"}`}>
@@ -199,7 +202,6 @@ export default function App() {
 
             <div className="order-3 mx-auto w-full max-w-4xl min-w-0 rounded-2xl border border-[#F7F3EE]/15 bg-[#2A1C14]/20 p-1.5 shadow-inner 2xl:order-2 2xl:max-w-3xl">
               <FiltersBar
-                searchTerm={searchTerm}
                 onSearchChange={setSearchTerm}
                 onAddFilter={addFilter}
                 advancedOpen={advancedOpen}
@@ -221,8 +223,8 @@ export default function App() {
       </header>
 
       <main className="relative max-w-[1700px] mx-auto px-4 sm:px-6 lg:px-8 pt-10 pb-16">
-        <InkSplatter className="absolute -left-10 top-24 w-40 h-40 opacity-[0.07] mix-blend-multiply -rotate-12" color="#785132" />
-        <InkSplatter className="absolute right-0 bottom-40 w-28 h-28 opacity-[0.08] mix-blend-multiply rotate-[160deg]" color="#829b72" />
+        <InkSplatter className="hidden md:block absolute -left-10 top-24 w-40 h-40 opacity-[0.07] mix-blend-multiply -rotate-12" color="#785132" />
+        <InkSplatter className="hidden md:block absolute right-0 bottom-40 w-28 h-28 opacity-[0.08] mix-blend-multiply rotate-[160deg]" color="#829b72" />
 
         <div className="relative space-y-6">
           <ActiveFilters activeFilters={activeFilters} filterStatus={filterStatus} onRemoveFilter={removeFilter} />
@@ -257,11 +259,11 @@ export default function App() {
 
       {selectedPokemon && (
         <div
-          className="fixed inset-0 bg-[#261A13]/45 backdrop-blur-sm z-50 flex items-center justify-center p-4 sm:p-6"
+          className="fixed inset-0 bg-[#261A13]/60 md:bg-[#261A13]/45 md:backdrop-blur-sm z-50 flex items-center justify-center p-4 sm:p-6"
           onClick={handleCloseModal}
         >
           <div
-            className="bg-[#FFFEFB] w-full max-w-5xl h-[90vh] sm:h-[85vh] rounded-[2rem] shadow-2xl overflow-hidden flex flex-col border border-[#4A3B32]/20"
+            className="bg-[#FFFEFB] w-full max-w-5xl h-[90vh] sm:h-[85vh] rounded-[2rem] shadow-xl md:shadow-2xl overflow-hidden flex flex-col border border-[#4A3B32]/20"
             onClick={(e) => e.stopPropagation()}
           >
             <PokemonDrawer

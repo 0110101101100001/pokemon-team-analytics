@@ -7,7 +7,7 @@ const BASE_CLASS =
 
 function Avatar({ user }) {
   const url = user.user_metadata?.avatar_url;
-  if (url) return <img src={url} alt="" className="h-7 w-7 rounded-full border border-[#F7F3EE]/40 object-cover" />;
+  if (url) return <img src={url} alt="" width={28} height={28} loading="lazy" decoding="async" className="h-7 w-7 rounded-full border border-[#F7F3EE]/40 object-cover" />;
   return (
     <span aria-hidden="true" className="flex h-7 w-7 items-center justify-center rounded-full bg-[#A4C294] font-serif text-sm font-bold uppercase text-[#2A1C14]">
       {user.email?.[0] ?? '?'}
