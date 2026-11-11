@@ -1,7 +1,7 @@
 import { memo, useCallback, useEffect, useMemo, useState } from 'react';
-import { ChevronDown, Loader2, Search, SlidersHorizontal, TriangleAlert, X } from 'lucide-react';
+import { ChevronDown, Loader2, NotebookPen, Search, SlidersHorizontal, TriangleAlert, X } from 'lucide-react';
 import { TYPE_NAMES, fetchAbilityNames, fetchMoveNames } from '../services/api';
-import { GENERATIONS, createFilter, eggGroupLabel, filterKey, formatSlug } from '../utils/filters';
+import { FIXED_FILTERS, GENERATIONS, createFilter, eggGroupLabel, filterKey, formatSlug } from '../utils/filters';
 import { useDebouncedValue } from '../hooks/useDebouncedValue';
 
 const SEARCH_DEBOUNCE_MS = 250;
@@ -179,11 +179,21 @@ function FiltersBar({ onSearchChange, onAddFilter, advancedOpen, advancedCount, 
   );
 }
 
+// Selects de valores fixos do painel avançado, na ordem de exibição.
+const FIXED_SELECTS = [
+  { type: 'region', label: 'Filtrar por forma regional', placeholder: 'Forma regional' },
+  { type: 'rarity', label: 'Filtrar por raridade', placeholder: 'Raridade' },
+  { type: 'mega', label: 'Filtrar por Mega Evolução', placeholder: 'Mega Evolução' },
+  { type: 'gmax', label: 'Filtrar por Gigantamax', placeholder: 'Gigantamax' },
+];
+
 function AdvancedFiltersComponent({ eggGroups, onAddFilter }) {
-  const handleEggGroup = useCallback((e) => {
-    if (e.target.value) onAddFilter(createFilter('eggGroup', e.target.value));
+  const handleSelect = useCallback((type) => (e) => {
+    if (e.target.value) onAddFilter(createFilter(type, e.target.value));
     e.target.value = '';
   }, [onAddFilter]);
+  const handleEggGroup = handleSelect('eggGroup');
+  const addBuilds = useCallback(() => onAddFilter(createFilter('builds', 'with')), [onAddFilter]);
 
   const addAbility = useCallback((slug) => onAddFilter(createFilter('ability', slug)), [onAddFilter]);
   const addMove = useCallback((slug) => onAddFilter(createFilter('move', slug)), [onAddFilter]);
@@ -211,8 +221,27 @@ function AdvancedFiltersComponent({ eggGroups, onAddFilter }) {
           ))}
         </HeaderSelect>
       </div>
+
+      <div className="mt-2 grid grid-cols-2 gap-2 sm:mt-2.5 sm:grid-cols-3 sm:gap-2.5 lg:grid-cols-5">
+        {FIXED_SELECTS.map(({ type, label, placeholder }) => (
+          <HeaderSelect key={type} label={label} placeholder={placeholder} onChange={handleSelect(type)} className="">
+            {FIXED_FILTERS[type].map(({ value, option }) => (
+              <option key={value} value={value} className={OPTION_CLASS}>{option}</option>
+            ))}
+          </HeaderSelect>
+        ))}
+        <button
+          type="button"
+          onClick={addBuilds}
+          className={`${FIELD_CLASS} col-span-2 inline-flex items-center justify-center gap-2 px-3 text-xs font-serif font-semibold tracking-wide cursor-pointer sm:col-span-2 lg:col-span-1`}
+        >
+          <NotebookPen className="w-4 h-4 shrink-0" aria-hidden="true" />
+          Com build da Smogon
+        </button>
+      </div>
+
       <p className="mt-2 font-hand text-base leading-tight text-[#F7F3EE]/70">
-        gerações se somam (ou); tipos, habilidades, golpes e grupos de ovos precisam ser todos atendidos (e).
+        gerações, regiões e raridades se somam dentro do grupo (ou); os demais filtros precisam ser todos atendidos (e).
       </p>
     </div>
   );

@@ -1,8 +1,8 @@
-import { useState, useEffect, useMemo, useCallback } from "react";
+import { useState, useEffect, useMemo, useCallback, useRef } from "react";
 import PokemonGrid from "./components/PokemonGrid";
 import PokemonDrawer from "./components/PokemonDrawer";
 import FiltersBar, { ActiveFilters, AdvancedFilters } from "./components/FiltersBar";
-import { createSearchMatcher, filterKey } from "./utils/filters";
+import { FIXED_FILTERS, SINGLE_VALUE_FILTERS, createSearchMatcher, filterKey } from "./utils/filters";
 import SmeargleMascote from "./components/SmeargleMascote";
 import Reveal from "./components/Reveal";
 import AuthModal from "./components/AuthModal";
@@ -19,15 +19,18 @@ import {
 } from "./services/api";
 import { buildPokedexEntries } from "./utils/pokedex";
 import { buildSmogonBadgeMap } from "./utils/smogon";
+import { fetchPokemonIdsWithBuilds } from "./utils/smogonSets";
 
 const SMEARGLE_ID = 235;
 
 // Filtros resolvidos sob demanda: cada um devolve o Set de ids de Pokémon que o cumprem.
+// Recebem o valor do filtro e as entradas da grade.
 const REMOTE_FILTERS = {
   ability: fetchPokemonIdsWithAbility,
   move: fetchPokemonIdsLearningMove,
+  builds: (_value, entries) => fetchPokemonIdsWithBuilds(entries),
 };
-const ADVANCED_TYPES = new Set(["ability", "move", "eggGroup"]);
+const ADVANCED_TYPES = new Set(["ability", "move", "eggGroup", ...Object.keys(FIXED_FILTERS)]);
 const EASE = "transition-all duration-500 max-md:duration-200 ease-[cubic-bezier(0.22,1,0.36,1)] motion-reduce:transition-none";
 // Celular: fundo opaco e sombra curta (blur e sombras longas pesam no scroll). md+: vidro e sombra longa.
 const HEADER_SURFACE = {
@@ -87,14 +90,21 @@ export default function App() {
     return () => { active = false; };
   }, []);
 
+  const pokemonListRef = useRef(pokemonList);
+  pokemonListRef.current = pokemonList;
+
   const addFilter = useCallback((filter) => {
     const key = filterKey(filter);
-    setActiveFilters((prev) => (prev.some((f) => filterKey(f) === key) ? prev : [...prev, filter]));
+    setActiveFilters((prev) => {
+      if (prev.some((f) => filterKey(f) === key)) return prev;
+      const kept = SINGLE_VALUE_FILTERS.has(filter.type) ? prev.filter((f) => f.type !== filter.type) : prev;
+      return [...kept, filter];
+    });
 
     const resolve = REMOTE_FILTERS[filter.type];
     if (!resolve) return;
     setRemoteFilterSets((prev) => (prev[key] instanceof Set ? prev : { ...prev, [key]: "loading" }));
-    resolve(filter.value)
+    resolve(filter.value, pokemonListRef.current)
       .then((ids) => setRemoteFilterSets((prev) => ({ ...prev, [key]: ids })))
       .catch(() => setRemoteFilterSets((prev) => ({ ...prev, [key]: "error" })));
   }, []);
@@ -105,26 +115,36 @@ export default function App() {
 
   const toggleAdvanced = useCallback(() => setAdvancedOpen((open) => !open), []);
 
-  // Gerações: OR. Tipos, grupos de ovos, habilidades e golpes: AND.
+  // Gerações, regiões e raridades: OR dentro do grupo. Os demais critérios: AND.
   // Filtros remotos ainda carregando (ou que falharam) são ignorados até terem o Set de ids.
   const filteredList = useMemo(() => {
     const matchesSearch = createSearchMatcher(searchTerm);
     const gens = new Set();
+    const regions = new Set();
+    const rarities = new Set();
     const types = [];
     const eggGroups = [];
     const idSets = [];
+    const flags = [];
     for (const f of activeFilters) {
       if (f.type === "generation") gens.add(Number(f.value));
+      else if (f.type === "region") regions.add(f.value);
+      else if (f.type === "rarity") rarities.add(f.value);
       else if (f.type === "type") types.push(f.value);
       else if (f.type === "eggGroup") eggGroups.push(f.value);
+      else if (f.type === "mega") flags.push(["hasMega", f.value === "with"]);
+      else if (f.type === "gmax") flags.push(["hasGmax", f.value === "with"]);
       else if (remoteFilterSets[filterKey(f)] instanceof Set) idSets.push(remoteFilterSets[filterKey(f)]);
     }
-    if (!matchesSearch && !gens.size && !types.length && !eggGroups.length && !idSets.length) return pokemonList;
+    if (!matchesSearch && activeFilters.length === 0) return pokemonList;
     return pokemonList.filter((p) =>
       (!matchesSearch || matchesSearch(p)) &&
       (!gens.size || gens.has(p.generation)) &&
+      (!regions.size || (p.region !== null && (regions.has("any") || regions.has(p.region)))) &&
+      (!rarities.size || rarities.has(p.rarity ?? "common")) &&
       types.every((t) => p.types.includes(t)) &&
       eggGroups.every((g) => p.eggGroups.includes(g)) &&
+      flags.every(([flag, expected]) => p[flag] === expected) &&
       idSets.every((ids) => ids.has(p.id)));
   }, [pokemonList, searchTerm, activeFilters, remoteFilterSets]);
 

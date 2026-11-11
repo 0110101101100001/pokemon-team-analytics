@@ -69,10 +69,41 @@ const LABEL_PREFIX = {
   eggGroup: 'Ovos',
 };
 
+/** Filtros de valores fixos: { tipo: [{ value, label, option }] }. `option` é o texto no select. */
+export const FIXED_FILTERS = {
+  mega: [
+    { value: 'with', label: 'Com Mega Evolução', option: 'Com Mega' },
+    { value: 'without', label: 'Sem Mega Evolução', option: 'Sem Mega' },
+  ],
+  gmax: [
+    { value: 'with', label: 'Com Gigantamax', option: 'Com Gigantamax' },
+    { value: 'without', label: 'Sem Gigantamax', option: 'Sem Gigantamax' },
+  ],
+  region: [
+    { value: 'any', label: 'Formas regionais', option: 'Todas as regionais' },
+    { value: 'alola', label: 'Forma de Alola', option: 'Alola' },
+    { value: 'galar', label: 'Forma de Galar', option: 'Galar' },
+    { value: 'hisui', label: 'Forma de Hisui', option: 'Hisui' },
+    { value: 'paldea', label: 'Forma de Paldea', option: 'Paldea' },
+  ],
+  rarity: [
+    { value: 'legendary', label: 'Lendários', option: 'Lendários' },
+    { value: 'mythical', label: 'Míticos', option: 'Míticos' },
+    { value: 'common', label: 'Comuns', option: 'Comuns (nem lendário nem mítico)' },
+  ],
+  builds: [{ value: 'with', label: 'Com build da Smogon', option: 'Com build da Smogon' }],
+};
+
+// Tipos em que só um valor faz sentido por vez: escolher "Sem Mega" substitui "Com Mega".
+export const SINGLE_VALUE_FILTERS = new Set(['mega', 'gmax', 'builds']);
+
 /** Cria o objeto de filtro com a etiqueta da pílula. */
 export function createFilter(type, value) {
   if (type === 'generation') {
     return { type, value, label: GENERATIONS.find((g) => g.value === value)?.label ?? `Gen ${value}` };
+  }
+  if (FIXED_FILTERS[type]) {
+    return { type, value, label: FIXED_FILTERS[type].find((option) => option.value === value)?.label ?? value };
   }
   const name = type === 'eggGroup' ? eggGroupLabel(value) : formatSlug(value);
   return { type, value, label: `${LABEL_PREFIX[type]}: ${name}` };

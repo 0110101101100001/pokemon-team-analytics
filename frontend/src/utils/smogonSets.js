@@ -1,4 +1,4 @@
-import { resolveSmogonName } from './smogon';
+import { buildSmogonNameIndex, resolveSmogonName } from './smogon';
 
 // Ordem de preferência dos formatos; os que não estiverem aqui vão para o fim, em ordem alfabética.
 const TIER_LABELS = {
@@ -92,6 +92,12 @@ export async function fetchSmogonSets(variety) {
       sets: Object.entries(sets).map(([name, raw]) => normalizeSet(name, raw)),
     }));
   return { smogonName, tiers };
+}
+
+/** Ids das entradas da grade que têm pelo menos uma build no arquivo local. */
+export async function fetchPokemonIdsWithBuilds(entries) {
+  const index = buildSmogonNameIndex(entries, Object.keys(await loadAllSets()));
+  return new Set(entries.filter((entry) => index.has(entry.name)).map((entry) => entry.id));
 }
 
 /**
