@@ -7,8 +7,8 @@ import { useDebouncedValue } from '../hooks/useDebouncedValue';
 const SEARCH_DEBOUNCE_MS = 250;
 
 const FIELD_CLASS =
-  'h-10 w-full rounded-xl border border-[#F7F3EE]/30 bg-[#3E2A1F]/90 text-[#F7F3EE] [color-scheme:dark] shadow-inner transition-colors hover:border-[#F7F3EE]/50 focus:outline-none focus:ring-2 focus:ring-[#A4C294]/70 focus:border-[#A4C294]';
-const SELECT_CLASS = `${FIELD_CLASS} appearance-none pl-3 pr-9 text-xs font-serif font-semibold tracking-wide cursor-pointer`;
+  'h-9 sm:h-10 w-full rounded-xl border border-[#F7F3EE]/30 bg-[#3E2A1F]/90 text-[#F7F3EE] [color-scheme:dark] shadow-inner transition-colors hover:border-[#F7F3EE]/50 focus:outline-none focus:ring-2 focus:ring-[#A4C294]/70 focus:border-[#A4C294]';
+const SELECT_CLASS = `${FIELD_CLASS} appearance-none pl-2.5 pr-7 sm:pl-3 sm:pr-9 text-xs font-serif font-semibold tracking-wide cursor-pointer`;
 const TEXT_INPUT_BASE = `${FIELD_CLASS} pl-9 text-sm font-serif placeholder:italic placeholder:text-[#F7F3EE]/75`;
 const TEXT_INPUT_CLASS = `${TEXT_INPUT_BASE} pr-3`;
 const OPTION_CLASS = 'bg-[#2A1C14] text-[#F7F3EE] font-sans';
@@ -22,7 +22,7 @@ function HeaderSelect({ label, placeholder, onChange, className = 'sm:w-36 sm:sh
         {children}
       </select>
       <ChevronDown
-        className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[#F7F3EE]/85"
+        className="pointer-events-none absolute right-2 sm:right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[#F7F3EE]/85"
         aria-hidden="true"
       />
     </div>
@@ -105,7 +105,7 @@ const SuggestInput = memo(function SuggestInput({ id, label, placeholder, loadOp
   );
 });
 
-function FiltersBar({ onSearchChange, onAddFilter, advancedOpen, advancedCount, onToggleAdvanced }) {
+function FiltersBar({ onSearchChange, onAddFilter, advancedOpen, advancedCount, onToggleAdvanced, compact = false }) {
   const [query, setQuery] = useState('');
   // O campo responde a cada tecla; a lista só é refiltrada quando a digitação pausa.
   // Esvaziar o campo propaga na hora, para limpar a busca sem esperar.
@@ -119,8 +119,13 @@ function FiltersBar({ onSearchChange, onAddFilter, advancedOpen, advancedCount, 
     e.target.value = '';
   }, [onAddFilter]);
 
+  // Celular: busca numa linha e os três filtros lado a lado na de baixo; essa segunda linha
+  // se recolhe ao rolar (`compact`), a não ser que os filtros avançados estejam abertos.
+  // sm+: tudo numa linha só (o wrapper vira `contents` e some do layout).
+  const filtersHidden = compact && !advancedOpen;
+
   return (
-    <div className="flex w-full flex-col gap-2 sm:flex-row sm:items-center">
+    <div className="flex w-full flex-col sm:flex-row sm:items-center sm:gap-2">
       <label className="relative w-full sm:min-w-0 sm:flex-1">
         <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[#F7F3EE]/85" aria-hidden="true" />
         <input
@@ -133,6 +138,11 @@ function FiltersBar({ onSearchChange, onAddFilter, advancedOpen, advancedCount, 
         />
       </label>
 
+      <div
+        className={`grid grid-cols-3 gap-1.5 overflow-hidden transition-[max-height,opacity,margin] duration-200 motion-reduce:transition-none sm:contents ${
+          filtersHidden ? 'max-sm:invisible max-sm:mt-0 max-sm:max-h-0 max-sm:opacity-0' : 'max-sm:mt-1.5 max-sm:max-h-10'
+        }`}
+      >
       <HeaderSelect label="Filtrar por geração" placeholder="Geração" onChange={handleSelect('generation')}>
         {GENERATIONS.map((gen) => (
           <option key={gen.value} value={gen.value} className={OPTION_CLASS}>{gen.label}</option>
@@ -150,7 +160,7 @@ function FiltersBar({ onSearchChange, onAddFilter, advancedOpen, advancedCount, 
         onClick={onToggleAdvanced}
         aria-expanded={advancedOpen}
         aria-controls="advanced-filters"
-        className={`relative h-10 shrink-0 inline-flex items-center justify-center gap-2 px-3.5 rounded-xl border text-xs font-serif font-semibold tracking-wide transition-colors cursor-pointer ${
+        className={`relative h-9 sm:h-10 sm:shrink-0 inline-flex items-center justify-center gap-1.5 sm:gap-2 px-2 sm:px-3.5 rounded-xl border text-xs font-serif font-semibold tracking-wide transition-colors cursor-pointer ${
           advancedOpen
             ? 'bg-[#A4C294] border-[#A4C294] text-[#2A1C14]'
             : 'bg-[#3E2A1F]/90 border-[#F7F3EE]/30 text-[#F7F3EE] hover:border-[#F7F3EE]/50'
@@ -164,6 +174,7 @@ function FiltersBar({ onSearchChange, onAddFilter, advancedOpen, advancedCount, 
           </span>
         )}
       </button>
+      </div>
     </div>
   );
 }

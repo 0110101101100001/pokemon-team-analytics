@@ -185,22 +185,22 @@ export default function App() {
         <InkSplatter className="hidden md:block absolute -top-6 right-[8%] w-36 h-36 opacity-[0.14] mix-blend-multiply rotate-12" color="#2A1C14" />
         <InkSplatter className="hidden md:block absolute -bottom-10 left-[22%] w-24 h-24 opacity-[0.16] -rotate-45" color="#A4C294" />
 
-        <div className={`relative max-w-[1700px] mx-auto px-4 sm:px-6 lg:px-8 ${EASE} ${collapsed ? "py-2" : "py-4"}`}>
+        <div className={`relative max-w-[1700px] mx-auto px-4 sm:px-6 lg:px-8 ${EASE} ${collapsed ? "py-2" : "py-2 sm:py-4"}`}>
           {/*
             Logotipo à esquerda, ações à direita e a barra de pesquisa/filtros como bloco central de largura limitada.
             Abaixo de 2xl a barra desce para uma 2ª linha, centrada; em 2xl as três zonas ficam numa grade.
           */}
-          <div className="flex flex-wrap items-center gap-x-4 gap-y-3 2xl:grid 2xl:grid-cols-[auto_minmax(0,1fr)_auto] 2xl:gap-6">
-            <div className="order-1 flex items-center gap-3 shrink-0">
+          <div className="flex flex-wrap items-center gap-x-2 gap-y-2 sm:gap-x-4 sm:gap-y-3 2xl:grid 2xl:grid-cols-[auto_minmax(0,1fr)_auto] 2xl:gap-6">
+            <div className="order-1 flex min-w-0 items-center gap-3 sm:shrink-0">
               <div className={`hidden shrink-0 overflow-hidden md:block ${EASE} ${collapsed ? "w-0 opacity-0 -mr-4" : "w-16 opacity-100"}`}>
                 <SmeargleMascote />
               </div>
-              <div className={`relative isolate min-w-0 ${EASE} ${collapsed ? "px-3 py-1" : "px-4 py-2"}`}>
+              <div className={`relative isolate min-w-0 ${EASE} ${collapsed ? "px-3 py-1" : "px-3 py-1 sm:px-4 sm:py-2"}`}>
                 <InkSplash />
-                <h1 className={`font-black font-serif tracking-tight leading-none text-[#FFFDF9] [text-shadow:0_1px_2px_rgba(38,26,19,0.35)] ${EASE} ${collapsed ? "text-xl" : "text-2xl sm:text-3xl"}`}>
+                <h1 className={`font-black font-serif tracking-tight leading-none text-[#FFFDF9] [text-shadow:0_1px_2px_rgba(38,26,19,0.35)] ${EASE} ${collapsed ? "text-lg sm:text-xl" : "text-xl sm:text-3xl"}`}>
                   Smeargle<span className="text-[#B7D99F]">pedia</span>
                 </h1>
-                <p className={`overflow-hidden text-[11px] uppercase tracking-wider font-bold text-[#FFFDF9]/80 ${EASE} ${collapsed ? "max-h-0 opacity-0 mt-0" : "max-h-5 opacity-100 mt-1"}`}>
+                <p className={`hidden sm:block overflow-hidden text-[11px] uppercase tracking-wider font-bold text-[#FFFDF9]/80 ${EASE} ${collapsed ? "max-h-0 opacity-0 mt-0" : "max-h-5 opacity-100 mt-1"}`}>
                   Pokédex • Filtros • Detalhes Smogon
                 </p>
               </div>
@@ -213,10 +213,11 @@ export default function App() {
                 advancedOpen={advancedOpen}
                 advancedCount={advancedCount}
                 onToggleAdvanced={toggleAdvanced}
+                compact={collapsed}
               />
             </div>
 
-            <div className="order-2 ml-auto flex items-center gap-2 shrink-0 2xl:order-3">
+            <div className="order-2 ml-auto flex items-center gap-1.5 sm:gap-2 shrink-0 2xl:order-3">
               <TeamBuilderButton onClick={openBuilder} count={team.length} />
               <AuthButton session={session} onOpen={openAuth} />
               <AboutButton onClick={openAbout} />
@@ -229,7 +230,7 @@ export default function App() {
         <TornEdge className={`absolute left-0 top-full -mt-px text-[#78614E] ${EASE} ${collapsed ? "opacity-[0.88]" : "opacity-[0.96]"}`} />
       </header>
 
-      <main className="relative max-w-[1700px] mx-auto px-4 sm:px-6 lg:px-8 pt-10 pb-16">
+      <main className="relative max-w-[1700px] mx-auto px-4 sm:px-6 lg:px-8 pt-6 sm:pt-10 pb-16">
         <InkSplatter className="hidden md:block absolute -left-10 top-24 w-40 h-40 opacity-[0.07] mix-blend-multiply -rotate-12" color="#785132" />
         <InkSplatter className="hidden md:block absolute right-0 bottom-40 w-28 h-28 opacity-[0.08] mix-blend-multiply rotate-[160deg]" color="#829b72" />
 
