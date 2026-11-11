@@ -51,10 +51,6 @@ poetry.lock
 .DS_Store
 Thumbs.db
 
-# Docker / build
-.dockerignore
-.docker/
-
 # Testes e cobertura
 .pytest_cache/
 .coverage
@@ -74,9 +70,6 @@ frontend/build/
 frontend/dist/
 frontend/.cache/
 frontend/*.local
-
-# Kubernetes / kustomize (se houver geração local)
-k8s/rendered/
 
 # Cache do scraper da Smogon (caso seja criado futuramente)
 scraper/cache/

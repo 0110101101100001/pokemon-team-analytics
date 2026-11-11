@@ -1,198 +1,131 @@
-# Pokémon Team Analytics
+# Smearglepedia
 
-Monorepo fullstack para uma Pokédex e Team Builder competitivo, com estatísticas da Smogon sincronizadas no Supabase e recomendações de time via FastAPI.
+Pokédex com dados competitivos da Smogon e um team builder. O frontend é React + Vite e está no Netlify; a API é FastAPI e está no Render. Os dados e a autenticação ficam no Supabase.
 
 ## Estrutura
 
 ```
-backend/           # Serviço FastAPI (Python)
+backend/
   app/
-    main.py        # Entrypoint da API
-    core/          # config.py (env), security.py (JWT Supabase)
-    routers/       # Rotas da API (pokemon_stats.py, etc.)
-    scrapers/      # Scraper da Smogon (update_smogon.py)
-    services/      # Lógica de recomendação, PokeAPI, ML
-    schemas/       # Pydantic (recommendation.py, pokemon_stats.py, etc.)
-  requirements.txt # Dependências Python
-  .env             # Variáveis de ambiente (SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY, ...)
-  Dockerfile       # Imagem Docker do backend
-scraper/           # (antigo local do script; mantido vazio após a migração)
-frontend/          # Aplicação frontend
-k8s/               # Manifests Kubernetes
+    main.py          rotas /health, /api/recommend, /api/admin/sync-smogon
+    core/            config.py (variáveis de ambiente), security.py (JWT do Supabase)
+    routers/         pokemon_stats.py
+    scrapers/        update_smogon.py
+    services/        recomendação, PokéAPI
+    schemas/         modelos Pydantic
+  requirements.txt
+  Dockerfile
+frontend/            React + Vite + Tailwind
+netlify.toml         build e headers do frontend
+docker-compose.yml   backend local
 ```
 
-## Scraper da Smogon (`update_smogon.py`)
+## Desenvolvimento local
 
-O script `backend/app/scrapers/update_smogon.py` baixa, trata (parsing) e sincroniza as estatísticas de moveset da Smogon no Supabase (tabela `smogon_stats`).
-
-### Dependências
-O script utiliza `requests`, `python-dotenv` e `supabase`. Todas já estão listadas em `backend/requirements.txt`:
-```
-fastapi==0.110.0
-uvicorn==0.30.0
-python-dotenv==1.0.0
-pyjwt>=2.15.1
-supabase>=2.10.0
-websockets>=14.0
-requests==2.31.0
-pandas>=2.2.0
-numpy>=1.26.0
-httpx==0.24.0
-scikit-learn>=1.4.0
-```
-
-### Variáveis de ambiente obrigatórias
-
-Crie/confira `backend/.env` com, no mínimo:
-
-```
-SUPABASE_URL=https://seu-projeto.supabase.co
-SUPABASE_SERVICE_ROLE_KEY=sua_chave_service_role_do_supabase_aqui
-SUPABASE_JWT_SECRET=seu_jwt_secret_do_supabase_aqui
-DEFAULT_TIER=gen9ou
-SMOGON_STATS_TABLE=smogon_stats
-```
-
-## Rodando o scraper
-
-### 1. Manualmente (sem Docker)
-
-A partir da pasta `backend/`:
+Backend, a partir de `backend/`:
 
 ```bash
-# Instale as dependências
+cp .env.example .env
 pip install -r requirements.txt
+uvicorn app.main:app --reload --port 8000
+```
 
-# Execute o scraper diretamente
+Ou, na raiz, `docker compose up --build`.
+
+Frontend, a partir de `frontend/`:
+
+```bash
+cp .env.example .env
+npm install
+npm run dev
+```
+
+Em desenvolvimento `VITE_API_URL` fica vazio e o Vite encaminha `/api` para `http://localhost:8000`.
+
+## Variáveis de ambiente
+
+Backend (`backend/.env`, ou Environment no Render):
+
+| Variável | Obrigatória | Notas |
+|---|---|---|
+| `SUPABASE_URL` | sim | |
+| `SUPABASE_SERVICE_ROLE_KEY` | sim | só no servidor |
+| `SUPABASE_JWT_SECRET` | sim | valida os tokens enviados pelo frontend |
+| `ALLOWED_ORIGINS` | não | origens CORS separadas por vírgula; por omissão `http://localhost:5173` |
+| `DEFAULT_TIER` | não | por omissão `gen9ou` |
+| `SMOGON_BADGE_TIERS` | não | tiers considerados para o selo "Smogon" na grelha |
+
+Frontend (`frontend/.env`, ou Environment variables no Netlify):
+
+| Variável | Notas |
+|---|---|
+| `VITE_API_URL` | URL do serviço no Render; vazio em desenvolvimento |
+| `VITE_SUPABASE_URL` | |
+| `VITE_SUPABASE_ANON_KEY` | chave anon, nunca a service role |
+
+As `VITE_*` são embutidas no bundle durante o build. Depois de as alterar no Netlify é preciso fazer um novo deploy.
+
+## Deploy
+
+**Frontend (Netlify).** O `netlify.toml` na raiz já define `base = "frontend"`, o comando de build, a pasta `dist`, os headers de cache e o fallback de SPA. Basta ligar o repositório e definir as três `VITE_*`.
+
+**Backend (Render).** Web Service com Root Directory `backend`, usando o `Dockerfile` ou o runtime Python:
+
+- Build: `pip install -r requirements.txt`
+- Start: `uvicorn app.main:app --host 0.0.0.0 --port $PORT`
+- Health check: `/health`
+
+`ALLOWED_ORIGINS` tem de incluir o domínio do Netlify, sem barra no fim.
+
+No plano gratuito o Render adormece o serviço após 15 minutos sem tráfego, e o primeiro pedido seguinte demora a responder. O Supabase gratuito também pausa projetos inativos; o workflow `.github/workflows/supabase-keepalive.yml` faz um pedido a cada três dias para o evitar.
+
+### Cron Jobs no Render
+
+Dois Cron Jobs, criados em New > Cron Job a partir do mesmo repositório. Os horários são em UTC.
+
+| | Keepalive | Atualização da Smogon |
+|---|---|---|
+| Root Directory | `backend` | `backend` |
+| Build Command | `echo ok` | `pip install -r requirements.txt` |
+| Command | `curl -fsS --retry 3 --max-time 90 "$BACKEND_HEALTH_URL"` | `python -m app.scrapers.update_smogon` |
+| Schedule | `*/10 * * * *` | `0 6 2 * *` |
+| Variáveis | `BACKEND_HEALTH_URL` (URL pública do serviço + `/health`) | `SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY`, `PYTHON_VERSION` |
+
+A atualização corre no dia 2 porque a Smogon nem sempre publica as estatísticas do mês anterior logo no dia 1. O comando termina com erro se algum tier falhar, e a execução fica marcada como falhada no painel.
+
+## Dados da Smogon
+
+`backend/app/scrapers/update_smogon.py` descarrega os ficheiros de uso e de moveset de `smogon.com/stats/<mês>/` para os tiers da Geração 9 (OU, Ubers, UU, RU, NU, PU, LC, Doubles OU) e faz upsert na tabela `smogon_stats`, com chave única `(name, tier, date)`. As linhas do mesmo tier e mês são apagadas antes de serem regravadas.
+
+```bash
+cd backend
 python -m app.scrapers.update_smogon
 ```
 
-O script processa os tiers `gen9ou`, `gen9uu`, `gen9ubers` e `gen9doublesou` para a data `2026-10`, faz o parsing dos arquivos da Smogon e grava/atualiza (upsert) na tabela `smogon_stats` do Supabase.
-
-### 2. Via Docker
-
-Na raiz do projeto:
+Sem argumentos, sincroniza o mês anterior ao corrente. Para outro mês:
 
 ```bash
-# Levanta o container do backend
-docker-compose up --build
-
-# A API fica disponível em http://localhost:8000
+python -m app.scrapers.update_smogon 2026-10
 ```
 
-O `Dockerfile` já instala `requests` (e demais dependências), então o container sobe sem erros relacionadas ao scraper.
+A API usa sempre o mês mais recente que existir na tabela.
 
-## Endpoint de sincronização sob demanda
+A sincronização também pode ser disparada pela API, em segundo plano, com `POST /api/admin/sync-smogon`.
 
-A API expõe um endpoint administrativo que dispara a sincronização da Smogon:
+## API
 
-```
-POST /api/admin/sync-smogon
-```
+| Método | Caminho | Auth | |
+|---|---|---|---|
+| GET | `/health` | não | |
+| GET | `/api/smogon/names` | não | Pokémon com dados na Smogon, por tier |
+| GET | `/api/pokemon/{name}/stats` | não | estatísticas de um Pokémon (`?tier=`, `?date=`) |
+| POST | `/api/recommend` | sim | recomendação para a equipa |
+| POST | `/api/admin/sync-smogon` | sim | sincronização com a Smogon |
 
-- **Autenticação:** requer `Authorization: Bearer <token_jwt_do_supabase>` (mesma dependência de `/api/recommend`).
-- **Execução:** a tarefa roda em segundo plano (`BackgroundTasks`); o endpoint retorna imediatamente com `status: "accepted"`.
-- **Efeito:** chama `run_sync()` do scraper, que baixa os movesets da Smogon e faz upsert na tabela `smogon_stats`.
-
-Exemplo com `curl`:
+As rotas autenticadas esperam `Authorization: Bearer <access token do Supabase>`. A documentação interativa fica em `/docs`.
 
 ```bash
-curl -X POST http://localhost:8000/api/admin/sync-smogon \
-  -H "Authorization: Bearer SEU_TOKEN_JWT"
-```
-
-Resposta esperada:
-
-```json
-{
-  "status": "accepted",
-  "message": "Sincronização da Smogon iniciada em segundo plano.",
-  "endpoint": "/api/admin/sync-smogon"
-}
-```
-
-## Endpoint público: estatísticas de um Pokémon
-
-O frontend pode consultar os dados estatísticos de um Pokémon específico através do endpoint público:
-
-```
-GET /api/pokemon/{name}/stats
-```
-
-### Parâmetros
-
-| Parâmetro | Tipo | Obrigatório | Padrão | Descrição |
-|-----------|------|-------------|--------|-----------|
-| `name` | path | Sim | — | Nome do Pokémon (ex: `Great Tusk`) |
-| `tier` | query | Não | `gen9ou` | Tier da Smogon (ex: `gen9ou`, `gen9uu`, `gen9ubers`, `gen9doublesou`) |
-| `date` | query | Não | mais recente | Mês de referência (ex: `2026-10`). Se omitido, retorna o mês mais recente disponível. |
-
-### Exemplo com `curl`
-
-```bash
-# Estatísticas do Great Tusk no gen9ou (mês mais recente)
 curl "http://localhost:8000/api/pokemon/Great%20Tusk/stats?tier=gen9ou"
-
-# Estatísticas de um mês específico
-curl "http://localhost:8000/api/pokemon/Gholdengo/stats?tier=gen9ou&date=2026-10"
 ```
 
-### Resposta (exemplo)
-
-```json
-{
-  "name": "Great Tusk",
-  "tier": "gen9ou",
-  "date": "2026-10",
-  "raw_count": 12345,
-  "usage_percent": 28.5,
-  "abilities": { "Protosynthesis": 98.2 },
-  "items": { "Booster Energy": 88.1, "Leftovers": 5.2 },
-  "moves": { "Headlong Rush": 75.3, "Close Combat": 60.1 },
-  "spreads": { "Adamant:252/252/4/0/0/0": 40.5 },
-  "tera_types": { "Fighting": 35.2, "Steel": 20.1 },
-  "teammates": { "Iron Valiant": 15.3, "Raging Bolt": 12.8 },
-  "checks_and_counters": [
-    { "pokemon": "Iron Valiant", "score": 85.2, "ko_pct": 42.1, "switch_pct": 30.5 }
-  ]
-}
-```
-
-- **Autenticação:** não é necessária (endpoint público).
-- **404 Not Found:** se o Pokémon não existir para o tier/data informados.
-
-## Frontend (React + Vite + Tailwind)
-
-A aplicação frontend está em `frontend/` e consome o backend FastAPI através do proxy do Vite (`/api` → `http://localhost:8000`).
-
-### Executar o frontend
-
-```bash
-cd frontend
-npm install
-npm run dev   # http://localhost:5173
-```
-
-### Funcionalidades da Pokédex
-
-- **Listagem (Grid):** cards com sprite oficial, nome, número e tipos elementares.
-- **Filtros:** busca por nome, seletor de tier (OU/UU/Ubers/Doubles) e mês de referência.
-- **Painel lateral (Drawer):** ao clicar em um Pokémon, exibe estatísticas competitivas do Smogon (taxa de uso, habilidades, itens, moves, checks/counters) buscadas em `GET /api/pokemon/{name}/stats`.
-
-Documentação detalhada em `frontend/README.md`.
-
-## Automação agendada (opcional)
-
-Para rodar periodicamente (ex: todo mês, quando a Smogon publica novas estatísticas), você pode:
-
-- Chamar `POST /api/admin/sync-smogon` a partir de um cron job / GitHub Actions / Cloud Scheduler, passando um token de serviço válido.
-- Ou executar o script diretamente em um container/job: `docker run ... python -m app.scrapers.update_smogon`.
-
-## Endpoints principais
-
-| Método | Caminho | Descrição | Auth |
-|--------|---------|-----------|------|
-| GET | `/health` | Health check | Não |
-| GET | `/api/pokemon/{name}/stats` | Estatísticas de um Pokémon na Smogon | Não |
-| POST | `/api/recommend` | Recomendação de Pokémon/time (autenticado) | Sim |
-| POST | `/api/admin/sync-smogon` | Sincronização sob demanda dos dados da Smogon (autenticado) | Sim |
+`/api/pokemon/{name}/stats` devolve 404 quando não há dados para esse Pokémon no tier e mês pedidos.

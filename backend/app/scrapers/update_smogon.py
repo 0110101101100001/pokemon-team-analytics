@@ -1,5 +1,7 @@
+import datetime
 import os
 import re
+import sys
 from pathlib import Path
 from typing import List, Optional
 
@@ -229,17 +231,25 @@ def parse_general_stats(file_content: str) -> dict:
     return general_data
 
 
+def previous_month(today: Optional[datetime.date] = None) -> str:
+    """Mês mais recente publicado pela Smogon (AAAA-MM): o anterior ao corrente."""
+    today = today or datetime.date.today()
+    return (today.replace(day=1) - datetime.timedelta(days=1)).strftime("%Y-%m")
+
+
 def run_sync(
-    date: str = "2026-10",
+    date: Optional[str] = None,
     tiers: Optional[List[str]] = None,
 ) -> dict:
     """Executa a sincronização completa de estatísticas da Smogon no Supabase.
 
     Para cada tier, baixa o arquivo de moveset e o de estatísticas gerais,
     faz o parsing, limpa as linhas antigas do tier/mês e faz upsert dos dados.
+    Sem ``date``, sincroniza o mês anterior ao corrente.
 
     Retorna um resumo com os tiers processados e a quantidade de Pokémons.
     """
+    date = date or previous_month()
     if tiers is None:
         tiers = DEFAULT_TIERS_GEN9
 
@@ -314,4 +324,7 @@ def run_sync(
 
 
 if __name__ == "__main__":
-    run_sync()
+    # Uso: python -m app.scrapers.update_smogon [AAAA-MM]
+    summary = run_sync(date=sys.argv[1] if len(sys.argv) > 1 else None)
+    # Código de saída != 0 para o agendador (Render Cron Job) marcar a execução como falhada.
+    sys.exit(1 if summary["errors"] or not summary["tiers_processados"] else 0)
