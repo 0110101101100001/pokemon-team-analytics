@@ -1,46 +1,60 @@
 # Smearglepedia
 
-Pokédex com dados competitivos da Smogon e um team builder. O frontend é React + Vite e está no Netlify; a API é FastAPI e está no Render. Os dados e a autenticação ficam no Supabase.
+Pokédex com dados competitivos da Smogon, fichas de campo e um team builder.
 
-## Estrutura
+**Produção:** [smearglepedia.netlify.app](https://smearglepedia.netlify.app) · API: [pokemon-team-analytics.onrender.com](https://pokemon-team-analytics.onrender.com/docs)
 
-```
-backend/
-  app/
-    main.py          rotas /health, /api/recommend, /api/admin/sync-smogon
-    core/            config.py (variáveis de ambiente), security.py (JWT do Supabase)
-    routers/         pokemon_stats.py
-    scrapers/        update_smogon.py
-    services/        recomendação, PokéAPI
-    schemas/         modelos Pydantic
-  requirements.txt
-  Dockerfile
-frontend/            React + Vite + Tailwind
-netlify.toml         build e headers do frontend
-docker-compose.yml   backend local
-```
+![Tela inicial da Smearglepedia](img.png)
 
-## Desenvolvimento local
+## Arquitetura
 
-Backend, a partir de `backend/`:
+| Camada | Tecnologia | Hospedagem |
+|---|---|---|
+| Frontend | SPA em React 18 + Vite + Tailwind | Netlify |
+| Backend | FastAPI (Python 3.11) | Render |
+| Banco de dados e autenticação | Supabase (Postgres + Auth) | Supabase |
+| Dados de Pokémon | PokéAPI, consultada direto pelo navegador | — |
+| Dados competitivos | Estatísticas mensais da Smogon, importadas para a tabela `smogon_stats` | — |
+
+O frontend busca na PokéAPI os dados de espécies, golpes e habilidades, e no backend as estatísticas da Smogon. O login e os times salvos usam o Supabase direto, com a chave anon. O backend valida o JWT do Supabase nas rotas protegidas e é o único que usa a service role.
+
+## Funcionalidades
+
+- **Pokédex:** 1025 espécies e 133 formas regionais e alternativas, com filtros por geração, tipo, habilidade, golpe e grupo de ovos.
+  - A grade monta 24 cards por vez e carrega o próximo lote ao rolar.
+  - A busca por nome ou número só refiltra quando a digitação pausa (debounce de 250 ms).
+- **Ficha de campo:**
+  - status base, fraquezas e resistências, árvore evolutiva, locais de encontro e cry;
+  - formas alternativas e versão shiny;
+  - painel competitivo da Smogon por tier e learnset por geração.
+- **Modais de habilidades e golpes:** abrem ao clicar na ficha, no painel Smogon ou na tabela de movimentos.
+  - Mostram tipo, categoria, poder, precisão, PP, alvo e o efeito em batalha.
+  - Os textos vêm da PokéAPI em pt-BR quando existem e caem para o inglês, com aviso, quando não há tradução. Hoje a PokéAPI tem pouca tradução em português.
+- **Team Builder:** time de até 6 Pokémon.
+  - Sugere candidatos por cobertura de tipos e sinergia no meta da Smogon.
+  - Mostra a tabela de fraquezas e cobertura do time.
+  - Times salvos na conta do usuário.
+- **Mobile:** em telas pequenas, blur, sombras longas, a inclinação 3D dos cards e o embed do mascote ficam desligados.
+
+## Rodando localmente
+
+Pré-requisitos: Docker (ou Python 3.11), Node 22 e um projeto Supabase.
 
 ```bash
-cp .env.example .env
-pip install -r requirements.txt
-uvicorn app.main:app --reload --port 8000
-```
+# Backend em http://localhost:8000 (documentação em /docs)
+cp backend/.env.example backend/.env    # preencha as chaves do Supabase
+docker compose up --build
 
-Ou, na raiz, `docker compose up --build`.
-
-Frontend, a partir de `frontend/`:
-
-```bash
+# Frontend em http://localhost:5173, em outro terminal
+cd frontend
 cp .env.example .env
 npm install
 npm run dev
 ```
 
-Em desenvolvimento `VITE_API_URL` fica vazio e o Vite redireciona `/api` para `http://localhost:8000`.
+O `docker-compose.yml` sobe só o backend. Em desenvolvimento `VITE_API_URL` fica vazio e o Vite redireciona `/api` para `http://localhost:8000`.
+
+Sem Docker, o backend roda a partir de `backend/` com `pip install -r requirements.txt` e `uvicorn app.main:app --reload --port 8000`.
 
 ## Variáveis de ambiente
 
@@ -67,15 +81,15 @@ As `VITE_*` são embutidas no bundle durante o build. Depois de alterá-las no N
 
 ## Deploy
 
-**Frontend (Netlify).** O `netlify.toml` na raiz já define `base = "frontend"`, o comando de build, a pasta `dist`, os headers de cache e o fallback de SPA. Basta conectar o repositório e definir as três `VITE_*`.
+**Frontend (Netlify).** O `netlify.toml` na raiz define `base = "frontend"`, o build, a pasta `dist`, os headers de cache e o fallback de SPA. Basta conectar o repositório e definir as três `VITE_*`.
 
-**Backend (Render).** Web Service com Root Directory `backend`, usando o `Dockerfile` ou o runtime Python:
+**Backend (Render).** Web Service com Root Directory `backend`:
 
 - Build: `pip install -r requirements.txt`
 - Start: `uvicorn app.main:app --host 0.0.0.0 --port $PORT`
 - Health check: `/health`
 
-`ALLOWED_ORIGINS` precisa incluir o domínio do Netlify, sem barra no final.
+`ALLOWED_ORIGINS` precisa incluir `https://smearglepedia.netlify.app`, sem barra no final.
 
 No plano gratuito o Render suspende o serviço após 15 minutos sem tráfego, e a primeira requisição seguinte demora para responder. O Supabase gratuito também pausa projetos inativos.
 
@@ -87,30 +101,19 @@ No plano gratuito o Render suspende o serviço após 15 minutos sem tráfego, e 
 | `smogon-sync.yml` | dia 2, 06:00 | `POST /api/admin/sync-smogon` e espera até todos os tiers estarem no mês anterior | `SUPABASE_JWT_SECRET` |
 | `supabase-keepalive.yml` | de 3 em 3 dias, 09:00 | consulta a tabela `smogon_stats` no Supabase | `SUPABASE_URL`, `SUPABASE_KEY` |
 
-Os secrets ficam em Settings > Secrets and variables > Actions. `SUPABASE_JWT_SECRET` é o mesmo valor configurado no Render; o workflow o usa para assinar um token que expira em 5 minutos.
-
-A sincronização corre no dia 2 porque a Smogon nem sempre publica as estatísticas do mês anterior logo no dia 1. Os três workflows também podem ser disparados manualmente na aba Actions.
-
-O GitHub desativa workflows agendados após 60 dias sem atividade no repositório, e os agendamentos podem atrasar alguns minutos.
+Os secrets ficam em Settings > Secrets and variables > Actions. O GitHub desativa workflows agendados após 60 dias sem atividade no repositório.
 
 ## Dados da Smogon
 
-`backend/app/scrapers/update_smogon.py` baixa os arquivos de uso e de moveset de `smogon.com/stats/<mês>/` para os tiers da Geração 9 (OU, Ubers, UU, RU, NU, PU, LC, Doubles OU) e faz upsert na tabela `smogon_stats`, com chave única `(name, tier, date)`. As linhas do mesmo tier e mês são apagadas antes de serem regravadas.
+`backend/app/scrapers/update_smogon.py` baixa os arquivos de uso e de moveset de `smogon.com/stats/<mês>/` para os tiers da Geração 9 (OU, Ubers, UU, RU, NU, PU, LC, Doubles OU) e faz upsert na tabela `smogon_stats`, com chave única `(name, tier, date)`.
 
 ```bash
 cd backend
-python -m app.scrapers.update_smogon
-```
-
-Sem argumentos, sincroniza o mês anterior ao atual. Para outro mês:
-
-```bash
-python -m app.scrapers.update_smogon 2026-10
+python -m app.scrapers.update_smogon            # mês anterior ao atual
+python -m app.scrapers.update_smogon 2026-10    # mês específico
 ```
 
 A API usa sempre o mês mais recente que existir na tabela.
-
-A sincronização também pode ser disparada pela API, em segundo plano, com `POST /api/admin/sync-smogon`.
 
 ## API
 
@@ -122,10 +125,26 @@ A sincronização também pode ser disparada pela API, em segundo plano, com `PO
 | POST | `/api/recommend` | sim | recomendação para o time |
 | POST | `/api/admin/sync-smogon` | sim | sincronização com a Smogon |
 
-As rotas autenticadas esperam `Authorization: Bearer <access token do Supabase>`. A documentação interativa fica em `/docs`.
+As rotas autenticadas esperam `Authorization: Bearer <access token do Supabase>`.
 
-```bash
-curl "http://localhost:8000/api/pokemon/Great%20Tusk/stats?tier=gen9ou"
+## Estrutura
+
 ```
-
-`/api/pokemon/{name}/stats` retorna 404 quando não há dados para esse Pokémon no tier e mês solicitados.
+backend/
+  app/
+    main.py          rotas /health, /api/recommend, /api/admin/sync-smogon
+    core/            configuração e validação do JWT
+    routers/         estatísticas da Smogon
+    scrapers/        importação da Smogon
+    services/        recomendação e PokéAPI
+    schemas/         modelos Pydantic
+frontend/
+  src/
+    components/      grade, ficha, modais, team builder
+    hooks/           debounce, pontuação do team builder, header recolhível
+    services/        PokéAPI, backend e Supabase
+    utils/           filtros, evoluções, tabela de tipos, pontuação
+.github/workflows/   keep-alive e sincronização mensal
+netlify.toml         build e headers do frontend
+docker-compose.yml   backend local
+```
