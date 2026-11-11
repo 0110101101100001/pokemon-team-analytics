@@ -1,0 +1,86 @@
+name: Sincronização mensal da Smogon
+
+on:
+  schedule:
+    # Dia 2 às 06:00 UTC: a Smogon nem sempre publica o mês anterior logo no dia 1.
+    - cron: '0 6 2 * *'
+  workflow_dispatch:
+
+permissions: {}
+
+concurrency:
+  group: smogon-sync
+  cancel-in-progress: false
+
+env:
+  API_URL: https://pokemon-team-analytics.onrender.com
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - name: Acordar o backend
+        run: curl -fsS --retry 5 --retry-delay 15 --max-time 90 -o /dev/null "$API_URL/health"
+
+      # O endpoint valida um JWT HS256 assinado com o JWT secret do Supabase.
+      # O token gerado aqui dura 5 minutos e não inclui a claim `role`, por isso
+      # não dá acesso ao banco de dados se for exposto.
+      - name: Disparar a sincronização
+        env:
+          SUPABASE_JWT_SECRET: ${{ secrets.SUPABASE_JWT_SECRET }}
+        run: |
+          if [ -z "$SUPABASE_JWT_SECRET" ]; then
+            echo "::error::O secret SUPABASE_JWT_SECRET não está definido no repositório."
+            exit 1
+          fi
+
+          token=$(python3 - <<'PY'
+          import base64, hashlib, hmac, json, os, time
+
+          def b64url(raw: bytes) -> str:
+              return base64.urlsafe_b64encode(raw).rstrip(b"=").decode()
+
+          header = b64url(json.dumps({"alg": "HS256", "typ": "JWT"}).encode())
+          claims = b64url(json.dumps({"sub": "github-actions-smogon-sync", "exp": int(time.time()) + 300}).encode())
+          signing_input = f"{header}.{claims}"
+          signature = hmac.new(
+              os.environ["SUPABASE_JWT_SECRET"].encode(), signing_input.encode(), hashlib.sha256
+          ).digest()
+          print(f"{signing_input}.{b64url(signature)}")
+          PY
+          )
+          echo "::add-mask::$token"
+
+          # Sem --retry: repetir o POST dispararia duas sincronizações em paralelo.
+          curl -fsS --max-time 60 -X POST \
+            -H "Authorization: Bearer $token" \
+            "$API_URL/api/admin/sync-smogon"
+
+      # O POST só confirma que a tarefa foi aceita; a sincronização roda em
+      # segundo plano. /api/smogon/names tem cache de 10 minutos, daí a espera.
+      - name: Confirmar que os dados do mês chegaram
+        run: |
+          export MONTH=$(date -u -d "$(date -u +%Y-%m-01) -1 day" +%Y-%m)
+
+          check='
+          import json, os, sys
+          try:
+              tiers = json.load(sys.stdin)["tiers"]
+          except (ValueError, KeyError):
+              sys.exit("sem resposta válida")
+          print(tiers)
+          sys.exit(0 if tiers and all(month == os.environ["MONTH"] for month in tiers.values()) else 1)
+          '
+
+          for attempt in $(seq 1 40); do
+            echo "Tentativa $attempt:"
+            if curl -fsS --max-time 60 "$API_URL/api/smogon/names" | python3 -c "$check"; then
+              echo "Todos os tiers estão em $MONTH."
+              exit 0
+            fi
+            sleep 30
+          done
+
+          echo "::error::Nem todos os tiers chegaram a $MONTH após 20 minutos."
+          exit 1

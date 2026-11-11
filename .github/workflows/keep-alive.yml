@@ -1,0 +1,25 @@
+name: Keep-alive do backend
+
+on:
+  schedule:
+    - cron: '*/10 * * * *'
+  workflow_dispatch:
+
+permissions: {}
+
+concurrency:
+  group: keep-alive
+  cancel-in-progress: true
+
+jobs:
+  ping:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      # O --retry cobre a inicialização a frio (cold start): se o serviço já estiver dormindo,
+      # o Render responde 502/503 até a instância acordar.
+      - name: GET /health
+        run: >-
+          curl -fsS --retry 4 --retry-delay 15 --max-time 90 -o /dev/null
+          -w 'HTTP %{http_code} em %{time_total}s\n'
+          https://pokemon-team-analytics.onrender.com/health
