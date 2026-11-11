@@ -1,12 +1,13 @@
 import { memo, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
-  BarChart3, BookOpen, Cpu, Egg, Ruler, Search, Shield, Sparkles, Swords, Weight, X, Zap,
+  BarChart3, BookOpen, Cpu, Egg, NotebookPen, Ruler, Search, Shield, Sparkles, Swords, Weight, X, Zap,
 } from 'lucide-react';
 import PokemonTypeBadge, { TYPE_INK } from './PokemonTypeBadge';
 import PokemonEncounters from './PokemonEncounters';
 import EvolutionTree from './EvolutionTree';
 import PokemonCry from './PokemonCry';
 import MoveAbilityModal from './MoveAbilityModal';
+import PokemonBuilds from './PokemonBuilds';
 import { capitalize } from '../utils/typeColors';
 import {
   fetchEvolutionChain, fetchMove, fetchPokemonDetail, fetchPokemonSpecies,
@@ -74,6 +75,7 @@ const TABS = [
   { value: 'overview', label: 'Ficha de Campo', icon: BookOpen },
   { value: 'competitive', label: 'Competitivo', icon: BarChart3 },
   { value: 'moves', label: 'Movimentos', icon: Swords },
+  { value: 'builds', label: 'Builds', icon: NotebookPen },
 ];
 
 const EFFECTIVENESS_ROWS = {
@@ -329,7 +331,7 @@ export default function PokemonDrawer({ pokemonName, onClose, onSmogonDataFound 
   const [learnMethod, setLearnMethod] = useState('level-up');
   const [selectedGen, setSelectedGen] = useState('gen9');
 
-  // Golpe ou habilidade aberto no modal de detalhes: { kind, name } | null
+  // Golpe, habilidade ou item aberto no modal de detalhes: { kind, name } | null
   const [infoEntry, setInfoEntry] = useState(null);
 
   // Invalida respostas de troca de forma pendentes (troca rápida, mudança de Pokémon ou unmount).
@@ -384,10 +386,13 @@ export default function PokemonDrawer({ pokemonName, onClose, onSmogonDataFound 
   // As estatísticas são pedidas pelo nome exato da variedade na Smogon ("Urshifu-Rapid-Strike").
   // Uma forma sem nome próprio na Smogon fica sem dados; nunca recebe os da espécie base.
   const speciesName = species?.name ?? detail?.species?.name;
+  const variety = useMemo(
+    () => ({ name: currentFormName, species: speciesName, isForm: currentFormName !== baseFormName }),
+    [currentFormName, speciesName, baseFormName],
+  );
   useEffect(() => {
     if (!currentFormName || !speciesName) return;
     const controller = new AbortController();
-    const variety = { name: currentFormName, species: speciesName, isForm: currentFormName !== baseFormName };
     setSmogonLoading(true);
     setSmogonError(false);
 
@@ -411,7 +416,7 @@ export default function PokemonDrawer({ pokemonName, onClose, onSmogonDataFound 
       .finally(() => { if (!controller.signal.aborted) setSmogonLoading(false); });
 
     return () => controller.abort();
-  }, [currentFormName, baseFormName, speciesName, selectedSmogonTier, pokemonName, onSmogonDataFound]);
+  }, [variety, currentFormName, speciesName, selectedSmogonTier, pokemonName, onSmogonDataFound]);
 
   // O learnset (100–200 pedidos) só é carregado quando a aba Movimentos é aberta.
   useEffect(() => {
@@ -460,6 +465,7 @@ export default function PokemonDrawer({ pokemonName, onClose, onSmogonDataFound 
 
   const openAbility = useCallback((name) => setInfoEntry({ kind: 'ability', name }), []);
   const openMove = useCallback((name) => setInfoEntry({ kind: 'move', name }), []);
+  const openItem = useCallback((name) => setInfoEntry({ kind: 'item', name }), []);
   const closeInfo = useCallback(() => setInfoEntry(null), []);
 
   const visibleMoves = useMemo(() => {
@@ -905,6 +911,19 @@ export default function PokemonDrawer({ pokemonName, onClose, onSmogonDataFound 
                 </tbody>
               </table>
             </div>
+          </SectionCard>
+        )}
+
+        {/* ------------------------------------------------ Builds */}
+        {activeTab === 'builds' && (
+          <SectionCard icon={NotebookPen} title="Builds da Smogon">
+            <PokemonBuilds
+              variety={variety}
+              pokemonLabel={displayName}
+              onOpenItem={openItem}
+              onOpenAbility={openAbility}
+              onOpenMove={openMove}
+            />
           </SectionCard>
         )}
       </div>

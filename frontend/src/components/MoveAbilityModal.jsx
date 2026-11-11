@@ -1,14 +1,15 @@
 import { memo, useEffect, useId, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
-import { Languages, Loader2, Sparkles, Swords, TriangleAlert, X } from 'lucide-react';
+import { Languages, Loader2, Package, Sparkles, Swords, TriangleAlert, X } from 'lucide-react';
 import PokemonTypeBadge from './PokemonTypeBadge';
-import { fetchAbilityInfo, fetchMoveInfo, toPokeApiSlug } from '../services/api';
+import { fetchAbilityInfo, fetchItemInfo, fetchMoveInfo, toPokeApiSlug } from '../services/api';
 import { formatSlug } from '../utils/filters';
 import { useModalBehavior } from '../hooks/useModalBehavior';
 
 const KINDS = {
   move: { label: 'Golpe', icon: Swords, load: fetchMoveInfo },
   ability: { label: 'Habilidade', icon: Sparkles, load: fetchAbilityInfo },
+  item: { label: 'Item', icon: Package, load: fetchItemInfo },
 };
 
 const DAMAGE_CLASS_LABELS = { physical: 'Físico', special: 'Especial', status: 'Status' };
@@ -34,25 +35,29 @@ const TARGET_LABELS = {
 
 const generationLabel = (name) => (name ? `Geração ${name.split('-')[1]?.toUpperCase() ?? '?'}` : null);
 
-function attributesFor(info) {
-  const rows = info.kind === 'move'
-    ? [
-      ['Tipo', info.type && <PokemonTypeBadge type={info.type} />],
-      ['Categoria', DAMAGE_CLASS_LABELS[info.damageClass] ?? (info.damageClass && formatSlug(info.damageClass))],
-      ['Poder', info.power ?? '—'],
-      ['Precisão', info.accuracy ? `${info.accuracy}%` : '—'],
-      ['PP', info.pp ?? '—'],
-      ['Prioridade', info.priority ? (info.priority > 0 ? `+${info.priority}` : `${info.priority}`) : null],
-      ['Chance de efeito', info.effectChance ? `${info.effectChance}%` : null],
-      ['Alvo', TARGET_LABELS[info.target] ?? (info.target && formatSlug(info.target))],
-      ['Introduzido na', generationLabel(info.generation)],
-    ]
-    : [
-      ['Introduzida na', generationLabel(info.generation)],
-      ['Pokémon com ela', info.pokemonCount || null],
-    ];
-  return rows.filter(([, value]) => value != null && value !== false);
-}
+const ATTRIBUTES = {
+  move: (info) => [
+    ['Tipo', info.type && <PokemonTypeBadge type={info.type} />],
+    ['Categoria', DAMAGE_CLASS_LABELS[info.damageClass] ?? (info.damageClass && formatSlug(info.damageClass))],
+    ['Poder', info.power ?? '—'],
+    ['Precisão', info.accuracy ? `${info.accuracy}%` : '—'],
+    ['PP', info.pp ?? '—'],
+    ['Prioridade', info.priority ? (info.priority > 0 ? `+${info.priority}` : `${info.priority}`) : null],
+    ['Chance de efeito', info.effectChance ? `${info.effectChance}%` : null],
+    ['Alvo', TARGET_LABELS[info.target] ?? (info.target && formatSlug(info.target))],
+    ['Introduzido na', generationLabel(info.generation)],
+  ],
+  ability: (info) => [
+    ['Introduzida na', generationLabel(info.generation)],
+    ['Pokémon com ela', info.pokemonCount || null],
+  ],
+  item: (info) => [
+    ['Categoria', info.category && formatSlug(info.category)],
+  ],
+};
+
+const attributesFor = (info) =>
+  ATTRIBUTES[info.kind](info).filter(([, value]) => value != null && value !== false);
 
 function TextBlock({ title, entries }) {
   const shown = entries.filter(Boolean);
@@ -76,7 +81,7 @@ function TextBlock({ title, entries }) {
 }
 
 /**
- * Modal de detalhes de um golpe ou habilidade. `name` aceita o slug da PokéAPI ("kings-shield")
+ * Modal de detalhes de um golpe, habilidade ou item. `name` aceita o slug da PokéAPI ("kings-shield")
  * ou o nome de exibição da Smogon ("King's Shield").
  */
 function MoveAbilityModal({ kind, name, onClose }) {
@@ -118,7 +123,11 @@ function MoveAbilityModal({ kind, name, onClose }) {
       >
         <header className="flex items-start gap-3 border-b border-dashed border-[#78614E]/25 px-6 pb-4 pt-5">
           <span className="mt-0.5 flex h-10 w-10 shrink-0 items-center justify-center rounded-full border border-[#829b72]/40 bg-[#829b72]/15 text-[#5B7856]">
-            <Icon className="h-5 w-5" aria-hidden="true" />
+            {state.info?.sprite ? (
+              <img src={state.info.sprite} alt="" width={30} height={30} className="h-[30px] w-[30px] object-contain [image-rendering:pixelated]" />
+            ) : (
+              <Icon className="h-5 w-5" aria-hidden="true" />
+            )}
           </span>
           <div className="min-w-0 flex-1">
             <p className="font-hand text-lg leading-none text-[#78614E]">{label}</p>

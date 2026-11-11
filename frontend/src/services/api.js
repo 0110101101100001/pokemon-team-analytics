@@ -236,7 +236,7 @@ const fallbackName = (slug) => ({ text: slug.replace(/-/g, ' '), translated: fal
 
 /** Dados de um golpe prontos para exibição. Rejeita se o golpe não existir. */
 export async function fetchMoveInfo(slug) {
-  const data = await cachedJson(`${POKEAPI_BASE}/move/${encodeURIComponent(slug)}`);
+  const data = await cachedJson(`${POKEAPI_BASE}/move/${encodeURIComponent(moveSlug(slug))}`);
   // "$effect_chance" é o marcador da PokéAPI para a chance do efeito secundário.
   const withChance = (entry) =>
     entry && { ...entry, text: entry.text.replace(/\$effect_chance/g, data.effect_chance ?? '') };
@@ -256,6 +256,31 @@ export async function fetchMoveInfo(slug) {
     effectChance: data.effect_chance,
     target: data.target?.name ?? null,
     generation: data.generation?.name ?? null,
+  };
+}
+
+// Na PokéAPI os cristais Z têm duas entradas; a segurada em batalha é "<nome>-z--held".
+const itemSlug = (slug) => (slug.endsWith('-z') ? `${slug}--held` : slug);
+
+// "Hidden Power Fire" é o golpe Hidden Power com o tipo já escolhido.
+const moveSlug = (slug) => (slug.startsWith('hidden-power-') ? 'hidden-power' : slug);
+
+/** Ícone de um item a partir do nome de exibição ("Heavy-Duty Boots"). */
+export const itemSpriteUrl = (name) =>
+  `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/items/${itemSlug(toPokeApiSlug(name))}.png`;
+
+/** Dados de um item prontos para exibição. Rejeita se o item não existir na PokéAPI. */
+export async function fetchItemInfo(slug) {
+  const data = await cachedJson(`${POKEAPI_BASE}/item/${encodeURIComponent(itemSlug(slug))}`);
+  return {
+    kind: 'item',
+    name: pickLocalized(data.names, 'name') ?? fallbackName(slug),
+    // Nos itens o texto do jogo vem em `text`, não em `flavor_text`.
+    description: pickLocalized(data.flavor_text_entries, 'text'),
+    shortEffect: pickLocalized(data.effect_entries, 'short_effect'),
+    effect: pickLocalized(data.effect_entries, 'effect'),
+    sprite: data.sprites?.default ?? null,
+    category: data.category?.name ?? null,
   };
 }
 
