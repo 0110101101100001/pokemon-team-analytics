@@ -94,6 +94,7 @@ export const fetchPokemonDetail = (nameOrId) =>
 export const fetchPokemonSpecies = (nameOrId) =>
   cachedJson(`${POKEAPI_BASE}/pokemon-species/${encodeURIComponent(nameOrId)}`).catch(() => null);
 
+/** `name` é o nome exato na Smogon ("Urshifu-Rapid-Strike"), vindo de `resolveSmogonName`. */
 export async function fetchSmogonStats(name, tier = 'gen9ou', { date, signal } = {}) {
   const params = new URLSearchParams({ tier });
   if (date) {
@@ -116,12 +117,24 @@ export async function fetchSmogonStats(name, tier = 'gen9ou', { date, signal } =
   return response.json();
 }
 
-/** Nomes (formato Smogon) de todos os Pokémon com estatísticas em pelo menos um tier. */
-export async function fetchSmogonNames() {
-  const response = await fetch(`${BACKEND_BASE}/smogon/names`, { headers: { Accept: 'application/json' } });
-  if (!response.ok) throw new Error(`Erro ao buscar a lista da Smogon (${response.status})`);
-  const data = await response.json();
-  return data.names ?? [];
+let smogonNamesRequest = null;
+
+/**
+ * Nomes (formato Smogon) de todos os Pokémon com estatísticas em pelo menos um tier.
+ * Um pedido por sessão, compartilhado pela grade e pela ficha; uma falha não fica em cache.
+ */
+export function fetchSmogonNames() {
+  smogonNamesRequest ??= fetch(`${BACKEND_BASE}/smogon/names`, { headers: { Accept: 'application/json' } })
+    .then((response) => {
+      if (!response.ok) throw new Error(`Erro ao buscar a lista da Smogon (${response.status})`);
+      return response.json();
+    })
+    .then((data) => data.names ?? [])
+    .catch((error) => {
+      smogonNamesRequest = null;
+      throw error;
+    });
+  return smogonNamesRequest;
 }
 
 const LOGIN_REQUIRED = 'Não autorizado. Faça login no Supabase para receber recomendações.';

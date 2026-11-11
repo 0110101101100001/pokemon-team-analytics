@@ -10,8 +10,9 @@ import MoveAbilityModal from './MoveAbilityModal';
 import { capitalize } from '../utils/typeColors';
 import {
   fetchEvolutionChain, fetchMove, fetchPokemonDetail, fetchPokemonSpecies,
-  fetchSmogonStats, fetchTypeData, officialSpriteUrl,
+  fetchSmogonNames, fetchSmogonStats, fetchTypeData, officialSpriteUrl,
 } from '../services/api';
+import { resolveSmogonName } from '../utils/smogon';
 
 /* ---------------------------------------------------------------- dados estáticos */
 
@@ -318,6 +319,7 @@ export default function PokemonDrawer({ pokemonName, onClose, onSmogonDataFound 
 
   const [smogon, setSmogon] = useState(null);
   const [smogonLoading, setSmogonLoading] = useState(false);
+  const [smogonError, setSmogonError] = useState(false);
   const [selectedSmogonTier, setSelectedSmogonTier] = useState('gen9ou');
 
   const [moveset, setMoveset] = useState([]);
@@ -379,22 +381,37 @@ export default function PokemonDrawer({ pokemonName, onClose, onSmogonDataFound 
     };
   }, [pokemonName]);
 
+  // As estatísticas são pedidas pelo nome exato da variedade na Smogon ("Urshifu-Rapid-Strike").
+  // Uma forma sem nome próprio na Smogon fica sem dados; nunca recebe os da espécie base.
+  const speciesName = species?.name ?? detail?.species?.name;
   useEffect(() => {
-    if (!currentFormName) return;
+    if (!currentFormName || !speciesName) return;
     const controller = new AbortController();
+    const variety = { name: currentFormName, species: speciesName, isForm: currentFormName !== baseFormName };
     setSmogonLoading(true);
+    setSmogonError(false);
 
-    fetchSmogonStats(formatFormName(currentFormName), selectedSmogonTier, { signal: controller.signal })
+    fetchSmogonNames()
+      .then((names) => {
+        const smogonName = resolveSmogonName(variety, names);
+        return smogonName && !controller.signal.aborted
+          ? fetchSmogonStats(smogonName, selectedSmogonTier, { signal: controller.signal })
+          : null;
+      })
       .then((stats) => {
         if (controller.signal.aborted) return;
         setSmogon(stats);
         if (stats) onSmogonDataFound?.(pokemonName);
       })
-      .catch((err) => { if (err.name !== 'AbortError') setSmogon(null); })
+      .catch((err) => {
+        if (err.name === 'AbortError' || controller.signal.aborted) return;
+        setSmogon(null);
+        setSmogonError(true);
+      })
       .finally(() => { if (!controller.signal.aborted) setSmogonLoading(false); });
 
     return () => controller.abort();
-  }, [currentFormName, selectedSmogonTier, pokemonName, onSmogonDataFound]);
+  }, [currentFormName, baseFormName, speciesName, selectedSmogonTier, pokemonName, onSmogonDataFound]);
 
   // O learnset (100–200 pedidos) só é carregado quando a aba Movimentos é aberta.
   useEffect(() => {
@@ -728,7 +745,11 @@ export default function PokemonDrawer({ pokemonName, onClose, onSmogonDataFound 
                     />
                   </div>
                   <div className="flex items-center justify-between mt-2.5 text-[11px] text-[#78614E]">
-                    <span>Tier <strong className="uppercase text-[#2A2421]">{smogon.tier || selectedSmogonTier}</strong></span>
+                    <span>
+                      <strong className="text-[#2A2421]">{smogon.name}</strong>
+                      {' · '}
+                      <span className="uppercase">{smogon.tier || selectedSmogonTier}</span>
+                    </span>
                     <span>Coleta <strong className="text-[#2A2421]">{smogon.date}</strong></span>
                   </div>
                 </div>
@@ -788,7 +809,11 @@ export default function PokemonDrawer({ pokemonName, onClose, onSmogonDataFound 
               </div>
             ) : (
               <p className="p-4 text-center text-xs text-[#78614E] rounded-xl bg-[#FFFEFB]/80 border border-[#4A3B32]/10">
-                Sem dados do Smogon para este tier.
+                {smogonError
+                  ? 'Não foi possível consultar a Smogon agora. Tente de novo em instantes.'
+                  : isAlternateForm
+                    ? `Sem dados da Smogon para ${displayName} neste tier. As estatísticas da forma base não valem para esta forma.`
+                    : 'Sem dados da Smogon para este tier.'}
               </p>
             )}
           </SectionCard>
