@@ -69,9 +69,13 @@ function PokemonGrid({
         )}
       </div>
 
-      {/* Sentinela do scroll infinito. Também é um botão: serve ao teclado e a navegadores sem IntersectionObserver. */}
+      {/*
+        Sentinela do scroll infinito. Também é um botão: serve ao teclado e a navegadores sem IntersectionObserver.
+        overflow-anchor: none impede o navegador de ancorar a rolagem nele: sem isso, cada lote inserido acima
+        faz a página rolar para acompanhar o botão, que continua à vista e carrega o lote seguinte, até o fim.
+      */}
       {hasMore && (
-        <div className="mt-8 flex justify-center">
+        <div className="mt-8 flex justify-center [overflow-anchor:none]">
           <button
             ref={sentinelRef}
             type="button"

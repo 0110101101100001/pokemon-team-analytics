@@ -3,7 +3,9 @@ import { memo } from 'react';
 /** Mancha de pincel decorativa. Posicione com `className` (absolute/fixed + coordenadas). */
 export const InkSplatter = memo(function InkSplatter({ className = '', color = '#829b72' }) {
   return (
-    <svg aria-hidden="true" viewBox="0 0 200 200" className={`pointer-events-none select-none ${className}`}>
+    // overflow-anchor: none: uma mancha presa ao fim da página não pode servir de âncora de rolagem,
+    // senão a página rola para acompanhá-la cada vez que a grade cresce.
+    <svg aria-hidden="true" viewBox="0 0 200 200" className={`pointer-events-none select-none [overflow-anchor:none] ${className}`}>
       <path
         fill={color}
         d="M98 22c22-8 48 2 60 22s30 28 20 52-22 46-50 54-54 2-70-14S26 106 28 80s12-44 38-50 24 0 32-8z"
