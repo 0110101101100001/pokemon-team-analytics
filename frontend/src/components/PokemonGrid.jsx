@@ -11,6 +11,8 @@ function PokemonGrid({
   selectedName,
   onSelect,
   hasSmogonDataMap = {},
+  favorites,
+  onToggleFavorite,
 }) {
   const [visibleCount, setVisibleCount] = useState(BATCH_SIZE);
   const [renderedList, setRenderedList] = useState(pokemonList);
@@ -53,7 +55,9 @@ function PokemonGrid({
             types={types}
             isSelected={selectedName === name}
             hasSmogonData={!!hasSmogonDataMap[name]}
+            isFavorite={favorites?.has(name) ?? false}
             onSelect={onSelect}
+            onToggleFavorite={onToggleFavorite}
           />
         ))}
 

@@ -1,6 +1,7 @@
 import { memo, useEffect, useRef } from 'react';
 import { Shield } from 'lucide-react';
 import PokemonTypeBadge from './PokemonTypeBadge';
+import FavoriteButton from './FavoriteButton';
 import { thumbnailSpriteUrl } from '../services/api';
 import { observeInView } from '../utils/inView';
 
@@ -67,7 +68,9 @@ function PokemonCard({
   types = [],
   isSelected,
   hasSmogonData = false,
+  isFavorite = false,
   onSelect,
+  onToggleFavorite,
 }) {
   const wrapperRef = useRef(null);
   const cardRef = useRef(null);
@@ -166,17 +169,22 @@ function PokemonCard({
           <div className="absolute inset-0 rounded-[inherit] ring-1 ring-inset ring-white/50" />
         </div>
 
-        {/* Camada média: número e selo Smogon */}
+        {/* Camada média: número, selo Smogon e favorito */}
         <div className="card-layer-near relative flex items-center justify-between gap-2 mb-2 sm:mb-3">
           <span className="shrink-0 px-2.5 py-0.5 rounded-md bg-[#FFFEFB]/85 border border-[#4A3B32]/15 font-mono text-[10px] font-bold text-[#4A3B32] tracking-wider shadow-xs">
             Nº {String(number).padStart(3, '0')}
           </span>
-          {hasSmogonData && (
-            <span className="flex shrink-0 items-center gap-1 px-2 py-0.5 rounded-full bg-[#FFFEFB]/85 border border-[#4A3B32]/15 text-[9px] font-bold uppercase tracking-wider text-[#4A3B32] shadow-xs">
-              <Shield className="w-2.5 h-2.5 fill-[#4A3B32]" aria-hidden="true" />
-              Smogon
-            </span>
-          )}
+          <div className="flex items-center gap-1.5">
+            {hasSmogonData && (
+              <span className="flex shrink-0 items-center gap-1 px-2 py-0.5 rounded-full bg-[#FFFEFB]/85 border border-[#4A3B32]/15 text-[9px] font-bold uppercase tracking-wider text-[#4A3B32] shadow-xs">
+                <Shield className="w-2.5 h-2.5 fill-[#4A3B32]" aria-hidden="true" />
+                Smogon
+              </span>
+            )}
+            {onToggleFavorite && (
+              <FavoriteButton name={pokemon} label={pokemon.replace(/-/g, ' ')} active={isFavorite} onToggle={onToggleFavorite} />
+            )}
+          </div>
         </div>
 
         {/* Camada da frente: sprite com parallax */}

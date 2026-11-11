@@ -8,6 +8,7 @@ import EvolutionTree from './EvolutionTree';
 import PokemonCry from './PokemonCry';
 import MoveAbilityModal from './MoveAbilityModal';
 import PokemonBuilds from './PokemonBuilds';
+import FavoriteButton from './FavoriteButton';
 import { capitalize } from '../utils/typeColors';
 import {
   fetchEvolutionChain, fetchMove, fetchPokemonDetail, fetchPokemonSpecies,
@@ -306,7 +307,9 @@ const SpreadCard = memo(function SpreadCard({ index, nature, evs, pct }) {
 
 /* ---------------------------------------------------------------- drawer */
 
-export default function PokemonDrawer({ pokemonName, onClose, onSmogonDataFound }) {
+export default function PokemonDrawer({
+  pokemonName, onClose, onSmogonDataFound, favorites, gridEntries, onToggleFavorite,
+}) {
   const [detail, setDetail] = useState(null);
   const [species, setSpecies] = useState(null);
   const [forms, setForms] = useState([]);
@@ -509,6 +512,9 @@ export default function PokemonDrawer({ pokemonName, onClose, onSmogonDataFound 
   const totalStat = baseStats.reduce((sum, s) => sum + s.value, 0);
   const isAlternateForm = Boolean(currentFormName && baseFormName && currentFormName !== baseFormName);
   const displayName = formatFormName(detail.name);
+  // Favorita-se a forma aberta quando ela existe na grade (Raticate de Alola); Megas e afins,
+  // que só existem dentro da ficha, contam para o Pokémon que abriu a ficha.
+  const favoriteName = gridEntries?.has(currentFormName) ? currentFormName : pokemonName;
 
   return (
     <div className="relative flex h-full flex-col overflow-y-auto bg-[#F7F3EE]" style={PAPER_BG}>
@@ -553,6 +559,15 @@ export default function PokemonDrawer({ pokemonName, onClose, onSmogonDataFound 
           </div>
 
           <div className="order-first flex w-full items-center justify-end gap-2 sm:order-none sm:w-auto sm:shrink-0 sm:self-start">
+            {onToggleFavorite && (
+              <FavoriteButton
+                name={favoriteName}
+                label={formatFormName(favoriteName)}
+                active={favorites?.has(favoriteName) ?? false}
+                onToggle={onToggleFavorite}
+                variant="header"
+              />
+            )}
             <button
               type="button"
               onClick={toggleShiny}

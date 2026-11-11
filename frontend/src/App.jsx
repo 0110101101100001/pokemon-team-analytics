@@ -11,8 +11,10 @@ import TeamBuilderButton from "./components/TeamBuilderButton";
 import TeamBuilderModal from "./components/TeamBuilderModal";
 import AboutButton from "./components/AboutButton";
 import AboutModal from "./components/AboutModal";
+import CollectionTabs, { COLLECTIONS, CollectionNotice } from "./components/CollectionTabs";
 import { InkSplash, InkSplatter, PageVignette, TornEdge } from "./components/InkDecor";
 import { useScrollCollapsed } from "./hooks/useScrollCollapsed";
+import { useUserCollections } from "./hooks/useUserCollections";
 import {
   fetchEggGroupIndex, fetchPokemonIdsLearningMove, fetchPokemonIdsWithAbility,
   fetchPokemonList, fetchSmogonNames, fetchSpeciesList, fetchTypeIndex, officialSpriteUrl,
@@ -54,6 +56,10 @@ export default function App() {
   const [authOpen, setAuthOpen] = useState(false);
   const [builderOpen, setBuilderOpen] = useState(false);
   const [aboutOpen, setAboutOpen] = useState(false);
+  // "all" | "favorites" | "history": coleção exibida na grade.
+  const [view, setView] = useState("all");
+  const collections = useUserCollections(session);
+  const { toggleFavorite, recordView } = collections;
   const [team, setTeam] = useState([]);
   const collapsed = useScrollCollapsed();
 
@@ -115,6 +121,16 @@ export default function App() {
 
   const toggleAdvanced = useCallback(() => setAdvancedOpen((open) => !open), []);
 
+  const entryByName = useMemo(() => new Map(pokemonList.map((p) => [p.name, p])), [pokemonList]);
+
+  // Favoritos e histórico são listas de nomes; na grade viram as mesmas entradas da Pokédex,
+  // na ordem da coleção (mais recentes primeiro). A busca e os filtros valem sobre a coleção.
+  const baseList = useMemo(() => {
+    if (view === "all") return pokemonList;
+    const names = view === "favorites" ? collections.favorites : collections.history.map((visit) => visit.name);
+    return names.map((name) => entryByName.get(name)).filter(Boolean);
+  }, [view, pokemonList, entryByName, collections.favorites, collections.history]);
+
   // Gerações, regiões e raridades: OR dentro do grupo. Os demais critérios: AND.
   // Filtros remotos ainda carregando (ou que falharam) são ignorados até terem o Set de ids.
   const filteredList = useMemo(() => {
@@ -136,8 +152,8 @@ export default function App() {
       else if (f.type === "gmax") flags.push(["hasGmax", f.value === "with"]);
       else if (remoteFilterSets[filterKey(f)] instanceof Set) idSets.push(remoteFilterSets[filterKey(f)]);
     }
-    if (!matchesSearch && activeFilters.length === 0) return pokemonList;
-    return pokemonList.filter((p) =>
+    if (!matchesSearch && activeFilters.length === 0) return baseList;
+    return baseList.filter((p) =>
       (!matchesSearch || matchesSearch(p)) &&
       (!gens.size || gens.has(p.generation)) &&
       (!regions.size || (p.region !== null && (regions.has("any") || regions.has(p.region)))) &&
@@ -146,7 +162,7 @@ export default function App() {
       eggGroups.every((g) => p.eggGroups.includes(g)) &&
       flags.every(([flag, expected]) => p[flag] === expected) &&
       idSets.every((ids) => ids.has(p.id)));
-  }, [pokemonList, searchTerm, activeFilters, remoteFilterSets]);
+  }, [baseList, searchTerm, activeFilters, remoteFilterSets]);
 
   const filterStatus = useMemo(() => {
     const status = {};
@@ -163,7 +179,21 @@ export default function App() {
     [activeFilters],
   );
 
-  const handleSelect = useCallback((name) => setSelectedPokemon(name), []);
+  const handleSelect = useCallback((name) => {
+    setSelectedPokemon(name);
+    recordView(name);
+  }, [recordView]);
+
+  // Sem login, o coração leva ao cadastro em vez de falhar em silêncio.
+  const handleToggleFavorite = useCallback(
+    (name) => (session ? toggleFavorite(name) : setAuthOpen(true)),
+    [session, toggleFavorite],
+  );
+
+  const collectionCounts = useMemo(
+    () => ({ favorites: collections.favorites.length, history: collections.history.length }),
+    [collections.favorites, collections.history],
+  );
   const handleCloseModal = useCallback(() => setSelectedPokemon(null), []);
   const openAuth = useCallback(() => setAuthOpen(true), []);
   const closeAuth = useCallback(() => setAuthOpen(false), []);
@@ -185,7 +215,9 @@ export default function App() {
     );
   }
 
-  const count = filteredList.length;
+  // Numa coleção sem login, carregando, com falha ou vazia, um aviso ocupa o lugar da grade.
+  const collectionBlocked = view !== "all" && (collections.status !== "ready" || baseList.length === 0);
+  const count = collectionBlocked ? 0 : filteredList.length;
   const plural = count !== 1 ? "s" : "";
 
   return (
@@ -257,9 +289,17 @@ export default function App() {
         <div className="relative space-y-6">
           <ActiveFilters activeFilters={activeFilters} filterStatus={filterStatus} onRemoveFilter={removeFilter} />
 
+          <CollectionTabs
+            view={view}
+            onChange={setView}
+            counts={collectionCounts}
+            onClearHistory={collections.clearHistory}
+            error={collections.error}
+          />
+
           <Reveal className="flex flex-col sm:flex-row sm:items-end justify-between gap-4 px-1">
             <div>
-              <p className="font-hand text-xl leading-none text-[#78614E] -rotate-1">anotações de campo</p>
+              <p className="font-hand text-xl leading-none text-[#78614E] -rotate-1">{COLLECTIONS[view].caption}</p>
               <h2 className="mt-1 text-2xl font-black font-serif text-[#2A2421] tracking-tight">
                 <span className="ink-splotch tabular-nums">{count}</span> Pokémon{plural} encontrado{plural}
               </h2>
@@ -276,12 +316,18 @@ export default function App() {
 
           <Reveal delay={120} className="organic-divider !my-2" />
 
-          <PokemonGrid
-            pokemonList={filteredList}
-            selectedName={selectedPokemon}
-            onSelect={handleSelect}
-            hasSmogonDataMap={hasSmogonDataMap}
-          />
+          {collectionBlocked ? (
+            <CollectionNotice view={view} status={collections.status} isEmpty={baseList.length === 0} onLogin={openAuth} />
+          ) : (
+            <PokemonGrid
+              pokemonList={filteredList}
+              selectedName={selectedPokemon}
+              onSelect={handleSelect}
+              hasSmogonDataMap={hasSmogonDataMap}
+              favorites={collections.favoriteSet}
+              onToggleFavorite={handleToggleFavorite}
+            />
+          )}
         </div>
       </main>
 
@@ -298,6 +344,9 @@ export default function App() {
               pokemonName={selectedPokemon}
               onClose={handleCloseModal}
               onSmogonDataFound={markSmogonData}
+              favorites={collections.favoriteSet}
+              gridEntries={entryByName}
+              onToggleFavorite={handleToggleFavorite}
             />
           </div>
         </div>
