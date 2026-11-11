@@ -29,7 +29,7 @@ const ITEM_NAMES = {
   'prism-scale': 'Escama Prisma',
   'deep-sea-tooth': 'Dente Abissal',
   'deep-sea-scale': 'Escama Abissal',
-  sachet: 'Saqueta Perfumada',
+  sachet: 'Sachê Perfumado',
   'whipped-dream': 'Doce Chantilly',
   'tart-apple': 'Maçã Ácida',
   'sweet-apple': 'Maçã Doce',
@@ -43,8 +43,8 @@ const ITEM_NAMES = {
   'linking-cord': 'Cabo de Ligação',
   'auspicious-armor': 'Armadura Auspiciosa',
   'malicious-armor': 'Armadura Maliciosa',
-  'unremarkable-teacup': 'Chávena Banal',
-  'masterpiece-teacup': 'Chávena Prima',
+  'unremarkable-teacup': 'Xícara Comum',
+  'masterpiece-teacup': 'Xícara Obra-Prima',
   'metal-alloy': 'Liga Metálica',
   'leaders-crest': 'Crista do Líder',
   'scroll-of-darkness': 'Pergaminho da Escuridão',
@@ -108,7 +108,7 @@ export function parseEvolutionDetail(detail) {
   if (detail.party_species) badges.push({ icon: 'party', text: `${titleCase(detail.party_species.name)} no time` });
   if (detail.party_type) badges.push({ icon: 'party', text: `Tipo ${titleCase(detail.party_type.name)} no time` });
   if (detail.needs_overworld_rain) badges.push({ icon: 'rain', text: 'Com chuva' });
-  if (detail.turn_upside_down) badges.push({ icon: 'spin', text: 'Consola invertida' });
+  if (detail.turn_upside_down) badges.push({ icon: 'spin', text: 'Console de cabeça para baixo' });
   if (TRIGGER_BADGES[trigger]) badges.push(TRIGGER_BADGES[trigger]);
 
   if (badges.length === 0) {
@@ -120,19 +120,26 @@ export function parseEvolutionDetail(detail) {
 }
 
 const MAX_ALTERNATIVES = 3;
+const VARIES_BY_FORM = { icon: 'special', text: 'Varia conforme a forma' };
 
-/** Lista de alternativas (cada uma é uma lista de badges), sem duplicados. */
+/**
+ * Lista de alternativas (cada uma é uma lista de badges), sem duplicados.
+ * Acima de MAX_ALTERNATIVES (Alcremie tem 21 combinações de doce e horário) mostra só
+ * o que todas têm em comum, em vez de três escolhidas ao acaso.
+ */
 export function describeEvolution(details = []) {
-  const seen = new Set();
-  const alternatives = [];
+  const byKey = new Map();
   for (const detail of details) {
     const badges = parseEvolutionDetail(detail);
     const key = badges.map((b) => b.text).join('|');
-    if (seen.has(key)) continue;
-    seen.add(key);
-    alternatives.push(badges);
+    if (!byKey.has(key)) byKey.set(key, badges);
   }
-  return alternatives.slice(0, MAX_ALTERNATIVES);
+  const alternatives = [...byKey.values()];
+  if (alternatives.length <= MAX_ALTERNATIVES) return alternatives;
+
+  const [first, ...rest] = alternatives;
+  const shared = first.filter((badge) => rest.every((other) => other.some((b) => b.text === badge.text)));
+  return [[...shared, VARIES_BY_FORM]];
 }
 
 /**
@@ -160,7 +167,7 @@ export function layoutEvolutionChain(chain) {
     }
 
     if (parentId) {
-      edges.push({ from: parentId, to: node.id, alternatives: describeEvolution(link.evolution_details) });
+      edges.push({ from: parentId, to: node.id, details: link.evolution_details ?? [] });
     }
     return node;
   };
@@ -189,6 +196,45 @@ const ROMAN = { i: 1, ii: 2, iii: 3, iv: 4, v: 5, vi: 6, vii: 7, viii: 8, ix: 9 
 export function detectRegion(formName) {
   if (!formName) return null;
   return FORM_REGION[formName] ?? formName.match(REGION_PATTERN)?.[1] ?? null;
+}
+
+// A PokéAPI marca cada condição com a forma de origem, a forma de destino ou a região a que pertence.
+const detailRegion = (detail) =>
+  detectRegion(detail.required_pokemon_form?.name)
+  ?? detectRegion(detail.evolved_pokemon_form?.name)
+  ?? detail.region?.name
+  ?? null;
+
+/**
+ * Condições de uma evolução que valem para a forma aberta no drawer:
+ * 1. as que citam essa forma (Lycanroc Dusk → só "ao entardecer"; Raticate de Alola → só "de noite");
+ * 2. senão, as da linha da forma (base ou região); numa linha regional sem condição própria
+ *    vale a da linha base (Pichu → Pikachu é igual em Alola);
+ * 3. senão, todas (Perrserker visto a partir do Meowth normal).
+ * Do que sobrar ficam os métodos atuais (`is_default`), sem os de jogos antigos
+ * (Leafeon: Pedra da Folha, sem as cinco rochas musgosas).
+ */
+export function selectEvolutionDetails(details = [], { region = null, form = null } = {}) {
+  const inLine = (line) => details.filter((detail) => detailRegion(detail) === line);
+  const candidates = [
+    form ? details.filter((d) => d.required_pokemon_form?.name === form || d.evolved_pokemon_form?.name === form) : [],
+    inLine(region),
+    region ? inLine(null) : [],
+  ];
+  const selected = candidates.find((list) => list.length > 0) ?? details;
+  const current = selected.filter((detail) => detail.is_default);
+  return current.length > 0 ? current : selected;
+}
+
+/** Resolve as condições de cada aresta para a forma aberta. `region` vem de `detectRegion(form)`. */
+export function withEvolutionConditions(layout, { region = null, form = null } = {}) {
+  return {
+    ...layout,
+    edges: layout.edges.map(({ details, ...edge }) => ({
+      ...edge,
+      alternatives: describeEvolution(selectEvolutionDetails(details, { region, form })),
+    })),
+  };
 }
 
 // Variedades com o nome da região que não são formas regionais (pikachu-alola-cap, raticate-totem-alola).

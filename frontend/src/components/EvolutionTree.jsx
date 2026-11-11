@@ -4,7 +4,9 @@ import {
   RotateCcw, Sparkles, Sun, Sunset, Swords, TrendingUp, User, Users, Zap,
 } from 'lucide-react';
 import { fetchPokemonSpecies, thumbnailSpriteUrl } from '../services/api';
-import { REGIONS, applyRegionalLine, detectRegion, layoutEvolutionChain } from '../utils/evolution';
+import {
+  REGIONS, applyRegionalLine, detectRegion, layoutEvolutionChain, withEvolutionConditions,
+} from '../utils/evolution';
 
 const BADGE_ICONS = {
   level: TrendingUp,
@@ -139,9 +141,14 @@ function EvolutionTree({ chain, currentSpecies, currentForm }) {
   const region = detectRegion(currentForm);
   const baseLayout = useMemo(() => layoutEvolutionChain(chain), [chain]);
   const speciesByName = useChainSpecies(baseLayout);
+  // As condições dependem só da forma aberta; ficam certas antes mesmo de as espécies chegarem.
+  const conditioned = useMemo(
+    () => withEvolutionConditions(baseLayout, { region, form: currentForm }),
+    [baseLayout, region, currentForm],
+  );
   const layout = useMemo(
-    () => (speciesByName ? applyRegionalLine(baseLayout, speciesByName, region) : baseLayout),
-    [baseLayout, speciesByName, region],
+    () => (speciesByName ? applyRegionalLine(conditioned, speciesByName, region) : conditioned),
+    [conditioned, speciesByName, region],
   );
   const nodeById = useMemo(() => new Map(layout.nodes.map((n) => [n.id, n])), [layout]);
 
