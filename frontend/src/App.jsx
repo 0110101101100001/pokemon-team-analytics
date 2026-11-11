@@ -9,6 +9,8 @@ import AuthModal from "./components/AuthModal";
 import AuthButton from "./components/AuthButton";
 import TeamBuilderButton from "./components/TeamBuilderButton";
 import TeamBuilderModal from "./components/TeamBuilderModal";
+import AboutButton from "./components/AboutButton";
+import AboutModal from "./components/AboutModal";
 import { InkSplash, InkSplatter, PageVignette, TornEdge } from "./components/InkDecor";
 import { useScrollCollapsed } from "./hooks/useScrollCollapsed";
 import {
@@ -48,6 +50,7 @@ export default function App() {
   const [session, setSession] = useState(null);
   const [authOpen, setAuthOpen] = useState(false);
   const [builderOpen, setBuilderOpen] = useState(false);
+  const [aboutOpen, setAboutOpen] = useState(false);
   const [team, setTeam] = useState([]);
   const collapsed = useScrollCollapsed();
 
@@ -146,6 +149,8 @@ export default function App() {
   const closeAuth = useCallback(() => setAuthOpen(false), []);
   const openBuilder = useCallback(() => setBuilderOpen(true), []);
   const closeBuilder = useCallback(() => setBuilderOpen(false), []);
+  const openAbout = useCallback(() => setAboutOpen(true), []);
+  const closeAbout = useCallback(() => setAboutOpen(false), []);
 
   if (loading) {
     return (
@@ -167,6 +172,7 @@ export default function App() {
     <div className="relative min-h-screen">
       <PageVignette />
       <AuthModal open={authOpen} onClose={closeAuth} onAuthChange={setSession} />
+      {aboutOpen && <AboutModal onClose={closeAbout} />}
       {builderOpen && (
         <TeamBuilderModal onClose={closeBuilder} team={team} onTeamChange={setTeam} pool={pokemonList} session={session} />
       )}
@@ -213,6 +219,7 @@ export default function App() {
             <div className="order-2 ml-auto flex items-center gap-2 shrink-0 2xl:order-3">
               <TeamBuilderButton onClick={openBuilder} count={team.length} />
               <AuthButton session={session} onOpen={openAuth} />
+              <AboutButton onClick={openAbout} />
             </div>
           </div>
 

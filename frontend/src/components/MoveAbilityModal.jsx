@@ -4,6 +4,7 @@ import { Languages, Loader2, Sparkles, Swords, TriangleAlert, X } from 'lucide-r
 import PokemonTypeBadge from './PokemonTypeBadge';
 import { fetchAbilityInfo, fetchMoveInfo, toPokeApiSlug } from '../services/api';
 import { formatSlug } from '../utils/filters';
+import { useModalBehavior } from '../hooks/useModalBehavior';
 
 const KINDS = {
   move: { label: 'Golpe', icon: Swords, load: fetchMoveInfo },
@@ -94,28 +95,7 @@ function MoveAbilityModal({ kind, name, onClose }) {
     return () => { active = false; };
   }, [load, slug]);
 
-  // Enquanto aberto: Esc fecha, a página não rola e o foco volta ao ponto de origem ao fechar.
-  useEffect(() => {
-    const previousFocus = document.activeElement;
-    closeRef.current?.focus();
-
-    const handleKey = (e) => e.key === 'Escape' && onClose();
-    window.addEventListener('keydown', handleKey);
-
-    const { style } = document.body;
-    const previous = { overflow: style.overflow, paddingRight: style.paddingRight };
-    const scrollbarWidth = window.innerWidth - document.documentElement.clientWidth;
-    style.overflow = 'hidden';
-    // Compensa a barra de rolagem que some, para a página não deslocar para o lado.
-    if (scrollbarWidth > 0) style.paddingRight = `${scrollbarWidth}px`;
-
-    return () => {
-      window.removeEventListener('keydown', handleKey);
-      style.overflow = previous.overflow;
-      style.paddingRight = previous.paddingRight;
-      previousFocus?.focus?.();
-    };
-  }, [onClose]);
+  useModalBehavior(onClose, closeRef);
 
   const { status, info } = state;
   const title = info?.name ?? { text: formatSlug(slug), translated: false };

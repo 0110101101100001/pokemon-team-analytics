@@ -147,7 +147,7 @@ function PokemonCard({
         onPointerMove={handlePointerMove}
         onPointerLeave={handlePointerLeave}
         onPointerCancel={handlePointerLeave}
-        className={`card-tilt group relative p-5 cursor-pointer select-none rounded-[1.6rem_1.3rem_1.6rem_1.2rem] border transition-[transform,box-shadow] duration-300 ease-out hover:[--lift:-6] hover:will-change-transform focus:outline-none focus-visible:ring-2 focus-visible:ring-[#829b72]/70 motion-reduce:transition-none ${
+        className={`card-tilt group relative p-4 sm:p-5 cursor-pointer select-none rounded-[1.6rem_1.3rem_1.6rem_1.2rem] border transition-[transform,box-shadow] duration-300 ease-out hover:[--lift:-6] hover:will-change-transform focus:outline-none focus-visible:ring-2 focus-visible:ring-[#829b72]/70 motion-reduce:transition-none ${
           isSelected
             ? 'border-[#829b72] ring-2 ring-[#829b72] shadow-card [--lift:-4]'
             : 'border-[#4A3B32]/15 shadow-xs hover:border-[#829b72]/50 hover:shadow-card-hover'
@@ -167,12 +167,12 @@ function PokemonCard({
         </div>
 
         {/* Camada média: número e selo Smogon */}
-        <div className="card-layer-near relative flex items-center justify-between mb-3">
-          <span className="px-2.5 py-0.5 rounded-md bg-[#FFFEFB]/85 border border-[#4A3B32]/15 font-mono text-[10px] font-bold text-[#4A3B32] tracking-wider shadow-xs">
+        <div className="card-layer-near relative flex items-center justify-between gap-2 mb-2 sm:mb-3">
+          <span className="shrink-0 px-2.5 py-0.5 rounded-md bg-[#FFFEFB]/85 border border-[#4A3B32]/15 font-mono text-[10px] font-bold text-[#4A3B32] tracking-wider shadow-xs">
             Nº {String(number).padStart(3, '0')}
           </span>
           {hasSmogonData && (
-            <span className="flex items-center gap-1 px-2 py-0.5 rounded-full bg-[#FFFEFB]/85 border border-[#4A3B32]/15 text-[9px] font-bold uppercase tracking-wider text-[#4A3B32] shadow-xs">
+            <span className="flex shrink-0 items-center gap-1 px-2 py-0.5 rounded-full bg-[#FFFEFB]/85 border border-[#4A3B32]/15 text-[9px] font-bold uppercase tracking-wider text-[#4A3B32] shadow-xs">
               <Shield className="w-2.5 h-2.5 fill-[#4A3B32]" aria-hidden="true" />
               Smogon
             </span>
@@ -180,7 +180,7 @@ function PokemonCard({
         </div>
 
         {/* Camada da frente: sprite com parallax */}
-        <div className="card-layer-sprite relative flex items-center justify-center h-40 w-full mb-3">
+        <div className="card-layer-sprite relative flex items-center justify-center h-36 sm:h-40 w-full mb-2 sm:mb-3">
           <img
             src={thumbnailSpriteUrl(id ?? number)}
             alt={pokemon}
@@ -194,7 +194,8 @@ function PokemonCard({
 
         {/* Camada média: nome e tipos */}
         <div className="card-layer-near relative text-center space-y-2">
-          <h3 className="font-serif font-bold text-lg text-[#3E3A35] capitalize tracking-tight">
+          {/* Nomes longos de formas ("tauros paldea blaze breed") quebram entre palavras, nunca são cortados. */}
+          <h3 className="break-words font-serif font-bold text-base sm:text-lg leading-snug text-[#3E3A35] capitalize tracking-tight">
             {pokemon.replace(/-/g, ' ')}
           </h3>
           <div className="flex items-center justify-center gap-1 flex-wrap">

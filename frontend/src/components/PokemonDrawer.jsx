@@ -474,27 +474,34 @@ export default function PokemonDrawer({ pokemonName, onClose, onSmogonDataFound 
         className="sticky top-0 z-20 border-b border-[#4A3B32]/10 shadow-sm md:backdrop-blur-xl md:shadow-[0_10px_30px_-18px_rgba(62,46,36,0.35)]"
         style={{ background: `linear-gradient(120deg, ${primaryInk.bg}F2 0%, #FFFEFBE6 60%, ${primaryInk.bg}CC 100%)` }}
       >
-        <div className="flex items-center gap-4 px-5 pt-4 pb-3">
+        {/*
+          Celular: as ações ocupam a primeira linha, alinhadas à direita, e sprite + nome ficam com a largura toda.
+          sm+: uma linha só, com as ações no fim.
+        */}
+        <div className="flex flex-wrap items-center gap-x-3 gap-y-2 px-4 pt-3 pb-3 sm:flex-nowrap sm:gap-4 sm:px-5 sm:pt-4">
           <div
-            className="relative shrink-0 w-24 h-24 rounded-full flex items-center justify-center border-2 bg-[#FFFEFB]/70 shadow-inner"
+            className="relative shrink-0 w-20 h-20 sm:w-24 sm:h-24 rounded-full flex items-center justify-center border-2 bg-[#FFFEFB]/70 shadow-inner"
             style={{ borderColor: `${primaryInk.border}66` }}
           >
             {shiny && (
-              <Sparkles className="absolute -top-1 -right-1 w-5 h-5 text-[#C9A66B] drop-shadow-sm" aria-hidden="true" />
+              <Sparkles className="absolute -top-1 -right-1 w-5 h-5 text-[#C9A66B] md:drop-shadow-sm" aria-hidden="true" />
             )}
-            <div className="w-20 h-20">
+            <div className="w-16 h-16 sm:w-20 sm:h-20">
               <HeroSprite key={`${detail.id}-${shiny}`} sources={heroSources} alt={displayName} />
             </div>
           </div>
 
           <div className="min-w-0 flex-1">
-            <p className="flex items-center gap-2 text-[10px] font-mono font-bold uppercase tracking-[0.18em] text-[#78614E]">
+            <p className="flex flex-wrap items-center gap-x-2 gap-y-0.5 text-[10px] font-mono font-bold uppercase tracking-[0.18em] text-[#78614E]">
               {formatDexNumber(species?.id ?? detail.id)}
               <span aria-hidden="true">·</span>
               {isAlternateForm ? 'Forma alternativa' : 'Pokédex'}
               {shiny && <span className="px-1.5 rounded bg-[#C9A66B]/25 text-[#7F682F]">Shiny</span>}
             </p>
-            <h2 className="truncate font-serif text-2xl sm:text-3xl font-black tracking-tight text-[#2A2421]">
+            <h2
+              title={displayName}
+              className="line-clamp-2 break-words font-serif text-xl sm:text-3xl font-black leading-tight tracking-tight text-[#2A2421]"
+            >
               {displayName}
             </h2>
             <div className="mt-1.5 flex flex-wrap gap-1.5">
@@ -502,7 +509,7 @@ export default function PokemonDrawer({ pokemonName, onClose, onSmogonDataFound 
             </div>
           </div>
 
-          <div className="flex items-center gap-2 shrink-0 self-start">
+          <div className="order-first flex w-full items-center justify-end gap-2 sm:order-none sm:w-auto sm:shrink-0 sm:self-start">
             <button
               type="button"
               onClick={toggleShiny}
@@ -529,7 +536,11 @@ export default function PokemonDrawer({ pokemonName, onClose, onSmogonDataFound 
           </div>
         </div>
 
-        <nav className="flex gap-1 px-5" aria-label="Seções do Pokémon">
+        {/* Abas numa linha só: no celular dividem a largura; se ainda assim não couberem, rolam em vez de quebrar. */}
+        <nav
+          className="flex gap-0.5 sm:gap-1 overflow-x-auto px-2 sm:px-5 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+          aria-label="Seções do Pokémon"
+        >
           {TABS.map(({ value, label, icon: Icon }) => {
             const active = activeTab === value;
             return (
@@ -538,13 +549,13 @@ export default function PokemonDrawer({ pokemonName, onClose, onSmogonDataFound 
                 type="button"
                 onClick={() => handleTabChange(value)}
                 aria-current={active ? 'page' : undefined}
-                className={`inline-flex items-center gap-1.5 px-3 py-2.5 -mb-px border-b-2 text-xs font-bold tracking-wide transition-colors cursor-pointer ${
+                className={`inline-flex flex-1 justify-center sm:flex-none items-center gap-1.5 whitespace-nowrap px-1 sm:px-3 py-2.5 -mb-px border-b-2 text-[11px] sm:text-xs font-bold sm:tracking-wide transition-colors cursor-pointer ${
                   active
                     ? 'border-[#829b72] text-[#2A2421]'
                     : 'border-transparent text-[#78614E] hover:text-[#2A2421] hover:border-[#4A3B32]/20'
                 }`}
               >
-                <Icon className="w-3.5 h-3.5" aria-hidden="true" />
+                <Icon className="hidden sm:block w-3.5 h-3.5" aria-hidden="true" />
                 {label}
               </button>
             );
@@ -552,7 +563,7 @@ export default function PokemonDrawer({ pokemonName, onClose, onSmogonDataFound 
         </nav>
       </header>
 
-      <div className="flex-1 p-5 space-y-5">
+      <div className="flex-1 p-4 space-y-4 sm:p-5 sm:space-y-5">
         {forms.length > 0 && (
           <div className={`${GLASS_CARD} px-4 py-3 flex flex-wrap items-center gap-2`}>
             <span className="text-[10px] font-bold uppercase tracking-wider text-[#78614E] mr-1">Formas</span>
