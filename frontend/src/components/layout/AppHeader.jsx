@@ -1,7 +1,7 @@
 import { memo } from 'react';
 import SmeargleMascote from '../SmeargleMascote';
 import SectionTabs from './SectionTabs';
-import { InkEdge, InkSplatter } from '../InkDecor';
+import { InkEdge } from '../InkDecor';
 import { DEFAULT_SECTION, sectionHref } from '../../navigation/sections';
 
 const EASE = 'transition-[padding,margin,width,max-height,opacity,font-size] duration-300 max-md:duration-200 ease-[cubic-bezier(0.22,1,0.36,1)] motion-reduce:transition-none';
@@ -14,9 +14,6 @@ const EASE = 'transition-[padding,margin,width,max-height,opacity,font-size] dur
 function AppHeader({ activeId, collapsed, toolbarRef, children }) {
   return (
     <header className="sticky top-0 z-40 bg-[#2A2421] text-[#F7F3EE]">
-      <InkSplatter className="hidden md:block absolute -top-10 right-[10%] h-36 w-36 rotate-12 opacity-[0.12]" color="#829b72" />
-      <InkSplatter className="hidden md:block absolute -bottom-8 left-[30%] h-20 w-20 -rotate-45 opacity-[0.1]" color="#785132" />
-
       <div className={`relative mx-auto max-w-[1700px] px-4 sm:px-6 lg:px-8 ${EASE} ${collapsed ? 'py-1.5' : 'py-2 sm:py-3'}`}>
         <div className="flex flex-wrap items-center gap-x-3 gap-y-1 xl:flex-nowrap xl:gap-x-6">
           {/* O mascote é um botão (alterna o shiny): fica fora do link da marca. */}

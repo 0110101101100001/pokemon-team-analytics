@@ -176,7 +176,7 @@ export default function App() {
           <AboutButton onClick={openAbout} />
         </AppHeader>
 
-        <main className="relative max-w-[1700px] mx-auto px-4 sm:px-6 lg:px-8 pt-10 sm:pt-14 pb-16">
+        <main className="relative max-w-[1700px] mx-auto px-4 sm:px-6 lg:px-8 pt-6 sm:pt-10 pb-16">
           <InkSplatter className="hidden md:block absolute -left-24 top-[22rem] w-44 h-44 opacity-[0.06] mix-blend-multiply -rotate-12" color="#785132" />
           <InkSplatter className="hidden md:block absolute right-0 bottom-40 w-28 h-28 opacity-[0.08] mix-blend-multiply rotate-[160deg]" color="#829b72" />
 

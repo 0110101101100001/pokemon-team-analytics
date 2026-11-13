@@ -1,14 +1,14 @@
 import { memo } from 'react';
 import { SECTIONS, sectionHref } from '../../navigation/sections';
 
-// A pincelada cresce da esquerda para a direita quando a aba fica ativa, como um traço de pincel.
+// Traço rápido e discreto sob a aba ativa: cresce da esquerda para a direita, como uma pincelada leve.
 function BrushStroke({ color, active }) {
   return (
     <svg
       aria-hidden="true"
       viewBox="0 0 120 10"
       preserveAspectRatio="none"
-      className={`pointer-events-none absolute inset-x-1 bottom-0 h-[6px] w-[calc(100%-0.5rem)] origin-left transition-[transform,opacity] duration-300 ease-out motion-reduce:transition-none sm:inset-x-2 sm:h-[7px] sm:w-[calc(100%-1rem)] ${
+      className={`pointer-events-none absolute inset-x-1 bottom-0 h-[3px] w-[calc(100%-0.5rem)] origin-left transition-[transform,opacity] duration-300 ease-out motion-reduce:transition-none sm:inset-x-2 sm:h-[4px] sm:w-[calc(100%-1rem)] ${
         active ? 'scale-x-100 opacity-100' : 'scale-x-0 opacity-0'
       }`}
     >
@@ -16,26 +16,10 @@ function BrushStroke({ color, active }) {
         fill={color}
         d="M2 6.1C14 3.3 27 2.5 41 3.1c13 .6 24 1.8 38 1.2 13-.6 25-2.3 38-1.5 1.7.1 2 2.4.3 2.9-12 3.5-25 3.2-38 3.5-14 .3-27-1-41-.7-12 .3-23 1.7-35 1.2C.9 9.6.3 6.5 2 6.1z"
       />
-      <circle cx="117" cy="8.6" r="1" fill={color} />
     </svg>
   );
 }
 
-// Pingos que o pincel solta ao parar: aparecem logo depois de a pincelada terminar de crescer.
-function BrushFlick({ color, active }) {
-  return (
-    <span
-      aria-hidden="true"
-      className={`pointer-events-none absolute -right-0.5 bottom-0.5 h-3 w-3 origin-bottom-left transition-[transform,opacity] duration-200 ease-out motion-reduce:transition-none sm:right-0.5 ${
-        active ? 'scale-100 opacity-100 delay-300 motion-reduce:delay-0' : 'scale-0 opacity-0'
-      }`}
-    >
-      <span className="absolute bottom-0 left-0 h-1.5 w-1.5 rounded-[60%_40%_55%_45%]" style={{ backgroundColor: color }} />
-      <span className="absolute bottom-1.5 left-2 h-1 w-1 rounded-full" style={{ backgroundColor: color }} />
-      <span className="absolute bottom-2.5 left-1 h-[3px] w-[3px] rounded-full opacity-80" style={{ backgroundColor: color }} />
-    </span>
-  );
-}
 
 /** Navegação principal. No celular vira uma barra de cinco ícones; `compact` esconde os rótulos ao rolar. */
 function SectionTabs({ activeId, compact = false, className = '' }) {
@@ -58,7 +42,6 @@ function SectionTabs({ activeId, compact = false, className = '' }) {
                 <span className={`truncate text-[10px] leading-none sm:hidden ${compact ? 'sr-only' : ''}`}>{shortLabel}</span>
                 <span className="hidden whitespace-nowrap text-[13px] leading-none tracking-wide sm:inline">{label}</span>
                 <BrushStroke color={pigment} active={active} />
-                <BrushFlick color={pigment} active={active} />
               </a>
             </li>
           );
