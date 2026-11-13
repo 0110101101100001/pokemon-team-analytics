@@ -235,41 +235,58 @@
   }
 
   /*
-    Tinta molhada: no hover a aguada do card se espalha do centro, como aquarela no papel úmido.
-    A cor vem de --wash, definida pelo próprio card.
+    Hover do card da Pokédex: um respingo de tinta na cor do tipo estoura atrás do sprite
+    e um contorno de pincel se desenha em volta do card. A cor do respingo vem de --splat.
   */
-  .wet-ink {
+  .ink-splat {
     isolation: isolate;
   }
 
-  .wet-ink::before {
+  .ink-splat::before {
     content: '';
     position: absolute;
-    inset: 8%;
+    left: 50%;
+    top: 44%;
     z-index: -1;
+    width: 72%;
+    aspect-ratio: 1;
     pointer-events: none;
-    border-radius: 48% 52% 44% 56% / 54% 46% 54% 46%;
-    /* Aquarela secando: o centro claro e a tinta acumulada na borda da mancha. */
-    background: radial-gradient(
-      circle,
-      var(--wash, #cfe3b4) 0 42%,
-      color-mix(in srgb, var(--wash, #cfe3b4) 70%, #2a2421 14%) 58%,
-      transparent 70%
-    );
+    background: var(--splat, #829b72);
+    -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 200 200'%3E%3Cpath d='M100 46c9 0 12 10 20 8s14-14 22-9-2 18 4 25 22 2 24 12-14 13-12 22 14 18 6 26-20-4-27 3-4 22-14 24-12-14-21-14-14 15-23 10 0-18-8-24-24 0-24-10 15-13 13-22-15-16-8-24 20 2 26-5 2-22 12-24 13 12 20 4 1-15 10-15z'/%3E%3Ccircle cx='160' cy='38' r='7'/%3E%3Ccircle cx='176' cy='60' r='3.5'/%3E%3Ccircle cx='38' cy='44' r='5'/%3E%3Ccircle cx='24' cy='128' r='6'/%3E%3Ccircle cx='44' cy='168' r='3'/%3E%3Ccircle cx='150' cy='172' r='5.5'/%3E%3Ccircle cx='182' cy='124' r='3'/%3E%3Ccircle cx='98' cy='18' r='3.5'/%3E%3Ccircle cx='112' cy='186' r='2.5'/%3E%3C/svg%3E") center / contain no-repeat;
+    mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 200 200'%3E%3Cpath d='M100 46c9 0 12 10 20 8s14-14 22-9-2 18 4 25 22 2 24 12-14 13-12 22 14 18 6 26-20-4-27 3-4 22-14 24-12-14-21-14-14 15-23 10 0-18-8-24-24 0-24-10 15-13 13-22-15-16-8-24 20 2 26-5 2-22 12-24 13 12 20 4 1-15 10-15z'/%3E%3Ccircle cx='160' cy='38' r='7'/%3E%3Ccircle cx='176' cy='60' r='3.5'/%3E%3Ccircle cx='38' cy='44' r='5'/%3E%3Ccircle cx='24' cy='128' r='6'/%3E%3Ccircle cx='44' cy='168' r='3'/%3E%3Ccircle cx='150' cy='172' r='5.5'/%3E%3Ccircle cx='182' cy='124' r='3'/%3E%3Ccircle cx='98' cy='18' r='3.5'/%3E%3Ccircle cx='112' cy='186' r='2.5'/%3E%3C/svg%3E") center / contain no-repeat;
     opacity: 0;
-    filter: blur(3px);
-    transform: scale(0.35);
-    transition: transform 0.6s cubic-bezier(0.22, 1, 0.36, 1), opacity 0.4s ease-out;
+    transform: translate(-50%, -50%) scale(0.35) rotate(-18deg);
+    transition: transform 0.45s cubic-bezier(0.34, 1.56, 0.64, 1), opacity 0.2s ease-out;
   }
 
-  .wet-ink:hover::before,
-  .wet-ink:focus-visible::before {
+  .ink-splat:hover::before,
+  .ink-splat:focus-visible::before {
+    opacity: 0.5;
+    transform: translate(-50%, -50%) scale(1) rotate(0deg);
+  }
+
+  /* Contorno de pincel: o traço percorre a borda do card, começando no canto de cima. */
+  .ink-outline {
+    fill: none;
+    stroke: var(--ink);
+    stroke-width: 0.85;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+    /* O traço escondido fica todo antes do início do caminho: sem isso, a ponta redonda aparece como um ponto. */
+    stroke-dasharray: 1 2;
+    stroke-dashoffset: 1.05;
     opacity: 0.85;
-    transform: scale(1.08);
+    transition: stroke-dashoffset 0.6s cubic-bezier(0.65, 0, 0.35, 1);
+  }
+
+  .ink-splat:hover .ink-outline,
+  .ink-splat:focus-visible .ink-outline {
+    stroke-dashoffset: 0;
   }
 
   @media (prefers-reduced-motion: reduce) {
-    .wet-ink::before {
+    .ink-splat::before,
+    .ink-outline {
       transition: none;
     }
   }

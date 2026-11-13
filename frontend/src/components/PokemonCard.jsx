@@ -1,6 +1,6 @@
 import { memo } from 'react';
 import { Shield } from 'lucide-react';
-import PokemonTypeBadge from './PokemonTypeBadge';
+import PokemonTypeBadge, { TYPE_INK } from './PokemonTypeBadge';
 import FavoriteButton from './FavoriteButton';
 import { thumbnailSpriteUrl } from '../services/api';
 
@@ -33,8 +33,8 @@ function backgroundStyleFor(type) {
   if (!style) {
     const [wash, paper] = TYPE_WASHES[type] ?? TYPE_WASHES.normal;
     style = {
-      // A tinta molhada do hover (.wet-ink) se espalha nesta cor.
-      '--wash': wash,
+      // Tinta do respingo que estoura atrás do sprite no hover (.ink-splat): a cor forte do tipo.
+      '--splat': (TYPE_INK[type] ?? TYPE_INK.normal).border,
       backgroundColor: paper,
       backgroundImage: `radial-gradient(ellipse 75% 55% at 50% 42%, ${wash}, transparent 72%), var(--paper-grain)`,
       backgroundSize: 'auto, 220px 220px',
@@ -45,6 +45,29 @@ function backgroundStyleFor(type) {
 }
 
 const displayName = (name) => name.replace(/-/g, ' ');
+
+/*
+  Contorno de pincel do hover: um traço irregular em volta do card, desenhado de uma vez a partir do canto
+  de cima e passando um pouco do ponto de partida, como o pincel que fecha a volta. pathLength="1" deixa
+  a animação do traço (index.css, .ink-outline) independente do tamanho do card. Sem non-scaling-stroke:
+  com ele o tracejado que esconde o traço sai desregulado e sobram pedaços visíveis nos cards parados.
+*/
+const BrushOutline = memo(function BrushOutline() {
+  return (
+    <svg
+      aria-hidden="true"
+      viewBox="0 0 100 100"
+      preserveAspectRatio="none"
+      className="pointer-events-none absolute -inset-[4px] h-[calc(100%+8px)] w-[calc(100%+8px)] overflow-visible"
+    >
+      <path
+        className="ink-outline"
+        pathLength="1"
+        d="M9 1.6C30 .7 70 1.3 91.5 1.9c5.6.2 6.9 2.4 6.8 7.4-.5 26 .4 55-.2 81.6-.1 5.5-2.2 7.4-7.2 7.3-26 .6-55-.3-81.6.3-5.4.1-7.3-2.2-7.2-7.5.5-26-.4-55 .2-81.5C2.4 4 4.6 1.9 11 1.3"
+      />
+    </svg>
+  );
+});
 
 function PokemonCard({
   pokemon,
@@ -77,12 +100,13 @@ function PokemonCard({
       onClick={handleSelect}
       onKeyDown={handleKeyDown}
       style={backgroundStyleFor(types[0] ?? 'normal')}
-      className={`wet-ink group relative cursor-pointer select-none rounded-[1.4rem_1.15rem_1.5rem_1.05rem/1.1rem_1.45rem_1.05rem_1.35rem] border-[1.5px] p-4 transition-[transform,box-shadow,border-color] duration-200 ease-out hover:-translate-y-0.5 focus:outline-none focus-visible:ring-2 focus-visible:ring-paint-cobalt focus-visible:ring-offset-2 focus-visible:ring-offset-[#F7F3EE] motion-reduce:transition-none motion-reduce:hover:translate-y-0 sm:p-5 ${
+      className={`ink-splat group relative cursor-pointer select-none rounded-[1.4rem_1.15rem_1.5rem_1.05rem/1.1rem_1.45rem_1.05rem_1.35rem] border-[1.5px] p-4 transition-[transform,box-shadow,border-color] duration-200 ease-out hover:-translate-y-0.5 focus:outline-none focus-visible:ring-2 focus-visible:ring-paint-cobalt focus-visible:ring-offset-2 focus-visible:ring-offset-[#F7F3EE] motion-reduce:transition-none motion-reduce:hover:translate-y-0 sm:p-5 ${
         isSelected
           ? 'brush-frame border-[#2A2421] shadow-[4px_5px_0_#829b72]'
-          : 'border-[#2A2421]/25 shadow-[3px_3px_0_rgba(42,36,33,0.1)] hover:border-[#2A2421]/70 hover:shadow-[4px_5px_0_rgba(42,36,33,0.2)]'
+          : 'border-[#2A2421]/25 shadow-[3px_3px_0_rgba(42,36,33,0.1)] hover:shadow-[4px_5px_0_rgba(42,36,33,0.2)]'
       }`}
     >
+      <BrushOutline />
       <div className="relative mb-2 flex items-center justify-between gap-2 sm:mb-3">
         <span className="shrink-0 rounded-md border border-[#2A2421]/20 bg-[#FFFEFB]/85 px-2 py-0.5 font-mono text-[10px] font-bold tracking-wider text-[#2A2421] tabular-nums">
           Nº {String(number).padStart(3, '0')}
@@ -108,7 +132,7 @@ function PokemonCard({
           height={128}
           loading="lazy"
           decoding="async"
-          className="h-32 w-32 object-contain transition-transform duration-300 ease-out group-hover:scale-[1.03] md:drop-shadow-[0_8px_8px_rgba(42,36,33,0.2)] motion-reduce:transform-none"
+          className="h-32 w-32 object-contain transition-transform duration-300 ease-out group-hover:-translate-y-0.5 group-hover:scale-[1.04] md:drop-shadow-[0_8px_8px_rgba(42,36,33,0.2)] motion-reduce:transform-none"
         />
       </div>
 
