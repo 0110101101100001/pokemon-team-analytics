@@ -21,7 +21,7 @@ function AppHeader({ activeId, collapsed, toolbarRef, children }) {
         <div className="flex flex-wrap items-center gap-x-3 gap-y-1 xl:flex-nowrap xl:gap-x-6">
           {/* O mascote é um botão (alterna o shiny): fica fora do link da marca. */}
           <div className="order-1 flex min-w-0 items-center gap-3 sm:shrink-0">
-            <div className={`hidden shrink-0 overflow-hidden md:block ${EASE} ${collapsed ? '-mr-3 w-0 opacity-0' : 'w-16 opacity-100'}`}>
+            <div className={`hidden shrink-0 overflow-hidden md:block ${EASE} ${collapsed ? '-mr-3 w-0 opacity-0' : 'w-[5.5rem] opacity-100'}`}>
               <SmeargleMascote className="m-1" />
             </div>
             <a
@@ -29,17 +29,17 @@ function AppHeader({ activeId, collapsed, toolbarRef, children }) {
               aria-label="Smearglepedia: ir para a Pokédex"
               className="block min-w-0 rounded-xl px-1 py-1 focus:outline-none focus-visible:ring-2 focus-visible:ring-[#A4C294]/70"
             >
-              <h1 className={`font-serif font-black leading-none tracking-tight text-[#FFFDF9] ${EASE} ${collapsed ? 'text-lg sm:text-xl' : 'text-xl sm:text-[1.75rem]'}`}>
+              <h1 className={`font-serif font-black leading-none tracking-tight text-[#FFFDF9] ${EASE} ${collapsed ? 'text-xl sm:text-2xl' : 'text-2xl sm:text-[2.4rem]'}`}>
                 Smeargle
                 <span className="relative isolate text-[#B7D99F]">
                   pedia
                   {/* A ponta da cauda do Smeargle: uma pincelada de tinta sob "pedia". */}
-                  <svg aria-hidden="true" viewBox="0 0 100 12" preserveAspectRatio="none" className="absolute -bottom-1.5 left-0 -z-10 h-2 w-full text-[#829b72]">
+                  <svg aria-hidden="true" viewBox="0 0 100 12" preserveAspectRatio="none" className="absolute -bottom-2 left-0 -z-10 h-2.5 w-full text-[#829b72]">
                     <path fill="currentColor" opacity="0.75" d="M1 7c18-4 40-5 62-4 13 .5 24 1.5 34 .5 2 0 3 3 1 4-14 3-34 2-52 3-15 1-29 2-42 1C0 11 0 8 1 7z" />
                   </svg>
                 </span>
               </h1>
-              <p className={`hidden overflow-hidden font-hand text-base leading-none text-[#F7F3EE]/65 sm:block ${EASE} ${collapsed ? 'mt-0 max-h-0 opacity-0' : 'mt-1.5 max-h-5 opacity-100'}`}>
+              <p className={`hidden overflow-hidden font-hand text-lg leading-none text-[#F7F3EE]/65 sm:block ${EASE} ${collapsed ? 'mt-0 max-h-0 opacity-0' : 'mt-2 max-h-6 opacity-100'}`}>
                 guia de campo competitivo
               </p>
             </a>
