@@ -322,32 +322,34 @@
     background-size: auto, auto, 220px 220px;
   }
 
-  /* Tinta escorrendo da borda de cima da folha: o fio e a gota que se solta, como no header. */
+  /*
+    Poça de tinta caída sobre a borda de cima da folha: mais larga que alta, com a borda mais escura
+    da aquarela secando, e dois respingos miúdos ao lado (nunca embaixo, para não formar um "!").
+  */
   .ink-blotted::before,
   .ink-blotted::after {
     content: '';
     position: absolute;
     pointer-events: none;
-    background: var(--ink);
   }
 
   .ink-blotted::before {
-    top: -1.5px;
-    right: 2.25rem;
-    width: 0.4rem;
+    top: -0.55rem;
+    right: 1.5rem;
+    width: 2.6rem;
     height: 1.3rem;
-    border-radius: 0 0 50% 50% / 0 0 0.45rem 0.45rem;
-    clip-path: polygon(0 0, 100% 0, 88% 60%, 100% 100%, 0 100%, 12% 60%);
-    opacity: 0.82;
+    background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 120 60'%3E%3Cpath d='M104.0 31.0C104.2 33.0 99.8 34.9 98.5 37.0C97.1 39.2 98.0 41.9 95.7 43.9C93.4 46.0 89.4 48.6 84.6 49.4C79.9 50.3 72.6 49.5 67.4 49.2C62.2 48.8 58.1 47.5 53.4 47.1C48.7 46.7 44.1 47.1 39.1 46.6C34.1 46.1 27.0 45.7 23.6 44.2C20.2 42.7 19.2 39.7 18.7 37.5C18.1 35.3 20.7 33.2 20.4 31.0C20.1 28.8 16.9 26.6 17.0 24.2C17.1 21.9 17.8 18.6 21.2 17.0C24.7 15.3 32.2 14.6 37.6 14.2C42.9 13.8 48.3 14.8 53.3 14.5C58.3 14.3 62.3 12.9 67.5 12.7C72.6 12.4 80.2 11.8 84.2 12.9C88.2 14.0 89.5 17.5 91.7 19.5C93.9 21.6 95.2 23.2 97.2 25.2C99.3 27.1 103.8 29.0 104.0 31.0Z' fill='%232a2421' fill-opacity='.62' stroke='%232a2421' stroke-opacity='.55' stroke-width='3'/%3E%3Cellipse cx='103' cy='40' rx='7' ry='5' fill='%232a2421' fill-opacity='.6'/%3E%3C/svg%3E") center / contain no-repeat;
+    transform: rotate(-6deg);
   }
 
   .ink-blotted::after {
-    top: 1.65rem;
-    right: 2.35rem;
-    width: 0.3rem;
-    height: 0.38rem;
-    border-radius: 50% 50% 50% 50% / 40% 40% 60% 60%;
-    opacity: 0.7;
+    top: -0.3rem;
+    right: 1.15rem;
+    width: 0.32rem;
+    height: 0.28rem;
+    border-radius: 55% 45% 50% 50%;
+    background: rgba(42, 36, 33, 0.7);
+    box-shadow: -3.4rem 0.55rem 0 -0.04rem rgba(42, 36, 33, 0.5);
   }
 
   .paper-field {
