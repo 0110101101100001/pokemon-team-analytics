@@ -3,7 +3,7 @@ import AuthModal from "./components/AuthModal";
 import AuthButton from "./components/AuthButton";
 import AboutButton from "./components/AboutButton";
 import AppHeader from "./components/layout/AppHeader";
-import InkDropLoader from "./components/InkDropLoader";
+import BrushLoader from "./components/BrushLoader";
 import PokemonSheet, { loadPokemonDrawer } from "./components/PokemonSheet";
 import { HeaderContext } from "./components/layout/headerContext";
 import { InkSplatter } from "./components/InkDecor";
@@ -14,7 +14,7 @@ import { usePokedexFilters } from "./hooks/usePokedexFilters";
 import { useScrollCollapsed } from "./hooks/useScrollCollapsed";
 import { useUserCollections } from "./hooks/useUserCollections";
 import {
-  fetchEggGroupIndex, fetchPokemonList, fetchSmogonNames, fetchSpeciesList, fetchTypeIndex, officialSpriteUrl,
+  fetchEggGroupIndex, fetchPokemonList, fetchSmogonNames, fetchSpeciesList, fetchTypeIndex,
 } from "./services/api";
 import { buildPokedexEntries } from "./utils/pokedex";
 import { buildSmogonBadgeMap } from "./utils/smogon";
@@ -27,11 +27,10 @@ const DamageCalculatorSection = lazy(() => import("./sections/DamageCalculatorSe
 // O "Sobre" e a ficha (em PokemonSheet) só abrem por ação do usuário: ficam fora do pacote inicial.
 const AboutModal = lazy(() => import("./components/AboutModal"));
 
-const SMEARGLE_ID = 235;
 const APP_NAME = "Smearglepedia";
 
 function SectionFallback() {
-  return <InkDropLoader label="Molhando o pincel..." className="py-24" />;
+  return <BrushLoader label="Molhando o pincel..." className="py-24" />;
 }
 
 export default function App() {
@@ -117,9 +116,8 @@ export default function App() {
 
   if (loading) {
     return (
-      <div className="flex min-h-screen flex-col items-center justify-center gap-4">
-        <img src={officialSpriteUrl(SMEARGLE_ID)} alt="" width={72} height={72} decoding="async" className="h-[72px] w-[72px] object-contain" />
-        <InkDropLoader label="Preparando a tinta..." />
+      <div className="flex min-h-screen items-center justify-center">
+        <BrushLoader label="Preparando a tinta..." />
       </div>
     );
   }

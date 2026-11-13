@@ -82,9 +82,8 @@ export default {
       animation: {
         'fade-in': 'fadeIn 0.25s ease-out',
         'bubble-pop': 'bubblePop 0.3s cubic-bezier(0.22, 1, 0.36, 1)',
-        'ink-drop': 'inkDrop 1.4s cubic-bezier(0.55, 0, 0.45, 1) infinite',
+        'brush-draw': 'brushDraw 1.6s cubic-bezier(0.65, 0, 0.35, 1) infinite',
         'mascot-bob': 'mascotBob 3.2s ease-in-out infinite',
-        'ink-ripple': 'inkRipple 1.4s ease-out infinite',
         'cry-wave': 'cryWave 0.8s ease-in-out infinite',
         'cry-ring': 'cryRing 1.2s ease-out infinite',
         // Sem fill-mode: terminada a entrada, a seção não fica com transform nem contexto de empilhamento
@@ -108,17 +107,12 @@ export default {
           '0%, 100%': { transform: 'translateY(0) rotate(0deg)' },
           '50%': { transform: 'translateY(-3px) rotate(-2deg)' },
         },
-        // Gota de tinta caindo e a onda que ela abre ao tocar o papel.
-        inkDrop: {
-          '0%': { transform: 'translateY(-14px) scale(0.7, 1.25)', opacity: '0' },
-          '15%': { opacity: '1' },
-          '55%': { transform: 'translateY(6px) scale(1, 1)', opacity: '1' },
-          '62%, 100%': { transform: 'translateY(8px) scale(1.5, 0.4)', opacity: '0' },
-        },
-        inkRipple: {
-          '0%, 55%': { transform: 'scale(0.2)', opacity: '0' },
-          '62%': { opacity: '0.7' },
-          '100%': { transform: 'scale(1.6)', opacity: '0' },
+        // Traço do carregamento: o pincel desenha da esquerda para a direita, segura um instante e some.
+        brushDraw: {
+          '0%': { transform: 'scaleX(0)', opacity: '1' },
+          '55%': { transform: 'scaleX(1)', opacity: '1' },
+          '80%': { transform: 'scaleX(1)', opacity: '1' },
+          '100%': { transform: 'scaleX(1)', opacity: '0' },
         },
         cryWave: {
           '0%, 100%': { transform: 'scaleY(0.35)' },

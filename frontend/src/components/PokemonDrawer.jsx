@@ -15,7 +15,7 @@ import {
   fetchSmogonNames, fetchSmogonStats, fetchTypeData, officialSpriteUrl,
 } from '../services/api';
 import { resolveSmogonName } from '../utils/smogon';
-import InkDropLoader from './InkDropLoader';
+import BrushLoader from './BrushLoader';
 import { BrushHighlight } from './InkDecor';
 
 /* ---------------------------------------------------------------- dados estáticos */
@@ -514,7 +514,7 @@ export default function PokemonDrawer({
   if (loading) {
     return (
       <div className="flex h-full items-center justify-center bg-[#F7F3EE]" style={PAPER_BG}>
-        <InkDropLoader label="Carregando dados de campo..." />
+        <BrushLoader label="Carregando dados de campo..." />
       </div>
     );
   }
@@ -777,7 +777,7 @@ export default function PokemonDrawer({
             }
           >
             {smogonLoading ? (
-              <InkDropLoader label="Sincronizando estatísticas..." className="py-8" />
+              <BrushLoader label="Sincronizando estatísticas..." className="py-8" />
             ) : smogon ? (
               <div className="space-y-4">
                 <div className="p-4 rounded-xl border border-[#2A2421]/12 bg-[#FFFEFB]">
@@ -916,7 +916,7 @@ export default function PokemonDrawer({
                 </thead>
                 <tbody className="divide-y divide-[#2A2421]/10">
                   {movesetLoading ? (
-                    <tr><td colSpan={7}><InkDropLoader label="Compilando o learnset..." className="py-8" /></td></tr>
+                    <tr><td colSpan={7}><BrushLoader label="Compilando o learnset..." className="py-8" /></td></tr>
                   ) : visibleMoves.length === 0 ? (
                     <tr><td colSpan={7} className="py-8 text-center text-xs text-[#78614E]">Nenhum golpe para este filtro.</td></tr>
                   ) : (
