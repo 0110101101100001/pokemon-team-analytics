@@ -1,7 +1,7 @@
 import { memo } from 'react';
 import SmeargleMascote from '../SmeargleMascote';
 import SectionTabs from './SectionTabs';
-import { InkEdge } from '../InkDecor';
+import { InkEdge, InkStain } from '../InkDecor';
 import { DEFAULT_SECTION, sectionHref } from '../../navigation/sections';
 
 const EASE = 'transition-[padding,margin,width,max-height,opacity,font-size] duration-300 max-md:duration-200 ease-[cubic-bezier(0.22,1,0.36,1)] motion-reduce:transition-none';
@@ -17,7 +17,11 @@ function AppHeader({ activeId, collapsed, toolbarRef, children }) {
       <div className={`relative mx-auto max-w-[1700px] px-4 sm:px-6 lg:px-8 ${EASE} ${collapsed ? 'py-1.5' : 'py-2 sm:py-3'}`}>
         <div className="flex flex-wrap items-center gap-x-3 gap-y-1 xl:flex-nowrap xl:gap-x-6">
           {/* O mascote é um botão (alterna o shiny): fica fora do link da marca. */}
-          <div className="order-1 flex min-w-0 items-center gap-3 sm:shrink-0">
+          <div className="relative isolate order-1 flex min-w-0 items-center gap-3 sm:shrink-0">
+            {/* Mancha de tinta atrás da logo e do mascote. Some com o header recolhido: sem o mascote a área fica estreita e ela esticaria. */}
+            <InkStain
+              className={`-inset-x-5 -inset-y-2 h-[calc(100%+1rem)] w-[calc(100%+2.5rem)] transition-opacity duration-300 motion-reduce:transition-none md:-inset-x-6 md:w-[calc(100%+3rem)] ${collapsed ? 'opacity-0' : 'opacity-100'}`}
+            />
             <div className={`hidden shrink-0 overflow-hidden md:block ${EASE} ${collapsed ? '-mr-3 w-0 opacity-0' : 'w-[5.5rem] opacity-100'}`}>
               <SmeargleMascote className="m-1" />
             </div>

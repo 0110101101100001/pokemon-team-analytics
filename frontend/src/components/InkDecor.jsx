@@ -1,4 +1,4 @@
-import { memo } from 'react';
+import { memo, useId } from 'react';
 
 /** Mancha de pincel decorativa. Posicione com `className` (absolute + coordenadas). */
 export const InkSplatter = memo(function InkSplatter({ className = '', color = '#829b72' }) {
@@ -71,6 +71,38 @@ export const BrushHighlight = memo(function BrushHighlight({ color = '#A4C294', 
         d="M6 14c32-7 71-9 112-7 37 2 70 6 108 3 26-2 46-4 66-1 6 1 8 9 3 12-22 9-49 7-77 10-37 4-71 1-107 3-33 2-62 7-95 6-11 0-19-5-20-13-1-7 4-11 10-13z"
       />
       <path fill={color} opacity="0.35" d="M20 26c50-5 115 0 170-3 32-2 62-3 92-1 4 3-1 8-6 9-61 4-134 3-201 5-26 1-56-2-55-10z" />
+    </svg>
+  );
+});
+
+/**
+ * Mancha de tinta atrás da marca (logo e mascote): elipses fundidas num grupo translúcido e uma turbulência
+ * que deixa a borda irregular, como tinta absorvida pelo papel. O pai precisa de `relative isolate`.
+ */
+export const InkStain = memo(function InkStain({ className = '', color = '#3A2C24' }) {
+  const filterId = useId().replace(/:/g, '');
+  return (
+    <svg
+      aria-hidden="true"
+      viewBox="0 0 400 100"
+      preserveAspectRatio="none"
+      className={`pointer-events-none absolute -z-10 overflow-visible ${className}`}
+    >
+      <defs>
+        <filter id={filterId} x="-10%" y="-20%" width="120%" height="140%">
+          <feTurbulence type="fractalNoise" baseFrequency="0.035 0.09" numOctaves="3" seed="7" result="noise" />
+          <feDisplacementMap in="SourceGraphic" in2="noise" scale="11" xChannelSelector="R" yChannelSelector="G" />
+        </filter>
+      </defs>
+      <g fill={color} opacity="0.42" filter={`url(#${filterId})`}>
+        <ellipse cx="60" cy="50" rx="50" ry="46" />
+        <ellipse cx="225" cy="53" rx="166" ry="35" />
+        <ellipse cx="140" cy="32" rx="58" ry="23" />
+        <ellipse cx="255" cy="31" rx="70" ry="17" />
+        <ellipse cx="300" cy="74" rx="70" ry="19" />
+        <ellipse cx="366" cy="49" rx="27" ry="25" />
+        <ellipse cx="118" cy="76" rx="44" ry="19" />
+      </g>
     </svg>
   );
 });
