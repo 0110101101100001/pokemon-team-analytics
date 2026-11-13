@@ -47,24 +47,23 @@ function backgroundStyleFor(type) {
 const displayName = (name) => name.replace(/-/g, ' ');
 
 /*
-  Contorno de pincel do hover: um traço irregular em volta do card, desenhado de uma vez a partir do canto
-  de cima e passando um pouco do ponto de partida, como o pincel que fecha a volta. pathLength="1" deixa
-  a animação do traço (index.css, .ink-outline) independente do tamanho do card. Sem non-scaling-stroke:
-  com ele o tracejado que esconde o traço sai desregulado e sobram pedaços visíveis nos cards parados.
+  Contorno de pincel do hover: o traço corre sobre a borda do card, a partir do canto de cima.
+  O retângulo é medido em pixels (sem viewBox), para o traço cair exatamente sobre a borda de 1,5px;
+  pathLength="1" deixa a animação (index.css, .ink-outline) independente do tamanho do card.
 */
+const OUTLINE_GEOMETRY = {
+  x: '2.25px',
+  y: '2.25px',
+  width: 'calc(100% - 4.5px)',
+  height: 'calc(100% - 4.5px)',
+  // O mesmo raio do card (rounded-[1.25rem]), descontada a metade da borda.
+  rx: 'calc(1.25rem - 0.75px)',
+};
+
 const BrushOutline = memo(function BrushOutline() {
   return (
-    <svg
-      aria-hidden="true"
-      viewBox="0 0 100 100"
-      preserveAspectRatio="none"
-      className="pointer-events-none absolute -inset-[4px] h-[calc(100%+8px)] w-[calc(100%+8px)] overflow-visible"
-    >
-      <path
-        className="ink-outline"
-        pathLength="1"
-        d="M9 1.6C30 .7 70 1.3 91.5 1.9c5.6.2 6.9 2.4 6.8 7.4-.5 26 .4 55-.2 81.6-.1 5.5-2.2 7.4-7.2 7.3-26 .6-55-.3-81.6.3-5.4.1-7.3-2.2-7.2-7.5.5-26-.4-55 .2-81.5C2.4 4 4.6 1.9 11 1.3"
-      />
+    <svg aria-hidden="true" className="pointer-events-none absolute -inset-[1.5px] h-[calc(100%+3px)] w-[calc(100%+3px)] overflow-visible">
+      <rect className="ink-outline" pathLength="1" style={OUTLINE_GEOMETRY} />
     </svg>
   );
 });
@@ -100,7 +99,7 @@ function PokemonCard({
       onClick={handleSelect}
       onKeyDown={handleKeyDown}
       style={backgroundStyleFor(types[0] ?? 'normal')}
-      className={`ink-splat group relative cursor-pointer select-none rounded-[1.4rem_1.15rem_1.5rem_1.05rem/1.1rem_1.45rem_1.05rem_1.35rem] border-[1.5px] p-4 transition-[transform,box-shadow,border-color] duration-200 ease-out hover:-translate-y-0.5 focus:outline-none focus-visible:ring-2 focus-visible:ring-paint-cobalt focus-visible:ring-offset-2 focus-visible:ring-offset-[#F7F3EE] motion-reduce:transition-none motion-reduce:hover:translate-y-0 sm:p-5 ${
+      className={`ink-splat group relative cursor-pointer select-none rounded-[1.25rem] border-[1.5px] p-4 transition-[transform,box-shadow,border-color] duration-200 ease-out hover:-translate-y-0.5 focus:outline-none focus-visible:ring-2 focus-visible:ring-paint-cobalt focus-visible:ring-offset-2 focus-visible:ring-offset-[#F7F3EE] motion-reduce:transition-none motion-reduce:hover:translate-y-0 sm:p-5 ${
         isSelected
           ? 'brush-frame border-[#2A2421] shadow-[4px_5px_0_#829b72]'
           : 'border-[#2A2421]/25 shadow-[3px_3px_0_rgba(42,36,33,0.1)] hover:shadow-[4px_5px_0_rgba(42,36,33,0.2)]'
