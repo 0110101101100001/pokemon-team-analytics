@@ -13,7 +13,7 @@ const EASE = 'transition-[padding,margin,width,max-height,opacity,font-size] dur
  */
 function AppHeader({ activeId, collapsed, toolbarRef, children }) {
   return (
-    <header className="sticky top-0 z-40 bg-[#2A2421] text-[#F7F3EE]">
+    <header className="sticky top-0 z-40 bg-[#78614E] text-[#F7F3EE]">
       <div className={`relative mx-auto max-w-[1700px] px-4 sm:px-6 lg:px-8 ${EASE} ${collapsed ? 'py-1.5' : 'py-2 sm:py-3'}`}>
         <div className="flex flex-wrap items-center gap-x-3 gap-y-1 xl:flex-nowrap xl:gap-x-6">
           {/* O mascote é um botão (alterna o shiny): fica fora do link da marca. */}
@@ -36,7 +36,7 @@ function AppHeader({ activeId, collapsed, toolbarRef, children }) {
                   </svg>
                 </span>
               </h1>
-              <p className={`hidden overflow-hidden font-hand text-lg leading-none text-[#F7F3EE]/65 sm:block ${EASE} ${collapsed ? 'mt-0 max-h-0 opacity-0' : 'mt-2 max-h-6 opacity-100'}`}>
+              <p className={`hidden overflow-hidden font-hand text-lg leading-none text-[#F7F3EE]/80 sm:block ${EASE} ${collapsed ? 'mt-0 max-h-0 opacity-0' : 'mt-2 max-h-6 opacity-100'}`}>
                 guia de campo competitivo
               </p>
             </a>

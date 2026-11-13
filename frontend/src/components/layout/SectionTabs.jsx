@@ -35,7 +35,7 @@ function SectionTabs({ activeId, compact = false, className = '' }) {
                 href={sectionHref(section)}
                 aria-current={active ? 'page' : undefined}
                 className={`relative flex flex-col items-center gap-1 rounded-xl px-1 pb-2 pt-1.5 font-serif font-semibold transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-[#A4C294]/70 sm:flex-row sm:gap-2 sm:px-3 sm:pb-2.5 sm:pt-2 ${
-                  active ? 'text-[#FFFDF9]' : 'text-[#F7F3EE]/60 hover:text-[#F7F3EE]'
+                  active ? 'text-[#FFFDF9]' : 'text-[#F7F3EE]/80 hover:text-[#FFFDF9]'
                 }`}
               >
                 <Icon className="h-4 w-4 shrink-0" style={active ? { color: pigment } : undefined} aria-hidden="true" />
