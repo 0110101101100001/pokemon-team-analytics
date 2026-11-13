@@ -19,23 +19,11 @@ export const InkSplatter = memo(function InkSplatter({ className = '', color = '
 });
 
 /**
- * Borda inferior de um bloco pintado: o traço de pincel termina irregular, com a tinta escorrendo em gotas.
- * Herda a cor via `text-*`.
+ * Borda inferior do header: a pincelada grossa que termina em franja de cerdas, com escorridos e respingos.
+ * O desenho é um ladrilho que se repete na horizontal sem esticar (index.css, .ink-brush-edge).
  */
 export const InkEdge = memo(function InkEdge({ className = '' }) {
-  return (
-    <svg
-      aria-hidden="true"
-      viewBox="0 0 1200 22"
-      preserveAspectRatio="none"
-      className={`pointer-events-none block h-[14px] w-full sm:h-[18px] ${className}`}
-    >
-      <path
-        fill="currentColor"
-        d="M0 0h1200v5c-30 4-62-1-96 3-14 2-20 9-26 9s-6-7-18-8c-40-3-80 3-120 1-30-1-52-4-84 0-16 2-22 3-36 2-26-2-50-5-82-1-12 2-14 12-22 12s-8-9-16-10c-34-3-70 2-104 1-40-1-74-5-112-1-20 2-34 4-56 2-28-3-52-4-80 0-10 1-12 6-18 6s-7-5-14-6C130 11 92 7 52 9 30 10 14 8 0 5z"
-      />
-    </svg>
-  );
+  return <div aria-hidden="true" className={`ink-brush-edge pointer-events-none w-full ${className}`} />;
 });
 
 /**

@@ -53,7 +53,7 @@ function AppHeader({ activeId, collapsed, toolbarRef, children }) {
         <div ref={toolbarRef} className="mx-auto mt-1.5 w-full max-w-4xl empty:hidden sm:mt-2.5" />
       </div>
 
-      <InkEdge className="absolute left-0 top-full -mt-px text-[#2A2421]" />
+      <InkEdge className="absolute left-0 top-full -mt-px" />
     </header>
   );
 }
