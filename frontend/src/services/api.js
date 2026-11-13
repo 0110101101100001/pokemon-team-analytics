@@ -190,9 +190,12 @@ export function officialSpriteUrl(nameOrId) {
   return `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/${nameOrId}.png`;
 }
 
-/** Sprite animado no estilo do Showdown (GIF), normal ou shiny. */
+/**
+ * Sprite 2D animado de Black/White (GIF em pixel art), normal ou shiny.
+ * A geração V só tem sprites até o nº 649.
+ */
 export function animatedSpriteUrl(id, { shiny = false } = {}) {
-  return `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/showdown/${shiny ? 'shiny/' : ''}${id}.gif`;
+  return `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/versions/generation-v/black-white/animated/${shiny ? 'shiny/' : ''}${id}.gif`;
 }
 
 export function thumbnailSpriteUrl(nameOrId) {
