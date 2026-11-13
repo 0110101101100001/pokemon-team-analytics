@@ -19,10 +19,10 @@ function AppHeader({ activeId, collapsed, toolbarRef, children }) {
 
       <div className={`relative mx-auto max-w-[1700px] px-4 sm:px-6 lg:px-8 ${EASE} ${collapsed ? 'py-1.5' : 'py-2 sm:py-3'}`}>
         <div className="flex flex-wrap items-center gap-x-3 gap-y-1 xl:flex-nowrap xl:gap-x-6">
-          {/* O mascote fica fora do link: o embed do Tenor traz as próprias âncoras. */}
+          {/* O mascote é um botão (alterna o shiny): fica fora do link da marca. */}
           <div className="order-1 flex min-w-0 items-center gap-3 sm:shrink-0">
-            <div className={`hidden shrink-0 overflow-hidden md:block ${EASE} ${collapsed ? '-mr-3 w-0 opacity-0' : 'w-14 opacity-100'}`}>
-              <SmeargleMascote />
+            <div className={`hidden shrink-0 overflow-hidden md:block ${EASE} ${collapsed ? '-mr-3 w-0 opacity-0' : 'w-16 opacity-100'}`}>
+              <SmeargleMascote className="m-1" />
             </div>
             <a
               href={sectionHref(DEFAULT_SECTION)}

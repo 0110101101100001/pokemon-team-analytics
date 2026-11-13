@@ -190,6 +190,11 @@ export function officialSpriteUrl(nameOrId) {
   return `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/${nameOrId}.png`;
 }
 
+/** Sprite animado no estilo do Showdown (GIF), normal ou shiny. */
+export function animatedSpriteUrl(id, { shiny = false } = {}) {
+  return `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/showdown/${shiny ? 'shiny/' : ''}${id}.gif`;
+}
+
 export function thumbnailSpriteUrl(nameOrId) {
   return `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/${nameOrId}.png`;
 }

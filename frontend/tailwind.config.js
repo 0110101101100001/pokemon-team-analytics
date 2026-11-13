@@ -83,6 +83,7 @@ export default {
         'fade-in': 'fadeIn 0.25s ease-out',
         'bubble-pop': 'bubblePop 0.3s cubic-bezier(0.22, 1, 0.36, 1)',
         'ink-drop': 'inkDrop 1.4s cubic-bezier(0.55, 0, 0.45, 1) infinite',
+        'mascot-bob': 'mascotBob 3.2s ease-in-out infinite',
         'ink-ripple': 'inkRipple 1.4s ease-out infinite',
         'cry-wave': 'cryWave 0.8s ease-in-out infinite',
         'cry-ring': 'cryRing 1.2s ease-out infinite',
@@ -101,6 +102,11 @@ export default {
         },
         sectionIn: {
           '0%': { opacity: '0', transform: 'translateY(10px)' },
+        },
+        // O mascote balança de leve no lugar, como quem espera com o pincel na mão.
+        mascotBob: {
+          '0%, 100%': { transform: 'translateY(0) rotate(0deg)' },
+          '50%': { transform: 'translateY(-3px) rotate(-2deg)' },
         },
         // Gota de tinta caindo e a onda que ela abre ao tocar o papel.
         inkDrop: {
