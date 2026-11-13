@@ -92,6 +92,7 @@ export default function App() {
   useEffect(() => {
     window.scrollTo(0, 0);
     document.title = `${section.label} · ${APP_NAME}`;
+    document.documentElement.style.setProperty("--section-wash", section.pigment);
   }, [section]);
 
   const entryByName = useMemo(() => new Map(pokemonList.map((p) => [p.name, p])), [pokemonList]);

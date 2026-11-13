@@ -220,7 +220,7 @@ const HeroSprite = memo(function HeroSprite({ sources, alt }) {
       height={80}
       decoding="async"
       onError={() => setIndex((i) => (i + 1 < sources.length ? i + 1 : i))}
-      className={`h-full w-full object-contain drop-shadow-[0_10px_14px_rgba(62,46,36,0.28)] ${animated ? '[image-rendering:pixelated] scale-[1.35]' : ''}`}
+      className={`relative h-full w-full object-contain drop-shadow-[0_4px_3px_rgba(42,36,33,0.18)] ${animated ? '[image-rendering:pixelated] scale-[1.35]' : ''}`}
     />
   );
 });
@@ -245,11 +245,8 @@ const StatBar = memo(function StatBar({ name, value }) {
   return (
     <div className="flex items-center gap-3 text-xs">
       <span className="w-20 font-semibold text-[#78614E]">{meta.label}</span>
-      <div className="flex-1 h-2 rounded-full bg-[#4A3B32]/10 overflow-hidden">
-        <div
-          className="h-full rounded-full transition-[width] duration-500"
-          style={{ width: `${(value / 255) * 100}%`, backgroundColor: meta.color }}
-        />
+      <div className="brush-bar-track flex-1">
+        <div className="brush-bar" style={{ width: `max(${(value / 255) * 100}%, 6px)`, backgroundColor: meta.color }} />
       </div>
       <span className="w-8 text-right font-bold text-[#2A2421]">{value}</span>
     </div>
@@ -537,6 +534,12 @@ export default function PokemonDrawer({
             {shiny && (
               <Sparkles className="absolute -top-1 -right-1 w-5 h-5 text-[#C9A66B] md:drop-shadow-sm" aria-hidden="true" />
             )}
+            {/* A sombra do sprite é uma poça de aquarela na tinta do tipo. */}
+            <span
+              aria-hidden="true"
+              className="absolute bottom-2 left-1/2 h-4 w-14 -translate-x-1/2 rounded-[48%_52%_45%_55%/60%_55%_45%_40%] blur-[1.5px] sm:bottom-3 sm:w-16"
+              style={{ background: `radial-gradient(ellipse at 50% 45%, ${primaryInk.border}99, ${primaryInk.border}33 60%, transparent 75%)` }}
+            />
             <div className="w-16 h-16 sm:w-20 sm:h-20">
               <HeroSprite key={`${detail.id}-${shiny}`} sources={heroSources} alt={displayName} />
             </div>

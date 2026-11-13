@@ -21,6 +21,22 @@ function BrushStroke({ color, active }) {
   );
 }
 
+// Pingos que o pincel solta ao parar: aparecem logo depois de a pincelada terminar de crescer.
+function BrushFlick({ color, active }) {
+  return (
+    <span
+      aria-hidden="true"
+      className={`pointer-events-none absolute -right-0.5 bottom-0.5 h-3 w-3 origin-bottom-left transition-[transform,opacity] duration-200 ease-out motion-reduce:transition-none sm:right-0.5 ${
+        active ? 'scale-100 opacity-100 delay-300 motion-reduce:delay-0' : 'scale-0 opacity-0'
+      }`}
+    >
+      <span className="absolute bottom-0 left-0 h-1.5 w-1.5 rounded-[60%_40%_55%_45%]" style={{ backgroundColor: color }} />
+      <span className="absolute bottom-1.5 left-2 h-1 w-1 rounded-full" style={{ backgroundColor: color }} />
+      <span className="absolute bottom-2.5 left-1 h-[3px] w-[3px] rounded-full opacity-80" style={{ backgroundColor: color }} />
+    </span>
+  );
+}
+
 /** Navegação principal. No celular vira uma barra de cinco ícones; `compact` esconde os rótulos ao rolar. */
 function SectionTabs({ activeId, compact = false, className = '' }) {
   return (
@@ -42,6 +58,7 @@ function SectionTabs({ activeId, compact = false, className = '' }) {
                 <span className={`truncate text-[10px] leading-none sm:hidden ${compact ? 'sr-only' : ''}`}>{shortLabel}</span>
                 <span className="hidden whitespace-nowrap text-[13px] leading-none tracking-wide sm:inline">{label}</span>
                 <BrushStroke color={pigment} active={active} />
+                <BrushFlick color={pigment} active={active} />
               </a>
             </li>
           );

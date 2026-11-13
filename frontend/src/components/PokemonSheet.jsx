@@ -26,7 +26,7 @@ export default function PokemonSheet({ pokemonName, onClose, ...drawerProps }) {
         aria-modal="true"
         aria-label={`Ficha de ${formatSlug(pokemonName)}`}
         tabIndex={-1}
-        className="flex h-[90vh] w-full max-w-5xl flex-col overflow-hidden rounded-[1.8rem_1.5rem_1.9rem_1.4rem/1.5rem_1.9rem_1.4rem_1.8rem] border-[1.5px] border-[#2A2421] bg-[#FFFEFB] shadow-panel animate-bubble-pop focus:outline-none motion-reduce:animate-none sm:h-[85vh]"
+        className="flex h-[90vh] w-full max-w-5xl flex-col overflow-hidden rounded-[1.8rem_1.5rem_1.9rem_1.4rem/1.5rem_1.9rem_1.4rem_1.8rem] border-[1.5px] border-[#2A2421] bg-[#FFFEFB] shadow-panel ink-reveal focus:outline-none sm:h-[85vh]"
         onClick={(e) => e.stopPropagation()}
       >
         <Suspense fallback={<DrawerFallback />}>

@@ -25,7 +25,14 @@ function FavoriteButton({ name, label, active, onToggle, variant = 'card' }) {
         active ? 'text-[#B5654A] hover:text-[#8A4A34]' : 'text-[#78614E]/70 hover:border-[#B5654A]/50 hover:text-[#B5654A]'
       }`}
     >
-      <Heart className={`h-4 w-4 transition-transform ${active ? 'scale-110 fill-current' : ''}`} aria-hidden="true" />
+      {/* O contorno fica; por cima, o coração cheio sobe como tinta num pincel mergulhado. */}
+      <span className={`relative h-4 w-4 transition-transform duration-300 ${active ? 'scale-110' : ''}`} aria-hidden="true">
+        <Heart className="absolute inset-0 h-4 w-4" />
+        <Heart
+          className="absolute inset-0 h-4 w-4 fill-current transition-[clip-path] duration-500 ease-[cubic-bezier(0.22,1,0.36,1)] motion-reduce:transition-none"
+          style={{ clipPath: active ? 'inset(0 0 0 0)' : 'inset(100% 0 0 0)' }}
+        />
+      </span>
     </button>
   );
 }
