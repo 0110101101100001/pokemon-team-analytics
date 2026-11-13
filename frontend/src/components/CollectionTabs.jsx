@@ -105,7 +105,7 @@ function CollectionNoticeComponent({ view, status, isEmpty, onLogin }) {
   const { icon: Icon } = COLLECTIONS[view];
   return (
     <div className="flex flex-col items-center justify-center py-16 text-center text-sm font-medium text-[#78614E]">
-      <div className="mb-4 flex h-12 w-12 items-center justify-center rounded-full border border-[#4A3B32]/15 bg-white shadow-sm">
+      <div className="ink-stamp mb-4 h-14 w-14 text-[#78614E]">
         <Icon className="h-6 w-6" strokeWidth={1.75} aria-hidden="true" />
       </div>
       <div className="max-w-sm">{content}</div>

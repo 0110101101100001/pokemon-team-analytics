@@ -133,7 +133,7 @@ export function scoreCandidate(candidate, profile, meta = null) {
 
   const total = Object.values(breakdown).reduce((sum, value) => sum + value, 0);
   const multiplier = smogon?.multiplier ?? 1;
-  // Num total negativo o multiplicador divide, para o bónus aproximar de zero em vez de afundar.
+  // Num total negativo o multiplicador divide, para o bônus aproximar de zero em vez de afundar.
   const score = total >= 0 ? total * multiplier : total / multiplier;
 
   return {

@@ -386,7 +386,7 @@ export default function PokemonDrawer({
     };
   }, [pokemonName]);
 
-  // As estatísticas são pedidas pelo nome exato da variedade na Smogon ("Urshifu-Rapid-Strike").
+  // As estatísticas são buscadas pelo nome exato da variedade na Smogon ("Urshifu-Rapid-Strike").
   // Uma forma sem nome próprio na Smogon fica sem dados; nunca recebe os da espécie base.
   const speciesName = species?.name ?? detail?.species?.name;
   const variety = useMemo(
@@ -421,7 +421,7 @@ export default function PokemonDrawer({
     return () => controller.abort();
   }, [variety, currentFormName, speciesName, selectedSmogonTier, pokemonName, onSmogonDataFound]);
 
-  // O learnset (100–200 pedidos) só é carregado quando a aba Movimentos é aberta.
+  // O learnset (100–200 requisições) só é carregado quando a aba Movimentos é aberta.
   useEffect(() => {
     if (!detail || !movesVisited) return;
     let active = true;

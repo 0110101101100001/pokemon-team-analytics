@@ -143,10 +143,15 @@ backend/
     schemas/         modelos Pydantic
 frontend/
   src/
-    components/      grade, ficha, modais, team builder
-    hooks/           debounce, pontuação do team builder, header recolhível
+    sections/        uma tela por aba: Pokédex, Itens, Gym Leaders, Team Builder, Damage Calculator
+    components/      grade, ficha, modais; layout/ (header, abas, filtros contextuais), team/, calc/, items/, leaders/
+    navigation/      lista das abas e rotas por hash (#/pokedex, #/itens…)
+    data/            jogos e dexes regionais, líderes de ginásio, TMs por jogo
+    hooks/           filtros da Pokédex, dex regional, dados de batalha, pontuação do team builder
     services/        PokéAPI, backend e Supabase
-    utils/           filtros, evoluções, tabela de tipos, pontuação
+    utils/           filtros, tabela de tipos, atributos (EVs/IVs/natureza), cálculo de dano
+scripts/
+  build-machines.mjs gera frontend/src/data/machines.json a partir dos CSVs da PokéAPI
 .github/workflows/   keep-alives, sincronização mensal e commit de atividade
 netlify.toml         build e headers do frontend
 docker-compose.yml   backend local

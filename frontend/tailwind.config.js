@@ -78,6 +78,9 @@ export default {
         'bubble-pop': 'bubblePop 0.5s ease-out forwards',
         'cry-wave': 'cryWave 0.8s ease-in-out infinite',
         'cry-ring': 'cryRing 1.2s ease-out infinite',
+        // Sem fill-mode: terminada a entrada, a seção não fica com transform nem contexto de empilhamento
+        // (os modais `fixed` dentro dela dependem disso).
+        'section-in': 'sectionIn 0.35s cubic-bezier(0.22, 1, 0.36, 1)',
       },
       keyframes: {
         float: {
@@ -99,6 +102,9 @@ export default {
         bubblePop: {
           '0%': { opacity: '0', transform: 'scale(0.85) translateY(10px)' },
           '100%': { opacity: '1', transform: 'scale(1) translateY(0)' },
+        },
+        sectionIn: {
+          '0%': { opacity: '0', transform: 'translateY(10px)' },
         },
         cryWave: {
           '0%, 100%': { transform: 'scaleY(0.35)' },

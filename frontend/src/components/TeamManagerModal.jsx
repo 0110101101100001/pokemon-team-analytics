@@ -10,7 +10,8 @@ const MAX_NAME_LENGTH = 40;
 
 const DATE_FORMAT = new Intl.DateTimeFormat('pt-BR', { day: '2-digit', month: 'short', year: 'numeric' });
 
-const toStoredPokemon = ({ id, name, number, species, types }) => ({ id, name, number, species, types });
+// `set` (item, natureza, EVs, IVs, golpes) é salvo junto de cada Pokémon; times antigos não o têm.
+const toStoredPokemon = ({ id, name, number, species, types, set }) => ({ id, name, number, species, types, ...(set && { set }) });
 
 const describeError = (error) =>
   error?.code === '42501' || error?.code === 'PGRST301'

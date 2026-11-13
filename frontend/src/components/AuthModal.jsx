@@ -4,7 +4,7 @@ import { supabase } from '../services/supabase';
 
 const MODES = {
   login: { title: 'Bem-vindo de volta', subtitle: 'Abra seu caderno de campo.', submit: 'Entrar' },
-  signup: { title: 'Novo caderno', subtitle: 'Cadastre-se para guardar suas equipes.', submit: 'Criar conta' },
+  signup: { title: 'Novo caderno', subtitle: 'Cadastre-se para salvar seus times.', submit: 'Criar conta' },
 };
 
 const ERROR_MESSAGES = {

@@ -1,36 +1,23 @@
 import { memo, useCallback, useEffect, useMemo, useState } from 'react';
-import { ChevronDown, Loader2, NotebookPen, Search, SlidersHorizontal, TriangleAlert, X } from 'lucide-react';
+import { Loader2, NotebookPen, Search, SlidersHorizontal, TriangleAlert, X } from 'lucide-react';
+import GameOptions from './GameOptions';
+import {
+  FIELD_CLASS, HeaderSegmented, HeaderSelect, OPTION_CLASS, TEXT_INPUT_BASE, TEXT_INPUT_CLASS,
+} from './layout/HeaderControls';
+import { GAMES } from '../data/games';
 import { TYPE_NAMES, fetchAbilityNames, fetchMoveNames } from '../services/api';
 import { FIXED_FILTERS, GENERATIONS, createFilter, eggGroupLabel, filterKey, formatSlug } from '../utils/filters';
 import { useDebouncedValue } from '../hooks/useDebouncedValue';
 
 const SEARCH_DEBOUNCE_MS = 250;
 
-const FIELD_CLASS =
-  'h-9 sm:h-10 w-full rounded-xl border border-[#F7F3EE]/30 bg-[#3E2A1F]/90 text-[#F7F3EE] [color-scheme:dark] shadow-inner transition-colors hover:border-[#F7F3EE]/50 focus:outline-none focus:ring-2 focus:ring-[#A4C294]/70 focus:border-[#A4C294]';
-const SELECT_CLASS = `${FIELD_CLASS} appearance-none pl-2.5 pr-7 sm:pl-3 sm:pr-9 text-xs font-serif font-semibold tracking-wide cursor-pointer`;
-const TEXT_INPUT_BASE = `${FIELD_CLASS} pl-9 text-sm font-serif placeholder:italic placeholder:text-[#F7F3EE]/75`;
-const TEXT_INPUT_CLASS = `${TEXT_INPUT_BASE} pr-3`;
-const OPTION_CLASS = 'bg-[#2A1C14] text-[#F7F3EE] font-sans';
-
-// O placeholder é `hidden` e não `disabled`: uma opção disabled selecionada aparece a cinzento.
-function HeaderSelect({ label, placeholder, onChange, className = 'sm:w-36 sm:shrink-0', children }) {
-  return (
-    <div className={`relative w-full ${className}`}>
-      <select onChange={onChange} defaultValue="" aria-label={label} className={SELECT_CLASS}>
-        <option value="" hidden>{placeholder}</option>
-        {children}
-      </select>
-      <ChevronDown
-        className="pointer-events-none absolute right-2 sm:right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[#F7F3EE]/85"
-        aria-hidden="true"
-      />
-    </div>
-  );
-}
+const SCOPES = [
+  { value: 'national', label: 'Nacional' },
+  { value: 'regional', label: 'Regional' },
+];
 
 /**
- * Campo com sugestões (datalist) para listas longas. As opções só são pedidas no primeiro foco.
+ * Campo com sugestões (datalist) para listas longas. As opções só são buscadas no primeiro foco.
  * Adiciona o filtro ao escolher uma sugestão ou ao pressionar Enter com um nome válido.
  */
 // O campo com datalist ganha uma seta nativa à direita, desenhada por cima do texto; fica escondida,
@@ -105,8 +92,21 @@ const SuggestInput = memo(function SuggestInput({ id, label, placeholder, loadOp
   );
 });
 
-function FiltersBar({ onSearchChange, onAddFilter, advancedOpen, advancedCount, onToggleAdvanced, compact = false }) {
-  const [query, setQuery] = useState('');
+function FiltersBar({
+  initialQuery = '',
+  onSearchChange,
+  onAddFilter,
+  scope,
+  onScopeChange,
+  gameId,
+  onGameChange,
+  advancedOpen,
+  advancedCount,
+  onToggleAdvanced,
+  compact = false,
+}) {
+  // A barra é desmontada ao sair da aba Pokédex; `initialQuery` devolve o texto da busca na volta.
+  const [query, setQuery] = useState(initialQuery);
   // O campo responde a cada tecla; a lista só é refiltrada quando a digitação pausa.
   // Esvaziar o campo propaga na hora, para limpar a busca sem esperar.
   const debouncedQuery = useDebouncedValue(query, query ? SEARCH_DEBOUNCE_MS : 0);
@@ -119,35 +119,47 @@ function FiltersBar({ onSearchChange, onAddFilter, advancedOpen, advancedCount, 
     e.target.value = '';
   }, [onAddFilter]);
 
-  // Celular: busca numa linha e os três filtros lado a lado na de baixo; essa segunda linha
+  const handleGame = useCallback((e) => onGameChange(e.target.value), [onGameChange]);
+
+  // Celular: recorte e busca numa linha e os três filtros lado a lado na de baixo; essa segunda linha
   // se recolhe ao rolar (`compact`), a não ser que os filtros avançados estejam abertos.
-  // sm+: tudo numa linha só (o wrapper vira `contents` e some do layout).
+  // sm+: tudo numa linha só (os wrappers viram `contents` e somem do layout).
   const filtersHidden = compact && !advancedOpen;
+  const regional = scope === 'regional';
 
   return (
     <div className="flex w-full flex-col sm:flex-row sm:items-center sm:gap-2">
-      <label className="relative w-full sm:min-w-0 sm:flex-1">
-        <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[#F7F3EE]/85" aria-hidden="true" />
-        <input
-          type="search"
-          className={TEXT_INPUT_CLASS}
-          placeholder="Nome ou número (ex.: 25)..."
-          aria-label="Pesquisar Pokémon por nome ou número da Pokédex"
-          value={query}
-          onChange={handleSearch}
-        />
-      </label>
+      <div className="flex items-center gap-1.5 sm:contents">
+        <HeaderSegmented label="Recorte da Pokédex" options={SCOPES} value={scope} onChange={onScopeChange} className="shrink-0" />
+        <label className="relative w-full min-w-0 sm:flex-1">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[#F7F3EE]/85" aria-hidden="true" />
+          <input
+            type="search"
+            className={TEXT_INPUT_CLASS}
+            placeholder={regional ? 'Nome ou número regional...' : 'Nome ou número (ex.: 25)...'}
+            aria-label={`Pesquisar Pokémon por nome ou número da Pokédex ${regional ? 'regional' : 'nacional'}`}
+            value={query}
+            onChange={handleSearch}
+          />
+        </label>
+      </div>
 
       <div
         className={`grid grid-cols-3 gap-1.5 overflow-hidden transition-[max-height,opacity,margin] duration-200 motion-reduce:transition-none sm:contents ${
           filtersHidden ? 'max-sm:invisible max-sm:mt-0 max-sm:max-h-0 max-sm:opacity-0' : 'max-sm:mt-1.5 max-sm:max-h-10'
         }`}
       >
-      <HeaderSelect label="Filtrar por geração" placeholder="Geração" onChange={handleSelect('generation')}>
-        {GENERATIONS.map((gen) => (
-          <option key={gen.value} value={gen.value} className={OPTION_CLASS}>{gen.label}</option>
-        ))}
-      </HeaderSelect>
+      {regional ? (
+        <HeaderSelect label="Jogo da Pokédex regional" value={gameId} onChange={handleGame}>
+          <GameOptions games={GAMES} />
+        </HeaderSelect>
+      ) : (
+        <HeaderSelect label="Filtrar por geração" placeholder="Geração" onChange={handleSelect('generation')}>
+          {GENERATIONS.map((gen) => (
+            <option key={gen.value} value={gen.value} className={OPTION_CLASS}>{gen.label}</option>
+          ))}
+        </HeaderSelect>
+      )}
 
       <HeaderSelect label="Filtrar por tipo" placeholder="Tipo" onChange={handleSelect('type')}>
         {TYPE_NAMES.map((type) => (
@@ -199,7 +211,7 @@ function AdvancedFiltersComponent({ eggGroups, onAddFilter }) {
   const addMove = useCallback((slug) => onAddFilter(createFilter('move', slug)), [onAddFilter]);
 
   return (
-    <div id="advanced-filters" className="mt-3 pt-3 border-t border-dashed border-white/20">
+    <div id="advanced-filters" className="mt-2.5 border-t border-dashed border-white/20 pt-2.5">
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
         <SuggestInput
           id="ability-options"

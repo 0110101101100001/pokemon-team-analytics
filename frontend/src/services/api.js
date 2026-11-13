@@ -84,9 +84,27 @@ export const fetchPokemonIdsLearningMove = (move) =>
   cachedJson(`${POKEAPI_BASE}/move/${encodeURIComponent(move)}`)
     .then((data) => new Set(data.learned_by_pokemon.map((p) => idFromUrl(p.url))));
 
+const escapeRegExp = (text) => text.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+
+/**
+ * Formas de batalha de uma variedade: Megas ("charizard-mega-x") e Primal ("kyogre-primal").
+ * Elas ficam fora da grade da Pokédex; aqui vêm da mesma lista de variedades, já em cache.
+ */
+export async function fetchBattleForms(name) {
+  const pattern = new RegExp(`^${escapeRegExp(name)}-(mega(-[a-z])?|primal)$`);
+  const list = await fetchPokemonList();
+  return list.filter((entry) => pattern.test(entry.name)).map((entry) => entry.name);
+}
+
 /** Todas as espécies como { name, url }; o id da espécie é o número na Pokédex nacional. */
 export const fetchSpeciesList = (limit = 1025) =>
   cachedJson(`${POKEAPI_BASE}/pokemon-species?limit=${limit}`).then((data) => data.results);
+
+/** Mapa número nacional → número na Pokédex regional (`slug` de /pokedex, ex.: "paldea"). */
+export const fetchRegionalDex = (slug) =>
+  cachedJson(`${POKEAPI_BASE}/pokedex/${encodeURIComponent(slug)}`).then(
+    (data) => new Map(data.pokemon_entries.map((entry) => [idFromUrl(entry.pokemon_species.url), entry.entry_number])),
+  );
 
 export const fetchPokemonDetail = (nameOrId) =>
   cachedJson(`${POKEAPI_BASE}/pokemon/${encodeURIComponent(nameOrId)}`);
@@ -121,7 +139,7 @@ let smogonNamesRequest = null;
 
 /**
  * Nomes (formato Smogon) de todos os Pokémon com estatísticas em pelo menos um tier.
- * Um pedido por sessão, compartilhado pela grade e pela ficha; uma falha não fica em cache.
+ * Uma requisição por sessão, compartilhado pela grade e pela ficha; uma falha não fica em cache.
  */
 export function fetchSmogonNames() {
   smogonNamesRequest ??= fetch(`${BACKEND_BASE}/smogon/names`, { headers: { Accept: 'application/json' } })
@@ -200,6 +218,83 @@ export const fetchMove = (moveUrlOrName) =>
 
 export const fetchTypeData = (typeName) =>
   cachedJson(`${POKEAPI_BASE}/type/${encodeURIComponent(typeName)}`).catch(() => null);
+
+// Golpes de vários acertos que a PokéAPI publica sem `meta.min_hits`/`max_hits`.
+const MULTI_HIT_FALLBACK = { 'population-bomb': [1, 10] };
+
+/**
+ * O essencial de um golpe para cobertura e cálculo de dano; null se o golpe não existir.
+ * `effectChance` marca golpes com efeito secundário (Sheer Force); `minHits`/`maxHits` só
+ * aparecem nos golpes de vários acertos.
+ */
+export const fetchMoveSummary = (slug) =>
+  fetchMove(slug).then((data) => {
+    if (!data) return null;
+    const [minHits, maxHits] = MULTI_HIT_FALLBACK[data.name] ?? [data.meta?.min_hits, data.meta?.max_hits];
+    return {
+      slug: data.name,
+      type: data.type.name,
+      damageClass: data.damage_class.name,
+      power: data.power,
+      priority: data.priority ?? 0,
+      effectChance: data.effect_chance ?? null,
+      ...(maxHits > 1 && { minHits, maxHits }),
+    };
+  });
+
+/* ---------------------------------------------------------------- itens */
+
+// Os cristais Z aparecem duas vezes ("-z--held" e "-z--bag"); fica só o segurado, sem o sufixo.
+const HELD_SUFFIX = /--held$/;
+const isBagCopy = (name) => name.endsWith('--bag');
+
+/** Nomes de todos os itens, numa requisição só (sugestões do campo de item). */
+export const fetchItemNames = () =>
+  cachedJson(`${POKEAPI_BASE}/item?limit=3000`).then((data) =>
+    data.results.filter((item) => !isBagCopy(item.name)).map((item) => item.name.replace(HELD_SUFFIX, '')));
+
+/** Todos os itens como { name, id, category, pocket }. A lista de itens não traz a categoria: vem de uma requisição por categoria. */
+export async function fetchItemIndex() {
+  const { results } = await cachedJson(`${POKEAPI_BASE}/item-category?limit=100`);
+  const categories = await Promise.all(results.map((category) => cachedJson(category.url)));
+  // A PokéAPI repete alguns itens dentro da mesma categoria (Roseli Berry); cada nome entra uma vez só.
+  const byName = new Map();
+  for (const category of categories) {
+    for (const item of category.items) {
+      const name = item.name.replace(HELD_SUFFIX, '');
+      if (isBagCopy(item.name) || byName.has(name)) continue;
+      byName.set(name, { name, id: idFromUrl(item.url), category: category.name, pocket: category.pocket.name });
+    }
+  }
+  return [...byName.values()].sort((a, b) => a.id - b.id);
+}
+
+/**
+ * Onde um item aparece segurado por Pokémon selvagens, por versão: [{ versions, holders: [{ name, id, rarity }] }].
+ * Versões com exatamente os mesmos Pokémon e chances ficam juntas, na ordem de lançamento.
+ * É o único dado de "onde encontrar" que a PokéAPI tem: locais no chão e lojas não existem na API.
+ */
+function groupHeldBy(heldByPokemon) {
+  const holdersByVersion = new Map();
+  for (const { pokemon, version_details: details } of heldByPokemon) {
+    for (const { rarity, version } of details) {
+      const entry = holdersByVersion.get(version.name) ?? { id: idFromUrl(version.url), holders: [] };
+      entry.holders.push({ name: pokemon.name, id: idFromUrl(pokemon.url), rarity });
+      holdersByVersion.set(version.name, entry);
+    }
+  }
+
+  const groups = new Map();
+  const versions = [...holdersByVersion].sort(([, a], [, b]) => a.id - b.id);
+  for (const [version, { holders }] of versions) {
+    holders.sort((a, b) => b.rarity - a.rarity || a.name.localeCompare(b.name));
+    const key = holders.map((holder) => `${holder.name}:${holder.rarity}`).join(',');
+    const group = groups.get(key) ?? { versions: [], holders };
+    group.versions.push(version);
+    groups.set(key, group);
+  }
+  return [...groups.values()];
+}
 
 /* ---------------------------------------------------------------- golpes e habilidades (textos) */
 
@@ -281,6 +376,7 @@ export async function fetchItemInfo(slug) {
     effect: pickLocalized(data.effect_entries, 'effect'),
     sprite: data.sprites?.default ?? null,
     category: data.category?.name ?? null,
+    heldBy: groupHeldBy(data.held_by_pokemon ?? []),
   };
 }
 

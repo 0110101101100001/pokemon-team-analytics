@@ -1,5 +1,5 @@
 // Números da Pokédex nacional, gerados a partir de `is_legendary` e `is_mythical` de /pokemon-species
-// da PokéAPI (espécies #1–#1025). Ficam fixos aqui porque consultá-los exigiria um pedido por espécie.
+// da PokéAPI (espécies #1–#1025). Ficam fixos aqui porque consultá-los exigiria uma requisição por espécie.
 const LEGENDARY = new Set([
   144, 145, 146, 150, 243, 244, 245, 249, 250, 377, 378, 379, 380, 381, 382, 383,
   384, 480, 481, 482, 483, 484, 485, 486, 487, 488, 638, 639, 640, 641, 642, 643,

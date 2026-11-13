@@ -2,7 +2,7 @@ import { memo, useEffect, useId, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { Languages, Loader2, Package, Sparkles, Swords, TriangleAlert, X } from 'lucide-react';
 import PokemonTypeBadge from './PokemonTypeBadge';
-import { fetchAbilityInfo, fetchItemInfo, fetchMoveInfo, toPokeApiSlug } from '../services/api';
+import { fetchAbilityInfo, fetchItemInfo, fetchMoveInfo, thumbnailSpriteUrl, toPokeApiSlug } from '../services/api';
 import { formatSlug } from '../utils/filters';
 import { useModalBehavior } from '../hooks/useModalBehavior';
 
@@ -55,6 +55,61 @@ const ATTRIBUTES = {
     ['Categoria', info.category && formatSlug(info.category)],
   ],
 };
+
+// Nomes das versões como aparecem nas capas; o restante vem do slug ("omega-ruby" → "Omega Ruby").
+const VERSION_LABELS = {
+  firered: 'FireRed',
+  leafgreen: 'LeafGreen',
+  heartgold: 'HeartGold',
+  soulsilver: 'SoulSilver',
+  xd: 'XD',
+  'red-japan': 'Red (JP)',
+  'green-japan': 'Green (JP)',
+  'blue-japan': 'Blue (JP)',
+  'lets-go-pikachu': "Let's Go Pikachu",
+  'lets-go-eevee': "Let's Go Eevee",
+  'the-isle-of-armor-sword': 'Isle of Armor (Sword)',
+  'the-isle-of-armor-shield': 'Isle of Armor (Shield)',
+  'the-crown-tundra-sword': 'Crown Tundra (Sword)',
+  'the-crown-tundra-shield': 'Crown Tundra (Shield)',
+  'the-teal-mask-scarlet': 'Teal Mask (Scarlet)',
+  'the-teal-mask-violet': 'Teal Mask (Violet)',
+  'the-indigo-disk-scarlet': 'Indigo Disk (Scarlet)',
+  'the-indigo-disk-violet': 'Indigo Disk (Violet)',
+  'legends-za': 'Legends: Z-A',
+  'legends-arceus': 'Legends: Arceus',
+  'black-2': 'Black 2',
+  'white-2': 'White 2',
+};
+
+const versionLabel = (slug) => VERSION_LABELS[slug] ?? formatSlug(slug);
+
+/** Pokémon selvagens que seguram o item em cada jogo, com a chance de estar segurando. */
+function HeldBySection({ groups }) {
+  if (groups.length === 0) return null;
+  return (
+    <section className="space-y-2">
+      <h3 className="text-[10px] font-bold uppercase tracking-wider text-[#78614E]">Onde encontrar</h3>
+      <p className="text-xs text-[#78614E]">Segurado por Pokémon selvagens; capture ou use Thief/Covet para pegar.</p>
+      <ul className="space-y-2">
+        {groups.map(({ versions, holders }) => (
+          <li key={versions.join(',')} className="rounded-xl border border-[#4A3B32]/10 bg-[#F7F3EE]/70 px-3 py-2">
+            <p className="font-serif text-xs font-bold text-[#2A2421]">{versions.map(versionLabel).join(' · ')}</p>
+            <ul className="mt-1.5 flex flex-wrap gap-1.5">
+              {holders.map(({ name, id, rarity }) => (
+                <li key={name} className="flex items-center gap-1 rounded-full border border-[#4A3B32]/10 bg-[#FFFEFB] py-0.5 pl-0.5 pr-2">
+                  <img src={thumbnailSpriteUrl(id)} alt="" width={24} height={24} loading="lazy" decoding="async" className="h-6 w-6 object-contain" />
+                  <span className="text-xs font-semibold text-[#3E3A35]">{formatSlug(name)}</span>
+                  <span className="font-mono text-[11px] font-bold tabular-nums text-[#5B7856]">{rarity}%</span>
+                </li>
+              ))}
+            </ul>
+          </li>
+        ))}
+      </ul>
+    </section>
+  );
+}
 
 const attributesFor = (info) =>
   ATTRIBUTES[info.kind](info).filter(([, value]) => value != null && value !== false);
@@ -178,6 +233,7 @@ function MoveAbilityModal({ kind, name, onClose }) {
 
               <TextBlock title="Descrição" entries={[info.description]} />
               <TextBlock title="Efeito em batalha" entries={[info.shortEffect, detailedEffect]} />
+              {info.heldBy && <HeldBySection groups={info.heldBy} />}
 
               {!info.description && !info.shortEffect && !info.effect && (
                 <p className="text-xs italic text-[#78614E]">A PokéAPI ainda não tem descrição para este registro.</p>

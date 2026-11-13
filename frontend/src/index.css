@@ -78,12 +78,13 @@
     @apply relative bg-[#FFFEFB] border-2 border-[#3E2E24]/20 rounded-xl p-6 cursor-pointer transition-all duration-300 hover:border-[#5C4033]/60 hover:-translate-y-1;
   }
 
+  /* Botões com sombra dura de nanquim: ao apertar, o papel "desce" sobre a sombra. */
   .btn-action {
-    @apply inline-flex items-center justify-center gap-2 px-4 py-2 rounded-lg bg-smeargle-accentBright text-white text-sm font-semibold shadow-sm transition-all duration-200 hover:bg-[#748a66] hover:shadow-md focus:outline-none focus:ring-2 focus:ring-smeargle-accentBright focus:ring-offset-2;
+    @apply inline-flex items-center justify-center gap-2 px-4 py-2 rounded-xl border-[1.5px] border-[#5C4033] bg-smeargle-accentBright text-white text-sm font-semibold shadow-[3px_3px_0_#5C4033] transition-all duration-150 hover:translate-x-[1px] hover:translate-y-[1px] hover:shadow-[2px_2px_0_#5C4033] active:translate-x-[3px] active:translate-y-[3px] active:shadow-none focus:outline-none focus-visible:ring-2 focus-visible:ring-smeargle-accentBright focus-visible:ring-offset-2;
   }
 
   .btn-outline {
-    @apply inline-flex items-center justify-center gap-2 px-4 py-2 rounded-lg border border-smeargle-border text-smeargle-textDim text-sm font-medium bg-transparent transition-all duration-200 hover:border-smeargle-textDim hover:text-smeargle-text hover:bg-smeargle-surface focus:outline-none focus:ring-2 focus:ring-smeargle-border focus:ring-offset-2;
+    @apply inline-flex items-center justify-center gap-2 px-4 py-2 rounded-xl border-[1.5px] border-[#5C4033]/70 bg-[#FFFEFB] text-smeargle-textDim text-sm font-medium shadow-[3px_3px_0_rgba(92,64,51,0.35)] transition-all duration-150 hover:translate-x-[1px] hover:translate-y-[1px] hover:text-smeargle-text hover:shadow-[2px_2px_0_rgba(92,64,51,0.35)] active:translate-x-[3px] active:translate-y-[3px] active:shadow-none focus:outline-none focus-visible:ring-2 focus-visible:ring-smeargle-border focus-visible:ring-offset-2;
   }
 
   .input-field {
@@ -169,6 +170,85 @@
     background: #785132;
     border-radius: 60% 40% 30% 70% / 50% 60% 70% 40%;
     box-shadow: 1px 1px 0px 0px #4a3b32;
+  }
+
+  /*
+    Folha de caderno: o cartão das seções (itens, líderes, team builder, calculadora).
+    Cantos irregulares de papel recortado, fibra do papel, uma aguada de tinta num canto
+    e a sombra dura de traço de nanquim deslocado.
+  */
+  .paper-card {
+    position: relative;
+    border: 1.5px solid rgba(74, 59, 50, 0.22);
+    border-radius: 1.6rem 1.25rem 1.7rem 1.15rem / 1.2rem 1.6rem 1.15rem 1.5rem;
+    background-color: #fffefb;
+    background-image:
+      radial-gradient(ellipse at 100% 0%, rgba(164, 194, 148, 0.16), transparent 42%),
+      radial-gradient(ellipse at 0% 100%, rgba(240, 179, 126, 0.1), transparent 38%),
+      radial-gradient(rgba(120, 81, 50, 0.05) 1px, transparent 1px);
+    background-size: auto, auto, 7px 7px;
+    box-shadow: 3px 4px 0 rgba(92, 64, 51, 0.13), 0 10px 28px -14px rgba(62, 46, 36, 0.22);
+  }
+
+  /*
+    Papel pautado: linhas azuladas de caderno e a margem vermelha à esquerda.
+    O texto assenta na pauta com line-height de 1.6rem e padding vertical em múltiplos de 1.6rem.
+  */
+  .paper-ruled {
+    background-image:
+      linear-gradient(90deg, transparent 2.1rem, rgba(193, 84, 84, 0.32) 2.1rem, rgba(193, 84, 84, 0.32) calc(2.1rem + 1.5px), transparent calc(2.1rem + 1.5px)),
+      repeating-linear-gradient(180deg, transparent 0, transparent 1.6rem, rgba(109, 152, 181, 0.17) 1.6rem, rgba(109, 152, 181, 0.17) calc(1.6rem + 1px));
+    background-size: auto;
+  }
+
+  /* Pedaço de fita adesiva prendendo a folha: cor sólida meio translúcida, com a borda serrilhada do corte. */
+  .paper-taped::before {
+    content: '';
+    position: absolute;
+    top: -0.7rem;
+    left: 50%;
+    z-index: 1;
+    width: 5.5rem;
+    height: 1.5rem;
+    transform: translateX(-50%) rotate(-2.5deg);
+    background: rgba(214, 196, 150, 0.7);
+    box-shadow: 0 1px 2px rgba(62, 46, 36, 0.15);
+    clip-path: polygon(3% 0, 97% 4%, 100% 30%, 96% 55%, 100% 80%, 97% 100%, 2% 96%, 0 70%, 4% 45%, 0 20%);
+    pointer-events: none;
+  }
+
+  .paper-field {
+    @apply h-10 w-full rounded-xl border-[1.5px] border-[#78614E]/25 bg-[#FFFEFB]/80 px-3 font-serif text-sm text-smeargle-text shadow-[inset_1px_2px_0_rgba(92,64,51,0.06)] transition-colors placeholder:italic placeholder:text-[#78614E]/55 hover:border-[#78614E]/45 focus:border-smeargle-olive focus:outline-none focus:ring-2 focus:ring-smeargle-olive/50 disabled:cursor-not-allowed disabled:opacity-60;
+  }
+
+  .paper-label {
+    @apply mb-1 block font-hand text-base font-semibold leading-none text-[#78614E];
+  }
+
+  /* Abas de seção escritas à mão, sublinhadas por um traço de pincel na ativa. */
+  .ink-tab {
+    @apply relative inline-flex cursor-pointer items-center gap-1.5 px-2.5 pb-2 font-hand text-xl leading-none text-[#78614E]/55 transition-colors hover:text-[#78614E] focus:outline-none focus-visible:ring-2 focus-visible:ring-smeargle-olive/60 disabled:cursor-not-allowed disabled:opacity-40;
+  }
+
+  .ink-tab[aria-selected='true'] {
+    @apply text-[#5C4033];
+  }
+
+  .ink-tab[aria-selected='true']::after {
+    content: '';
+    position: absolute;
+    inset: auto 0.35rem 0.15rem;
+    height: 0.4rem;
+    background: rgba(130, 155, 114, 0.55);
+    border-radius: 60% 40% 55% 45% / 70% 60% 40% 30%;
+    transform: rotate(-1deg);
+    z-index: -1;
+  }
+
+  /* Carimbo: moldura tracejada e leve rotação, para ícones e números de destaque. */
+  .ink-stamp {
+    @apply inline-flex items-center justify-center rounded-full border-[1.5px] border-dashed border-[#78614E]/45 bg-[#FFFEFB];
+    transform: rotate(-4deg);
   }
 
   .glass-panel {

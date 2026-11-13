@@ -237,7 +237,7 @@ function scoreAnswers(stat, threats, meta) {
 }
 
 /**
- * Bónus de meta de um candidato: uso no tier, sinergia com o time e respostas às ameaças.
+ * Bônus de meta de um candidato: uso no tier, sinergia com o time e respostas às ameaças.
  * `multiplier` (1–2) se aplica ao score final quando o candidato é parceiro direto
  * ou do mesmo núcleo de algum membro.
  */

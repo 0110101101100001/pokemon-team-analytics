@@ -3,7 +3,7 @@ import { Loader2, LogIn, LogOut } from 'lucide-react';
 import { supabase } from '../services/supabase';
 
 const BASE_CLASS =
-  'h-10 inline-flex items-center gap-2 rounded-xl border border-[#F7F3EE]/30 bg-[#3E2A1F]/90 text-[#F7F3EE] shadow-inner transition-colors hover:border-[#F7F3EE]/50 focus:outline-none focus-visible:ring-2 focus-visible:ring-[#A4C294]/70';
+  'h-9 sm:h-10 inline-flex items-center gap-2 rounded-xl border border-[#F7F3EE]/30 bg-[#3E2A1F]/90 text-[#F7F3EE] shadow-inner transition-colors hover:border-[#F7F3EE]/50 focus:outline-none focus-visible:ring-2 focus-visible:ring-[#A4C294]/70';
 
 function Avatar({ user }) {
   const url = user.user_metadata?.avatar_url;

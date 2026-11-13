@@ -60,6 +60,50 @@ export const TornEdge = memo(function TornEdge({ className = '' }) {
   );
 });
 
+/** Linha divisória traçada à mão, com a gota de tinta onde a pena parou. */
+// A gota fica fora do SVG: com preserveAspectRatio="none" um círculo viraria uma elipse esticada.
+export const InkRule = memo(function InkRule({ className = '' }) {
+  return (
+    <div aria-hidden="true" className={`pointer-events-none flex items-center gap-1 text-[#785132] ${className}`}>
+      <svg viewBox="0 0 1000 14" preserveAspectRatio="none" className="block h-3.5 min-w-0 flex-1">
+        <path
+          d="M2 8C120 5 240 10 360 7S600 5 720 8 900 10 998 7"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="1.6"
+          strokeLinecap="round"
+          strokeDasharray="10 5 22 6 4 6"
+          opacity="0.55"
+          vectorEffect="non-scaling-stroke"
+        />
+      </svg>
+      <span className="h-1.5 w-2 shrink-0 rounded-[60%_40%_55%_45%] bg-current opacity-55" />
+    </div>
+  );
+});
+
+/**
+ * Pincelada de aquarela atrás de um título. O pai precisa de `relative isolate`;
+ * a mancha cobre a metade de baixo do texto, como marca-texto passado com pincel.
+ */
+export const BrushHighlight = memo(function BrushHighlight({ color = '#A4C294', className = '' }) {
+  return (
+    <svg
+      aria-hidden="true"
+      viewBox="0 0 300 40"
+      preserveAspectRatio="none"
+      className={`pointer-events-none absolute -inset-x-2 bottom-0 -z-10 h-[58%] w-[calc(100%+1rem)] ${className}`}
+    >
+      <path
+        fill={color}
+        opacity="0.45"
+        d="M6 14c32-7 71-9 112-7 37 2 70 6 108 3 26-2 46-4 66-1 6 1 8 9 3 12-22 9-49 7-77 10-37 4-71 1-107 3-33 2-62 7-95 6-11 0-19-5-20-13-1-7 4-11 10-13z"
+      />
+      <path fill={color} opacity="0.3" d="M20 26c50-5 115 0 170-3 32-2 62-3 92-1 4 3-1 8-6 9-61 4-134 3-201 5-26 1-56-2-55-10z" />
+    </svg>
+  );
+});
+
 /** Vinheta fixa nas margens da tela: profundidade de diário físico sem custo de layout. */
 export const PageVignette = memo(function PageVignette() {
   return (
