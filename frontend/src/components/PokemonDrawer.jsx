@@ -1,6 +1,6 @@
 import { memo, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
-  BarChart3, BookOpen, Cpu, Egg, NotebookPen, Ruler, Search, Shield, Sparkles, Swords, Weight, X, Zap,
+  BarChart3, BookOpen, Cpu, Egg, NotebookPen, Ruler, Search, Shield, Sparkles, Swords, Weight, X,
 } from 'lucide-react';
 import PokemonTypeBadge, { TYPE_INK } from './PokemonTypeBadge';
 import PokemonEncounters from './PokemonEncounters';
@@ -15,6 +15,8 @@ import {
   fetchSmogonNames, fetchSmogonStats, fetchTypeData, officialSpriteUrl,
 } from '../services/api';
 import { resolveSmogonName } from '../utils/smogon';
+import InkDropLoader from './InkDropLoader';
+import { BrushHighlight } from './InkDecor';
 
 /* ---------------------------------------------------------------- dados estáticos */
 
@@ -96,10 +98,18 @@ const PAPER_BG = {
   backgroundSize: '220px 220px',
 };
 
-const GLASS_CARD = 'rounded-2xl border-[1.5px] border-[#2A2421]/15 bg-[#FFFEFB]/90 shadow-[3px_3px_0_rgba(42,36,33,0.07)]';
-const FIELD = 'h-9 px-3 rounded-xl border border-[#4A3B32]/20 bg-[#FFFEFB]/80 text-xs font-semibold text-[#2A2421] focus:outline-none focus:ring-1 focus:ring-[#829b72] cursor-pointer';
+// As mesmas peças do resto do site: folha a nanquim, campo, pílula, botão redondo, bloco interno e rótulo.
+const SHEET = 'paper-card paper-card-quiet';
+const TILE = 'rounded-xl border border-[#2A2421]/12 bg-[#FFFEFB]';
+const LABEL = 'text-[10px] font-semibold uppercase tracking-wider text-[#785132]';
+const FIELD = 'h-9 cursor-pointer rounded-xl border-[1.5px] border-[#2A2421]/25 bg-[#FFFEFB] px-3 text-xs font-semibold text-[#2A2421] transition-colors hover:border-[#2A2421]/45 focus:border-paint-cobalt focus:outline-none focus:ring-2 focus:ring-paint-cobalt/40';
+const PILL = 'cursor-pointer rounded-full border px-3 py-1.5 text-xs font-semibold transition-[background-color,border-color,box-shadow] focus:outline-none focus-visible:ring-2 focus-visible:ring-paint-cobalt';
+const PILL_ON = 'border-[#2A2421]/70 bg-[#829b72] text-white shadow-[2px_2px_0_rgba(42,36,33,0.25)]';
+const PILL_OFF = 'border-[#2A2421]/20 bg-[#FFFEFB] text-[#2A2421] hover:border-[#2A2421]/50';
+const ROUND_BUTTON = 'inline-flex h-9 cursor-pointer items-center justify-center gap-1.5 rounded-full border-[1.5px] transition-[border-color,box-shadow,color,background-color] focus:outline-none focus-visible:ring-2 focus-visible:ring-paint-cobalt';
+const ROUND_IDLE = 'border-[#2A2421]/25 bg-[#FFFEFB] text-[#5C4033] hover:border-[#2A2421]/60 hover:text-[#2A2421] hover:shadow-[2px_2px_0_rgba(42,36,33,0.15)]';
 // Habilidades e golpes que abrem o modal de detalhes.
-const CLICKABLE = 'transition-colors enabled:cursor-pointer enabled:hover:border-[#829b72]/70 enabled:hover:bg-[#F7F3EE] focus:outline-none focus-visible:ring-2 focus-visible:ring-paint-cobalt';
+const CLICKABLE = 'transition-colors enabled:cursor-pointer enabled:hover:border-[#829b72] enabled:hover:bg-[#F7F3EE] focus:outline-none focus-visible:ring-2 focus-visible:ring-paint-cobalt';
 
 /* ---------------------------------------------------------------- helpers puros */
 
@@ -207,6 +217,24 @@ function topSpreads(record, count) {
 
 /* ---------------------------------------------------------------- sub-componentes */
 
+function TabStroke({ active }) {
+  return (
+    <svg
+      aria-hidden="true"
+      viewBox="0 0 120 10"
+      preserveAspectRatio="none"
+      className={`pointer-events-none absolute inset-x-2 bottom-1 h-[3px] w-[calc(100%-1rem)] origin-left transition-[transform,opacity] duration-300 ease-out motion-reduce:transition-none ${
+        active ? 'scale-x-100 opacity-100' : 'scale-x-0 opacity-0'
+      }`}
+    >
+      <path
+        fill="#829b72"
+        d="M2 6.1C14 3.3 27 2.5 41 3.1c13 .6 24 1.8 38 1.2 13-.6 25-2.3 38-1.5 1.7.1 2 2.4.3 2.9-12 3.5-25 3.2-38 3.5-14 .3-27-1-41-.7-12 .3-23 1.7-35 1.2C.9 9.6.3 6.5 2 6.1z"
+      />
+    </svg>
+  );
+}
+
 const HeroSprite = memo(function HeroSprite({ sources, alt }) {
   const [index, setIndex] = useState(0);
   const src = sources[Math.min(index, sources.length - 1)];
@@ -227,10 +255,10 @@ const HeroSprite = memo(function HeroSprite({ sources, alt }) {
 
 const SectionCard = memo(function SectionCard({ icon: Icon, title, action, className = '', children }) {
   return (
-    <section className={`${GLASS_CARD} p-4 space-y-3 ${className}`}>
+    <section className={`${SHEET} space-y-3 p-4 sm:p-5 ${className}`}>
       <header className="flex flex-wrap items-center justify-between gap-2">
-        <h3 className="flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-[#78614E]">
-          {Icon && <Icon className="w-4 h-4" aria-hidden="true" />}
+        <h3 className="flex items-center gap-2 font-serif text-base font-bold tracking-tight text-[#2A2421]">
+          {Icon && <Icon className="h-4 w-4 text-[#829b72]" aria-hidden="true" />}
           {title}
         </h3>
         {action}
@@ -244,11 +272,11 @@ const StatBar = memo(function StatBar({ name, value }) {
   const meta = STAT_META[name] ?? { label: capitalize(name), color: '#829b72' };
   return (
     <div className="flex items-center gap-3 text-xs">
-      <span className="w-20 font-semibold text-[#78614E]">{meta.label}</span>
+      <span className="w-20 font-semibold text-[#785132]">{meta.label}</span>
       <div className="brush-bar-track flex-1">
         <div className="brush-bar" style={{ width: `max(${(value / 255) * 100}%, 6px)`, backgroundColor: meta.color }} />
       </div>
-      <span className="w-8 text-right font-bold text-[#2A2421]">{value}</span>
+      <span className="w-8 text-right font-mono font-bold tabular-nums text-[#2A2421]">{value}</span>
     </div>
   );
 });
@@ -256,10 +284,10 @@ const StatBar = memo(function StatBar({ name, value }) {
 const EffectivenessRow = memo(function EffectivenessRow({ types, multiplier, label, tone }) {
   if (!types?.length) return null;
   return (
-    <div className="flex items-start gap-3 p-2.5 rounded-xl bg-[#FFFEFB]/80 border border-[#4A3B32]/10">
+    <div className="flex items-start gap-3 p-2.5 rounded-xl border border-[#2A2421]/12 bg-[#FFFEFB]">
       <span className={`shrink-0 w-11 py-1 rounded-lg text-center text-[11px] font-black ${tone}`}>{multiplier}</span>
       <div className="space-y-1">
-        <span className="block text-[10px] font-semibold uppercase text-[#78614E]">{label}</span>
+        <span className={`block ${LABEL}`}>{label}</span>
         <div className="flex flex-wrap gap-1.5">
           {types.map((t) => <PokemonTypeBadge key={t} type={t} />)}
         </div>
@@ -274,7 +302,7 @@ const UsageChip = memo(function UsageChip({ name, pct, onSelect }) {
   return (
     <Tag
       {...interactive}
-      className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-[#FFFEFB]/80 border border-[#4A3B32]/15 text-xs font-semibold capitalize ${onSelect ? CLICKABLE : ''}`}
+      className={`inline-flex items-center gap-1.5 rounded-full border border-[#2A2421]/20 bg-[#FFFEFB] px-3 py-1.5 text-xs font-semibold capitalize ${onSelect ? CLICKABLE : ''}`}
     >
       <span className="w-1.5 h-1.5 rounded-full bg-[#829b72]" aria-hidden="true" />
       <span className="text-[#2A2421]">{name}</span>
@@ -287,7 +315,7 @@ const UsageChip = memo(function UsageChip({ name, pct, onSelect }) {
 const SpreadCard = memo(function SpreadCard({ index, nature, evs, pct }) {
   const [hp, atk, def, spa, spd, spe] = evs;
   return (
-    <div className="p-3 rounded-xl bg-[#FFFEFB]/80 border border-[#4A3B32]/10">
+    <div className="p-3 rounded-xl border border-[#2A2421]/12 bg-[#FFFEFB]">
       <div className="flex items-center justify-between mb-1.5 text-xs font-bold text-[#2A2421]">
         <span>
           Build {index + 1}
@@ -485,11 +513,8 @@ export default function PokemonDrawer({
 
   if (loading) {
     return (
-      <div className="flex h-full flex-col items-center justify-center gap-4 bg-[#F7F3EE]" style={PAPER_BG}>
-        <div className="w-14 h-14 rounded-full bg-[#FFFEFB] border border-[#4A3B32]/20 flex items-center justify-center animate-pulse">
-          <Zap className="w-6 h-6 text-[#829b72]" />
-        </div>
-        <p className="text-sm font-medium text-[#78614E]">Carregando dados de campo...</p>
+      <div className="flex h-full items-center justify-center bg-[#F7F3EE]" style={PAPER_BG}>
+        <InkDropLoader label="Carregando dados de campo..." />
       </div>
     );
   }
@@ -498,7 +523,7 @@ export default function PokemonDrawer({
     return (
       <div className="flex h-full flex-col items-center justify-center gap-4 bg-[#F7F3EE] p-6 text-center" style={PAPER_BG}>
         <p className="text-sm font-medium text-[#78614E]">Não foi possível carregar “{formatFormName(pokemonName)}”.</p>
-        <button type="button" onClick={onClose} className="px-4 py-2 rounded-xl bg-[#829b72] text-white text-xs font-bold">Fechar</button>
+        <button type="button" onClick={onClose} className="btn-action">Fechar</button>
       </div>
     );
   }
@@ -519,8 +544,8 @@ export default function PokemonDrawer({
     <div className="relative flex h-full flex-col overflow-y-auto bg-[#F7F3EE]" style={PAPER_BG}>
       {/* Cabeçalho imersivo e fixo */}
       <header
-        className="sticky top-0 z-20 border-b border-[#4A3B32]/10 shadow-sm md:backdrop-blur-xl md:shadow-[0_10px_30px_-18px_rgba(62,46,36,0.35)]"
-        style={{ background: `linear-gradient(120deg, ${primaryInk.bg}F2 0%, #FFFEFBE6 60%, ${primaryInk.bg}CC 100%)` }}
+        className="sticky top-0 z-20 border-b border-[#2A2421]/15"
+        style={{ background: `radial-gradient(ellipse 55% 140% at 100% 0%, ${primaryInk.bg}, transparent 70%), radial-gradient(ellipse 40% 120% at 0% 100%, ${primaryInk.bg}99, transparent 70%), #FFFEFB` }}
       >
         {/*
           Celular: as ações ocupam a primeira linha, alinhadas à direita, e sprite + nome ficam com a largura toda.
@@ -528,8 +553,7 @@ export default function PokemonDrawer({
         */}
         <div className="flex flex-wrap items-center gap-x-3 gap-y-2 px-4 pt-3 pb-3 sm:flex-nowrap sm:gap-4 sm:px-5 sm:pt-4">
           <div
-            className="relative shrink-0 w-20 h-20 sm:w-24 sm:h-24 rounded-full flex items-center justify-center border-2 bg-[#FFFEFB]/70 shadow-inner"
-            style={{ borderColor: `${primaryInk.border}66` }}
+            className="relative flex h-20 w-20 shrink-0 items-center justify-center rounded-full border-[1.5px] border-[#2A2421]/30 bg-[#FFFEFB] shadow-[3px_3px_0_rgba(42,36,33,0.12)] sm:h-24 sm:w-24"
           >
             {shiny && (
               <Sparkles className="absolute -top-1 -right-1 w-5 h-5 text-[#C9A66B] md:drop-shadow-sm" aria-hidden="true" />
@@ -546,17 +570,21 @@ export default function PokemonDrawer({
           </div>
 
           <div className="min-w-0 flex-1">
-            <p className="flex flex-wrap items-center gap-x-2 gap-y-0.5 text-[10px] font-mono font-bold uppercase tracking-[0.18em] text-[#78614E]">
+            <p className="flex flex-wrap items-center gap-x-2 gap-y-0.5 font-mono text-[10px] font-bold uppercase tracking-[0.18em] text-[#785132]">
               {formatDexNumber(species?.id ?? detail.id)}
               <span aria-hidden="true">·</span>
               {isAlternateForm ? 'Forma alternativa' : 'Pokédex'}
-              {shiny && <span className="px-1.5 rounded bg-[#C9A66B]/25 text-[#7F682F]">Shiny</span>}
+              {shiny && <span className="rounded border border-paint-ochre/50 bg-[#FBF1DC] px-1.5 text-[#6E4E14]">Shiny</span>}
             </p>
             <h2
               title={displayName}
-              className="line-clamp-2 break-words font-serif text-xl sm:text-3xl font-black leading-tight tracking-tight text-[#2A2421]"
+              className="line-clamp-2 break-words font-serif text-xl font-black leading-tight tracking-tight text-[#2A2421] sm:text-3xl"
             >
-              {displayName}
+              {/* A pincelada na tinta do tipo, como nos títulos das seções do site. */}
+              <span className="relative isolate">
+                <BrushHighlight color={primaryInk.border} />
+                {displayName}
+              </span>
             </h2>
             <div className="mt-1.5 flex flex-wrap gap-1.5">
               {currentTypes.map((type) => <PokemonTypeBadge key={type} type={type} />)}
@@ -578,10 +606,8 @@ export default function PokemonDrawer({
               onClick={toggleShiny}
               aria-pressed={shiny}
               title={shiny ? 'Ver cor normal' : 'Ver versão shiny'}
-              className={`inline-flex items-center gap-1.5 h-9 px-3 rounded-full border text-xs font-bold transition-colors cursor-pointer ${
-                shiny
-                  ? 'bg-[#C9A66B] border-[#C9A66B] text-white shadow-sm'
-                  : 'bg-[#FFFEFB]/80 border-[#4A3B32]/20 text-[#78614E] hover:border-[#C9A66B] hover:text-[#7F682F]'
+              className={`${ROUND_BUTTON} px-3 text-xs font-bold ${
+                shiny ? 'border-paint-ochre bg-[#FBF1DC] text-[#6E4E14] shadow-[2px_2px_0_rgba(185,132,40,0.3)]' : ROUND_IDLE
               }`}
             >
               <Sparkles className="w-4 h-4" aria-hidden="true" />
@@ -592,7 +618,7 @@ export default function PokemonDrawer({
               type="button"
               onClick={onClose}
               aria-label="Fechar"
-              className="h-9 w-9 inline-flex items-center justify-center rounded-full bg-[#FFFEFB]/80 border border-[#4A3B32]/20 text-[#78614E] hover:text-[#2A2421] hover:border-[#4A3B32]/40 transition-colors cursor-pointer"
+              className={`${ROUND_BUTTON} ${ROUND_IDLE} w-9`}
             >
               <X className="w-5 h-5" />
             </button>
@@ -612,14 +638,13 @@ export default function PokemonDrawer({
                 type="button"
                 onClick={() => handleTabChange(value)}
                 aria-current={active ? 'page' : undefined}
-                className={`inline-flex flex-1 justify-center sm:flex-none items-center gap-1.5 whitespace-nowrap px-1 sm:px-3 py-2.5 -mb-px border-b-2 text-[11px] sm:text-xs font-bold sm:tracking-wide transition-colors cursor-pointer ${
-                  active
-                    ? 'border-[#829b72] text-[#2A2421]'
-                    : 'border-transparent text-[#78614E] hover:text-[#2A2421] hover:border-[#4A3B32]/20'
+                className={`relative inline-flex flex-1 cursor-pointer items-center justify-center gap-1.5 whitespace-nowrap px-1 pb-3 pt-2.5 font-serif text-xs font-semibold transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-paint-cobalt sm:flex-none sm:px-3 sm:text-[13px] ${
+                  active ? 'text-[#2A2421]' : 'text-[#785132]/80 hover:text-[#2A2421]'
                 }`}
               >
-                <Icon className="hidden sm:block w-3.5 h-3.5" aria-hidden="true" />
+                <Icon className={`hidden h-3.5 w-3.5 sm:block ${active ? 'text-[#829b72]' : ''}`} aria-hidden="true" />
                 {label}
+                <TabStroke active={active} />
               </button>
             );
           })}
@@ -628,8 +653,8 @@ export default function PokemonDrawer({
 
       <div className="flex-1 p-4 space-y-4 sm:p-5 sm:space-y-5">
         {forms.length > 0 && (
-          <div className={`${GLASS_CARD} px-4 py-3 flex flex-wrap items-center gap-2`}>
-            <span className="text-[10px] font-bold uppercase tracking-wider text-[#78614E] mr-1">Formas</span>
+          <div className={`${SHEET} flex flex-wrap items-center gap-2 px-4 py-3`}>
+            <span className={`mr-1 ${LABEL}`}>Formas</span>
             {[baseFormName, ...forms].map((form, index) => {
               const selected = currentFormName === form;
               return (
@@ -638,11 +663,7 @@ export default function PokemonDrawer({
                   type="button"
                   onClick={() => handleFormChange(form)}
                   aria-pressed={selected}
-                  className={`px-3 py-1.5 rounded-full text-xs font-semibold transition-colors cursor-pointer ${
-                    selected
-                      ? 'bg-[#829b72] text-white shadow-sm'
-                      : 'bg-[#FFFEFB]/80 border border-[#4A3B32]/20 text-[#2A2421] hover:bg-[#F7F3EE]'
-                  }`}
+                  className={`${PILL} ${selected ? PILL_ON : PILL_OFF}`}
                 >
                   {index === 0 ? 'Base' : formatFormName(form)}
                 </button>
@@ -658,7 +679,7 @@ export default function PokemonDrawer({
               <SectionCard
                 icon={Cpu}
                 title="Status Base"
-                action={<span className="px-2.5 py-1 rounded-full bg-[#829b72] text-white text-[11px] font-bold">Total {totalStat}</span>}
+                action={<span className="rounded-full border border-[#2A2421]/60 bg-[#829b72] px-2.5 py-1 font-mono text-[11px] font-bold tabular-nums text-white shadow-[2px_2px_0_rgba(42,36,33,0.2)]">Total {totalStat}</span>}
               >
                 <div className="space-y-2">
                   {baseStats.map((stat) => <StatBar key={stat.name} {...stat} />)}
@@ -672,7 +693,7 @@ export default function PokemonDrawer({
                       key={a.ability.name}
                       type="button"
                       onClick={() => openAbility(a.ability.name)}
-                      className={`px-2.5 py-1 rounded-lg bg-[#FFFEFB]/80 border border-[#4A3B32]/15 text-[11px] font-medium capitalize text-[#2A2421] ${CLICKABLE}`}
+                      className={`rounded-lg border border-[#2A2421]/20 bg-[#FFFEFB] px-2.5 py-1 text-[11px] font-medium capitalize text-[#2A2421] ${CLICKABLE}`}
                     >
                       {a.ability.name.replace(/-/g, ' ')}
                       {a.is_hidden && <span className="ml-1 text-[9px] font-bold text-[#78614E]">(oculta)</span>}
@@ -680,14 +701,14 @@ export default function PokemonDrawer({
                   ))}
                 </div>
                 <div className="grid grid-cols-2 gap-2">
-                  <div className="flex items-center gap-2 p-2.5 rounded-xl bg-[#FFFEFB]/80 border border-[#4A3B32]/10">
+                  <div className="flex items-center gap-2 p-2.5 rounded-xl bg-[#FFFEFB]/80 border border-[#2A2421]/10">
                     <Ruler className="w-4 h-4 text-[#78614E]" aria-hidden="true" />
                     <div>
                       <span className="block text-[10px] font-semibold uppercase text-[#78614E]">Altura</span>
                       <span className="text-xs font-bold text-[#2A2421]">{(detail.height / 10).toFixed(1)} m</span>
                     </div>
                   </div>
-                  <div className="flex items-center gap-2 p-2.5 rounded-xl bg-[#FFFEFB]/80 border border-[#4A3B32]/10">
+                  <div className="flex items-center gap-2 p-2.5 rounded-xl bg-[#FFFEFB]/80 border border-[#2A2421]/10">
                     <Weight className="w-4 h-4 text-[#78614E]" aria-hidden="true" />
                     <div>
                       <span className="block text-[10px] font-semibold uppercase text-[#78614E]">Peso</span>
@@ -697,10 +718,10 @@ export default function PokemonDrawer({
                 </div>
                 {species?.egg_groups?.length > 0 && (
                   <div>
-                    <span className="block mb-1 text-[10px] font-semibold uppercase text-[#78614E]">Grupos de ovo</span>
+                    <span className={`mb-1 block ${LABEL}`}>Grupos de ovo</span>
                     <div className="flex flex-wrap gap-1">
                       {species.egg_groups.map((g) => (
-                        <span key={g.name} className="px-2 py-0.5 rounded-md bg-[#FFFEFB]/80 border border-[#4A3B32]/15 text-[10px] font-medium capitalize text-[#2A2421]">
+                        <span key={g.name} className="rounded-md border border-[#2A2421]/20 bg-[#FFFEFB] px-2 py-0.5 text-[10px] font-medium capitalize text-[#2A2421]">
                           {g.name}
                         </span>
                       ))}
@@ -756,19 +777,16 @@ export default function PokemonDrawer({
             }
           >
             {smogonLoading ? (
-              <p className="p-8 text-center text-xs font-medium text-[#78614E] animate-pulse">Sincronizando estatísticas...</p>
+              <InkDropLoader label="Sincronizando estatísticas..." className="py-8" />
             ) : smogon ? (
               <div className="space-y-4">
-                <div className="p-4 rounded-xl bg-[#FFFEFB]/80 border border-[#4A3B32]/10">
-                  <div className="flex items-center justify-between mb-2">
-                    <span className="text-xs font-bold uppercase text-[#78614E]">Taxa de uso no tier</span>
-                    <span className="text-xl font-black text-[#829b72]">{smogon.usage_percent?.toFixed(2)}%</span>
+                <div className="p-4 rounded-xl border border-[#2A2421]/12 bg-[#FFFEFB]">
+                  <div className="mb-2 flex items-center justify-between">
+                    <span className={LABEL}>Taxa de uso no tier</span>
+                    <span className="font-serif text-2xl font-black tabular-nums text-[#5B7856]">{smogon.usage_percent?.toFixed(2)}%</span>
                   </div>
-                  <div className="h-2 rounded-full bg-[#4A3B32]/10 overflow-hidden">
-                    <div
-                      className="h-full rounded-full bg-[#829b72] transition-[width] duration-500"
-                      style={{ width: `${Math.min(smogon.usage_percent ?? 0, 100)}%` }}
-                    />
+                  <div className="brush-bar-track">
+                    <div className="brush-bar bg-[#829b72]" style={{ width: `max(${Math.min(smogon.usage_percent ?? 0, 100)}%, 6px)` }} />
                   </div>
                   <div className="flex items-center justify-between mt-2.5 text-[11px] text-[#78614E]">
                     <span>
@@ -782,7 +800,7 @@ export default function PokemonDrawer({
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div className="space-y-2">
-                    <h4 className="flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-[#2A2421]">
+                    <h4 className="flex items-center gap-2 font-serif text-sm font-bold text-[#2A2421]">
                       <Cpu className="w-4 h-4 text-[#829b72]" aria-hidden="true" /> Spreads EV
                     </h4>
                     {spreads.length > 0 ? (
@@ -794,7 +812,7 @@ export default function PokemonDrawer({
 
                   <div className="space-y-4">
                     <div>
-                      <span className="block mb-2 text-xs font-bold uppercase tracking-wider text-[#78614E]">Habilidades principais</span>
+                      <span className={`mb-2 block ${LABEL}`}>Habilidades principais</span>
                       <div className="flex flex-wrap gap-1.5">
                         {topEntries(smogon.abilities, 3).map(([name, pct]) => (
                           <UsageChip key={name} name={name} pct={pct} onSelect={openAbility} />
@@ -802,7 +820,7 @@ export default function PokemonDrawer({
                       </div>
                     </div>
                     <div>
-                      <span className="block mb-2 text-xs font-bold uppercase tracking-wider text-[#78614E]">Itens mais usados</span>
+                      <span className={`mb-2 block ${LABEL}`}>Itens mais usados</span>
                       <div className="flex flex-wrap gap-1.5">
                         {topEntries(smogon.items, 3).map(([name, pct]) => <UsageChip key={name} name={name} pct={pct} />)}
                       </div>
@@ -811,7 +829,7 @@ export default function PokemonDrawer({
                 </div>
 
                 <div>
-                  <span className="block mb-2 text-xs font-bold uppercase tracking-wider text-[#78614E]">Movimentos populares</span>
+                  <span className={`mb-2 block ${LABEL}`}>Movimentos populares</span>
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                     {topEntries(smogon.moves, 6).map(([name, pct]) => (
                       <button
@@ -819,13 +837,13 @@ export default function PokemonDrawer({
                         type="button"
                         onClick={() => openMove(name)}
                         disabled={isSmogonPlaceholder(name)}
-                        className={`flex items-center justify-between gap-3 p-2.5 rounded-xl bg-[#FFFEFB]/80 border border-[#4A3B32]/10 text-left ${CLICKABLE}`}
+                        className={`flex items-center justify-between gap-3 p-2.5 text-left rounded-xl border border-[#2A2421]/12 bg-[#FFFEFB] ${CLICKABLE}`}
                       >
                         <span className="text-xs font-bold capitalize text-[#2A2421]">{name.replace(/-/g, ' ')}</span>
                         <span className="flex items-center gap-2 w-1/3">
                           <span className="w-8 text-right text-[10px] font-bold text-[#78614E]">{pct.toFixed(0)}%</span>
-                          <span className="flex-1 h-1.5 rounded-full bg-[#4A3B32]/10 overflow-hidden">
-                            <span className="block h-full rounded-full bg-[#829b72]" style={{ width: `${Math.min(pct, 100)}%` }} />
+                          <span className="brush-bar-track block flex-1 !h-1.5">
+                            <span className="brush-bar block bg-[#829b72]" style={{ width: `max(${Math.min(pct, 100)}%, 6px)` }} />
                           </span>
                         </span>
                       </button>
@@ -834,7 +852,7 @@ export default function PokemonDrawer({
                 </div>
               </div>
             ) : (
-              <p className="p-4 text-center text-xs text-[#78614E] rounded-xl bg-[#FFFEFB]/80 border border-[#4A3B32]/10">
+              <p className="ink-wash p-4 text-center text-xs text-[#785132] rounded-xl border border-[#2A2421]/12 bg-[#FFFEFB]">
                 {smogonError
                   ? 'Não foi possível consultar a Smogon agora. Tente de novo em instantes.'
                   : isAlternateForm
@@ -876,21 +894,17 @@ export default function PokemonDrawer({
                   type="button"
                   onClick={() => setLearnMethod(method.value)}
                   aria-pressed={learnMethod === method.value}
-                  className={`px-3.5 py-1.5 rounded-full text-xs font-semibold transition-colors cursor-pointer ${
-                    learnMethod === method.value
-                      ? 'bg-[#829b72] text-white shadow-sm'
-                      : 'bg-[#FFFEFB]/80 border border-[#4A3B32]/20 text-[#2A2421] hover:bg-[#F7F3EE]'
-                  }`}
+                  className={`${PILL} px-3.5 ${learnMethod === method.value ? PILL_ON : PILL_OFF}`}
                 >
                   {method.label}
                 </button>
               ))}
             </div>
 
-            <div className="overflow-x-auto rounded-xl border border-[#4A3B32]/15 bg-[#FFFEFB]/80">
+            <div className="overflow-x-auto rounded-xl border border-[#2A2421]/12 bg-[#FFFEFB]">
               <table className="w-full text-left border-collapse">
                 <thead>
-                  <tr className="border-b border-[#4A3B32]/15 bg-[#F7F3EE]/70 text-[11px] font-bold uppercase tracking-wider text-[#78614E]">
+                  <tr className="border-b border-[#2A2421]/15 bg-[#F7F3EE] font-serif text-xs font-bold text-[#5C4033]">
                     <th className="py-2.5 px-3">Aprender</th>
                     <th className="py-2.5 px-3">Nome</th>
                     <th className="py-2.5 px-3">Tipo</th>
@@ -900,9 +914,9 @@ export default function PokemonDrawer({
                     <th className="py-2.5 px-3 text-right">PP</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-[#4A3B32]/10">
+                <tbody className="divide-y divide-[#2A2421]/10">
                   {movesetLoading ? (
-                    <tr><td colSpan={7} className="py-8 text-center text-xs font-medium text-[#78614E] animate-pulse">Compilando o learnset...</td></tr>
+                    <tr><td colSpan={7}><InkDropLoader label="Compilando o learnset..." className="py-8" /></td></tr>
                   ) : visibleMoves.length === 0 ? (
                     <tr><td colSpan={7} className="py-8 text-center text-xs text-[#78614E]">Nenhum golpe para este filtro.</td></tr>
                   ) : (

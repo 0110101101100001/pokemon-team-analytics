@@ -5,7 +5,7 @@ const VARIANTS = {
   // Dentro do card, que também é clicável.
   card: 'h-7 w-7 border-[#4A3B32]/15 bg-[#FFFEFB]/85 shadow-xs',
   // No cabeçalho da ficha, ao lado de shiny e cry.
-  header: 'h-9 w-9 border-[#4A3B32]/20 bg-[#FFFEFB]/80',
+  header: 'h-9 w-9 border-[1.5px] border-[#2A2421]/25 bg-[#FFFEFB] hover:shadow-[2px_2px_0_rgba(42,36,33,0.15)]',
 };
 
 /** `name` volta em `onToggle(name)`, para o pai usar um único callback estável para todos os cards. */

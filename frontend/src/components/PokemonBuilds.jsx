@@ -4,7 +4,7 @@ import PokemonTypeBadge from './PokemonTypeBadge';
 import { itemSpriteUrl } from '../services/api';
 import { fetchSmogonSets, formatStatSpread, toShowdownText } from '../utils/smogonSets';
 
-const FIELD = 'h-9 px-3 rounded-xl border border-[#4A3B32]/20 bg-[#FFFEFB]/80 text-xs font-semibold text-[#2A2421] focus:outline-none focus:ring-1 focus:ring-[#829b72] cursor-pointer';
+const FIELD = 'h-9 px-3 rounded-xl border border-[#2A2421]/20 bg-[#FFFEFB]/80 text-xs font-semibold text-[#2A2421] focus:outline-none focus:ring-1 focus:ring-[#829b72] cursor-pointer';
 const LINK = 'rounded text-left font-semibold text-[#2A2421] underline decoration-dotted decoration-[#78614E]/50 underline-offset-4 cursor-pointer hover:text-[#5B7856] hover:decoration-[#5B7856] focus:outline-none focus-visible:ring-2 focus-visible:ring-paint-cobalt';
 const COPY_FEEDBACK_MS = 1800;
 
@@ -64,14 +64,14 @@ const BuildCard = memo(function BuildCard({ pokemonName, set, onOpenItem, onOpen
   const CopyIcon = copyState === 'copied' ? Check : copyState === 'failed' ? TriangleAlert : ClipboardCopy;
 
   return (
-    <article className="flex flex-col gap-3 rounded-xl border border-[#4A3B32]/10 bg-[#FFFEFB]/80 p-3.5">
+    <article className="flex flex-col gap-3 rounded-xl border border-[#2A2421]/10 bg-[#FFFEFB]/80 p-3.5">
       <header className="flex items-start justify-between gap-2">
         <h4 className="min-w-0 break-words font-serif text-base font-black leading-tight text-[#2A2421]">{set.name}</h4>
         <button
           type="button"
           onClick={handleCopy}
           title="Copiar no formato do Pokémon Showdown"
-          className="inline-flex h-8 shrink-0 cursor-pointer items-center gap-1.5 rounded-full border border-[#4A3B32]/20 bg-[#FFFEFB] px-2.5 text-[11px] font-bold text-[#78614E] transition-colors hover:border-[#829b72]/70 hover:text-[#2A2421] focus:outline-none focus-visible:ring-2 focus-visible:ring-paint-cobalt"
+          className="inline-flex h-8 shrink-0 cursor-pointer items-center gap-1.5 rounded-full border border-[#2A2421]/20 bg-[#FFFEFB] px-2.5 text-[11px] font-bold text-[#78614E] transition-colors hover:border-[#829b72]/70 hover:text-[#2A2421] focus:outline-none focus-visible:ring-2 focus-visible:ring-paint-cobalt"
         >
           <CopyIcon className="h-3.5 w-3.5" aria-hidden="true" />
           <span aria-live="polite">
@@ -152,7 +152,7 @@ function PokemonBuilds({ variety, pokemonLabel, onOpenItem, onOpenAbility, onOpe
   const { smogonName, tiers } = state.data;
   if (tiers.length === 0) {
     return (
-      <p className="rounded-xl border border-[#4A3B32]/10 bg-[#FFFEFB]/80 p-4 text-center text-xs text-[#78614E]">
+      <p className="rounded-xl border border-[#2A2421]/10 bg-[#FFFEFB]/80 p-4 text-center text-xs text-[#78614E]">
         {isForm
           ? `A Smogon não tem builds para ${pokemonLabel}. As da forma base não valem para esta forma.`
           : `A Smogon não tem builds de Geração 9 para ${pokemonLabel}.`}

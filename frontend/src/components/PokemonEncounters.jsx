@@ -13,7 +13,7 @@ const RARITY_STYLES = {
 
 const EncounterLocation = memo(function EncounterLocation({ location }) {
   return (
-    <li className="p-2.5 rounded-lg bg-[#F7F3EE]/60 border border-[#4A3B32]/10 space-y-1.5">
+    <li className="p-2.5 rounded-lg bg-[#F7F3EE]/60 border border-[#2A2421]/10 space-y-1.5">
       <div className="flex items-start justify-between gap-2">
         <span className="text-xs font-bold text-[#2A2421] leading-snug">{location.name}</span>
         {location.levelRange && (
@@ -21,7 +21,7 @@ const EncounterLocation = memo(function EncounterLocation({ location }) {
         )}
       </div>
       {location.exclusiveTo && (
-        <span className="inline-block px-1.5 py-px rounded bg-white border border-[#4A3B32]/15 text-[9px] font-bold uppercase tracking-wider text-[#78614E]">
+        <span className="inline-block px-1.5 py-px rounded bg-[#FFFEFB] border border-[#2A2421]/15 text-[9px] font-bold uppercase tracking-wider text-[#78614E]">
           Só em {location.exclusiveTo.join(', ')}
         </span>
       )}
@@ -45,7 +45,7 @@ const EncounterGroup = memo(function EncounterGroup({ group, open, onToggle }) {
   const panelId = `encounters-${group.key}`;
 
   return (
-    <div className="rounded-xl border border-[#4A3B32]/15 bg-white overflow-hidden">
+    <div className="rounded-xl border border-[#2A2421]/15 bg-[#FFFEFB] overflow-hidden">
       <button
         type="button"
         onClick={() => onToggle(group.key)}
@@ -62,7 +62,7 @@ const EncounterGroup = memo(function EncounterGroup({ group, open, onToggle }) {
         </span>
       </button>
       {open && (
-        <ul id={panelId} className="grid grid-cols-1 sm:grid-cols-2 gap-2 p-3 border-t border-[#4A3B32]/10">
+        <ul id={panelId} className="grid grid-cols-1 sm:grid-cols-2 gap-2 p-3 border-t border-[#2A2421]/10">
           {group.locations.map((location) => (
             <EncounterLocation key={location.id} location={location} />
           ))}
@@ -98,21 +98,21 @@ function PokemonEncounters({ pokemonId }) {
   const { status, groups } = state;
 
   return (
-    <div className="p-4 rounded-2xl bg-[#F7F3EE]/40 border border-[#4A3B32]/15 space-y-3">
+    <div className="paper-card paper-card-quiet space-y-3 p-4 sm:p-5">
       <div className="flex items-center justify-between gap-2">
         <div className="flex items-center gap-2">
-          <MapPin className="w-4 h-4 text-[#78614E]" />
-          <span className="text-xs font-bold text-[#78614E] uppercase tracking-wider">Rotas de Encontro</span>
+          <MapPin className="h-4 w-4 text-[#829b72]" aria-hidden="true" />
+          <h3 className="font-serif text-base font-bold tracking-tight text-[#2A2421]">Rotas de Encontro</h3>
         </div>
         {status === 'ready' && groups.length > 0 && (
-          <span className="text-[10px] font-bold px-2.5 py-1 rounded-full bg-[#829b72] text-white">
+          <span className="rounded-full border border-[#2A2421]/60 bg-[#829b72] px-2.5 py-1 text-[10px] font-bold text-white shadow-[2px_2px_0_rgba(42,36,33,0.2)]">
             {groups.length} {groups.length === 1 ? 'jogo' : 'jogos'}
           </span>
         )}
       </div>
 
       {status === 'loading' && (
-        <p className="text-xs text-[#78614E] font-medium animate-pulse">A consultar o mapa de campo...</p>
+        <p className="text-xs text-[#78614E] font-medium animate-pulse">Consultando o mapa de campo...</p>
       )}
       {status === 'error' && (
         <p className="text-xs text-[#78614E]">Não foi possível carregar os locais de encontro.</p>

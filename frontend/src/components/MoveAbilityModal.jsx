@@ -93,11 +93,11 @@ function HeldBySection({ groups }) {
       <p className="text-xs text-[#78614E]">Segurado por Pokémon selvagens; capture ou use Thief/Covet para pegar.</p>
       <ul className="space-y-2">
         {groups.map(({ versions, holders }) => (
-          <li key={versions.join(',')} className="rounded-xl border border-[#4A3B32]/10 bg-[#F7F3EE]/70 px-3 py-2">
+          <li key={versions.join(',')} className="rounded-xl border border-[#2A2421]/10 bg-[#F7F3EE]/70 px-3 py-2">
             <p className="font-serif text-xs font-bold text-[#2A2421]">{versions.map(versionLabel).join(' · ')}</p>
             <ul className="mt-1.5 flex flex-wrap gap-1.5">
               {holders.map(({ name, id, rarity }) => (
-                <li key={name} className="flex items-center gap-1 rounded-full border border-[#4A3B32]/10 bg-[#FFFEFB] py-0.5 pl-0.5 pr-2">
+                <li key={name} className="flex items-center gap-1 rounded-full border border-[#2A2421]/10 bg-[#FFFEFB] py-0.5 pl-0.5 pr-2">
                   <img src={thumbnailSpriteUrl(id)} alt="" width={24} height={24} loading="lazy" decoding="async" className="h-6 w-6 object-contain" />
                   <span className="text-xs font-semibold text-[#3E3A35]">{formatSlug(name)}</span>
                   <span className="font-mono text-[11px] font-bold tabular-nums text-[#5B7856]">{rarity}%</span>
@@ -167,14 +167,14 @@ function MoveAbilityModal({ kind, name, onClose }) {
   // Portal: fica fora do drawer, que tem rolagem própria e cantos recortados.
   return createPortal(
     <div
-      className="fixed inset-0 z-[70] flex items-center justify-center bg-black/65 p-4 md:bg-black/50 md:backdrop-blur-md animate-fade-in"
+      className="fixed inset-0 z-[70] flex items-center justify-center bg-[#2A2421]/60 p-4 animate-fade-in motion-reduce:animate-none md:bg-[#2A2421]/45 md:backdrop-blur-sm"
       onMouseDown={(e) => e.target === e.currentTarget && onClose()}
     >
       <div
         role="dialog"
         aria-modal="true"
         aria-labelledby={titleId}
-        className="relative flex max-h-[85vh] w-full max-w-lg flex-col rounded-panel border border-[#78614E]/30 bg-[#FFFEFB] shadow-lg md:shadow-panel animate-bubble-pop"
+        className="relative flex max-h-[85vh] w-full max-w-lg flex-col rounded-[1.5rem_1.25rem_1.6rem_1.15rem/1.25rem_1.6rem_1.15rem_1.5rem] border-[1.5px] border-[#2A2421] bg-[#FFFEFB] shadow-panel animate-bubble-pop motion-reduce:animate-none"
       >
         <header className="flex items-start gap-3 border-b border-[#5C4033]/25 px-6 pb-4 pt-5">
           <span className="mt-0.5 flex h-10 w-10 shrink-0 items-center justify-center rounded-full border border-[#829b72]/40 bg-[#829b72]/15 text-[#5B7856]">
@@ -199,7 +199,7 @@ function MoveAbilityModal({ kind, name, onClose }) {
             type="button"
             onClick={onClose}
             aria-label="Fechar"
-            className="inline-flex h-9 w-9 shrink-0 cursor-pointer items-center justify-center rounded-full border border-[#4A3B32]/20 bg-[#FFFEFB] text-[#78614E] transition-colors hover:border-[#4A3B32]/40 hover:text-[#2A2421] focus:outline-none focus-visible:ring-2 focus-visible:ring-paint-cobalt"
+            className="inline-flex h-9 w-9 shrink-0 cursor-pointer items-center justify-center rounded-full border border-[#2A2421]/20 bg-[#FFFEFB] text-[#78614E] transition-colors hover:border-[#2A2421]/40 hover:text-[#2A2421] focus:outline-none focus-visible:ring-2 focus-visible:ring-paint-cobalt"
           >
             <X className="h-5 w-5" aria-hidden="true" />
           </button>
@@ -224,7 +224,7 @@ function MoveAbilityModal({ kind, name, onClose }) {
             <>
               <dl className="grid grid-cols-2 gap-2 sm:grid-cols-3">
                 {attributesFor(info).map(([term, value]) => (
-                  <div key={term} className="rounded-xl border border-[#4A3B32]/10 bg-[#F7F3EE]/70 px-3 py-2">
+                  <div key={term} className="rounded-xl border border-[#2A2421]/10 bg-[#F7F3EE]/70 px-3 py-2">
                     <dt className="text-[10px] font-semibold uppercase tracking-wider text-[#78614E]">{term}</dt>
                     <dd className="mt-0.5 text-sm font-bold text-[#2A2421]">{value}</dd>
                   </div>

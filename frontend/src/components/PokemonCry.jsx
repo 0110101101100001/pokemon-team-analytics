@@ -59,10 +59,10 @@ function PokemonCry({ pokemonId, criesUrl, label = 'Ouvir cry', className = '' }
       disabled={!src}
       aria-label={failed ? `${label} (indisponível, tentar novamente)` : label}
       title={failed ? 'Cry indisponível' : label}
-      className={`relative inline-flex items-center gap-2 h-9 pl-2.5 pr-3 rounded-full border transition-colors duration-300 cursor-pointer disabled:cursor-not-allowed disabled:opacity-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-paint-cobalt ${
+      className={`relative inline-flex items-center gap-2 h-9 pl-2.5 pr-3 rounded-full border-[1.5px] transition-[border-color,box-shadow,color,background-color] duration-300 cursor-pointer disabled:cursor-not-allowed disabled:opacity-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-paint-cobalt ${
         playing
-          ? 'bg-[#829b72] border-[#829b72] text-white shadow-sm'
-          : 'bg-[#FFFEFB] border-[#4A3B32]/20 text-[#78614E] hover:border-[#829b72]/60 hover:text-[#2A2421]'
+          ? 'border-[#2A2421]/70 bg-[#829b72] text-white shadow-[2px_2px_0_rgba(42,36,33,0.25)]'
+          : 'border-[#2A2421]/25 bg-[#FFFEFB] text-[#5C4033] hover:border-[#2A2421]/60 hover:text-[#2A2421] hover:shadow-[2px_2px_0_rgba(42,36,33,0.15)]'
       } ${className}`}
     >
       {playing && (
