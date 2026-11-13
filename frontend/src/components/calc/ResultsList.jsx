@@ -27,7 +27,7 @@ function ResultsList({ directions, selected, onSelect }) {
                     type="button"
                     onClick={() => onSelect({ side: key, slot: slotIndex })}
                     aria-pressed={isSelected}
-                    className={`grid w-full cursor-pointer grid-cols-[minmax(0,1fr)_auto] items-center gap-x-2 rounded-lg border px-2.5 py-1.5 text-left transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-smeargle-olive/60 ${
+                    className={`grid w-full cursor-pointer grid-cols-[minmax(0,1fr)_auto] items-center gap-x-2 rounded-lg border px-2.5 py-1.5 text-left transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-paint-cobalt ${
                       isSelected ? 'border-smeargle-olive bg-smeargle-olive/15' : 'border-transparent hover:border-[#78614E]/25 hover:bg-[#78614E]/5'
                     }`}
                   >

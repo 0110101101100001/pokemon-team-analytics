@@ -12,7 +12,9 @@ export default function SectionHeading({ caption, title, note, aside, pigment })
     <div>
       <div className="flex flex-col justify-between gap-4 px-1 sm:flex-row sm:items-end">
         <div>
-          <p className="font-hand text-xl leading-none text-[#785132]">{caption}</p>
+          <p className="font-hand text-xl leading-none text-[#785132]">
+            <span className="marker-underline">{caption}</span>
+          </p>
           <h2 className="relative isolate mt-2 inline-block font-serif text-[1.75rem] font-black leading-tight tracking-tight text-[#2A2421] sm:text-4xl">
             <BrushHighlight color={pigment ?? sectionPigment} />
             {title}
@@ -21,11 +23,12 @@ export default function SectionHeading({ caption, title, note, aside, pigment })
         </div>
         {aside && <div className="self-start sm:self-auto">{aside}</div>}
       </div>
-      <InkRule className="mt-3" />
+      <InkRule className="mt-3" wash={pigment ?? sectionPigment} />
     </div>
   );
 }
 
 // Selo de tinta: contorno a nanquim e o texto em serifa, levemente torto como um carimbo.
+// O pingo de magenta queimado à esquerda é a tinta que sobrou no carimbo.
 export const HEADING_PILL_CLASS =
-  'inline-flex -rotate-1 items-center gap-1.5 rounded-full border-[1.5px] border-[#2A2421]/75 bg-[#FFFEFB] px-3.5 py-1.5 font-serif text-[13px] font-semibold italic leading-none text-[#5C4033] shadow-[2px_2px_0_rgba(42,36,33,0.2)]';
+  'inline-flex -rotate-1 items-center gap-1.5 rounded-full border-[1.5px] border-paint-ochre/80 bg-[#FFFAF0] px-3.5 py-1.5 font-serif text-[13px] font-semibold italic leading-none text-[#6E4E14] shadow-[2px_2px_0_rgba(185,132,40,0.28)] before:h-1.5 before:w-1.5 before:shrink-0 before:rounded-full before:bg-paint-magenta before:content-[""]';

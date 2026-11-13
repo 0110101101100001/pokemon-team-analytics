@@ -30,7 +30,7 @@ function Chip({ pressed, onToggle, title, children }) {
       aria-pressed={pressed}
       onClick={onToggle}
       title={title}
-      className={`h-7 cursor-pointer rounded-full border px-2.5 font-serif text-[11px] font-semibold transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-smeargle-olive/60 ${
+      className={`h-7 cursor-pointer rounded-full border px-2.5 font-serif text-[11px] font-semibold transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-paint-cobalt ${
         pressed ? 'border-smeargle-olive bg-smeargle-olive text-[#FFFEFB] shadow-sm' : 'border-[#78614E]/25 bg-[#FFFEFB]/70 text-[#78614E] hover:border-[#78614E]/50'
       }`}
     >
@@ -52,7 +52,7 @@ function SideConditions({ title, conditions, onChange }) {
           <select
             value={conditions.spikes}
             onChange={(e) => onChange({ spikes: Number(e.target.value) })}
-            className="h-5 cursor-pointer rounded-full bg-transparent font-mono text-[11px] focus:outline-none focus-visible:ring-2 focus-visible:ring-smeargle-olive/60"
+            className="h-5 cursor-pointer rounded-full bg-transparent font-mono text-[11px] focus:outline-none focus-visible:ring-2 focus-visible:ring-paint-cobalt"
           >
             {[0, 1, 2, 3].map((layers) => <option key={layers} value={layers}>{layers}</option>)}
           </select>

@@ -28,7 +28,7 @@ const SuggestionRow = memo(function SuggestionRow({ pokemon, score, detail, onAd
       <button
         type="button"
         onClick={() => onAdd(pokemon)}
-        className="flex w-full cursor-pointer items-center gap-3 rounded-xl border border-[#78614E]/15 bg-[#FFFEFB]/70 px-3 py-2 text-left transition-colors hover:border-smeargle-olive hover:bg-smeargle-olive/10 focus:outline-none focus-visible:ring-2 focus-visible:ring-smeargle-olive/60"
+        className="flex w-full cursor-pointer items-center gap-3 rounded-xl border border-[#78614E]/15 bg-[#FFFEFB]/70 px-3 py-2 text-left transition-colors hover:border-smeargle-olive hover:bg-smeargle-olive/10 focus:outline-none focus-visible:ring-2 focus-visible:ring-paint-cobalt"
       >
         <img src={thumbnailSpriteUrl(pokemon.id)} alt="" width={40} height={40} loading="lazy" decoding="async" className="h-10 w-10 shrink-0 object-contain" />
         <span className="min-w-0 flex-1">

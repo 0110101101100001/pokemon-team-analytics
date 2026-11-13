@@ -19,7 +19,7 @@ const describeError = (error) =>
     : error?.message ?? 'Algo deu errado. Tente novamente.';
 
 const ICON_BUTTON_CLASS =
-  'rounded-lg p-2 text-[#78614E]/75 transition-colors hover:bg-[#78614E]/10 hover:text-[#78614E] focus:outline-none focus-visible:ring-2 focus-visible:ring-smeargle-olive/60 disabled:cursor-wait disabled:opacity-60';
+  'rounded-lg p-2 text-[#78614E]/75 transition-colors hover:bg-[#78614E]/10 hover:text-[#78614E] focus:outline-none focus-visible:ring-2 focus-visible:ring-paint-cobalt disabled:cursor-wait disabled:opacity-60';
 
 const TeamSprites = memo(function TeamSprites({ pokemons }) {
   return (
@@ -70,7 +70,7 @@ const SavedTeamRow = memo(function SavedTeamRow({ team, onLoad, onDelete }) {
               type="button"
               onClick={() => setConfirming(false)}
               disabled={deleting}
-              className="rounded-lg px-3 py-1.5 text-xs font-semibold text-[#78614E] transition-colors hover:bg-[#78614E]/10 focus:outline-none focus-visible:ring-2 focus-visible:ring-smeargle-olive/60"
+              className="rounded-lg px-3 py-1.5 text-xs font-semibold text-[#78614E] transition-colors hover:bg-[#78614E]/10 focus:outline-none focus-visible:ring-2 focus-visible:ring-paint-cobalt"
             >
               Cancelar
             </button>
@@ -89,7 +89,7 @@ const SavedTeamRow = memo(function SavedTeamRow({ team, onLoad, onDelete }) {
             <button
               type="button"
               onClick={() => onLoad(team)}
-              className="inline-flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-semibold text-smeargle-ink-darkGreen transition-colors hover:bg-smeargle-olive/15 focus:outline-none focus-visible:ring-2 focus-visible:ring-smeargle-olive/60"
+              className="inline-flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-semibold text-smeargle-ink-darkGreen transition-colors hover:bg-smeargle-olive/15 focus:outline-none focus-visible:ring-2 focus-visible:ring-paint-cobalt"
             >
               <Download className="h-3.5 w-3.5" aria-hidden="true" />
               Carregar
@@ -211,7 +211,7 @@ export default function TeamManagerModal({ open, onClose, session, team = [], on
           type="button"
           onClick={onClose}
           aria-label="Fechar"
-          className="absolute right-4 top-4 rounded-full p-1.5 text-[#78614E]/70 transition-colors hover:bg-[#78614E]/10 hover:text-[#78614E] focus:outline-none focus-visible:ring-2 focus-visible:ring-smeargle-olive/60"
+          className="absolute right-4 top-4 rounded-full p-1.5 text-[#78614E]/70 transition-colors hover:bg-[#78614E]/10 hover:text-[#78614E] focus:outline-none focus-visible:ring-2 focus-visible:ring-paint-cobalt"
         >
           <X className="h-4 w-4" />
         </button>
@@ -246,7 +246,7 @@ export default function TeamManagerModal({ open, onClose, session, team = [], on
                 <button
                   type="submit"
                   disabled={!canSave}
-                  className="inline-flex h-11 shrink-0 items-center gap-2 rounded-xl bg-[#78614E] px-4 text-sm font-semibold tracking-wide text-[#FFFEFB] shadow-hard transition-all hover:translate-x-[2px] hover:translate-y-[2px] hover:shadow-hard-hover focus:outline-none focus-visible:ring-2 focus-visible:ring-smeargle-olive/60 disabled:pointer-events-none disabled:opacity-50"
+                  className="inline-flex h-11 shrink-0 items-center gap-2 rounded-xl bg-[#78614E] px-4 text-sm font-semibold tracking-wide text-[#FFFEFB] shadow-hard transition-all hover:translate-x-[2px] hover:translate-y-[2px] hover:shadow-hard-hover focus:outline-none focus-visible:ring-2 focus-visible:ring-paint-cobalt disabled:pointer-events-none disabled:opacity-50"
                 >
                   {saving ? <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" /> : <Save className="h-4 w-4" aria-hidden="true" />}
                   Salvar

@@ -55,7 +55,7 @@ function DamageResult({ entry, hint }) {
           </div>
 
           <details className="mt-2">
-            <summary className="cursor-pointer font-hand text-base leading-none text-[#78614E] focus:outline-none focus-visible:ring-2 focus-visible:ring-smeargle-olive/60">
+            <summary className="cursor-pointer font-hand text-base leading-none text-[#78614E] focus:outline-none focus-visible:ring-2 focus-visible:ring-paint-cobalt">
               ver os 16 resultados possíveis{hits > 1 ? ' (por acerto)' : ''}
             </summary>
             <p className="mt-1.5 font-mono text-xs tabular-nums leading-relaxed text-smeargle-text">{rolls.join(' · ')}</p>

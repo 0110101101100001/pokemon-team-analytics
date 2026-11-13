@@ -63,7 +63,7 @@ function PokemonGrid({
 
         {/* Mensagem de Vazio caso os filtros não retornem nada */}
         {total === 0 && (
-          <div className="col-span-full flex flex-col items-center justify-center py-24 text-center">
+          <div className="ink-scatter col-span-full flex flex-col items-center justify-center py-24 text-center">
             <div className="ink-stamp mb-4 h-14 w-14">
               <Paintbrush className="w-6 h-6 text-[#78614E]" strokeWidth={1.75} aria-hidden="true" />
             </div>

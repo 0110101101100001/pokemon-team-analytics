@@ -41,7 +41,7 @@ function LeaderCard({ leader, entryByName, onSelectPokemon }) {
                 type="button"
                 onClick={() => onSelectPokemon(slug)}
                 disabled={!entry}
-                className="flex w-full cursor-pointer flex-col items-center rounded-xl px-1 py-1.5 transition-colors hover:bg-[#829b72]/15 focus:outline-none focus-visible:ring-2 focus-visible:ring-[#829b72]/70 disabled:cursor-default disabled:hover:bg-transparent"
+                className="flex w-full cursor-pointer flex-col items-center rounded-xl px-1 py-1.5 transition-colors hover:bg-[#829b72]/15 focus:outline-none focus-visible:ring-2 focus-visible:ring-paint-cobalt disabled:cursor-default disabled:hover:bg-transparent"
               >
                 {entry && (
                   <img src={thumbnailSpriteUrl(entry.id)} alt="" width={56} height={56} loading="lazy" decoding="async" className="h-14 w-14 object-contain" />

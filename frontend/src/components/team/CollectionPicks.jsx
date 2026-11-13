@@ -84,7 +84,7 @@ function CollectionPicks({ collections, entryByName, takenSpecies, disabled, onP
                 disabled={disabled || taken}
                 title={taken ? `${name} já está no time` : `Adicionar ${name}`}
                 aria-label={taken ? `${name} já está no time` : `Adicionar ${name} ao time`}
-                className="flex w-[4.5rem] cursor-pointer flex-col items-center rounded-xl border border-transparent px-1 py-1 transition-colors hover:border-smeargle-olive/50 hover:bg-smeargle-olive/10 focus:outline-none focus-visible:ring-2 focus-visible:ring-smeargle-olive/60 disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:border-transparent disabled:hover:bg-transparent"
+                className="flex w-[4.5rem] cursor-pointer flex-col items-center rounded-xl border border-transparent px-1 py-1 transition-colors hover:border-smeargle-olive/50 hover:bg-smeargle-olive/10 focus:outline-none focus-visible:ring-2 focus-visible:ring-paint-cobalt disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:border-transparent disabled:hover:bg-transparent"
               >
                 <img src={thumbnailSpriteUrl(entry.id)} alt="" width={48} height={48} loading="lazy" decoding="async" className="h-12 w-12 object-contain" />
                 <span className="w-full truncate text-center font-serif text-[11px] font-semibold text-smeargle-text">{name}</span>
@@ -103,7 +103,7 @@ function CollectionPicks({ collections, entryByName, takenSpecies, disabled, onP
         onClick={toggleOpen}
         aria-expanded={open}
         aria-controls={panelId}
-        className="flex w-full cursor-pointer items-center justify-between gap-2 rounded-xl text-left focus:outline-none focus-visible:ring-2 focus-visible:ring-[#829b72]/70"
+        className="flex w-full cursor-pointer items-center justify-between gap-2 rounded-xl text-left focus:outline-none focus-visible:ring-2 focus-visible:ring-paint-cobalt"
       >
         <span className="font-hand text-xl leading-none text-[#78614E]">dos favoritos e vistos</span>
         <ChevronDown
@@ -125,7 +125,7 @@ function CollectionPicks({ collections, entryByName, takenSpecies, disabled, onP
               role="tab"
               aria-selected={selected}
               onClick={() => setSource(key)}
-              className={`inline-flex h-8 cursor-pointer items-center gap-1.5 rounded-full px-3 font-serif text-xs font-semibold transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-[#829b72]/70 ${
+              className={`inline-flex h-8 cursor-pointer items-center gap-1.5 rounded-full px-3 font-serif text-xs font-semibold transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-paint-cobalt ${
                 selected ? 'bg-[#78614E] text-[#FFFDF9] shadow-sm' : 'text-[#78614E] hover:bg-[#78614E]/10'
               }`}
             >

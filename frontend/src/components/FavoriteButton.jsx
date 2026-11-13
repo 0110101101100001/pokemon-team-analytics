@@ -21,7 +21,7 @@ function FavoriteButton({ name, label, active, onToggle, variant = 'card' }) {
       aria-pressed={active}
       aria-label={active ? `Remover ${label} dos favoritos` : `Favoritar ${label}`}
       title={active ? 'Remover dos favoritos' : 'Favoritar'}
-      className={`inline-flex shrink-0 cursor-pointer items-center justify-center rounded-full border transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-[#829b72]/70 ${VARIANTS[variant]} ${
+      className={`inline-flex shrink-0 cursor-pointer items-center justify-center rounded-full border transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-paint-cobalt ${VARIANTS[variant]} ${
         active ? 'text-[#B5654A] hover:text-[#8A4A34]' : 'text-[#78614E]/70 hover:border-[#B5654A]/50 hover:text-[#B5654A]'
       }`}
     >

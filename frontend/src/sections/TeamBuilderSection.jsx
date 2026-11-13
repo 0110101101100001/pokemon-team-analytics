@@ -79,7 +79,7 @@ export default function TeamBuilderSection({ team, onTeamChange, pool, session, 
           <button
             type="button"
             onClick={openManager}
-            className="inline-flex h-10 cursor-pointer items-center gap-2 rounded-xl border border-[#78614E]/30 bg-[#FFFEFB] px-4 text-xs font-semibold tracking-wide text-[#78614E] shadow-xs transition-colors hover:bg-[#78614E]/10 focus:outline-none focus-visible:ring-2 focus-visible:ring-smeargle-olive/60"
+            className="btn-outline cursor-pointer font-serif"
           >
             <BookOpen className="h-4 w-4" aria-hidden="true" />
             Salvar / Meus times

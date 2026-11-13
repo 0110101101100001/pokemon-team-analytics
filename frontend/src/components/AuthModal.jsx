@@ -123,7 +123,7 @@ export default function AuthModal({ open, onClose, onAuthChange }) {
           type="button"
           onClick={onClose}
           aria-label="Fechar diálogo"
-          className="absolute right-4 top-4 rounded-full p-1.5 text-[#78614E]/70 transition-colors hover:bg-[#78614E]/10 hover:text-[#78614E] focus:outline-none focus-visible:ring-2 focus-visible:ring-smeargle-olive/60"
+          className="absolute right-4 top-4 rounded-full p-1.5 text-[#78614E]/70 transition-colors hover:bg-[#78614E]/10 hover:text-[#78614E] focus:outline-none focus-visible:ring-2 focus-visible:ring-paint-cobalt"
         >
           <X className="h-4 w-4" />
         </button>
@@ -193,7 +193,7 @@ export default function AuthModal({ open, onClose, onAuthChange }) {
           <button
             type="submit"
             disabled={loading}
-            className="flex h-11 w-full items-center justify-center gap-2 rounded-xl bg-[#78614E] font-semibold tracking-wide text-[#FFFEFB] shadow-hard transition-all hover:translate-x-[2px] hover:translate-y-[2px] hover:shadow-hard-hover focus:outline-none focus-visible:ring-2 focus-visible:ring-smeargle-olive/60 disabled:cursor-wait disabled:opacity-70"
+            className="flex h-11 w-full items-center justify-center gap-2 rounded-xl bg-[#78614E] font-semibold tracking-wide text-[#FFFEFB] shadow-hard transition-all hover:translate-x-[2px] hover:translate-y-[2px] hover:shadow-hard-hover focus:outline-none focus-visible:ring-2 focus-visible:ring-paint-cobalt disabled:cursor-wait disabled:opacity-70"
           >
             {loading && <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" />}
             {copy.submit}

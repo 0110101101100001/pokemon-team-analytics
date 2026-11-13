@@ -36,7 +36,7 @@ function DexAreaTabs({ dexes, value, onChange }) {
             role="tab"
             aria-selected={selected}
             onClick={() => onChange(dex.slug)}
-            className={`h-8 cursor-pointer rounded-full px-3 font-serif text-xs font-semibold transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-[#829b72]/70 ${
+            className={`h-8 cursor-pointer rounded-full px-3 font-serif text-xs font-semibold transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-paint-cobalt ${
               selected ? 'bg-[#829b72] text-[#FFFDF9] shadow-sm' : 'text-[#78614E] hover:bg-[#78614E]/10'
             }`}
           >

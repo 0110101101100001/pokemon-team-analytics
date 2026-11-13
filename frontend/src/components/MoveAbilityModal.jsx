@@ -199,7 +199,7 @@ function MoveAbilityModal({ kind, name, onClose }) {
             type="button"
             onClick={onClose}
             aria-label="Fechar"
-            className="inline-flex h-9 w-9 shrink-0 cursor-pointer items-center justify-center rounded-full border border-[#4A3B32]/20 bg-[#FFFEFB] text-[#78614E] transition-colors hover:border-[#4A3B32]/40 hover:text-[#2A2421] focus:outline-none focus-visible:ring-2 focus-visible:ring-[#829b72]/70"
+            className="inline-flex h-9 w-9 shrink-0 cursor-pointer items-center justify-center rounded-full border border-[#4A3B32]/20 bg-[#FFFEFB] text-[#78614E] transition-colors hover:border-[#4A3B32]/40 hover:text-[#2A2421] focus:outline-none focus-visible:ring-2 focus-visible:ring-paint-cobalt"
           >
             <X className="h-5 w-5" aria-hidden="true" />
           </button>

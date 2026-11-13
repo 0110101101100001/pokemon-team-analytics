@@ -14,7 +14,7 @@ const ItemCard = memo(function ItemCard({ item, onSelect }) {
       <button
         type="button"
         onClick={() => onSelect(item.name)}
-        className="paper-card flex h-full w-full cursor-pointer items-center gap-3 px-3 py-2.5 text-left transition-[border-color,box-shadow,transform] duration-200 hover:-translate-y-0.5 hover:border-[#829b72]/60 hover:shadow-card-hover focus:outline-none focus-visible:ring-2 focus-visible:ring-[#829b72]/70 motion-reduce:transform-none"
+        className="paper-card flex h-full w-full cursor-pointer items-center gap-3 px-3 py-2.5 text-left transition-[border-color,box-shadow,transform] duration-200 hover:-translate-y-0.5 hover:border-[#829b72]/60 hover:shadow-card-hover focus:outline-none focus-visible:ring-2 focus-visible:ring-paint-cobalt motion-reduce:transform-none"
       >
         <span className="ink-stamp h-11 w-11 shrink-0">
           {spriteFailed ? (

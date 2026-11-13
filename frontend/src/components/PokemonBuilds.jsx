@@ -5,7 +5,7 @@ import { itemSpriteUrl } from '../services/api';
 import { fetchSmogonSets, formatStatSpread, toShowdownText } from '../utils/smogonSets';
 
 const FIELD = 'h-9 px-3 rounded-xl border border-[#4A3B32]/20 bg-[#FFFEFB]/80 text-xs font-semibold text-[#2A2421] focus:outline-none focus:ring-1 focus:ring-[#829b72] cursor-pointer';
-const LINK = 'rounded text-left font-semibold text-[#2A2421] underline decoration-dotted decoration-[#78614E]/50 underline-offset-4 cursor-pointer hover:text-[#5B7856] hover:decoration-[#5B7856] focus:outline-none focus-visible:ring-2 focus-visible:ring-[#829b72]/70';
+const LINK = 'rounded text-left font-semibold text-[#2A2421] underline decoration-dotted decoration-[#78614E]/50 underline-offset-4 cursor-pointer hover:text-[#5B7856] hover:decoration-[#5B7856] focus:outline-none focus-visible:ring-2 focus-visible:ring-paint-cobalt';
 const COPY_FEEDBACK_MS = 1800;
 
 /** Alternativas de um campo separadas por "/"; cada uma abre o modal de detalhes se `onSelect` existir. */
@@ -71,7 +71,7 @@ const BuildCard = memo(function BuildCard({ pokemonName, set, onOpenItem, onOpen
           type="button"
           onClick={handleCopy}
           title="Copiar no formato do Pokémon Showdown"
-          className="inline-flex h-8 shrink-0 cursor-pointer items-center gap-1.5 rounded-full border border-[#4A3B32]/20 bg-[#FFFEFB] px-2.5 text-[11px] font-bold text-[#78614E] transition-colors hover:border-[#829b72]/70 hover:text-[#2A2421] focus:outline-none focus-visible:ring-2 focus-visible:ring-[#829b72]/70"
+          className="inline-flex h-8 shrink-0 cursor-pointer items-center gap-1.5 rounded-full border border-[#4A3B32]/20 bg-[#FFFEFB] px-2.5 text-[11px] font-bold text-[#78614E] transition-colors hover:border-[#829b72]/70 hover:text-[#2A2421] focus:outline-none focus-visible:ring-2 focus-visible:ring-paint-cobalt"
         >
           <CopyIcon className="h-3.5 w-3.5" aria-hidden="true" />
           <span aria-live="polite">

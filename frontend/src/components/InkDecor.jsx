@@ -38,12 +38,22 @@ export const InkEdge = memo(function InkEdge({ className = '' }) {
   );
 });
 
-/** Divisória de pincel: o traço engrossa no meio e afina nas pontas, com a gota onde o pincel parou. */
+/**
+ * Divisória de pincel: o traço engrossa no meio e afina nas pontas, com a gota onde o pincel parou.
+ * `wash` pinta uma aguada larga de aquarela por baixo do traço.
+ */
 // A gota fica fora do SVG: com preserveAspectRatio="none" um círculo viraria uma elipse esticada.
-export const InkRule = memo(function InkRule({ className = '' }) {
+export const InkRule = memo(function InkRule({ className = '', wash }) {
   return (
     <div aria-hidden="true" className={`pointer-events-none flex items-center gap-1.5 text-[#2A2421] ${className}`}>
-      <svg viewBox="0 0 1000 12" preserveAspectRatio="none" className="block h-2.5 min-w-0 flex-1">
+      <svg viewBox="0 0 1000 12" preserveAspectRatio="none" className="block h-2.5 min-w-0 flex-1 overflow-visible">
+        {wash && (
+          <path
+            fill={wash}
+            opacity="0.35"
+            d="M10 9c120-6 260-8 400-6 150 2 300 5 440 2 60-1 110 0 140 2 6 3 2 8-6 9-140 4-300 2-450 3-160 1-320 3-480 0-30 0-50-6-44-10z"
+          />
+        )}
         <path
           fill="currentColor"
           opacity="0.7"

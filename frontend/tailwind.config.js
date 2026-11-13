@@ -27,6 +27,14 @@ export default {
             darkGreen: '#6E8B6E',
           },
         },
+        // Tubos de tinta do ateliê: realces de foco, selos e estados ativos.
+        paint: {
+          olive: '#829b72',
+          pistachio: '#A4C294',
+          cobalt: '#4F6D8A',
+          magenta: '#9E3D64',
+          ochre: '#B98428',
+        },
         pokemon: {
           normal: '#A8A878',
           fire: '#F08030',
@@ -74,6 +82,8 @@ export default {
       animation: {
         'fade-in': 'fadeIn 0.25s ease-out',
         'bubble-pop': 'bubblePop 0.3s cubic-bezier(0.22, 1, 0.36, 1)',
+        'ink-drop': 'inkDrop 1.4s cubic-bezier(0.55, 0, 0.45, 1) infinite',
+        'ink-ripple': 'inkRipple 1.4s ease-out infinite',
         'cry-wave': 'cryWave 0.8s ease-in-out infinite',
         'cry-ring': 'cryRing 1.2s ease-out infinite',
         // Sem fill-mode: terminada a entrada, a seção não fica com transform nem contexto de empilhamento
@@ -91,6 +101,18 @@ export default {
         },
         sectionIn: {
           '0%': { opacity: '0', transform: 'translateY(10px)' },
+        },
+        // Gota de tinta caindo e a onda que ela abre ao tocar o papel.
+        inkDrop: {
+          '0%': { transform: 'translateY(-14px) scale(0.7, 1.25)', opacity: '0' },
+          '15%': { opacity: '1' },
+          '55%': { transform: 'translateY(6px) scale(1, 1)', opacity: '1' },
+          '62%, 100%': { transform: 'translateY(8px) scale(1.5, 0.4)', opacity: '0' },
+        },
+        inkRipple: {
+          '0%, 55%': { transform: 'scale(0.2)', opacity: '0' },
+          '62%': { opacity: '0.7' },
+          '100%': { transform: 'scale(1.6)', opacity: '0' },
         },
         cryWave: {
           '0%, 100%': { transform: 'scaleY(0.35)' },

@@ -24,8 +24,8 @@ const TeamSlot = memo(function TeamSlot({ pokemon, selected, onSelect, onRemove 
         onClick={() => onSelect(pokemon.id)}
         aria-pressed={selected}
         aria-label={`Editar ${name}`}
-        className={`flex h-28 w-full cursor-pointer flex-col items-center justify-center gap-1 rounded-sketch border bg-[#FFFEFB]/80 px-1 transition-shadow focus:outline-none focus-visible:ring-2 focus-visible:ring-smeargle-olive/60 ${
-          selected ? 'border-smeargle-olive shadow-ink ring-1 ring-smeargle-olive' : 'border-[#78614E]/25 shadow-card hover:border-[#78614E]/50'
+        className={`relative flex h-28 w-full cursor-pointer flex-col items-center justify-center gap-1 rounded-sketch border bg-[#FFFEFB]/80 px-1 transition-[box-shadow,border-color] focus:outline-none focus-visible:ring-2 focus-visible:ring-paint-cobalt ${
+          selected ? 'brush-frame border-[#2A2421] shadow-[3px_3px_0_#829b72]' : 'border-[#2A2421]/25 shadow-card hover:border-[#2A2421]/60 hover:shadow-[3px_3px_0_rgba(42,36,33,0.15),0_8px_18px_-8px_rgba(130,155,114,0.55)]'
         }`}
       >
         <img src={thumbnailSpriteUrl(pokemon.id)} alt="" width={48} height={48} loading="lazy" decoding="async" className="h-12 w-12 object-contain" />
@@ -38,7 +38,7 @@ const TeamSlot = memo(function TeamSlot({ pokemon, selected, onSelect, onRemove 
         type="button"
         onClick={() => onRemove(pokemon.id)}
         aria-label={`Remover ${name}`}
-        className="absolute right-1 top-1 cursor-pointer rounded-full p-1 text-[#78614E]/60 transition-colors hover:bg-[#B5543C]/15 hover:text-[#8A3B27] focus:outline-none focus-visible:ring-2 focus-visible:ring-smeargle-olive/60"
+        className="absolute right-1 top-1 cursor-pointer rounded-full p-1 text-[#78614E]/60 transition-colors hover:bg-[#B5543C]/15 hover:text-[#8A3B27] focus:outline-none focus-visible:ring-2 focus-visible:ring-paint-cobalt"
       >
         <X className="h-3.5 w-3.5" aria-hidden="true" />
       </button>

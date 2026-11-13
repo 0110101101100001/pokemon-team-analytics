@@ -37,7 +37,7 @@ function MachineTable({ machines, onSelectMove }) {
                 <button
                   type="button"
                   onClick={() => onSelectMove(move)}
-                  className="cursor-pointer rounded font-semibold underline decoration-[#78614E]/35 decoration-dashed underline-offset-4 transition-colors hover:text-[#5B7856] hover:decoration-[#5B7856] focus:outline-none focus-visible:ring-2 focus-visible:ring-[#829b72]/70"
+                  className="cursor-pointer rounded font-semibold underline decoration-[#78614E]/35 decoration-dashed underline-offset-4 transition-colors hover:text-[#5B7856] hover:decoration-[#5B7856] focus:outline-none focus-visible:ring-2 focus-visible:ring-paint-cobalt"
                 >
                   {formatSlug(move)}
                 </button>

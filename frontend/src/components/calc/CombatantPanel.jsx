@@ -21,7 +21,7 @@ const AIRBORNE_LABELS = { levitate: 'Levitate', 'air-balloon': 'Air Balloon' };
 const formLabel = (form, baseName) => formatSlug(form.slice(baseName.length + 1));
 
 const stageLabel = (stage) => (stage > 0 ? `+${stage}` : `${stage}`.replace('-', '−'));
-const STEP_BUTTON = 'flex h-full w-6 shrink-0 cursor-pointer items-center justify-center text-[#78614E] transition-colors hover:bg-[#78614E]/10 focus:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-smeargle-olive/60 disabled:cursor-not-allowed disabled:opacity-30';
+const STEP_BUTTON = 'flex h-full w-6 shrink-0 cursor-pointer items-center justify-center text-[#78614E] transition-colors hover:bg-[#78614E]/10 focus:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-paint-cobalt disabled:cursor-not-allowed disabled:opacity-30';
 
 /** Estágio de um atributo, de −6 a +6: o nome em cima e o contador com menos e mais embaixo. */
 function BoostStepper({ stat, value, onChange }) {
@@ -92,7 +92,7 @@ function CombatantPanel({ caption, title, pickerPlaceholder, side, battle, forms
               onClick={() => pickFromTeam(member)}
               aria-label={`Usar ${formatSlug(member.name)} do time`}
               title={formatSlug(member.name)}
-              className={`cursor-pointer rounded-full border bg-[#FFFEFB] transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-smeargle-olive/60 ${
+              className={`cursor-pointer rounded-full border bg-[#FFFEFB] transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-paint-cobalt ${
                 pokemon?.id === member.id ? 'border-smeargle-olive ring-1 ring-smeargle-olive' : 'border-[#78614E]/25 hover:border-[#78614E]/60'
               }`}
             >
@@ -222,7 +222,7 @@ function CombatantPanel({ caption, title, pickerPlaceholder, side, battle, forms
                 <button
                   type="button"
                   onClick={() => onChange({ boosts: NO_BOOSTS })}
-                  className="inline-flex cursor-pointer items-center gap-1 rounded-full px-2 py-0.5 font-hand text-base leading-none text-[#78614E] transition-colors hover:bg-[#78614E]/10 focus:outline-none focus-visible:ring-2 focus-visible:ring-smeargle-olive/60"
+                  className="inline-flex cursor-pointer items-center gap-1 rounded-full px-2 py-0.5 font-hand text-base leading-none text-[#78614E] transition-colors hover:bg-[#78614E]/10 focus:outline-none focus-visible:ring-2 focus-visible:ring-paint-cobalt"
                 >
                   <RotateCcw className="h-3 w-3" aria-hidden="true" />
                   zerar
@@ -247,7 +247,7 @@ function CombatantPanel({ caption, title, pickerPlaceholder, side, battle, forms
           </div>
 
           <details className="group rounded-xl border border-[#5C4033]/30 bg-[#F7F3EE]/50">
-            <summary className="flex cursor-pointer list-none items-center gap-2 px-3 py-2 focus:outline-none focus-visible:ring-2 focus-visible:ring-smeargle-olive/60 [&::-webkit-details-marker]:hidden">
+            <summary className="flex cursor-pointer list-none items-center gap-2 px-3 py-2 focus:outline-none focus-visible:ring-2 focus-visible:ring-paint-cobalt [&::-webkit-details-marker]:hidden">
               <span className="font-hand text-lg leading-none text-[#5C4033]">natureza, EVs e IVs</span>
               <span className="ml-auto truncate font-mono text-xs tabular-nums text-[#78614E]">
                 {formatSlug(set.nature)} · {evTotal(set.evs)}/{MAX_EV_TOTAL} EVs

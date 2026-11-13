@@ -172,10 +172,10 @@ function FiltersBar({
         onClick={onToggleAdvanced}
         aria-expanded={advancedOpen}
         aria-controls="advanced-filters"
-        className={`relative h-9 sm:h-10 sm:shrink-0 inline-flex items-center justify-center gap-1.5 sm:gap-2 px-2 sm:px-3.5 rounded-xl border text-xs font-serif font-semibold tracking-wide transition-colors cursor-pointer ${
+        className={`relative h-9 sm:h-10 sm:shrink-0 inline-flex items-center justify-center gap-1.5 sm:gap-2 px-2 sm:px-3.5 rounded-xl border text-xs font-serif font-semibold tracking-wide transition-[background-color,border-color,box-shadow] cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-[#A4C294]/70 ${
           advancedOpen
-            ? 'bg-[#A4C294] border-[#A4C294] text-[#2A1C14]'
-            : 'bg-[#3E2A1F]/90 border-[#F7F3EE]/30 text-[#F7F3EE] hover:border-[#F7F3EE]/50'
+            ? 'bg-[#A4C294] border-[#A4C294] text-[#2A1C14] shadow-[0_0_16px_-3px_rgba(164,194,148,0.7)]'
+            : 'bg-[#3E2A1F]/90 border-[#F7F3EE]/30 text-[#F7F3EE] hover:border-[#F7F3EE]/50 hover:shadow-[0_0_16px_-6px_rgba(164,194,148,0.6)]'
         }`}
       >
         <SlidersHorizontal className="w-4 h-4" aria-hidden="true" />
@@ -290,7 +290,7 @@ function ActiveFiltersComponent({ activeFilters, filterStatus, onRemoveFilter })
               type="button"
               onClick={() => onRemoveFilter(key)}
               aria-label={`Remover ${filter.label}`}
-              className="inline-flex items-center justify-center w-5 h-5 rounded-full text-[#78614E] transition-colors cursor-pointer hover:bg-[#4A3B32]/15 hover:text-[#2A2421] focus:outline-none focus-visible:ring-2 focus-visible:ring-[#829b72]/70"
+              className="inline-flex items-center justify-center w-5 h-5 rounded-full text-[#78614E] transition-colors cursor-pointer hover:bg-[#4A3B32]/15 hover:text-[#2A2421] focus:outline-none focus-visible:ring-2 focus-visible:ring-paint-cobalt"
             >
               <X className="w-3 h-3" strokeWidth={2.5} aria-hidden="true" />
             </button>

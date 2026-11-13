@@ -33,6 +33,8 @@ function backgroundStyleFor(type) {
   if (!style) {
     const [wash, paper] = TYPE_WASHES[type] ?? TYPE_WASHES.normal;
     style = {
+      // A tinta molhada do hover (.wet-ink) se espalha nesta cor.
+      '--wash': wash,
       backgroundColor: paper,
       backgroundImage: `radial-gradient(ellipse 75% 55% at 50% 42%, ${wash}, transparent 72%), var(--paper-grain)`,
       backgroundSize: 'auto, 220px 220px',
@@ -75,9 +77,9 @@ function PokemonCard({
       onClick={handleSelect}
       onKeyDown={handleKeyDown}
       style={backgroundStyleFor(types[0] ?? 'normal')}
-      className={`group relative cursor-pointer select-none rounded-[1.4rem_1.15rem_1.5rem_1.05rem/1.1rem_1.45rem_1.05rem_1.35rem] border-[1.5px] p-4 transition-[transform,box-shadow,border-color] duration-200 ease-out hover:-translate-y-0.5 focus:outline-none focus-visible:ring-2 focus-visible:ring-[#829b72] focus-visible:ring-offset-2 focus-visible:ring-offset-[#F7F3EE] motion-reduce:transition-none motion-reduce:hover:translate-y-0 sm:p-5 ${
+      className={`wet-ink group relative cursor-pointer select-none rounded-[1.4rem_1.15rem_1.5rem_1.05rem/1.1rem_1.45rem_1.05rem_1.35rem] border-[1.5px] p-4 transition-[transform,box-shadow,border-color] duration-200 ease-out hover:-translate-y-0.5 focus:outline-none focus-visible:ring-2 focus-visible:ring-paint-cobalt focus-visible:ring-offset-2 focus-visible:ring-offset-[#F7F3EE] motion-reduce:transition-none motion-reduce:hover:translate-y-0 sm:p-5 ${
         isSelected
-          ? 'border-[#2A2421] shadow-[4px_5px_0_#829b72]'
+          ? 'brush-frame border-[#2A2421] shadow-[4px_5px_0_#829b72]'
           : 'border-[#2A2421]/25 shadow-[3px_3px_0_rgba(42,36,33,0.1)] hover:border-[#2A2421]/70 hover:shadow-[4px_5px_0_rgba(42,36,33,0.2)]'
       }`}
     >
@@ -87,8 +89,8 @@ function PokemonCard({
         </span>
         <div className="flex items-center gap-1.5">
           {hasSmogonData && (
-            <span className="flex shrink-0 items-center gap-1 rounded-full border border-[#2A2421]/20 bg-[#FFFEFB]/85 px-2 py-0.5 text-[9px] font-bold uppercase tracking-wider text-[#2A2421]">
-              <Shield className="h-2.5 w-2.5 fill-[#2A2421]" aria-hidden="true" />
+            <span className="flex shrink-0 items-center gap-1 rounded-full border border-paint-ochre/50 bg-[#FBF1DC] px-2 py-0.5 text-[9px] font-bold uppercase tracking-wider text-[#6E4E14]">
+              <Shield className="h-2.5 w-2.5 fill-paint-ochre text-paint-ochre" aria-hidden="true" />
               Smogon
             </span>
           )}

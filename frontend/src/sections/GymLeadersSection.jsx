@@ -23,7 +23,7 @@ function EmptyLeaders() {
   return (
     <div className="space-y-6">
       <SectionHeading caption="rumo à liga" title="Gym Leaders" />
-      <div className="flex flex-col items-center justify-center py-16 text-center text-sm font-medium text-[#78614E]">
+      <div className="ink-scatter flex flex-col items-center justify-center py-16 text-center text-sm font-medium text-[#78614E]">
         <div className="ink-stamp mb-4 h-14 w-14 text-[#78614E]">
           <Medal className="h-6 w-6" strokeWidth={1.75} aria-hidden="true" />
         </div>

@@ -1,5 +1,5 @@
 import { Suspense, lazy, useRef } from 'react';
-import { Loader2 } from 'lucide-react';
+import InkDropLoader from './InkDropLoader';
 import { useModalBehavior } from '../hooks/useModalBehavior';
 import { formatSlug } from '../utils/filters';
 
@@ -7,12 +7,7 @@ export const loadPokemonDrawer = () => import('./PokemonDrawer');
 const PokemonDrawer = lazy(loadPokemonDrawer);
 
 function DrawerFallback() {
-  return (
-    <p className="flex h-full items-center justify-center gap-2 font-hand text-xl text-[#785132]">
-      <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" />
-      Molhando o pincel...
-    </p>
-  );
+  return <InkDropLoader label="Molhando o pincel..." className="h-full" />;
 }
 
 /** A ficha do Pokémon em modal: Esc fecha, a página por trás não rola e o foco volta ao card ao fechar. */

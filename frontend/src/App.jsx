@@ -1,9 +1,9 @@
 import { Suspense, lazy, useCallback, useEffect, useMemo, useState } from "react";
-import { Loader2 } from "lucide-react";
 import AuthModal from "./components/AuthModal";
 import AuthButton from "./components/AuthButton";
 import AboutButton from "./components/AboutButton";
 import AppHeader from "./components/layout/AppHeader";
+import InkDropLoader from "./components/InkDropLoader";
 import PokemonSheet, { loadPokemonDrawer } from "./components/PokemonSheet";
 import { HeaderContext } from "./components/layout/headerContext";
 import { InkSplatter } from "./components/InkDecor";
@@ -31,12 +31,7 @@ const SMEARGLE_ID = 235;
 const APP_NAME = "Smearglepedia";
 
 function SectionFallback() {
-  return (
-    <p className="flex items-center justify-center gap-2 py-24 font-hand text-xl text-[#78614E]">
-      <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" />
-      Molhando o pincel...
-    </p>
-  );
+  return <InkDropLoader label="Molhando o pincel..." className="py-24" />;
 }
 
 export default function App() {
@@ -121,13 +116,9 @@ export default function App() {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="flex flex-col items-center gap-3 animate-pulse">
-          <div className="ink-stamp h-12 w-12">
-            <img src={officialSpriteUrl(SMEARGLE_ID)} alt="Smeargle" width={32} height={32} decoding="async" className="w-8 h-8 object-contain" />
-          </div>
-          <p className="font-hand text-xl text-[#78614E]">Preparando a tinta...</p>
-        </div>
+      <div className="flex min-h-screen flex-col items-center justify-center gap-4">
+        <img src={officialSpriteUrl(SMEARGLE_ID)} alt="" width={72} height={72} decoding="async" className="h-[72px] w-[72px] object-contain" />
+        <InkDropLoader label="Preparando a tinta..." />
       </div>
     );
   }

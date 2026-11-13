@@ -99,7 +99,7 @@ const PAPER_BG = {
 const GLASS_CARD = 'rounded-2xl border-[1.5px] border-[#2A2421]/15 bg-[#FFFEFB]/90 shadow-[3px_3px_0_rgba(42,36,33,0.07)]';
 const FIELD = 'h-9 px-3 rounded-xl border border-[#4A3B32]/20 bg-[#FFFEFB]/80 text-xs font-semibold text-[#2A2421] focus:outline-none focus:ring-1 focus:ring-[#829b72] cursor-pointer';
 // Habilidades e golpes que abrem o modal de detalhes.
-const CLICKABLE = 'transition-colors enabled:cursor-pointer enabled:hover:border-[#829b72]/70 enabled:hover:bg-[#F7F3EE] focus:outline-none focus-visible:ring-2 focus-visible:ring-[#829b72]/70';
+const CLICKABLE = 'transition-colors enabled:cursor-pointer enabled:hover:border-[#829b72]/70 enabled:hover:bg-[#F7F3EE] focus:outline-none focus-visible:ring-2 focus-visible:ring-paint-cobalt';
 
 /* ---------------------------------------------------------------- helpers puros */
 
@@ -912,7 +912,7 @@ export default function PokemonDrawer({
                           <button
                             type="button"
                             onClick={() => openMove(move.name)}
-                            className="rounded text-left text-xs font-bold capitalize text-[#2A2421] underline decoration-dotted decoration-[#78614E]/50 underline-offset-4 cursor-pointer hover:text-[#5B7856] hover:decoration-[#5B7856] focus:outline-none focus-visible:ring-2 focus-visible:ring-[#829b72]/70"
+                            className="rounded text-left text-xs font-bold capitalize text-[#2A2421] underline decoration-dotted decoration-[#78614E]/50 underline-offset-4 cursor-pointer hover:text-[#5B7856] hover:decoration-[#5B7856] focus:outline-none focus-visible:ring-2 focus-visible:ring-paint-cobalt"
                           >
                             {move.name.replace(/-/g, ' ')}
                           </button>
