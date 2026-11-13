@@ -92,11 +92,11 @@ const EFFECTIVENESS_ROWS = {
 };
 
 const PAPER_BG = {
-  backgroundImage: 'radial-gradient(rgba(120, 81, 50, 0.10) 1px, transparent 1px)',
-  backgroundSize: '14px 14px',
+  backgroundImage: 'var(--paper-grain)',
+  backgroundSize: '220px 220px',
 };
 
-const GLASS_CARD = 'rounded-2xl border border-white/70 bg-white/80 shadow-sm md:bg-white/55 md:backdrop-blur-md md:shadow-[0_8px_30px_-14px_rgba(62,46,36,0.25)]';
+const GLASS_CARD = 'rounded-2xl border-[1.5px] border-[#2A2421]/15 bg-[#FFFEFB]/90 shadow-[3px_3px_0_rgba(42,36,33,0.07)]';
 const FIELD = 'h-9 px-3 rounded-xl border border-[#4A3B32]/20 bg-[#FFFEFB]/80 text-xs font-semibold text-[#2A2421] focus:outline-none focus:ring-1 focus:ring-[#829b72] cursor-pointer';
 // Habilidades e golpes que abrem o modal de detalhes.
 const CLICKABLE = 'transition-colors enabled:cursor-pointer enabled:hover:border-[#829b72]/70 enabled:hover:bg-[#F7F3EE] focus:outline-none focus-visible:ring-2 focus-visible:ring-[#829b72]/70';
@@ -345,6 +345,8 @@ export default function PokemonDrawer({
     formRequestRef.current++;
     setLoading(true);
     setActiveTab('overview');
+    // Outro Pokémon: o learnset só volta a ser baixado se a aba Movimentos for aberta de novo.
+    setMovesVisited(false);
     const cleanName = getCleanPokemonName(pokemonName);
 
     (async () => {
@@ -710,12 +712,12 @@ export default function PokemonDrawer({
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                   <div className="space-y-3">
                     {EFFECTIVENESS_ROWS.weak.map((row) => (
-                      <EffectivenessRow key={row.key} types={typeEffectiveness[row.key]} {...row} />
+                      <EffectivenessRow key={row.key} types={typeEffectiveness[row.key]} multiplier={row.multiplier} label={row.label} tone={row.tone} />
                     ))}
                   </div>
                   <div className="space-y-3">
                     {EFFECTIVENESS_ROWS.resist.map((row) => (
-                      <EffectivenessRow key={row.key} types={typeEffectiveness[row.key]} {...row} />
+                      <EffectivenessRow key={row.key} types={typeEffectiveness[row.key]} multiplier={row.multiplier} label={row.label} tone={row.tone} />
                     ))}
                   </div>
                 </div>

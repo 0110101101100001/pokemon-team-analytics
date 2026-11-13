@@ -211,7 +211,7 @@ function AdvancedFiltersComponent({ eggGroups, onAddFilter }) {
   const addMove = useCallback((slug) => onAddFilter(createFilter('move', slug)), [onAddFilter]);
 
   return (
-    <div id="advanced-filters" className="mt-2.5 border-t border-dashed border-white/20 pt-2.5">
+    <div id="advanced-filters" className="mt-2.5 border-t border-white/20 pt-2.5">
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
         <SuggestInput
           id="ability-options"

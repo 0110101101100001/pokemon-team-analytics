@@ -62,7 +62,7 @@ const SavedTeamRow = memo(function SavedTeamRow({ team, onLoad, onDelete }) {
         <TeamSprites pokemons={team.pokemons} />
       </div>
 
-      <div className="mt-2 flex items-center justify-end gap-1 border-t border-dashed border-[#78614E]/20 pt-2">
+      <div className="mt-2 flex items-center justify-end gap-1 border-t border-[#5C4033]/20 pt-2">
         {confirming ? (
           <>
             <span className="mr-auto font-hand text-lg leading-none text-[#8A3B27]">Apagar este time?</span>
@@ -218,7 +218,7 @@ export default function TeamManagerModal({ open, onClose, session, team = [], on
 
         <header className="mb-5 pr-6">
           <h2 id={`${ids}-title`} className="font-display text-2xl font-bold text-[#78614E]">Meus times</h2>
-          <p className="mt-1 font-serif text-sm italic text-smeargle-textDim/80">Salve e retome as páginas do seu caderno.</p>
+          <p className="mt-1 font-serif text-sm italic text-smeargle-textDim/80">Salve seus times e retome de onde parou.</p>
         </header>
 
         {!userId ? (
@@ -265,7 +265,7 @@ export default function TeamManagerModal({ open, onClose, session, team = [], on
               {status === 'loading' ? (
                 <p className="flex items-center justify-center gap-2 py-8 font-hand text-xl text-[#78614E]">
                   <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" />
-                  Folheando o caderno...
+                  Molhando o pincel...
                 </p>
               ) : teams.length === 0 ? (
                 <p className="flex flex-col items-center gap-2 py-8 text-center font-serif text-sm italic text-smeargle-textDim/70">

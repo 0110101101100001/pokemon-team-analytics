@@ -110,13 +110,13 @@ export default function TeamBuilderSection({ team, onTeamChange, pool, session, 
           {selected ? (
             <TeamMemberEditor key={selected.id} member={selected} onChange={updateSet} />
           ) : (
-            <p className="paper-card paper-ruled paper-taped py-[3.2rem] pl-12 pr-6 font-hand text-xl leading-[1.6rem] text-[#5C4033]">
+            <p className="paper-card ink-wash ink-blotted px-6 py-10 font-hand text-xl leading-snug text-[#5C4033]">
               Adicione o primeiro Pokémon para montar o set: item, natureza, EVs, IVs e golpes.
             </p>
           )}
         </div>
 
-        <section className="paper-card paper-taped p-4 pt-5 sm:p-5 sm:pt-6" aria-label="Análise do time">
+        <section className="paper-card ink-blotted p-4 pt-5 sm:p-5 sm:pt-6" aria-label="Análise do time">
           <div role="tablist" className="isolate mb-4 flex flex-wrap gap-x-1 gap-y-2">
             {PANELS.map(({ key, label, icon: Icon }) => (
               <button

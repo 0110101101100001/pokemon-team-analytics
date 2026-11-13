@@ -50,32 +50,30 @@ export default {
       },
       fontFamily: {
         sans: ['"Inter"', 'system-ui', 'sans-serif'],
-        display: ['"Playfair Display"', 'serif'],
-        hand: ['"Caveat"', 'cursive'],
-        mono: ['"VT323"', 'monospace'],
-        sketch: ['"VT323"', 'monospace'],
+        serif: ['"Playfair Display"', 'Georgia', 'serif'],
+        display: ['"Playfair Display"', 'Georgia', 'serif'],
+        // Anotações a nanquim: Playfair itálico (o estilo e o ajuste de altura ficam em index.css).
+        hand: ['"Playfair Display"', 'Georgia', 'serif'],
+        mono: ['"JetBrains Mono"', 'ui-monospace', 'monospace'],
       },
       borderRadius: {
         'xl': '1.25rem',
         'pill': '9999px',
         'panel': '1.5rem',
-        'sketch': '1rem 2rem 1.5rem 1rem', // cantos assimétricos estilo desenho à mão
+        // Cantos de um traço de pincel: levemente desiguais.
+        'sketch': '1.1rem 1.4rem 1.2rem 1rem / 1rem 1.2rem 1.1rem 1.3rem',
       },
       boxShadow: {
-        'card': '0 4px 20px -4px rgba(62, 46, 36, 0.08)',
-        'card-hover': '0 12px 32px -8px rgba(62, 46, 36, 0.12), 0 0 0 1px rgba(120, 81, 50, 0.15)',
-        'mascote': '0 8px 32px rgba(62, 46, 36, 0.12)',
-        'panel': '0 20px 60px -12px rgba(62, 46, 36, 0.10), 0 0 0 1px rgba(120, 81, 50, 0.10)',
-        'hard': '4px 4px 0px 0px #785132', // hard shadow retrô
-        'hard-hover': '2px 2px 0px 0px #785132', // sombra sobe com o card
-        'ink': '0 0 0 1px #785132, 2px 2px 0px 0px #5C4033', // traço de tinta
+        'card': '3px 3px 0 rgba(42, 36, 33, 0.14)',
+        'card-hover': '4px 5px 0 rgba(42, 36, 33, 0.2)',
+        'panel': '6px 7px 0 rgba(42, 36, 33, 0.18), 0 24px 60px -24px rgba(42, 36, 33, 0.35)',
+        'hard': '3px 3px 0 #2A2421',
+        'hard-hover': '2px 2px 0 #2A2421',
+        'ink': '0 0 0 1px #2A2421, 3px 3px 0 #2A2421',
       },
       animation: {
-        'float': 'float 7s ease-in-out infinite',
-        'pulse-soft': 'pulseSoft 4s ease-in-out infinite',
-        'fade-in': 'fadeIn 0.6s ease-out forwards',
-        'slide-up': 'slideUp 0.5s ease-out forwards',
-        'bubble-pop': 'bubblePop 0.5s ease-out forwards',
+        'fade-in': 'fadeIn 0.25s ease-out',
+        'bubble-pop': 'bubblePop 0.3s cubic-bezier(0.22, 1, 0.36, 1)',
         'cry-wave': 'cryWave 0.8s ease-in-out infinite',
         'cry-ring': 'cryRing 1.2s ease-out infinite',
         // Sem fill-mode: terminada a entrada, a seção não fica com transform nem contexto de empilhamento
@@ -83,24 +81,12 @@ export default {
         'section-in': 'sectionIn 0.35s cubic-bezier(0.22, 1, 0.36, 1)',
       },
       keyframes: {
-        float: {
-          '0%, 100%': { transform: 'translateY(0) rotate(0deg)' },
-          '50%': { transform: 'translateY(-10px) rotate(2deg)' },
-        },
-        pulseSoft: {
-          '0%, 100%': { opacity: '1', transform: 'scale(1)' },
-          '50%': { opacity: '0.85', transform: 'scale(1.03)' },
-        },
         fadeIn: {
-          '0%': { opacity: '0', transform: 'translateY(20px)' },
-          '100%': { opacity: '1', transform: 'translateY(0)' },
-        },
-        slideUp: {
-          '0%': { opacity: '0', transform: 'translateY(25px)' },
-          '100%': { opacity: '1', transform: 'translateY(0)' },
+          '0%': { opacity: '0' },
+          '100%': { opacity: '1' },
         },
         bubblePop: {
-          '0%': { opacity: '0', transform: 'scale(0.85) translateY(10px)' },
+          '0%': { opacity: '0', transform: 'scale(0.97) translateY(6px)' },
           '100%': { opacity: '1', transform: 'scale(1) translateY(0)' },
         },
         sectionIn: {

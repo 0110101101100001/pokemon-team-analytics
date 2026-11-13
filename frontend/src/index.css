@@ -2,34 +2,54 @@
 @tailwind components;
 @tailwind utilities;
 
+/*
+  Tinta sobre papel: fundo de papel com fibra, contornos a nanquim (#2A2421), aguadas de sépia e oliva
+  e manchas de pincel. Um só estilo de card (.paper-card), de campo (.paper-field) e de botão (.btn-*).
+*/
+
 @layer base {
+  :root {
+    --ink: #2a2421;
+    --ink-sepia: #5c4033;
+    --ink-brown: #785132;
+    --ink-olive: #829b72;
+    --paper: #f7f3ee;
+    --paper-bright: #fffefb;
+    /* Fibra do papel: ruído fractal em tons de sépia, bem fraco. */
+    --paper-grain: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='220' height='220'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 0.36 0 0 0 0 0.25 0 0 0 0 0.2 0 0 0 0.09 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  }
+
   html {
     scroll-behavior: smooth;
   }
 
-  body {
-    @apply bg-[#F7F3EE] text-smeargle-text antialiased;
-    font-family: 'Inter', system-ui, sans-serif;
-    min-height: 100vh;
-    overflow-x: hidden;
-    background-image:
-      radial-gradient(rgba(120, 81, 51, 0.6) 1px, transparent 1px),
-      radial-gradient(rgba(120, 81, 51, 0.3) 2px, transparent 2px);
-    background-size: 24px 24px, 48px 48px;
-    background-attachment: fixed;
-  }
-
-  /* Celular: uma só camada de pontos e sem fundo fixo (repinta a cada frame do scroll). */
-  @media (max-width: 767px) {
-    body {
-      background-image: radial-gradient(rgba(120, 81, 51, 0.6) 1px, transparent 1px);
-      background-size: 24px 24px;
-      background-attachment: scroll;
+  @media (prefers-reduced-motion: reduce) {
+    html {
+      scroll-behavior: auto;
     }
   }
 
-  * {
-    box-sizing: border-box;
+  body {
+    @apply text-smeargle-text antialiased;
+    font-family: 'Inter', system-ui, sans-serif;
+    min-height: 100vh;
+    overflow-x: hidden;
+    background-color: var(--paper);
+    /* Fibra do papel e duas aguadas largas de tinta, rolando com a página (nada fixo para repintar). */
+    background-image:
+      var(--paper-grain),
+      radial-gradient(ellipse 60% 40% at 0% 0%, rgba(120, 81, 50, 0.08), transparent 70%),
+      radial-gradient(ellipse 50% 35% at 100% 100%, rgba(130, 155, 114, 0.1), transparent 70%);
+    background-size: 220px 220px, 100% 100%, 100% 100%;
+  }
+
+  ::selection {
+    background: rgba(130, 155, 114, 0.4);
+    color: var(--ink);
+  }
+
+  :focus-visible {
+    outline-color: var(--ink-olive);
   }
 
   ::-webkit-scrollbar {
@@ -42,108 +62,44 @@
   }
 
   ::-webkit-scrollbar-thumb {
-    background: #D9CEC2;
+    background: rgba(92, 64, 51, 0.35);
     border-radius: 4px;
   }
 
   ::-webkit-scrollbar-thumb:hover {
-    background: #C9BCB0;
+    background: rgba(92, 64, 51, 0.55);
   }
 }
 
 @layer components {
-  /* Inclinação 3D e parallax dos cards: só com mouse. Em telas touch os cards ficam planos
-     (sem perspectiva nem uma camada de composição por card). */
-  @media (hover: hover) and (pointer: fine) {
-    .card-tilt {
-      transform: perspective(900px) rotateX(calc(var(--rx, 0) * 1deg)) rotateY(calc(var(--ry, 0) * 1deg)) translateY(calc(var(--lift, 0) * 1px));
-      transform-style: preserve-3d;
-    }
-    .card-layer-bg {
-      transform: translateZ(0);
-    }
-    .card-layer-near {
-      transform: translateZ(18px);
-    }
-    .card-layer-sprite {
-      transform: translateZ(48px) translate(calc(var(--ry, 0) * 1.2px), calc(var(--rx, 0) * -1.2px));
-    }
-  }
-
   .poke-type-badge {
-    @apply inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-semibold tracking-wider uppercase transition-all duration-200 border border-white/60 shadow-sm;
+    @apply inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-semibold tracking-wider uppercase transition-colors duration-200 border border-white/60 shadow-sm;
   }
 
-  .poke-card {
-    @apply relative bg-[#FFFEFB] border-2 border-[#3E2E24]/20 rounded-xl p-6 cursor-pointer transition-all duration-300 hover:border-[#5C4033]/60 hover:-translate-y-1;
-  }
-
-  /* Botões com sombra dura de nanquim: ao apertar, o papel "desce" sobre a sombra. */
+  /* Botões a nanquim: a sombra dura é o traço deslocado; ao passar o mouse o papel desce um passo, ao apertar encosta. */
   .btn-action {
-    @apply inline-flex items-center justify-center gap-2 px-4 py-2 rounded-xl border-[1.5px] border-[#5C4033] bg-smeargle-accentBright text-white text-sm font-semibold shadow-[3px_3px_0_#5C4033] transition-all duration-150 hover:translate-x-[1px] hover:translate-y-[1px] hover:shadow-[2px_2px_0_#5C4033] active:translate-x-[3px] active:translate-y-[3px] active:shadow-none focus:outline-none focus-visible:ring-2 focus-visible:ring-smeargle-accentBright focus-visible:ring-offset-2;
+    @apply inline-flex min-h-11 items-center justify-center gap-2 px-4 py-2 rounded-xl border-[1.5px] border-[#2A2421] bg-smeargle-olive text-white text-sm font-semibold shadow-[3px_3px_0_#2A2421] transition-[transform,box-shadow] duration-150 hover:translate-x-px hover:translate-y-px hover:shadow-[2px_2px_0_#2A2421] active:translate-x-[3px] active:translate-y-[3px] active:shadow-none focus:outline-none focus-visible:ring-2 focus-visible:ring-smeargle-olive focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-60;
   }
 
   .btn-outline {
-    @apply inline-flex items-center justify-center gap-2 px-4 py-2 rounded-xl border-[1.5px] border-[#5C4033]/70 bg-[#FFFEFB] text-smeargle-textDim text-sm font-medium shadow-[3px_3px_0_rgba(92,64,51,0.35)] transition-all duration-150 hover:translate-x-[1px] hover:translate-y-[1px] hover:text-smeargle-text hover:shadow-[2px_2px_0_rgba(92,64,51,0.35)] active:translate-x-[3px] active:translate-y-[3px] active:shadow-none focus:outline-none focus-visible:ring-2 focus-visible:ring-smeargle-border focus-visible:ring-offset-2;
+    @apply inline-flex min-h-11 items-center justify-center gap-2 px-4 py-2 rounded-xl border-[1.5px] border-[#2A2421]/80 bg-[#FFFEFB] text-smeargle-ink-darkBrown text-sm font-medium shadow-[3px_3px_0_rgba(42,36,33,0.3)] transition-[transform,box-shadow,color] duration-150 hover:translate-x-px hover:translate-y-px hover:text-smeargle-text hover:shadow-[2px_2px_0_rgba(42,36,33,0.3)] active:translate-x-[3px] active:translate-y-[3px] active:shadow-none focus:outline-none focus-visible:ring-2 focus-visible:ring-smeargle-border focus-visible:ring-offset-2;
   }
 
-  .input-field {
-    @apply block w-full px-4 py-2.5 rounded-lg border border-smeargle-border bg-smeargle-card text-smeargle-text placeholder-smeargle-textDim/60 text-sm transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-smeargle-accentBright focus:border-smeargle-accentBright;
-  }
-
-  .select-field {
-    @apply block w-full px-4 py-2.5 rounded-lg border border-smeargle-border bg-smeargle-card text-smeargle-text text-sm transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-smeargle-accentBright focus:border-smeargle-accentBright appearance-none;
-  }
-
+  /* Título de bloco: o ponto é uma gota de tinta. */
   .section-title {
-    @apply text-sm font-semibold uppercase tracking-wider text-smeargle-text mb-3 flex items-center gap-1;
+    @apply mb-3 flex items-center gap-2 font-serif text-base font-bold tracking-tight text-smeargle-text;
   }
 
   .section-title::before {
     content: '';
     display: inline-block;
-    width: 10px;
-    height: 10px;
-    background: currentColor;
-    border-radius: 50%;
-    box-shadow: 2px 2px 0px 0px #5C4033;
+    width: 0.6rem;
+    height: 0.6rem;
+    background: var(--ink-olive);
+    border-radius: 60% 40% 55% 45% / 50% 60% 40% 50%;
   }
 
-  .stat-row {
-    @apply flex items-center justify-between py-2 border-b border-smeargle-border/50 last:border-0 text-sm;
-  }
-
-  .stat-name {
-    @apply text-smeargle-textDim font-medium w-24;
-  }
-
-  .stat-value {
-    @apply text-smeargle-text font-semibold text-right w-full pl-2;
-  }
-
-  .mascote-bubble {
-    @apply max-w-xs rounded-2xl bg-white border-2 border-[#5C4033] p-4 text-sm text-smeargle-text relative shadow-sm;
-  }
-
-  .organic-divider {
-    @apply relative h-px w-full my-6 bg-transparent;
-  }
-
-  .organic-divider::before {
-    content: '';
-    position: absolute;
-    top: 50%;
-    left: 0;
-    width: 100%;
-    height: 1px;
-    background: repeating-linear-gradient(to right, #785132 0, #785132 4px, transparent 4px, transparent 8px);
-    opacity: 0.5;
-  }
-
-  .ink-dot {
-    @apply w-2 h-2 rounded-full bg-[#5C4033] shadow-sm;
-  }
-
+  /* Duas gotas de tinta salpicadas no canto de um número de destaque. */
   .ink-splotch {
     @apply relative inline-block;
   }
@@ -152,110 +108,126 @@
     content: '';
     position: absolute;
     top: -4px;
-    right: -4px;
-    width: 10px;
-    height: 10px;
-    background: #829b72;
+    right: -6px;
+    width: 9px;
+    height: 9px;
+    background: var(--ink-olive);
     border-radius: 50% 20% 70% 30% / 70% 30% 50% 60%;
-    box-shadow: 1px 1px 0px 0px #5C4033;
   }
 
   .ink-splotch::after {
     content: '';
     position: absolute;
-    bottom: -3px;
-    left: -3px;
-    width: 8px;
-    height: 8px;
-    background: #785132;
+    bottom: -2px;
+    left: -5px;
+    width: 6px;
+    height: 6px;
+    background: var(--ink-brown);
     border-radius: 60% 40% 30% 70% / 50% 60% 70% 40%;
-    box-shadow: 1px 1px 0px 0px #4a3b32;
   }
 
   /*
-    Folha de caderno: o cartão das seções (itens, líderes, team builder, calculadora).
-    Cantos irregulares de papel recortado, fibra do papel, uma aguada de tinta num canto
-    e a sombra dura de traço de nanquim deslocado.
+    Folha a nanquim: o cartão das seções. Contorno de tinta com cantos de pincel, papel claro com fibra,
+    uma aguada de oliva num canto e o traço deslocado no lugar de sombra difusa.
   */
   .paper-card {
     position: relative;
-    border: 1.5px solid rgba(74, 59, 50, 0.22);
-    border-radius: 1.6rem 1.25rem 1.7rem 1.15rem / 1.2rem 1.6rem 1.15rem 1.5rem;
-    background-color: #fffefb;
+    border: 1.5px solid rgba(42, 36, 33, 0.62);
+    border-radius: 1.4rem 1.15rem 1.5rem 1.05rem / 1.1rem 1.45rem 1.05rem 1.35rem;
+    background-color: var(--paper-bright);
     background-image:
-      radial-gradient(ellipse at 100% 0%, rgba(164, 194, 148, 0.16), transparent 42%),
-      radial-gradient(ellipse at 0% 100%, rgba(240, 179, 126, 0.1), transparent 38%),
-      radial-gradient(rgba(120, 81, 50, 0.05) 1px, transparent 1px);
-    background-size: auto, auto, 7px 7px;
-    box-shadow: 3px 4px 0 rgba(92, 64, 51, 0.13), 0 10px 28px -14px rgba(62, 46, 36, 0.22);
+      radial-gradient(ellipse 55% 45% at 100% 0%, rgba(164, 194, 148, 0.16), transparent 70%),
+      var(--paper-grain);
+    background-size: auto, 220px 220px;
+    box-shadow: 3px 3px 0 rgba(42, 36, 33, 0.13);
   }
 
-  /*
-    Papel pautado: linhas azuladas de caderno e a margem vermelha à esquerda.
-    O texto assenta na pauta com line-height de 1.6rem e padding vertical em múltiplos de 1.6rem.
-  */
-  .paper-ruled {
+  /* Aguada de tinta por trás de um bloco de texto em destaque (estado vazio, aviso). */
+  .ink-wash {
     background-image:
-      linear-gradient(90deg, transparent 2.1rem, rgba(193, 84, 84, 0.32) 2.1rem, rgba(193, 84, 84, 0.32) calc(2.1rem + 1.5px), transparent calc(2.1rem + 1.5px)),
-      repeating-linear-gradient(180deg, transparent 0, transparent 1.6rem, rgba(109, 152, 181, 0.17) 1.6rem, rgba(109, 152, 181, 0.17) calc(1.6rem + 1px));
-    background-size: auto;
+      radial-gradient(ellipse 70% 60% at 15% 30%, rgba(120, 81, 50, 0.1), transparent 70%),
+      radial-gradient(ellipse 50% 50% at 90% 85%, rgba(130, 155, 114, 0.14), transparent 70%),
+      var(--paper-grain);
+    background-size: auto, auto, 220px 220px;
   }
 
-  /* Pedaço de fita adesiva prendendo a folha: cor sólida meio translúcida, com a borda serrilhada do corte. */
-  .paper-taped::before {
+  /* Tinta escorrendo da borda de cima da folha: o fio e a gota que se solta, como no header. */
+  .ink-blotted::before,
+  .ink-blotted::after {
     content: '';
     position: absolute;
-    top: -0.7rem;
-    left: 50%;
-    z-index: 1;
-    width: 5.5rem;
-    height: 1.5rem;
-    transform: translateX(-50%) rotate(-2.5deg);
-    background: rgba(214, 196, 150, 0.7);
-    box-shadow: 0 1px 2px rgba(62, 46, 36, 0.15);
-    clip-path: polygon(3% 0, 97% 4%, 100% 30%, 96% 55%, 100% 80%, 97% 100%, 2% 96%, 0 70%, 4% 45%, 0 20%);
     pointer-events: none;
+    background: var(--ink);
+  }
+
+  .ink-blotted::before {
+    top: -1.5px;
+    right: 2.25rem;
+    width: 0.5rem;
+    height: 1.4rem;
+    border-radius: 0 0 999px 999px / 0 0 0.55rem 0.55rem;
+    opacity: 0.82;
+  }
+
+  .ink-blotted::after {
+    top: 1.65rem;
+    right: 2.35rem;
+    width: 0.3rem;
+    height: 0.38rem;
+    border-radius: 50% 50% 50% 50% / 40% 40% 60% 60%;
+    opacity: 0.7;
   }
 
   .paper-field {
-    @apply h-10 w-full rounded-xl border-[1.5px] border-[#78614E]/25 bg-[#FFFEFB]/80 px-3 font-serif text-sm text-smeargle-text shadow-[inset_1px_2px_0_rgba(92,64,51,0.06)] transition-colors placeholder:italic placeholder:text-[#78614E]/55 hover:border-[#78614E]/45 focus:border-smeargle-olive focus:outline-none focus:ring-2 focus:ring-smeargle-olive/50 disabled:cursor-not-allowed disabled:opacity-60;
+    @apply h-10 w-full rounded-xl border-[1.5px] border-[#2A2421]/25 bg-[#FFFEFB] px-3 text-sm text-smeargle-text shadow-[inset_1px_2px_0_rgba(42,36,33,0.05)] transition-colors placeholder:italic placeholder:text-[#78614E]/60 hover:border-[#2A2421]/45 focus:border-smeargle-olive focus:outline-none focus:ring-2 focus:ring-smeargle-olive/50 disabled:cursor-not-allowed disabled:opacity-60;
   }
 
   .paper-label {
     @apply mb-1 block font-hand text-base font-semibold leading-none text-[#78614E];
   }
 
-  /* Abas de seção escritas à mão, sublinhadas por um traço de pincel na ativa. */
+  /* Abas de seção: o nome em serifa e a pincelada de tinta sublinhando a ativa. */
   .ink-tab {
-    @apply relative inline-flex cursor-pointer items-center gap-1.5 px-2.5 pb-2 font-hand text-xl leading-none text-[#78614E]/55 transition-colors hover:text-[#78614E] focus:outline-none focus-visible:ring-2 focus-visible:ring-smeargle-olive/60 disabled:cursor-not-allowed disabled:opacity-40;
+    @apply relative inline-flex min-h-11 cursor-pointer items-center gap-1.5 px-2.5 pb-2 font-serif text-base font-semibold leading-none text-[#5C4033]/55 transition-colors hover:text-[#5C4033] focus:outline-none focus-visible:ring-2 focus-visible:ring-smeargle-olive/60 disabled:cursor-not-allowed disabled:opacity-40;
   }
 
   .ink-tab[aria-selected='true'] {
-    @apply text-[#5C4033];
+    @apply text-[#2A2421];
   }
 
   .ink-tab[aria-selected='true']::after {
     content: '';
     position: absolute;
-    inset: auto 0.35rem 0.15rem;
-    height: 0.4rem;
-    background: rgba(130, 155, 114, 0.55);
+    inset: auto 0.35rem 0.25rem;
+    height: 0.45rem;
+    background: rgba(130, 155, 114, 0.6);
     border-radius: 60% 40% 55% 45% / 70% 60% 40% 30%;
     transform: rotate(-1deg);
     z-index: -1;
   }
 
-  /* Carimbo: moldura tracejada e leve rotação, para ícones e números de destaque. */
+  /* Selo de tinta: anel cheio, levemente torto, para ícones e números de destaque. */
   .ink-stamp {
-    @apply inline-flex items-center justify-center rounded-full border-[1.5px] border-dashed border-[#78614E]/45 bg-[#FFFEFB];
+    @apply inline-flex items-center justify-center rounded-full border-[1.5px] border-[#2A2421]/70 bg-[#FFFEFB] text-[#5C4033] shadow-[2px_2px_0_rgba(42,36,33,0.18)];
     transform: rotate(-4deg);
   }
+}
 
-  .glass-panel {
-    @apply bg-[#F5F0E6]/90 md:backdrop-blur-xl border border-[#5C4033]/20 shadow-panel;
+@layer utilities {
+  /* Números da Playfair em altura de caixa alta: os algarismos antigos desalinham contagens e números da Pokédex. */
+  .font-serif,
+  .font-display,
+  .font-hand {
+    font-variant-numeric: lining-nums;
+    font-feature-settings: 'lnum' 1;
   }
 
-  .status-gradient {
-    background: linear-gradient(135deg, #829b72 0%, #ec4899 33%, #fbbf24 66%, #a855f7 100%);
+  /*
+    Anotação a nanquim em Playfair itálico. O ajuste de altura mantém o tamanho visual que a fonte manuscrita
+    anterior tinha nas mesmas classes text-*, sem precisar reescrever cada uso.
+  */
+  .font-hand {
+    font-style: italic;
+    font-size-adjust: 0.4;
   }
 }

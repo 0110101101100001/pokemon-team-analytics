@@ -31,7 +31,7 @@ function MachineTable({ machines, onSelectMove }) {
         </thead>
         <tbody>
           {machines.map(({ code, move, type, damageClass, power, accuracy }) => (
-            <tr key={code} className="border-b border-dashed border-[#78614E]/10 transition-colors last:border-0 hover:bg-[#829b72]/10">
+            <tr key={code} className="border-b border-[#5C4033]/10 transition-colors last:border-0 hover:bg-[#829b72]/10">
               <td className={`${CELL} whitespace-nowrap font-mono text-xs font-bold tracking-wider text-[#4A3B32]`}>{code.toUpperCase()}</td>
               <td className={CELL}>
                 <button

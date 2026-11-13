@@ -41,7 +41,7 @@ function Chip({ pressed, onToggle, title, children }) {
 
 function SideConditions({ title, conditions, onChange }) {
   return (
-    <fieldset className="min-w-0 rounded-xl border border-dashed border-[#78614E]/25 p-2">
+    <fieldset className="min-w-0 rounded-xl border border-[#5C4033]/25 p-2">
       <legend className="px-1 font-hand text-base leading-none text-[#5C4033]">{title}</legend>
       <div className="flex flex-wrap gap-1">
         {SIDE_TOGGLES.map(({ key, label }) => (

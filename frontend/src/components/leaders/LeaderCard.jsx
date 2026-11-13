@@ -16,7 +16,7 @@ function LeaderCard({ leader, entryByName, onSelectPokemon }) {
 
   return (
     <li className="paper-card flex flex-col overflow-hidden">
-      <header className="relative border-b border-dashed border-[#78614E]/25 px-4 pb-3 pt-4" style={{ backgroundColor: `${ink.bg}99` }}>
+      <header className="relative border-b border-[#5C4033]/25 px-4 pb-3 pt-4" style={{ backgroundColor: `${ink.bg}99` }}>
         <span aria-hidden="true" className="absolute inset-x-0 top-0 h-1.5" style={{ backgroundColor: ink.border }} />
         <p className="font-hand text-lg leading-none text-[#78614E]">{LEADER_ROLES[leader.role].caption(leader)}</p>
         <div className="mt-1 flex flex-wrap items-center gap-x-2 gap-y-1">
@@ -55,7 +55,7 @@ function LeaderCard({ leader, entryByName, onSelectPokemon }) {
       </ul>
 
       {leader.note && (
-        <p className="border-t border-dashed border-[#78614E]/20 px-4 py-2.5 font-serif text-[11px] italic leading-snug text-smeargle-textDim">{leader.note}</p>
+        <p className="border-t border-[#5C4033]/20 px-4 py-2.5 font-serif text-[11px] italic leading-snug text-smeargle-textDim">{leader.note}</p>
       )}
     </li>
   );

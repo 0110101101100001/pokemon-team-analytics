@@ -50,14 +50,14 @@ function TeamTypeTable({ team }) {
                   <img src={thumbnailSpriteUrl(member.id)} alt={formatSlug(member.name)} width={36} height={36} loading="lazy" decoding="async" className="mx-auto h-9 w-9 object-contain" />
                 </th>
               ))}
-              <th scope="col" className={`${HEAD} border-l border-dashed border-[#78614E]/25 pt-2`}>Fracos</th>
+              <th scope="col" className={`${HEAD} border-l border-[#5C4033]/25 pt-2`}>Fracos</th>
               <th scope="col" className={`${HEAD} pt-2`}>Resist.</th>
               <th scope="col" className={`${HEAD} pt-2 pr-3`} title="Membros que acertam este tipo com dano super efetivo usando STAB">Cobertura</th>
             </tr>
           </thead>
           <tbody>
             {rows.map(({ type, multipliers, weak, resist, coverage }) => (
-              <tr key={type} className="border-b border-dashed border-[#78614E]/10 last:border-0">
+              <tr key={type} className="border-b border-[#5C4033]/10 last:border-0">
                 <th scope="row" className="sticky left-0 bg-[#FFFEFB] py-1 pl-3 pr-2 text-left font-normal">
                   <PokemonTypeBadge type={type} className="!px-1.5 !text-[9px]" />
                 </th>
@@ -69,7 +69,7 @@ function TeamTypeTable({ team }) {
                     </td>
                   );
                 })}
-                <td className={`${CELL} border-l border-dashed border-[#78614E]/25`}>
+                <td className={`${CELL} border-l border-[#5C4033]/25`}>
                   <span className={`inline-flex h-6 min-w-7 items-center justify-center rounded-md px-1 ${summaryClass(weak >= 3 || weak > resist + 1, false)}`}>{weak}</span>
                 </td>
                 <td className={CELL}>

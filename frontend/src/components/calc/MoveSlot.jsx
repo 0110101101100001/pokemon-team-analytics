@@ -27,7 +27,7 @@ function MoveSlot({ index, slot, learnset, onChange }) {
   }, [index, onChange]);
 
   return (
-    <li className="rounded-xl border border-dashed border-[#78614E]/25 bg-[#FFFEFB]/60 p-2">
+    <li className="rounded-xl border border-[#5C4033]/25 bg-[#FFFEFB]/60 p-2">
       <div className="flex items-center gap-2">
         <div className="min-w-0 flex-1">
           <SuggestField

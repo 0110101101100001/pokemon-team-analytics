@@ -1,6 +1,6 @@
 import { memo } from 'react';
 
-/** Mancha de pincel decorativa. Posicione com `className` (absolute/fixed + coordenadas). */
+/** Mancha de pincel decorativa. Posicione com `className` (absolute + coordenadas). */
 export const InkSplatter = memo(function InkSplatter({ className = '', color = '#829b72' }) {
   return (
     // overflow-anchor: none: uma mancha presa ao fim da página não pode servir de âncora de rolagem,
@@ -18,73 +18,46 @@ export const InkSplatter = memo(function InkSplatter({ className = '', color = '
   );
 });
 
-const SPLASH_GRAIN = {
-  backgroundImage:
-    'radial-gradient(rgba(255, 253, 249, 0.07) 1px, transparent 1px), radial-gradient(ellipse at 30% 40%, rgba(38, 26, 19, 0.25), transparent 70%)',
-  backgroundSize: '5px 5px, auto',
-};
-
 /**
- * Mancha de tinta castanha atrás de um bloco de texto. O pai precisa de `relative isolate`;
- * a mancha ocupa o pai inteiro (inset-0) e acompanha o seu tamanho, incluindo no header colapsado.
+ * Borda inferior de um bloco pintado: o traço de pincel termina irregular, com a tinta escorrendo em gotas.
+ * Herda a cor via `text-*`.
  */
-export const InkSplash = memo(function InkSplash({ className = '' }) {
-  return (
-    <span aria-hidden="true" className={`pointer-events-none absolute inset-0 -z-10 ${className}`}>
-      <span
-        className="absolute inset-0 rounded-[46%_54%_38%_62%/58%_42%_60%_40%] bg-[#4A3B32]/40 md:backdrop-blur-[2px] shadow-[inset_0_0_14px_rgba(38,26,19,0.35)]"
-        style={SPLASH_GRAIN}
-      />
-      <span className="absolute -right-2.5 top-0.5 w-3 h-3 rounded-[60%_40%_55%_45%/45%_60%_40%_55%] bg-[#4A3B32]/45" />
-      <span className="absolute -right-4 top-4 w-1.5 h-1.5 rounded-full bg-[#4A3B32]/35" />
-      <span className="absolute -left-1.5 bottom-1 w-2 h-2 rounded-full bg-[#4A3B32]/40" />
-      <span className="absolute right-8 -bottom-1.5 w-1.5 h-1.5 rounded-full bg-[#4A3B32]/30" />
-    </span>
-  );
-});
-
-/** Borda de papel rasgado para o fundo de um bloco; herda a cor via `text-*`. */
-export const TornEdge = memo(function TornEdge({ className = '' }) {
+export const InkEdge = memo(function InkEdge({ className = '' }) {
   return (
     <svg
       aria-hidden="true"
-      viewBox="0 0 1200 10"
+      viewBox="0 0 1200 22"
       preserveAspectRatio="none"
-      className={`pointer-events-none block w-full h-[10px] ${className}`}
+      className={`pointer-events-none block h-[14px] w-full sm:h-[18px] ${className}`}
     >
       <path
         fill="currentColor"
-        d="M0 0h1200v4c-18 3-36-1-54 2s-36 4-54 1-38-3-56 0-38 4-56 1-42-3-60 0-34 2-52 0-38-2-56 1-42 3-60 0-38-3-56 0-38 4-56 1-42-3-60 0-34 2-52 0-38-2-56 1-42 3-60 0-38-3-56 0-38 4-56 1-42-3-60 0-34 2-52 0-38-2-56 1-30 2-48 0L0 4z"
+        d="M0 0h1200v5c-30 4-62-1-96 3-14 2-20 9-26 9s-6-7-18-8c-40-3-80 3-120 1-30-1-52-4-84 0-16 2-22 3-36 2-26-2-50-5-82-1-12 2-14 12-22 12s-8-9-16-10c-34-3-70 2-104 1-40-1-74-5-112-1-20 2-34 4-56 2-28-3-52-4-80 0-10 1-12 6-18 6s-7-5-14-6C130 11 92 7 52 9 30 10 14 8 0 5z"
       />
     </svg>
   );
 });
 
-/** Linha divisória traçada à mão, com a gota de tinta onde a pena parou. */
+/** Divisória de pincel: o traço engrossa no meio e afina nas pontas, com a gota onde o pincel parou. */
 // A gota fica fora do SVG: com preserveAspectRatio="none" um círculo viraria uma elipse esticada.
 export const InkRule = memo(function InkRule({ className = '' }) {
   return (
-    <div aria-hidden="true" className={`pointer-events-none flex items-center gap-1 text-[#785132] ${className}`}>
-      <svg viewBox="0 0 1000 14" preserveAspectRatio="none" className="block h-3.5 min-w-0 flex-1">
+    <div aria-hidden="true" className={`pointer-events-none flex items-center gap-1.5 text-[#2A2421] ${className}`}>
+      <svg viewBox="0 0 1000 12" preserveAspectRatio="none" className="block h-2.5 min-w-0 flex-1">
         <path
-          d="M2 8C120 5 240 10 360 7S600 5 720 8 900 10 998 7"
-          fill="none"
-          stroke="currentColor"
-          strokeWidth="1.6"
-          strokeLinecap="round"
-          strokeDasharray="10 5 22 6 4 6"
-          opacity="0.55"
-          vectorEffect="non-scaling-stroke"
+          fill="currentColor"
+          opacity="0.7"
+          d="M0 6.4C90 5.2 170 3.6 260 3.9c110 .4 210 1.7 320 1.2 120-.6 240-2 340-.9 30 .3 60 .9 80 1.6v1.4c-20 .5-50 .9-80 1.3-100 1.2-220.5 0-340-.2-110-.2-210 1.4-320 1.5C170 8.9 90 7.6 0 6.4z"
         />
       </svg>
-      <span className="h-1.5 w-2 shrink-0 rounded-[60%_40%_55%_45%] bg-current opacity-55" />
+      <span className="h-2 w-2.5 shrink-0 rounded-[60%_40%_55%_45%/55%_60%_40%_45%] bg-current opacity-80" />
     </div>
   );
 });
 
 /**
- * Pincelada de aquarela atrás de um título. O pai precisa de `relative isolate`;
- * a mancha cobre a metade de baixo do texto, como marca-texto passado com pincel.
+ * Pincelada de tinta atrás de um título. O pai precisa de `relative isolate`;
+ * a mancha cobre a metade de baixo do texto, como uma passada de pincel carregado.
  */
 export const BrushHighlight = memo(function BrushHighlight({ color = '#A4C294', className = '' }) {
   return (
@@ -96,24 +69,10 @@ export const BrushHighlight = memo(function BrushHighlight({ color = '#A4C294', 
     >
       <path
         fill={color}
-        opacity="0.45"
+        opacity="0.5"
         d="M6 14c32-7 71-9 112-7 37 2 70 6 108 3 26-2 46-4 66-1 6 1 8 9 3 12-22 9-49 7-77 10-37 4-71 1-107 3-33 2-62 7-95 6-11 0-19-5-20-13-1-7 4-11 10-13z"
       />
-      <path fill={color} opacity="0.3" d="M20 26c50-5 115 0 170-3 32-2 62-3 92-1 4 3-1 8-6 9-61 4-134 3-201 5-26 1-56-2-55-10z" />
+      <path fill={color} opacity="0.35" d="M20 26c50-5 115 0 170-3 32-2 62-3 92-1 4 3-1 8-6 9-61 4-134 3-201 5-26 1-56-2-55-10z" />
     </svg>
-  );
-});
-
-/** Vinheta fixa nas margens da tela: profundidade de diário físico sem custo de layout. */
-export const PageVignette = memo(function PageVignette() {
-  return (
-    <div
-      aria-hidden="true"
-      className="pointer-events-none fixed inset-0 z-30 hidden md:block"
-      style={{
-        background: 'radial-gradient(ellipse at center, transparent 58%, rgba(62, 46, 36, 0.16) 100%)',
-        boxShadow: 'inset 0 0 96px rgba(62, 46, 36, 0.14)',
-      }}
-    />
   );
 });

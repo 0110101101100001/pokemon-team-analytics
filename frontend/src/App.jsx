@@ -1,13 +1,12 @@
 import { Suspense, lazy, useCallback, useEffect, useMemo, useState } from "react";
 import { Loader2 } from "lucide-react";
-import PokemonDrawer from "./components/PokemonDrawer";
 import AuthModal from "./components/AuthModal";
 import AuthButton from "./components/AuthButton";
 import AboutButton from "./components/AboutButton";
-import AboutModal from "./components/AboutModal";
 import AppHeader from "./components/layout/AppHeader";
+import PokemonSheet, { loadPokemonDrawer } from "./components/PokemonSheet";
 import { HeaderContext } from "./components/layout/headerContext";
-import { InkSplatter, PageVignette } from "./components/InkDecor";
+import { InkSplatter } from "./components/InkDecor";
 import PokedexSection from "./sections/PokedexSection";
 import { sectionFromPath } from "./navigation/sections";
 import { useHashPath } from "./hooks/useHashPath";
@@ -25,6 +24,8 @@ const ItemsSection = lazy(() => import("./sections/ItemsSection"));
 const GymLeadersSection = lazy(() => import("./sections/GymLeadersSection"));
 const TeamBuilderSection = lazy(() => import("./sections/TeamBuilderSection"));
 const DamageCalculatorSection = lazy(() => import("./sections/DamageCalculatorSection"));
+// O "Sobre" e a ficha (em PokemonSheet) só abrem por ação do usuário: ficam fora do pacote inicial.
+const AboutModal = lazy(() => import("./components/AboutModal"));
 
 const SMEARGLE_ID = 235;
 const APP_NAME = "Smearglepedia";
@@ -33,7 +34,7 @@ function SectionFallback() {
   return (
     <p className="flex items-center justify-center gap-2 py-24 font-hand text-xl text-[#78614E]">
       <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" />
-      Virando a página...
+      Molhando o pincel...
     </p>
   );
 }
@@ -78,6 +79,8 @@ export default function App() {
         const entries = buildPokedexEntries({ pokemon, species, typeIndex, eggGroupIndex: eggGroups.index });
         setPokemonList(entries);
         setEggGroupNames(eggGroups.names);
+        // Com a grade pronta, a ficha é baixada em segundo plano: o primeiro clique já abre na hora.
+        (window.requestIdleCallback ?? setTimeout)(() => loadPokemonDrawer().catch(() => {}));
 
         smogonNames.then((names) => {
           if (!active || names.length === 0) return;
@@ -90,7 +93,7 @@ export default function App() {
     return () => { active = false; };
   }, []);
 
-  // Cada aba é uma página do caderno: abre do topo e dá nome à guia do navegador.
+  // Cada aba abre do topo e dá nome à guia do navegador.
   useEffect(() => {
     window.scrollTo(0, 0);
     document.title = `${section.label} · ${APP_NAME}`;
@@ -120,10 +123,10 @@ export default function App() {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="flex flex-col items-center gap-3 animate-pulse">
-          <div className="w-12 h-12 rounded-full bg-[#FFFEFB] flex items-center justify-center border-2 border-[#4A3B32]/20 shadow-sm">
+          <div className="ink-stamp h-12 w-12">
             <img src={officialSpriteUrl(SMEARGLE_ID)} alt="Smeargle" width={32} height={32} decoding="async" className="w-8 h-8 object-contain" />
           </div>
-          <p className="font-hand text-xl text-[#78614E]">Folheando o manual de campo...</p>
+          <p className="font-hand text-xl text-[#78614E]">Preparando a tinta...</p>
         </div>
       </div>
     );
@@ -169,9 +172,12 @@ export default function App() {
   return (
     <HeaderContext.Provider value={headerContext}>
       <div className="relative min-h-screen">
-        <PageVignette />
         <AuthModal open={authOpen} onClose={closeAuth} onAuthChange={setSession} />
-        {aboutOpen && <AboutModal onClose={closeAbout} />}
+        {aboutOpen && (
+          <Suspense fallback={null}>
+            <AboutModal onClose={closeAbout} />
+          </Suspense>
+        )}
 
         <AppHeader activeId={section.id} collapsed={collapsed} toolbarRef={setToolbarSlot}>
           <AuthButton session={session} onOpen={openAuth} />
@@ -179,7 +185,7 @@ export default function App() {
         </AppHeader>
 
         <main className="relative max-w-[1700px] mx-auto px-4 sm:px-6 lg:px-8 pt-6 sm:pt-10 pb-16">
-          <InkSplatter className="hidden md:block absolute -left-10 top-24 w-40 h-40 opacity-[0.07] mix-blend-multiply -rotate-12" color="#785132" />
+          <InkSplatter className="hidden md:block absolute -left-24 top-[22rem] w-44 h-44 opacity-[0.06] mix-blend-multiply -rotate-12" color="#785132" />
           <InkSplatter className="hidden md:block absolute right-0 bottom-40 w-28 h-28 opacity-[0.08] mix-blend-multiply rotate-[160deg]" color="#829b72" />
 
           <div key={section.id} className="relative animate-section-in motion-reduce:animate-none">
@@ -188,24 +194,14 @@ export default function App() {
         </main>
 
         {selectedPokemon && (
-          <div
-            className="fixed inset-0 bg-[#261A13]/60 md:bg-[#261A13]/45 md:backdrop-blur-sm z-50 flex items-center justify-center p-4 sm:p-6"
-            onClick={handleCloseModal}
-          >
-            <div
-              className="bg-[#FFFEFB] w-full max-w-5xl h-[90vh] sm:h-[85vh] rounded-[2rem] shadow-xl md:shadow-2xl overflow-hidden flex flex-col border border-[#4A3B32]/20"
-              onClick={(e) => e.stopPropagation()}
-            >
-              <PokemonDrawer
-                pokemonName={selectedPokemon}
-                onClose={handleCloseModal}
-                onSmogonDataFound={markSmogonData}
-                favorites={collections.favoriteSet}
-                gridEntries={entryByName}
-                onToggleFavorite={handleToggleFavorite}
-              />
-            </div>
-          </div>
+          <PokemonSheet
+            pokemonName={selectedPokemon}
+            onClose={handleCloseModal}
+            onSmogonDataFound={markSmogonData}
+            favorites={collections.favoriteSet}
+            gridEntries={entryByName}
+            onToggleFavorite={handleToggleFavorite}
+          />
         )}
       </div>
     </HeaderContext.Provider>

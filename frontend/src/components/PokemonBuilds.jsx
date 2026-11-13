@@ -141,7 +141,7 @@ function PokemonBuilds({ variety, pokemonLabel, onOpenItem, onOpenAbility, onOpe
     return (
       <p className="flex items-center justify-center gap-2 py-8 text-xs font-medium text-[#78614E]">
         <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" />
-        Abrindo o caderno de builds...
+        Carregando as builds...
       </p>
     );
   }

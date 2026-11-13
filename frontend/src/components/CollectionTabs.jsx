@@ -92,7 +92,7 @@ function CollectionNoticeComponent({ view, status, isEmpty, onLogin }) {
     content = (
       <p className="inline-flex items-center gap-2">
         <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" />
-        Folheando o caderno...
+        Molhando o pincel...
       </p>
     );
   } else if (status === 'error') {

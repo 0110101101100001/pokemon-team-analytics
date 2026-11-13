@@ -3,8 +3,8 @@ import { Loader2, Lock, Mail, TriangleAlert, X } from 'lucide-react';
 import { supabase } from '../services/supabase';
 
 const MODES = {
-  login: { title: 'Bem-vindo de volta', subtitle: 'Abra seu caderno de campo.', submit: 'Entrar' },
-  signup: { title: 'Novo caderno', subtitle: 'Cadastre-se para salvar seus times.', submit: 'Criar conta' },
+  login: { title: 'Bem-vindo de volta', subtitle: 'Abra seu guia de campo.', submit: 'Entrar' },
+  signup: { title: 'Nova conta', subtitle: 'Cadastre-se para salvar seus times.', submit: 'Criar conta' },
 };
 
 const ERROR_MESSAGES = {

@@ -40,9 +40,9 @@ function AboutModal({ onClose }) {
         aria-labelledby={titleId}
         className="relative flex max-h-[85vh] w-full max-w-md flex-col rounded-panel border border-[#78614E]/30 bg-[#FFFEFB] shadow-lg md:shadow-panel animate-bubble-pop"
       >
-        <header className="flex items-start gap-3 border-b border-dashed border-[#78614E]/25 px-6 pb-4 pt-5">
+        <header className="flex items-start gap-3 border-b border-[#5C4033]/25 px-6 pb-4 pt-5">
           <div className="min-w-0 flex-1">
-            <p className="font-hand text-lg leading-none text-[#78614E]">sobre o caderno</p>
+            <p className="font-hand text-lg leading-none text-[#78614E]">sobre a Smearglepedia</p>
             <h2 id={titleId} className="mt-0.5 font-serif text-2xl font-black tracking-tight text-[#2A2421]">
               Smeargle<span className="text-[#5B7856]">pedia</span>
             </h2>
@@ -100,7 +100,7 @@ function AboutModal({ onClose }) {
             </div>
           </dl>
 
-          <p className="border-t border-dashed border-[#78614E]/20 pt-3 text-[11px] italic leading-snug text-[#78614E]/85">
+          <p className="border-t border-[#5C4033]/20 pt-3 text-[11px] italic leading-snug text-[#78614E]/85">
             Dados competitivos da Smogon. Projeto de fã, sem afiliação com Nintendo, Game Freak ou The Pokémon Company.
           </p>
         </div>

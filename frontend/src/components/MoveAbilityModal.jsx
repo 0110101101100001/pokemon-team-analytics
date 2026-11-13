@@ -176,7 +176,7 @@ function MoveAbilityModal({ kind, name, onClose }) {
         aria-labelledby={titleId}
         className="relative flex max-h-[85vh] w-full max-w-lg flex-col rounded-panel border border-[#78614E]/30 bg-[#FFFEFB] shadow-lg md:shadow-panel animate-bubble-pop"
       >
-        <header className="flex items-start gap-3 border-b border-dashed border-[#78614E]/25 px-6 pb-4 pt-5">
+        <header className="flex items-start gap-3 border-b border-[#5C4033]/25 px-6 pb-4 pt-5">
           <span className="mt-0.5 flex h-10 w-10 shrink-0 items-center justify-center rounded-full border border-[#829b72]/40 bg-[#829b72]/15 text-[#5B7856]">
             {state.info?.sprite ? (
               <img src={state.info.sprite} alt="" width={30} height={30} className="h-[30px] w-[30px] object-contain [image-rendering:pixelated]" />
@@ -240,7 +240,7 @@ function MoveAbilityModal({ kind, name, onClose }) {
               )}
 
               {untranslated && (
-                <p className="flex items-start gap-1.5 border-t border-dashed border-[#78614E]/20 pt-3 text-[11px] italic leading-snug text-[#78614E]/85">
+                <p className="flex items-start gap-1.5 border-t border-[#5C4033]/20 pt-3 text-[11px] italic leading-snug text-[#78614E]/85">
                   <Languages className="mt-px h-3.5 w-3.5 shrink-0" aria-hidden="true" />
                   A PokéAPI ainda não tem tradução em português para este texto; ele aparece em inglês.
                 </p>

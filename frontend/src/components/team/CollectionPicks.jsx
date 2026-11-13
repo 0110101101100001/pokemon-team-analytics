@@ -63,7 +63,7 @@ function CollectionPicks({ collections, entryByName, takenSpecies, disabled, onP
     content = (
       <p className="flex items-center gap-2 text-sm text-[#78614E]">
         <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" />
-        Folheando o caderno...
+        Molhando o pincel...
       </p>
     );
   } else if (collections.status === 'error') {

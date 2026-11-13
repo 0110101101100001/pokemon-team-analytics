@@ -14,9 +14,9 @@ const share = (value, hp) => `${Math.min((value / hp) * 100, 100)}%`;
 function DamageResult({ entry, hint }) {
   if (!entry) {
     return (
-      <section className="paper-card paper-ruled paper-taped py-[1.6rem] pl-12 pr-5" aria-label="Resultado" aria-live="polite">
-        <p className="font-hand text-2xl leading-[1.6rem] text-[#78614E]">a conta ainda está em branco…</p>
-        <p className="font-hand text-xl leading-[1.6rem] text-[#5C4033]">{hint}</p>
+      <section className="paper-card ink-wash ink-blotted px-5 py-6" aria-label="Resultado" aria-live="polite">
+        <p className="font-hand text-2xl leading-tight text-[#785132]">a conta ainda está em branco…</p>
+        <p className="mt-1 font-serif text-lg font-semibold leading-snug text-[#2A2421]">{hint}</p>
       </section>
     );
   }
@@ -25,7 +25,7 @@ function DamageResult({ entry, hint }) {
   const { rolls, extraRolls, hits, min, max, hp, typeMultiplier, stab, crit, reason } = result;
 
   return (
-    <section className="paper-card paper-taped px-4 pb-3.5 pt-5" aria-label="Resultado" aria-live="polite">
+    <section className="paper-card ink-blotted px-4 pb-3.5 pt-5" aria-label="Resultado" aria-live="polite">
       <p className="font-hand text-lg leading-none text-[#78614E]">
         {formatSlug(attackerName)} usa {formatSlug(move.slug)}{crit ? ' (crítico)' : ''} em {formatSlug(defenderName)}
       </p>

@@ -103,7 +103,7 @@ function CombatantPanel({ caption, title, pickerPlaceholder, side, battle, forms
       )}
 
       {pokemon && (
-        <div className="mt-4 space-y-3.5 border-t border-dashed border-[#78614E]/25 pt-4">
+        <div className="mt-4 space-y-3.5 border-t border-[#5C4033]/25 pt-4">
           <div className="flex items-center gap-3">
             <img src={officialSpriteUrl(side.form && battle.id ? battle.id : pokemon.id)} alt="" width={88} height={88} decoding="async" className="h-[72px] w-[72px] shrink-0 object-contain drop-shadow-[0_6px_8px_rgba(62,46,36,0.2)] sm:h-[88px] sm:w-[88px]" />
             <div className="min-w-0 flex-1">
@@ -215,7 +215,7 @@ function CombatantPanel({ caption, title, pickerPlaceholder, side, battle, forms
             </Field>
           </div>
 
-          <div className="rounded-xl border border-dashed border-[#78614E]/25 bg-[#F7F3EE]/40 px-2.5 pb-2.5 pt-2" role="group" aria-labelledby={stagesId}>
+          <div className="rounded-xl border border-[#5C4033]/25 bg-[#F7F3EE]/40 px-2.5 pb-2.5 pt-2" role="group" aria-labelledby={stagesId}>
             <div className="mb-1.5 flex h-6 items-center justify-between gap-2">
               <span id={stagesId} className="font-hand text-base leading-none text-[#78614E]">estágios</span>
               {boosted && (
@@ -246,7 +246,7 @@ function CombatantPanel({ caption, title, pickerPlaceholder, side, battle, forms
             </ul>
           </div>
 
-          <details className="group rounded-xl border border-dashed border-[#78614E]/30 bg-[#F7F3EE]/50">
+          <details className="group rounded-xl border border-[#5C4033]/30 bg-[#F7F3EE]/50">
             <summary className="flex cursor-pointer list-none items-center gap-2 px-3 py-2 focus:outline-none focus-visible:ring-2 focus-visible:ring-smeargle-olive/60 [&::-webkit-details-marker]:hidden">
               <span className="font-hand text-lg leading-none text-[#5C4033]">natureza, EVs e IVs</span>
               <span className="ml-auto truncate font-mono text-xs tabular-nums text-[#78614E]">
@@ -255,7 +255,7 @@ function CombatantPanel({ caption, title, pickerPlaceholder, side, battle, forms
               </span>
               <ChevronDown className="h-4 w-4 shrink-0 text-[#78614E] transition-transform group-open:rotate-180 motion-reduce:transition-none" aria-hidden="true" />
             </summary>
-            <div className="border-t border-dashed border-[#78614E]/25 px-3 pb-3 pt-2">
+            <div className="border-t border-[#5C4033]/25 px-3 pb-3 pt-2">
               <StatSpreadEditor baseStats={battle.baseStats} set={set} onChange={patchSet} />
             </div>
           </details>
