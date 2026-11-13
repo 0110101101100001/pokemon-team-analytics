@@ -8,7 +8,7 @@ function BrushStroke({ color, active }) {
       aria-hidden="true"
       viewBox="0 0 120 10"
       preserveAspectRatio="none"
-      className={`pointer-events-none absolute inset-x-1 bottom-0 h-[3px] w-[calc(100%-0.5rem)] origin-left transition-[transform,opacity] duration-300 ease-out motion-reduce:transition-none sm:inset-x-2 sm:h-[4px] sm:w-[calc(100%-1rem)] ${
+      className={`pointer-events-none absolute inset-x-3 bottom-1 h-[3px] w-[calc(100%-1.5rem)] origin-left transition-[transform,opacity] duration-300 ease-out motion-reduce:transition-none sm:inset-x-4 sm:bottom-1 sm:w-[calc(100%-2rem)] ${
         active ? 'scale-x-100 opacity-100' : 'scale-x-0 opacity-0'
       }`}
     >
@@ -21,11 +21,14 @@ function BrushStroke({ color, active }) {
 }
 
 
-/** Navegação principal. No celular vira uma barra de cinco ícones; `compact` esconde os rótulos ao rolar. */
+/**
+ * Navegação principal, agrupada num estojo em pílula (fundo escuro translúcido e borda fina clara).
+ * No celular vira um bloco com os cinco ícones; `compact` esconde os rótulos ao rolar.
+ */
 function SectionTabs({ activeId, compact = false, className = '' }) {
   return (
-    <nav aria-label="Seções" className={className}>
-      <ul className="grid grid-cols-5 sm:flex sm:items-center sm:justify-center sm:gap-1">
+    <nav aria-label="Seções" className={`flex justify-center ${className}`}>
+      <ul className="grid w-full grid-cols-5 gap-0.5 rounded-2xl border border-[#F7F3EE]/20 bg-[#3E2A1F]/35 p-1 shadow-[inset_0_1px_3px_rgba(0,0,0,0.18)] sm:flex sm:w-auto sm:items-center sm:gap-0.5 sm:rounded-full">
         {SECTIONS.map((section) => {
           const { id, label, shortLabel, icon: Icon, pigment } = section;
           const active = id === activeId;
@@ -34,8 +37,8 @@ function SectionTabs({ activeId, compact = false, className = '' }) {
               <a
                 href={sectionHref(section)}
                 aria-current={active ? 'page' : undefined}
-                className={`relative flex flex-col items-center gap-1 rounded-xl px-1 pb-2 pt-1.5 font-serif font-semibold transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-[#A4C294]/70 sm:flex-row sm:gap-2 sm:px-3 sm:pb-2.5 sm:pt-2 ${
-                  active ? 'text-[#FFFDF9]' : 'text-[#F7F3EE]/80 hover:text-[#FFFDF9]'
+                className={`relative flex flex-col items-center gap-1 rounded-xl px-1 pb-2 pt-1.5 font-serif font-semibold transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-[#A4C294]/70 sm:flex-row sm:gap-2 sm:rounded-full sm:px-4 sm:py-2 ${
+                  active ? 'bg-[#F7F3EE]/[0.13] text-[#FFFDF9]' : 'text-[#F7F3EE]/80 hover:bg-[#F7F3EE]/[0.07] hover:text-[#FFFDF9]'
                 }`}
               >
                 <Icon className="h-4 w-4 shrink-0" style={active ? { color: pigment } : undefined} aria-hidden="true" />
