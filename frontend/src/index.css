@@ -297,19 +297,6 @@
     }
   }
 
-  /* Moldura de pincelada do item ativo: um anel de tinta solto, um pouco torto, fora da borda. */
-  .brush-frame::after {
-    content: '';
-    position: absolute;
-    inset: -5px;
-    pointer-events: none;
-    border: 2.5px solid var(--ink-olive);
-    border-radius: 1.6rem 1.1rem 1.7rem 1.2rem / 1.2rem 1.7rem 1.1rem 1.6rem;
-    border-left-color: rgba(130, 155, 114, 0.55);
-    border-bottom-width: 3.5px;
-    transform: rotate(-0.8deg);
-  }
-
   /* Sublinhado de marcador de ponta porosa sob uma anotação. */
   .marker-underline {
     padding-bottom: 0.3em;

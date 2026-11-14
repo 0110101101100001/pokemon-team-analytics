@@ -1,6 +1,6 @@
 import { memo, useMemo } from 'react';
 import { Loader2, TriangleAlert } from 'lucide-react';
-import CollectionTabs, { COLLECTIONS, CollectionNotice } from '../components/CollectionTabs';
+import CollectionTabs, { CollectionNotice } from '../components/CollectionTabs';
 import FiltersBar, { ActiveFilters, AdvancedFilters } from '../components/FiltersBar';
 import PokemonGrid from '../components/PokemonGrid';
 import HeaderToolbar, { ToolbarRow } from '../components/layout/HeaderToolbar';
@@ -90,7 +90,6 @@ function PokedexSection({
   // Numa coleção sem login, carregando, com falha ou vazia, um aviso ocupa o lugar da grade.
   const collectionBlocked = !regionalPending && collection !== 'all' && (collections.status !== 'ready' || baseList.length === 0);
   const count = regionalPending || collectionBlocked ? 0 : filteredList.length;
-  const plural = count !== 1 ? 's' : '';
 
   return (
     <div className="space-y-6">
@@ -129,15 +128,11 @@ function PokedexSection({
       </div>
 
       <SectionHeading
-        caption={isRegional ? `pokédex de ${dex.label} · ${game.label}` : COLLECTIONS[collection].caption}
-        title={(
+        title={isRegional ? 'Registro Regional' : 'Registro Nacional'}
+        subtitle={(
           <>
-            <span className="ink-splotch tabular-nums">{count}</span> Pokémon{plural} encontrado{plural}
-          </>
-        )}
-        note={searchTerm && (
-          <>
-            Resultado para <span className="font-serif italic">“{searchTerm}”</span>
+            <span className="font-semibold tabular-nums text-[#2A2421]">{count}</span> Pokémon encontrado{count !== 1 ? 's' : ''}
+            {searchTerm && <> para <span className="font-serif italic">“{searchTerm}”</span></>}
           </>
         )}
         aside={(

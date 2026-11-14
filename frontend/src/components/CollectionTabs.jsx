@@ -2,9 +2,9 @@ import { memo } from 'react';
 import { BookOpen, Heart, History, Loader2, LogIn, Trash2, TriangleAlert } from 'lucide-react';
 
 export const COLLECTIONS = {
-  all: { label: 'Pokédex', caption: 'anotações de campo', icon: BookOpen },
-  favorites: { label: 'Favoritos', caption: 'meus favoritos', icon: Heart },
-  history: { label: 'Histórico', caption: 'visitados recentemente', icon: History },
+  all: { label: 'Pokédex', icon: BookOpen },
+  favorites: { label: 'Favoritos', icon: Heart },
+  history: { label: 'Histórico', icon: History },
 };
 
 const NOTICES = {

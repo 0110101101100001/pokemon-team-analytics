@@ -7,7 +7,8 @@ import MachineTable from '../components/items/MachineTable';
 import { HeaderSearch, HeaderSegmented, HeaderSelect, OPTION_CLASS } from '../components/layout/HeaderControls';
 import HeaderToolbar, { ToolbarRow } from '../components/layout/HeaderToolbar';
 import SectionHeading, { HEADING_PILL_CLASS } from '../components/layout/SectionHeading';
-import { DEFAULT_GAME_ID, GAMES, gameById } from '../data/games';
+import { DEFAULT_GAME_ID, GAMES } from '../data/games';
+import { ITEM_GROUPS, OTHER_GROUP, categoryOrder, itemGroupOf } from '../data/itemCategories';
 import MACHINES from '../data/machines.json';
 import { TYPE_NAMES, fetchItemIndex } from '../services/api';
 import { formatSlug } from '../utils/filters';
@@ -19,15 +20,17 @@ const VIEWS = [
 
 // As máquinas têm a sua própria visão; fora dela, o bolso "machines" só repetiria a lista.
 const MACHINE_POCKET = 'machines';
-const POCKET_LABELS = {
-  misc: 'Diversos',
-  medicine: 'Medicina',
-  pokeballs: 'Poké Bolas',
-  berries: 'Berries',
-  mail: 'Cartas',
-  battle: 'Batalha',
-  key: 'Itens-chave',
-};
+
+// Cada item ganha o grupo do filtro; a lista sai na ordem dos grupos (itens segurados primeiro), depois por categoria.
+function toListing(items) {
+  return items
+    .filter((item) => item.pocket !== MACHINE_POCKET)
+    .map((item) => {
+      const { group, order } = itemGroupOf(item.category);
+      return { ...item, group: group.id, order, categoryOrder: categoryOrder(item.category) };
+    })
+    .sort((a, b) => a.order - b.order || a.categoryOrder - b.categoryOrder || a.id - b.id);
+}
 
 // Brilliant Diamond / Shining Pearl fica de fora: a PokéAPI só tem 17 das 100 máquinas do jogo.
 const MACHINE_GAMES = GAMES.filter((game) => MACHINES.games[game.id] && game.id !== 'brilliant-diamond-shining-pearl');
@@ -47,7 +50,7 @@ function useItemIndex(enabled) {
     if (!enabled || state.status !== 'idle') return;
     setState({ status: 'loading', items: [] });
     fetchItemIndex()
-      .then((items) => setState({ status: 'ready', items: items.filter((item) => item.pocket !== MACHINE_POCKET) }))
+      .then((items) => setState({ status: 'ready', items: toListing(items) }))
       .catch(() => setState({ status: 'error', items: [] }));
   }, [enabled, state.status]);
 
@@ -57,7 +60,7 @@ function useItemIndex(enabled) {
 export default function ItemsSection() {
   const [view, setView] = useState('items');
   const [query, setQuery] = useState('');
-  const [pocket, setPocket] = useState('');
+  const [group, setGroup] = useState('');
   const [category, setCategory] = useState('');
   const [gameId, setGameId] = useState(DEFAULT_GAME_ID);
   const [moveType, setMoveType] = useState('');
@@ -68,18 +71,25 @@ export default function ItemsSection() {
   const showingItems = view === 'items';
   const index = useItemIndex(showingItems);
 
+  // Só os grupos que têm itens; "Outros" aparece apenas se a PokéAPI trouxer uma categoria fora dos grupos.
+  const groups = useMemo(() => {
+    const present = new Set(index.items.map((item) => item.group));
+    return [...ITEM_GROUPS, OTHER_GROUP].filter(({ id }) => present.has(id));
+  }, [index.items]);
+
+  // A lista já vem ordenada por grupo e categoria: o Set guarda essa ordem.
   const categories = useMemo(() => {
-    const scoped = pocket ? index.items.filter((item) => item.pocket === pocket) : index.items;
-    return [...new Set(scoped.map((item) => item.category))].sort();
-  }, [index.items, pocket]);
+    const scoped = group ? index.items.filter((item) => item.group === group) : index.items;
+    return [...new Set(scoped.map((item) => item.category))];
+  }, [index.items, group]);
 
   const items = useMemo(() => {
     const term = toSearchSlug(deferredQuery);
     return index.items.filter((item) =>
-      (!pocket || item.pocket === pocket) &&
+      (!group || item.group === group) &&
       (!category || item.category === category) &&
       (!term || item.name.includes(term)));
-  }, [index.items, pocket, category, deferredQuery]);
+  }, [index.items, group, category, deferredQuery]);
 
   const gameMachines = useMemo(() => machinesOf(gameId), [gameId]);
   const machines = useMemo(() => {
@@ -90,8 +100,8 @@ export default function ItemsSection() {
   }, [gameMachines, moveType, deferredQuery]);
 
   const handleQuery = useCallback((e) => setQuery(e.target.value), []);
-  const handlePocket = useCallback((e) => {
-    setPocket(e.target.value);
+  const handleGroup = useCallback((e) => {
+    setGroup(e.target.value);
     setCategory('');
   }, []);
   const selectItem = useCallback((name) => setDetail({ kind: 'item', name }), []);
@@ -103,33 +113,33 @@ export default function ItemsSection() {
   return (
     <div className="space-y-6">
       <HeaderToolbar>
-        <ToolbarRow>
-          <div className="flex items-center gap-1.5 sm:contents">
+        <ToolbarRow rowFrom="lg">
+          <div className="flex items-center gap-1.5 sm:gap-2 lg:contents">
             <HeaderSegmented label="Visão dos itens" options={VIEWS} value={view} onChange={setView} className="shrink-0" />
             <HeaderSearch
               label={showingItems ? 'Pesquisar item por nome' : 'Pesquisar máquina por golpe ou número'}
               placeholder={showingItems ? 'Nome do item...' : 'Golpe ou número (ex.: tm26)...'}
               value={query}
               onChange={handleQuery}
-              className="min-w-0 sm:flex-1"
+              className="min-w-0 lg:flex-1"
             />
           </div>
           {showingItems ? (
-            <div className="grid grid-cols-2 gap-1.5 sm:contents">
-              <HeaderSelect label="Filtrar por bolso da mochila" value={pocket} onChange={handlePocket} className="sm:w-44 sm:shrink-0">
-                <option value="" className={OPTION_CLASS}>Todos os bolsos</option>
-                {Object.entries(POCKET_LABELS).map(([value, label]) => (
-                  <option key={value} value={value} className={OPTION_CLASS}>{label}</option>
+            <div className="grid grid-cols-2 gap-1.5 sm:gap-2 lg:contents">
+              <HeaderSelect label="Filtrar por grupo de itens" value={group} onChange={handleGroup} className="lg:w-44 lg:shrink-0">
+                <option value="" className={OPTION_CLASS}>Todos os grupos</option>
+                {groups.map(({ id, label }) => (
+                  <option key={id} value={id} className={OPTION_CLASS}>{label}</option>
                 ))}
               </HeaderSelect>
-              <HeaderSelect label="Filtrar por categoria" value={category} onChange={(e) => setCategory(e.target.value)} className="sm:w-44 sm:shrink-0">
+              <HeaderSelect label="Filtrar por categoria" value={category} onChange={(e) => setCategory(e.target.value)} className="lg:w-44 lg:shrink-0">
                 <option value="" className={OPTION_CLASS}>Todas as categorias</option>
                 {categories.map((name) => <option key={name} value={name} className={OPTION_CLASS}>{formatSlug(name)}</option>)}
               </HeaderSelect>
             </div>
           ) : (
-            <div className="grid grid-cols-2 gap-1.5 sm:contents">
-              <HeaderSelect label="Jogo das máquinas" value={gameId} onChange={(e) => setGameId(e.target.value)} className="sm:w-44 sm:shrink-0">
+            <div className="grid grid-cols-2 gap-1.5 sm:gap-2 lg:contents">
+              <HeaderSelect label="Jogo das máquinas" value={gameId} onChange={(e) => setGameId(e.target.value)} className="lg:w-44 lg:shrink-0">
                 <GameOptions games={MACHINE_GAMES} />
               </HeaderSelect>
               <HeaderSelect label="Filtrar por tipo do golpe" value={moveType} onChange={(e) => setMoveType(e.target.value)}>
@@ -142,16 +152,12 @@ export default function ItemsSection() {
       </HeaderToolbar>
 
       <SectionHeading
-        caption={showingItems ? 'inventário de campo' : `máquinas de ${gameById(gameId).label}`}
-        title={(
+        title="Inventário e Mochila"
+        subtitle={(
           <>
-            <span className="ink-splotch tabular-nums">{count}</span>{' '}
+            <span className="font-semibold tabular-nums text-[#2A2421]">{count}</span>{' '}
             {showingItems ? `ite${count !== 1 ? 'ns' : 'm'}` : `máquina${count !== 1 ? 's' : ''}`}
-          </>
-        )}
-        note={deferredQuery.trim() && (
-          <>
-            Resultado para <span className="font-serif italic">“{deferredQuery.trim()}”</span>
+            {deferredQuery.trim() && <> para <span className="font-serif italic">“{deferredQuery.trim()}”</span></>}
           </>
         )}
         aside={(

@@ -121,17 +121,17 @@ function FiltersBar({
 
   const handleGame = useCallback((e) => onGameChange(e.target.value), [onGameChange]);
 
-  // Celular: recorte e busca numa linha e os três filtros lado a lado na de baixo; essa segunda linha
-  // se recolhe ao rolar (`compact`), a não ser que os filtros avançados estejam abertos.
-  // sm+: tudo numa linha só (os wrappers viram `contents` e somem do layout).
+  // Até lg: recorte e busca numa linha e os três filtros lado a lado na de baixo, para a busca nunca ficar
+  // espremida. No celular essa segunda linha se recolhe ao rolar (`compact`), a não ser que os filtros
+  // avançados estejam abertos. lg+: tudo numa linha só (os wrappers viram `contents` e somem do layout).
   const filtersHidden = compact && !advancedOpen;
   const regional = scope === 'regional';
 
   return (
-    <div className="flex w-full flex-col sm:flex-row sm:items-center sm:gap-2">
-      <div className="flex items-center gap-1.5 sm:contents">
+    <div className="flex w-full flex-col lg:flex-row lg:items-center lg:gap-2">
+      <div className="flex items-center gap-1.5 sm:gap-2 lg:contents">
         <HeaderSegmented label="Recorte da Pokédex" options={SCOPES} value={scope} onChange={onScopeChange} className="shrink-0" />
-        <label className="relative w-full min-w-0 sm:flex-1">
+        <label className="relative w-full min-w-0 lg:flex-1">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[#F7F3EE]/85" aria-hidden="true" />
           <input
             type="search"
@@ -145,7 +145,7 @@ function FiltersBar({
       </div>
 
       <div
-        className={`grid grid-cols-3 gap-1.5 overflow-hidden transition-[max-height,opacity,margin] duration-200 motion-reduce:transition-none sm:contents ${
+        className={`grid grid-cols-3 gap-1.5 transition-[max-height,opacity,margin] duration-200 motion-reduce:transition-none max-sm:overflow-hidden sm:gap-2 sm:max-lg:mt-2 lg:contents ${
           filtersHidden ? 'max-sm:invisible max-sm:mt-0 max-sm:max-h-0 max-sm:opacity-0' : 'max-sm:mt-1.5 max-sm:max-h-10'
         }`}
       >
@@ -172,7 +172,7 @@ function FiltersBar({
         onClick={onToggleAdvanced}
         aria-expanded={advancedOpen}
         aria-controls="advanced-filters"
-        className={`relative h-9 sm:h-10 sm:shrink-0 inline-flex items-center justify-center gap-1.5 sm:gap-2 px-2 sm:px-3.5 rounded-xl border text-xs font-serif font-semibold tracking-wide transition-[background-color,border-color,box-shadow] cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-[#A4C294]/70 ${
+        className={`relative h-9 sm:h-10 lg:shrink-0 inline-flex items-center justify-center gap-1.5 sm:gap-2 px-2 sm:px-3.5 rounded-xl border text-xs font-serif font-semibold tracking-wide transition-[background-color,border-color,box-shadow] cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-[#A4C294]/70 ${
           advancedOpen
             ? 'bg-[#A4C294] border-[#A4C294] text-[#2A1C14] shadow-[0_0_16px_-3px_rgba(164,194,148,0.7)]'
             : 'bg-[#3E2A1F]/90 border-[#F7F3EE]/30 text-[#F7F3EE] hover:border-[#F7F3EE]/50 hover:shadow-[0_0_16px_-6px_rgba(164,194,148,0.6)]'
@@ -211,8 +211,8 @@ function AdvancedFiltersComponent({ eggGroups, onAddFilter }) {
   const addMove = useCallback((slug) => onAddFilter(createFilter('move', slug)), [onAddFilter]);
 
   return (
-    <div id="advanced-filters" className="mt-2.5 border-t border-white/20 pt-2.5">
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
+    <div id="advanced-filters" className="mt-1.5 border-t border-[#F7F3EE]/15 pt-1.5">
+      <div className="grid grid-cols-1 gap-1.5 sm:grid-cols-3 sm:gap-2">
         <SuggestInput
           id="ability-options"
           label="Filtrar por habilidade"
@@ -234,7 +234,7 @@ function AdvancedFiltersComponent({ eggGroups, onAddFilter }) {
         </HeaderSelect>
       </div>
 
-      <div className="mt-2 grid grid-cols-2 gap-2 sm:mt-2.5 sm:grid-cols-3 sm:gap-2.5 lg:grid-cols-5">
+      <div className="mt-1.5 grid grid-cols-2 gap-1.5 sm:mt-2 sm:grid-cols-3 sm:gap-2 lg:grid-cols-5">
         {FIXED_SELECTS.map(({ type, label, placeholder }) => (
           <HeaderSelect key={type} label={label} placeholder={placeholder} onChange={handleSelect(type)} className="">
             {FIXED_FILTERS[type].map(({ value, option }) => (
@@ -252,7 +252,7 @@ function AdvancedFiltersComponent({ eggGroups, onAddFilter }) {
         </button>
       </div>
 
-      <p className="mt-2 font-hand text-base leading-tight text-[#F7F3EE]/70">
+      <p className="mt-2 px-1 pb-0.5 font-hand text-base leading-tight text-[#F7F3EE]/70">
         gerações, regiões e raridades se somam dentro do grupo (ou); os demais filtros precisam ser todos atendidos (e).
       </p>
     </div>

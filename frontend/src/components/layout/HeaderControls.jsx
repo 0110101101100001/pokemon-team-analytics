@@ -13,7 +13,7 @@ export const ICON_CLASS = 'pointer-events-none absolute top-1/2 -translate-y-1/2
  * e quem recebe o evento devolve o campo ao vazio. Com `value` é um select controlado comum.
  */
 // O placeholder é `hidden` e não `disabled`: uma opção disabled selecionada aparece em cinza.
-export function HeaderSelect({ label, placeholder, value, onChange, className = 'sm:w-36 sm:shrink-0', children }) {
+export function HeaderSelect({ label, placeholder, value, onChange, className = 'lg:w-40 lg:shrink-0', children }) {
   const controlled = value !== undefined;
   return (
     <div className={`relative w-full ${className}`}>
@@ -31,7 +31,7 @@ export function HeaderSelect({ label, placeholder, value, onChange, className = 
   );
 }
 
-export function HeaderSearch({ label, placeholder, value, onChange, className = 'sm:min-w-0 sm:flex-1' }) {
+export function HeaderSearch({ label, placeholder, value, onChange, className = 'min-w-0 lg:flex-1' }) {
   return (
     <label className={`relative block w-full ${className}`}>
       <Search className={`${ICON_CLASS} left-3`} aria-hidden="true" />

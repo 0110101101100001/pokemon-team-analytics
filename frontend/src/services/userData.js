@@ -1,12 +1,26 @@
 import { supabase } from './supabase';
 
 const FAVORITES = 'user_favorites';
+const TEAMS = 'teams';
 const HISTORY = 'user_history';
 const UNIQUE_VIOLATION = '23505';
 
 export const HISTORY_LIMIT = 60;
 
 // As políticas das duas tabelas exigem auth.uid() = user_id, por isso todo insert leva o id do usuário logado.
+
+export const SAVED_TEAM_COLUMNS = 'id, name, pokemons, created_at';
+
+/** Times salvos no Team Builder, do mais recente para o mais antigo. */
+export async function fetchSavedTeams(userId) {
+  const { data, error } = await supabase
+    .from(TEAMS)
+    .select(SAVED_TEAM_COLUMNS)
+    .eq('user_id', userId)
+    .order('created_at', { ascending: false });
+  if (error) throw error;
+  return data ?? [];
+}
 
 /** Nomes dos Pokémon favoritos, do mais recente para o mais antigo. */
 export async function fetchFavorites(userId) {

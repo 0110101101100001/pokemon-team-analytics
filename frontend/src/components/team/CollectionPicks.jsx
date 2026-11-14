@@ -1,5 +1,5 @@
 import { memo, useCallback, useId, useMemo, useState } from 'react';
-import { ChevronDown, Heart, History, Loader2, LogIn } from 'lucide-react';
+import { ChevronDown, Heart, History, Loader2 } from 'lucide-react';
 import { thumbnailSpriteUrl } from '../../services/api';
 import { formatSlug } from '../../utils/filters';
 
@@ -30,7 +30,7 @@ const saveOpen = (open) => {
 };
 
 /** Atalhos para montar o time a partir dos favoritos e das fichas vistas recentemente. */
-function CollectionPicks({ collections, entryByName, takenSpecies, disabled, onPick, onLogin }) {
+function CollectionPicks({ collections, entryByName, takenSpecies, disabled, onPick }) {
   const [open, setOpen] = useState(readOpen);
   const [source, setSource] = useState('favorites');
   const panelId = useId();
@@ -51,13 +51,7 @@ function CollectionPicks({ collections, entryByName, takenSpecies, disabled, onP
   let content;
   if (collections.status === 'signed-out') {
     content = (
-      <p className="flex flex-wrap items-center gap-x-3 gap-y-2 text-sm text-[#78614E]">
-        Entre na sua conta para usar seus favoritos e as fichas vistas.
-        <button type="button" onClick={onLogin} className="btn-action !px-3 !py-1.5 font-serif text-xs">
-          <LogIn className="h-3.5 w-3.5" aria-hidden="true" />
-          Entrar
-        </button>
-      </p>
+      <p className="text-sm text-[#78614E]">Entre na sua conta para usar seus favoritos e as fichas vistas.</p>
     );
   } else if (collections.status === 'loading') {
     content = (

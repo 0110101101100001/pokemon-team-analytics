@@ -25,7 +25,7 @@ const TeamSlot = memo(function TeamSlot({ pokemon, selected, onSelect, onRemove 
         aria-pressed={selected}
         aria-label={`Editar ${name}`}
         className={`relative flex h-28 w-full cursor-pointer flex-col items-center justify-center gap-1 rounded-sketch border bg-[#FFFEFB]/80 px-1 transition-[box-shadow,border-color] focus:outline-none focus-visible:ring-2 focus-visible:ring-paint-cobalt ${
-          selected ? 'brush-frame border-[#2A2421] shadow-[3px_3px_0_#829b72]' : 'border-[#2A2421]/25 shadow-card hover:border-[#2A2421]/60 hover:shadow-[3px_3px_0_rgba(42,36,33,0.15),0_8px_18px_-8px_rgba(130,155,114,0.55)]'
+          selected ? 'border-[#2A2421] shadow-card' : 'border-[#2A2421]/25 shadow-card hover:border-[#2A2421]/60 hover:shadow-[3px_3px_0_rgba(42,36,33,0.15),0_8px_18px_-8px_rgba(130,155,114,0.55)]'
         }`}
       >
         <img src={thumbnailSpriteUrl(pokemon.id)} alt="" width={48} height={48} loading="lazy" decoding="async" className="h-12 w-12 object-contain" />

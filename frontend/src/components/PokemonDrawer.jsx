@@ -1,6 +1,6 @@
 import { memo, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
-  BarChart3, BookOpen, Cpu, Egg, NotebookPen, Ruler, Search, Shield, Sparkles, Swords, Weight, X,
+  BarChart3, BookOpen, Check, Cpu, Egg, NotebookPen, Ruler, Search, Shield, Sparkles, Swords, Weight, X,
 } from 'lucide-react';
 import PokemonTypeBadge, { TYPE_INK } from './PokemonTypeBadge';
 import PokemonEncounters from './PokemonEncounters';
@@ -15,7 +15,8 @@ import {
   fetchSmogonNames, fetchSmogonStats, fetchTypeData, officialSpriteUrl,
 } from '../services/api';
 import { resolveSmogonName } from '../utils/smogon';
-import BrushLoader from './BrushLoader';
+import SmeargleLoader from './SmeargleLoader';
+import { teamSlotFor } from '../utils/teamScore';
 import { BrushHighlight } from './InkDecor';
 
 /* ---------------------------------------------------------------- dados estáticos */
@@ -217,6 +218,38 @@ function topSpreads(record, count) {
 
 /* ---------------------------------------------------------------- sub-componentes */
 
+const TEAM_BUTTON = {
+  ok: { action: 'Adicionar {name} ao time', short: 'Time', title: 'Adicionar ao Team Builder' },
+  taken: { action: 'Tirar {name} do time', short: 'No time', title: 'No Team Builder: clique para tirar do time' },
+  full: { action: 'Time completo', short: 'Completo', title: 'O time já tem 6 Pokémon: remova um no Team Builder' },
+};
+
+/**
+ * Botão da ficha que alterna o Pokémon no Team Builder: adiciona, e um novo clique tira do time.
+ * Com o time cheio (e o Pokémon fora dele) fica desativado.
+ */
+function TeamToggleButton({ entry, team, onToggle }) {
+  const status = teamSlotFor(team, entry);
+  const { action, short, title } = TEAM_BUTTON[status];
+  const Icon = status === 'taken' ? Check : Swords;
+  return (
+    <button
+      type="button"
+      onClick={() => onToggle(entry)}
+      disabled={status === 'full'}
+      aria-pressed={status === 'taken'}
+      aria-label={action.replace('{name}', formatFormName(entry.name))}
+      title={title}
+      className={`${ROUND_BUTTON} px-3 text-xs font-bold disabled:cursor-default ${
+        status === 'taken' ? 'border-[#829b72] bg-[#829b72]/15 text-[#3d5438] hover:bg-[#829b72]/25' : `${ROUND_IDLE} disabled:opacity-50 disabled:hover:shadow-none`
+      }`}
+    >
+      <Icon className="h-4 w-4" aria-hidden="true" />
+      <span className="hidden sm:inline">{short}</span>
+    </button>
+  );
+}
+
 function TabStroke({ active }) {
   return (
     <svg
@@ -333,7 +366,7 @@ const SpreadCard = memo(function SpreadCard({ index, nature, evs, pct }) {
 /* ---------------------------------------------------------------- drawer */
 
 export default function PokemonDrawer({
-  pokemonName, onClose, onSmogonDataFound, favorites, gridEntries, onToggleFavorite,
+  pokemonName, onClose, onSmogonDataFound, favorites, gridEntries, onToggleFavorite, team, onToggleTeam,
 }) {
   const [detail, setDetail] = useState(null);
   const [species, setSpecies] = useState(null);
@@ -514,7 +547,7 @@ export default function PokemonDrawer({
   if (loading) {
     return (
       <div className="flex h-full items-center justify-center bg-[#F7F3EE]" style={PAPER_BG}>
-        <BrushLoader label="Carregando dados de campo..." />
+        <SmeargleLoader label="Carregando dados de campo..." />
       </div>
     );
   }
@@ -600,6 +633,9 @@ export default function PokemonDrawer({
                 onToggle={onToggleFavorite}
                 variant="header"
               />
+            )}
+            {onToggleTeam && gridEntries?.has(favoriteName) && (
+              <TeamToggleButton entry={gridEntries.get(favoriteName)} team={team} onToggle={onToggleTeam} />
             )}
             <button
               type="button"
@@ -777,7 +813,7 @@ export default function PokemonDrawer({
             }
           >
             {smogonLoading ? (
-              <BrushLoader label="Sincronizando estatísticas..." className="py-8" />
+              <SmeargleLoader label="Sincronizando estatísticas..." className="py-8" />
             ) : smogon ? (
               <div className="space-y-4">
                 <div className="p-4 rounded-xl border border-[#2A2421]/12 bg-[#FFFEFB]">
@@ -916,7 +952,7 @@ export default function PokemonDrawer({
                 </thead>
                 <tbody className="divide-y divide-[#2A2421]/10">
                   {movesetLoading ? (
-                    <tr><td colSpan={7}><BrushLoader label="Compilando o learnset..." className="py-8" /></td></tr>
+                    <tr><td colSpan={7}><SmeargleLoader label="Compilando o learnset..." className="py-8" /></td></tr>
                   ) : visibleMoves.length === 0 ? (
                     <tr><td colSpan={7} className="py-8 text-center text-xs text-[#78614E]">Nenhum golpe para este filtro.</td></tr>
                   ) : (

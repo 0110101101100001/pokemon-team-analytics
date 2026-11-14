@@ -6,6 +6,7 @@ import ResultsList from '../components/calc/ResultsList';
 import { createField, createSide, resolveSlot, sideFromPokemon } from '../components/calc/calcState';
 import SectionHeading, { HEADING_PILL_CLASS } from '../components/layout/SectionHeading';
 import { useBattleForms, useFormBattleData } from '../hooks/usePokemonBattleData';
+import { useSavedTeams } from '../hooks/useSavedTeams';
 import { PRIMAL_WEATHERS, TERRAIN_ABILITIES, WEATHER_ABILITIES, WEATHER_SUPPRESSORS } from '../data/battleModifiers';
 import { airborneBy, calcSpeed, calculateDamage, describeKnockout, isCalculable } from '../utils/damage';
 import { calcStats } from '../utils/stats';
@@ -65,10 +66,19 @@ function resultHint(sides) {
   return 'Nenhum dos golpes escolhidos causa dano com poder fixo (são de status ou de poder variável).';
 }
 
-export default function DamageCalculatorSection({ pool, team }) {
+export default function DamageCalculatorSection({ pool, team, session }) {
   const [sides, setSides] = useState(() => [createSide(), createSide()]);
   const [field, setField] = useState(createField);
   const [selected, setSelected] = useState({ side: 0, slot: 0 });
+
+  // Atalhos de Pokémon de cada lado: o time em montagem no Team Builder e, com login, os times salvos.
+  const savedTeams = useSavedTeams(session);
+  const teamSources = useMemo(() => [
+    ...(team.length ? [{ id: 'current', label: 'Time em montagem', members: team }] : []),
+    ...savedTeams
+      .filter((saved) => saved.pokemons?.length)
+      .map((saved) => ({ id: saved.id, label: saved.name, members: saved.pokemons })),
+  ], [team, savedTeams]);
 
   const battles = [
     useFormBattleData(sides[0].pokemon?.name ?? null, sides[0].form),
@@ -172,8 +182,8 @@ export default function DamageCalculatorSection({ pool, team }) {
   return (
     <div className="space-y-4">
       <SectionHeading
-        caption="conta de batalha"
-        title="Damage Calculator"
+        title="Conta de Batalha"
+        subtitle="Simulador de Dano e Proj. de Turno"
         aside={<span className={HEADING_PILL_CLASS}>Fórmula da Gen 5+ · batalhas simples</span>}
       />
 
@@ -213,7 +223,7 @@ export default function DamageCalculatorSection({ pool, team }) {
             airborne={sideStates[index].airborne}
             faster={speeds[0] != null && speeds[1] != null && speeds[index] > speeds[1 - index]}
             pool={pool}
-            team={team}
+            teams={teamSources}
             onChange={handlers[index].change}
             onMoveChange={handlers[index].move}
             onPick={handlers[index].pick}

@@ -1,4 +1,5 @@
 import { supabase } from './supabase';
+import { HIDDEN_ITEM_CATEGORIES } from '../data/itemCategories';
 
 const POKEAPI_BASE = 'https://pokeapi.co/api/v2';
 
@@ -261,10 +262,14 @@ export const fetchItemNames = () =>
   cachedJson(`${POKEAPI_BASE}/item?limit=3000`).then((data) =>
     data.results.filter((item) => !isBagCopy(item.name)).map((item) => item.name.replace(HELD_SUFFIX, '')));
 
-/** Todos os itens como { name, id, category, pocket }. A lista de itens não traz a categoria: vem de uma requisição por categoria. */
+/**
+ * Os itens relevantes como { name, id, category, pocket }; as categorias de HIDDEN_ITEM_CATEGORIES nem são baixadas.
+ * A lista de itens não traz a categoria: vem de uma requisição por categoria.
+ */
 export async function fetchItemIndex() {
   const { results } = await cachedJson(`${POKEAPI_BASE}/item-category?limit=100`);
-  const categories = await Promise.all(results.map((category) => cachedJson(category.url)));
+  const visible = results.filter((category) => !HIDDEN_ITEM_CATEGORIES.has(category.name));
+  const categories = await Promise.all(visible.map((category) => cachedJson(category.url)));
   // A PokéAPI repete alguns itens dentro da mesma categoria (Roseli Berry); cada nome entra uma vez só.
   const byName = new Map();
   for (const category of categories) {

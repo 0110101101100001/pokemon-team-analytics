@@ -10,7 +10,7 @@ import TeamSuggestions from '../components/team/TeamSuggestions';
 import TeamManagerModal from '../components/TeamManagerModal';
 import TeamTypeTable from '../components/TeamTypeTable';
 import { createBattleSet, normalizeBattleSet } from '../utils/stats';
-import { TEAM_SIZE } from '../utils/teamScore';
+import { TEAM_SIZE, speciesOf, teamSlotFor } from '../utils/teamScore';
 
 const PANELS = [
   { key: 'coverage', label: 'cobertura dos golpes', icon: Crosshair },
@@ -18,9 +18,7 @@ const PANELS = [
   { key: 'suggestions', label: 'sugestões', icon: Sparkles },
 ];
 
-const speciesOf = (pokemon) => pokemon.species ?? pokemon.name;
-
-export default function TeamBuilderSection({ team, onTeamChange, pool, session, collections, entryByName, onLogin }) {
+export default function TeamBuilderSection({ team, onTeamChange, pool, session, collections, entryByName }) {
   const [selectedId, setSelectedId] = useState(null);
   const [panel, setPanel] = useState('coverage');
   const [managerOpen, setManagerOpen] = useState(false);
@@ -30,10 +28,7 @@ export default function TeamBuilderSection({ team, onTeamChange, pool, session, 
   const takenSpecies = useMemo(() => new Set(team.map(speciesOf)), [team]);
 
   const addPokemon = useCallback((pokemon) => {
-    onTeamChange((current) =>
-      current.length >= TEAM_SIZE || current.some((member) => speciesOf(member) === speciesOf(pokemon))
-        ? current
-        : [...current, { ...pokemon, set: createBattleSet() }]);
+    onTeamChange((current) => (teamSlotFor(current, pokemon) === 'ok' ? [...current, { ...pokemon, set: createBattleSet() }] : current));
     setSelectedId(pokemon.id);
   }, [onTeamChange]);
 
@@ -68,13 +63,13 @@ export default function TeamBuilderSection({ team, onTeamChange, pool, session, 
   return (
     <div className="space-y-6">
       <SectionHeading
-        caption="esboço de equipe"
         title={(
           <>
-            Team Builder
+            Esboço de Equipe
             <span className="ml-2 font-sans text-xs font-semibold text-smeargle-textDim/70">{team.length}/{TEAM_SIZE}</span>
           </>
         )}
+        subtitle="Monte e analise seu time competitivo"
         aside={(
           <button
             type="button"
@@ -105,7 +100,6 @@ export default function TeamBuilderSection({ team, onTeamChange, pool, session, 
             takenSpecies={takenSpecies}
             disabled={isFull}
             onPick={addPokemon}
-            onLogin={onLogin}
           />
           {selected ? (
             <TeamMemberEditor key={selected.id} member={selected} onChange={updateSet} />

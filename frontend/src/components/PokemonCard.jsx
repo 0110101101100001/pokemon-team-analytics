@@ -101,7 +101,7 @@ function PokemonCard({
       style={backgroundStyleFor(types[0] ?? 'normal')}
       className={`ink-splat group relative cursor-pointer select-none rounded-[1.25rem] border-[1.5px] p-4 transition-[transform,box-shadow,border-color] duration-200 ease-out hover:-translate-y-0.5 focus:outline-none focus-visible:ring-2 focus-visible:ring-paint-cobalt focus-visible:ring-offset-2 focus-visible:ring-offset-[#F7F3EE] motion-reduce:transition-none motion-reduce:hover:translate-y-0 sm:p-5 ${
         isSelected
-          ? 'brush-frame border-[#2A2421] shadow-[4px_5px_0_#829b72]'
+          ? 'border-[#2A2421] shadow-[3px_3px_0_rgba(42,36,33,0.1)]'
           : 'border-[#2A2421]/25 shadow-[3px_3px_0_rgba(42,36,33,0.1)] hover:shadow-[4px_5px_0_rgba(42,36,33,0.2)]'
       }`}
     >

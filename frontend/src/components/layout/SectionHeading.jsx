@@ -3,27 +3,25 @@ import { useHashPath } from '../../hooks/useHashPath';
 import { sectionFromPath } from '../../navigation/sections';
 
 /**
- * Cabeçalho de página: anotação a nanquim, título sobre uma pincelada de tinta, um bloco opcional à direita
- * e a pincelada que fecha o cabeçalho. A tinta é a da aba aberta; `pigment` troca a cor.
+ * Cabeçalho de página: o título da aba sobre uma pincelada de tinta, o subtítulo logo abaixo (contagem de
+ * resultados ou a descrição da aba), um bloco opcional à direita e a pincelada que fecha o cabeçalho.
+ * A tinta é a da aba aberta.
  */
-export default function SectionHeading({ caption, title, note, aside, pigment }) {
-  const sectionPigment = sectionFromPath(useHashPath()).pigment;
+export default function SectionHeading({ title, subtitle, aside }) {
+  const pigment = sectionFromPath(useHashPath()).pigment;
   return (
     <div>
       <div className="flex flex-col justify-between gap-4 px-1 sm:flex-row sm:items-end">
         <div>
-          <p className="font-hand text-xl leading-none text-[#785132]">
-            <span className="marker-underline">{caption}</span>
-          </p>
-          <h2 className="relative isolate mt-2 inline-block font-serif text-[1.75rem] font-black leading-tight tracking-tight text-[#2A2421] sm:text-4xl">
-            <BrushHighlight color={pigment ?? sectionPigment} />
+          <h2 className="relative isolate inline-block font-serif text-[1.75rem] font-black leading-tight tracking-tight text-[#2A2421] sm:text-4xl">
+            <BrushHighlight color={pigment} />
             {title}
           </h2>
-          {note && <p className="mt-1.5 max-w-prose text-sm text-[#785132]">{note}</p>}
+          {subtitle && <p className="mt-1.5 max-w-prose text-sm text-[#785132]">{subtitle}</p>}
         </div>
         {aside && <div className="self-start sm:self-auto">{aside}</div>}
       </div>
-      <InkRule className="mt-3" wash={pigment ?? sectionPigment} />
+      <InkRule className="mt-3" wash={pigment} />
     </div>
   );
 }

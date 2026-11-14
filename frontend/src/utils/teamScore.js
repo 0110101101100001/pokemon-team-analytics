@@ -3,6 +3,14 @@ import { buildMetaProfile, scoreMeta } from './metaScore';
 
 export const TEAM_SIZE = 6;
 
+export const speciesOf = (pokemon) => pokemon.species ?? pokemon.name;
+
+/** Se o Pokémon pode entrar no time: há vaga e a espécie ainda não está nele. Devolve 'ok', 'full' ou 'taken'. */
+export function teamSlotFor(team, pokemon) {
+  if (team.some((member) => speciesOf(member) === speciesOf(pokemon))) return 'taken';
+  return team.length >= TEAM_SIZE ? 'full' : 'ok';
+}
+
 const WEIGHTS = { defense: 3, offense: 2, synergy: 1.5, counters: 2.5, stats: 1 };
 
 // Exposição a um tipo atacante: fraqueza 2x = +1, 4x = +2; resistência 0.5x = -1, 0.25x = -2; imunidade = -3.

@@ -1,4 +1,4 @@
-import { memo, useCallback, useId, useMemo } from 'react';
+import { memo, useCallback, useId, useMemo, useState } from 'react';
 import { ChevronDown, Feather, Gem, Loader2, Minus, Plus, RotateCcw, TriangleAlert, Wind } from 'lucide-react';
 import MoveSlot from './MoveSlot';
 import PokemonTypeBadge from '../PokemonTypeBadge';
@@ -44,6 +44,35 @@ function BoostStepper({ stat, value, onChange }) {
     </div>
   );
 }
+/** "do time:" seguido do nome do time; com mais de um time, o nome vira um seletor. */
+function TeamSourcePicker({ teams, value, onChange }) {
+  const label = <span className="font-hand text-base leading-none text-[#78614E]">do time:</span>;
+  if (teams.length === 1) {
+    return (
+      <span className="mr-1 inline-flex items-baseline gap-1">
+        {label}
+        <span className="max-w-[10rem] truncate font-serif text-xs font-semibold text-[#5C4033]">{teams[0].label}</span>
+      </span>
+    );
+  }
+  return (
+    <label className="mr-1 inline-flex items-center gap-1.5">
+      {label}
+      <span className="relative">
+        <select
+          value={value}
+          onChange={(e) => onChange(e.target.value)}
+          aria-label="Time dos atalhos"
+          className="paper-field h-8 max-w-[11rem] cursor-pointer appearance-none truncate py-0 pl-2.5 pr-7 font-serif text-xs font-semibold"
+        >
+          {teams.map((source) => <option key={source.id} value={source.id}>{source.label}</option>)}
+        </select>
+        <ChevronDown className="pointer-events-none absolute right-2 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-[#78614E]" aria-hidden="true" />
+      </span>
+    </label>
+  );
+}
+
 const abilityLabel = (slug) => (ABILITY_EFFECTS[slug] ? `${formatSlug(slug)} · ${ABILITY_EFFECTS[slug]}` : formatSlug(slug));
 
 function Field({ label, children, className = '' }) {
@@ -59,7 +88,7 @@ function Field({ label, children, className = '' }) {
  * Um lado da calculadora: o Pokémon (pela busca ou do time), Mega/Primal, Tera, nível, habilidade, item, status,
  * os estágios de cada atributo, os quatro golpes e, recolhidos, natureza, EVs e IVs.
  */
-function CombatantPanel({ caption, title, pickerPlaceholder, side, battle, forms, ability, speed, faster, airborne, pool, team, onChange, onMoveChange, onPick, className = '' }) {
+function CombatantPanel({ caption, title, pickerPlaceholder, side, battle, forms, ability, speed, faster, airborne, pool, teams, onChange, onMoveChange, onPick, className = '' }) {
   const { pokemon, set, boosts } = side;
 
   const patchSet = useCallback((changes) => onChange({ set: { ...set, ...changes } }), [set, onChange]);
@@ -67,6 +96,11 @@ function CombatantPanel({ caption, title, pickerPlaceholder, side, battle, forms
 
   const boosted = BOOST_KEYS.some((key) => boosts[key] !== 0);
   const stagesId = useId();
+
+  // Cada lado escolhe o próprio time: dá para pôr um time salvo de um lado e outro do lado oposto.
+  // Se o time escolhido sair da lista (apagado, logout), volta para o primeiro.
+  const [teamId, setTeamId] = useState(null);
+  const activeTeam = teams.find((source) => source.id === teamId) ?? teams[0];
 
   const pickFromTeam = (member) => {
     const { set: memberSet, ...entry } = member;
@@ -82,12 +116,12 @@ function CombatantPanel({ caption, title, pickerPlaceholder, side, battle, forms
 
       <PokemonPicker pool={pool} onPick={onPick} label={pickerPlaceholder} placeholder={pickerPlaceholder} />
 
-      {team.length > 0 && (
+      {activeTeam && (
         <div className="mt-2 flex flex-wrap items-center gap-1">
-          <span className="mr-1 font-hand text-base leading-none text-[#78614E]">do time:</span>
-          {team.map((member) => (
+          <TeamSourcePicker teams={teams} value={activeTeam.id} onChange={setTeamId} />
+          {activeTeam.members.map((member) => (
             <button
-              key={member.id}
+              key={`${activeTeam.id}-${member.id}`}
               type="button"
               onClick={() => pickFromTeam(member)}
               aria-label={`Usar ${formatSlug(member.name)} do time`}

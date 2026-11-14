@@ -1,6 +1,7 @@
 import { memo, useCallback, useEffect, useId, useRef, useState } from 'react';
 import { BookOpen, Download, Loader2, Save, Trash2, TriangleAlert, X } from 'lucide-react';
 import { supabase } from '../services/supabase';
+import { SAVED_TEAM_COLUMNS, fetchSavedTeams } from '../services/userData';
 import { thumbnailSpriteUrl } from '../services/api';
 import { formatSlug } from '../utils/filters';
 
@@ -135,17 +136,14 @@ export default function TeamManagerModal({ open, onClose, session, team = [], on
     setStatus('loading');
     setError(null);
 
-    supabase
-      .from(TABLE)
-      .select('id, name, pokemons, created_at')
-      .eq('user_id', userId)
-      .order('created_at', { ascending: false })
-      .then(({ data, error: fetchError }) => {
+    fetchSavedTeams(userId)
+      .then((data) => active && setTeams(data))
+      .catch((fetchError) => {
         if (!active) return;
-        if (fetchError) setError(describeError(fetchError));
-        setTeams(data ?? []);
-        setStatus('idle');
-      });
+        setError(describeError(fetchError));
+        setTeams([]);
+      })
+      .finally(() => active && setStatus('idle'));
 
     return () => { active = false; };
   }, [open, userId]);
@@ -164,7 +162,7 @@ export default function TeamManagerModal({ open, onClose, session, team = [], on
     const { data, error: saveError } = await supabase
       .from(TABLE)
       .insert({ user_id: userId, name: trimmed, pokemons: team.slice(0, MAX_TEAM_SIZE).map(toStoredPokemon) })
-      .select('id, name, pokemons, created_at')
+      .select(SAVED_TEAM_COLUMNS)
       .single();
     setSaving(false);
 

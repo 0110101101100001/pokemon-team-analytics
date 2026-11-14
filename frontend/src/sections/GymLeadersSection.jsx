@@ -5,7 +5,7 @@ import LeaderCard from '../components/leaders/LeaderCard';
 import { HeaderSegmented, HeaderSelect } from '../components/layout/HeaderControls';
 import HeaderToolbar, { ToolbarRow } from '../components/layout/HeaderToolbar';
 import SectionHeading, { HEADING_PILL_CLASS } from '../components/layout/SectionHeading';
-import { GAMES, gameById } from '../data/games';
+import { GAMES } from '../data/games';
 import { GYM_LEADERS, LEADER_ROLES } from '../data/gymLeaders';
 
 const LEADER_GAMES = GAMES.filter((game) => GYM_LEADERS[game.id]);
@@ -19,10 +19,13 @@ const ROLE_FILTERS = [
 // O campeão é a última batalha da Liga: aparece junto com a Elite 4.
 const ROLES_BY_FILTER = { all: ['gym', 'elite', 'champion'], gym: ['gym'], elite: ['elite', 'champion'] };
 
+const HEADING_TITLE = 'Rumo à Liga';
+const HEADING_SUBTITLE = 'Líderes de Ginásio e Desafios';
+
 function EmptyLeaders() {
   return (
     <div className="space-y-6">
-      <SectionHeading caption="rumo à liga" title="Gym Leaders" />
+      <SectionHeading title={HEADING_TITLE} subtitle={HEADING_SUBTITLE} />
       <div className="ink-scatter flex flex-col items-center justify-center py-16 text-center text-sm font-medium text-[#78614E]">
         <div className="ink-stamp mb-4 h-14 w-14 text-[#78614E]">
           <Medal className="h-6 w-6" strokeWidth={1.75} aria-hidden="true" />
@@ -63,10 +66,10 @@ function LeadersByGame({ entryByName, onSelectPokemon }) {
       </HeaderToolbar>
 
       <SectionHeading
-        caption={`rumo à liga · ${gameById(gameId).label}`}
-        title={(
+        title={HEADING_TITLE}
+        subtitle={(
           <>
-            <span className="ink-splotch tabular-nums">{count}</span> treinador{count !== 1 ? 'es' : ''} no caminho
+            {HEADING_SUBTITLE} · <span className="font-semibold tabular-nums text-[#2A2421]">{count}</span> treinador{count !== 1 ? 'es' : ''} no caminho
           </>
         )}
         aside={<span className={HEADING_PILL_CLASS}>Toque num Pokémon para abrir a ficha</span>}

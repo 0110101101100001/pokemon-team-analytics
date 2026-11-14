@@ -161,8 +161,10 @@ function MoveAbilityModal({ kind, name, onClose }) {
   const title = info?.name ?? { text: formatSlug(slug), translated: false };
   const texts = info ? [info.name, info.description, info.shortEffect, info.effect].filter(Boolean) : [];
   const untranslated = texts.some((entry) => !entry.translated);
-  // A PokéAPI repete o resumo como efeito completo em alguns registros.
-  const detailedEffect = info?.effect?.text === info?.shortEffect?.text ? null : info?.effect;
+  // Nos itens o efeito completo só repete o resumo com o contexto de uso na frente ("Used on a party Pokémon: ...");
+  // nos golpes e habilidades a PokéAPI às vezes repete o resumo como efeito completo.
+  const repeatsSummary = (kind === 'item' && info?.shortEffect) || info?.effect?.text === info?.shortEffect?.text;
+  const detailedEffect = repeatsSummary ? null : info?.effect;
 
   // Portal: fica fora do drawer, que tem rolagem própria e cantos recortados.
   return createPortal(

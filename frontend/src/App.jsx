@@ -3,7 +3,7 @@ import AuthModal from "./components/AuthModal";
 import AuthButton from "./components/AuthButton";
 import AboutButton from "./components/AboutButton";
 import AppHeader from "./components/layout/AppHeader";
-import BrushLoader from "./components/BrushLoader";
+import SmeargleLoader from "./components/SmeargleLoader";
 import PokemonSheet, { loadPokemonDrawer } from "./components/PokemonSheet";
 import { HeaderContext } from "./components/layout/headerContext";
 import { InkSplatter } from "./components/InkDecor";
@@ -18,6 +18,8 @@ import {
 } from "./services/api";
 import { buildPokedexEntries } from "./utils/pokedex";
 import { buildSmogonBadgeMap } from "./utils/smogon";
+import { createBattleSet } from "./utils/stats";
+import { speciesOf, teamSlotFor } from "./utils/teamScore";
 
 // A Pokédex é a tela de entrada; as outras seções só são baixadas quando a aba é aberta.
 const ItemsSection = lazy(() => import("./sections/ItemsSection"));
@@ -30,7 +32,7 @@ const AboutModal = lazy(() => import("./components/AboutModal"));
 const APP_NAME = "Smearglepedia";
 
 function SectionFallback() {
-  return <BrushLoader label="Molhando o pincel..." className="py-24" />;
+  return <SmeargleLoader label="Molhando o pincel..." className="py-24" />;
 }
 
 export default function App() {
@@ -108,6 +110,16 @@ export default function App() {
     [session, toggleFavorite],
   );
 
+  // O botão da ficha alterna: a entrada da grade entra no time com um set vazio (como pelo Team Builder) ou,
+  // se a espécie já está no time, sai dele.
+  const handleToggleTeam = useCallback((entry) => {
+    setTeam((current) => {
+      const slot = teamSlotFor(current, entry);
+      if (slot === 'taken') return current.filter((member) => speciesOf(member) !== speciesOf(entry));
+      return slot === 'ok' ? [...current, { ...entry, set: createBattleSet() }] : current;
+    });
+  }, []);
+
   const handleCloseModal = useCallback(() => setSelectedPokemon(null), []);
   const openAuth = useCallback(() => setAuthOpen(true), []);
   const closeAuth = useCallback(() => setAuthOpen(false), []);
@@ -117,7 +129,7 @@ export default function App() {
   if (loading) {
     return (
       <div className="flex min-h-screen items-center justify-center">
-        <BrushLoader label="Preparando a tinta..." />
+        <SmeargleLoader label="Preparando a tinta..." />
       </div>
     );
   }
@@ -137,11 +149,10 @@ export default function App() {
             session={session}
             collections={collections}
             entryByName={entryByName}
-            onLogin={openAuth}
           />
         );
       case "damageCalculator":
-        return <DamageCalculatorSection pool={pokemonList} team={team} />;
+        return <DamageCalculatorSection pool={pokemonList} team={team} session={session} />;
       default:
         return (
           <PokedexSection
@@ -191,6 +202,8 @@ export default function App() {
             favorites={collections.favoriteSet}
             gridEntries={entryByName}
             onToggleFavorite={handleToggleFavorite}
+            team={team}
+            onToggleTeam={handleToggleTeam}
           />
         )}
       </div>
