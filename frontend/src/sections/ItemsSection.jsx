@@ -117,7 +117,7 @@ export default function ItemsSection() {
           <div className="flex items-center gap-1.5 sm:gap-2 lg:contents">
             <HeaderSegmented label="Visão dos itens" options={VIEWS} value={view} onChange={setView} className="shrink-0" />
             <HeaderSearch
-              label={showingItems ? 'Pesquisar item por nome' : 'Pesquisar máquina por golpe ou número'}
+              label={showingItems ? 'Pesquisar item por nome' : 'Pesquisar item por golpe ou número'}
               placeholder={showingItems ? 'Nome do item...' : 'Golpe ou número (ex.: tm26)...'}
               value={query}
               onChange={handleQuery}
@@ -146,7 +146,7 @@ export default function ItemsSection() {
             </div>
           ) : (
             <div className="grid grid-cols-2 gap-1.5 sm:gap-2 lg:contents">
-              <HeaderSelect label="Jogo das máquinas" value={gameId} onChange={(e) => setGameId(e.target.value)} className="lg:w-44 lg:shrink-0">
+              <HeaderSelect label="Jogo dos itens" value={gameId} onChange={(e) => setGameId(e.target.value)} className="lg:w-44 lg:shrink-0">
                 <GameOptions games={MACHINE_GAMES} />
               </HeaderSelect>
               <HeaderSelect label="Filtrar por tipo do golpe" value={moveType} onChange={(e) => setMoveType(e.target.value)}>
@@ -163,7 +163,7 @@ export default function ItemsSection() {
         subtitle={(
           <>
             <span className="font-semibold tabular-nums text-[#2A2421]">{count}</span>{' '}
-            {showingItems ? `ite${count !== 1 ? 'ns' : 'm'}` : `máquina${count !== 1 ? 's' : ''}`}
+            {`ite${count !== 1 ? 'ns' : 'm'}`}
             {deferredQuery.trim() && <> para <span className="font-serif italic">“{deferredQuery.trim()}”</span></>}
           </>
         )}

@@ -11,7 +11,7 @@ function MachineTable({ machines, onSelectMove }) {
   if (machines.length === 0) {
     return (
       <p className="py-16 text-center font-serif text-sm italic text-smeargle-textDim/80">
-        Nenhuma máquina encontrada. Ajuste a busca ou o tipo.
+        Nenhum item encontrado. Ajuste a busca ou o tipo.
       </p>
     );
   }
