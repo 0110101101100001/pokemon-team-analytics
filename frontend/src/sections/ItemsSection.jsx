@@ -132,8 +132,15 @@ export default function ItemsSection() {
                   <option key={id} value={id} className={OPTION_CLASS}>{label}</option>
                 ))}
               </HeaderSelect>
-              <HeaderSelect label="Filtrar por categoria" value={category} onChange={(e) => setCategory(e.target.value)} className="lg:w-44 lg:shrink-0">
-                <option value="" className={OPTION_CLASS}>Todas as categorias</option>
+              {/* As categorias só fazem sentido dentro de um grupo: sem grupo escolhido, o campo fica desativado. */}
+              <HeaderSelect
+                label={group ? 'Filtrar por categoria' : 'Filtrar por categoria (escolha um grupo primeiro)'}
+                value={category}
+                onChange={(e) => setCategory(e.target.value)}
+                disabled={!group}
+                className="lg:w-44 lg:shrink-0"
+              >
+                <option value="" className={OPTION_CLASS}>{group ? 'Todas as categorias' : 'Escolha um grupo'}</option>
                 {categories.map((name) => <option key={name} value={name} className={OPTION_CLASS}>{formatSlug(name)}</option>)}
               </HeaderSelect>
             </div>
