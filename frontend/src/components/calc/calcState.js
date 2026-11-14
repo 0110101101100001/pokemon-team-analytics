@@ -60,6 +60,7 @@ export const createField = () => ({
   magicRoom: false,
   wonderRoom: false,
   gravity: false,
+  trickRoom: false,
   sides: [createSideConditions(), createSideConditions()],
 });
 

@@ -9,6 +9,7 @@ const ROOMS = [
   { key: 'magicRoom', label: 'Magic Room', hint: 'desliga os itens' },
   { key: 'wonderRoom', label: 'Wonder Room', hint: 'troca Def e SpD' },
   { key: 'gravity', label: 'Gravity', hint: 'todos no chão' },
+  { key: 'trickRoom', label: 'Trick Room', hint: 'o mais lento age primeiro' },
 ];
 
 const SIDE_TOGGLES = [

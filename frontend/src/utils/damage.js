@@ -12,7 +12,8 @@ import {
   `types` são os tipos em batalha (o Tera já aplicado); `originalTypes`, os da espécie ou forma, que valem para o STAB.
   `ability` já vem resolvida pela seção (Neutralizing Gas zera a do oponente).
   Golpe: { slug, type, category, power, priority, effectChance, hits, maxHits, crit }
-  Campo: { weather, terrain, magicRoom, wonderRoom, gravity }; o clima já chega anulado por Cloud Nine e Air Lock.
+  Campo: { weather, terrain, magicRoom, wonderRoom, gravity, trickRoom }; o clima já chega anulado por Cloud Nine e Air Lock.
+  Trick Room não muda o dano: só inverte quem age primeiro, o que a calculadora mostra ao lado da velocidade.
   Condições do lado: { reflect, lightScreen, auroraVeil, protect, ... }
   Quem defende está com o HP cheio: Multiscale, Tera Shell e Sturdy valem.
 */

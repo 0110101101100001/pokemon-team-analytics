@@ -49,6 +49,13 @@ function fromAbilities(abilities, speeds, table) {
   return primal ?? candidates.reduce((slowest, candidate) => (candidate.speed < slowest.speed ? candidate : slowest));
 }
 
+/** Se o lado `index` age antes do outro: o mais rápido, ou o mais lento sob Trick Room. Empate não marca ninguém. */
+function actsFirst(speeds, index, trickRoom) {
+  const [own, other] = [speeds[index], speeds[1 - index]];
+  if (own == null || other == null) return false;
+  return trickRoom ? own < other : own > other;
+}
+
 /** Neutralizing Gas desliga a habilidade do oponente (a não ser que ele também a tenha). */
 const neutralize = (abilities) => abilities.map((ability, index) => (
   abilities[1 - index] === 'neutralizing-gas' && ability !== 'neutralizing-gas' ? '' : ability
@@ -221,7 +228,7 @@ export default function DamageCalculatorSection({ pool, team, session }) {
             ability={chosenAbilities[index]}
             speed={speeds[index]}
             airborne={sideStates[index].airborne}
-            faster={speeds[0] != null && speeds[1] != null && speeds[index] > speeds[1 - index]}
+            faster={actsFirst(speeds, index, field.trickRoom)}
             pool={pool}
             teams={teamSources}
             onChange={handlers[index].change}
