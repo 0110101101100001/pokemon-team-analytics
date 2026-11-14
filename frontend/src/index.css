@@ -94,7 +94,7 @@
 }
 
 @layer components {
-  /* Botões a nanquim: a sombra dura é o traço deslocado; ao passar o mouse o papel desce um passo, ao apertar encosta. */
+  /* Botões: no hover, uma aguada clara se abre por trás do texto (::before). */
   .btn-action,
   .btn-outline {
     position: relative;
@@ -135,8 +135,16 @@
     }
   }
 
+  /*
+    Botão principal: pílula verde-oliva com borda fina no mesmo tom e sombra difusa. No hover sobe um pouco
+    e a sombra abre; ao apertar, volta ao lugar. O texto tem altura de linha 1, para o ícone ficar centrado nele.
+  */
   .btn-action {
-    @apply inline-flex min-h-11 items-center justify-center gap-2 px-4 py-2 rounded-xl border-[1.5px] border-[#2A2421] bg-smeargle-olive text-white text-sm font-semibold shadow-[3px_3px_0_#2A2421] transition-[transform,box-shadow] duration-150 hover:translate-x-px hover:translate-y-px hover:shadow-[2px_2px_0_#2A2421,0_10px_22px_-8px_rgba(130,155,114,0.75)] active:translate-x-[3px] active:translate-y-[3px] active:shadow-none focus:outline-none focus-visible:ring-2 focus-visible:ring-paint-cobalt focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-60;
+    @apply inline-flex h-11 items-center justify-center gap-2 rounded-full border border-[#6E8B6E] bg-smeargle-olive px-5 text-sm font-semibold leading-none text-white shadow-[0_1px_2px_rgba(42,36,33,0.12),0_6px_16px_-6px_rgba(91,120,86,0.55)] transition-[transform,box-shadow,background-color] duration-200 ease-out hover:-translate-y-px hover:bg-[#789364] hover:shadow-[0_2px_4px_rgba(42,36,33,0.12),0_12px_24px_-8px_rgba(91,120,86,0.6)] active:translate-y-0 active:shadow-[0_1px_2px_rgba(42,36,33,0.15)] focus:outline-none focus-visible:ring-2 focus-visible:ring-paint-cobalt focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-60 motion-reduce:transition-none motion-reduce:hover:translate-y-0;
+  }
+
+  .btn-action > svg {
+    flex-shrink: 0;
   }
 
   .btn-outline {
