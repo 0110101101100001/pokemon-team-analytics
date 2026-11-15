@@ -375,7 +375,7 @@ function capDamage(distribution, cap) {
   return capped;
 }
 
-function useDistribution({ rolls, hits, extraRolls }) {
+function perUseDistribution({ rolls, hits, extraRolls }) {
   const single = rollDistribution(rolls);
   let distribution = new Map([[0, 1]]);
   for (let i = 0; i < hits; i += 1) distribution = convolve(distribution, single);
@@ -460,7 +460,7 @@ export function describeKnockout(result, { attacker, defender, defenderSide, fie
 
   const { hp } = result;
   const { entry, perTurn, notes } = residualEffects(defender, defenderSide, field, attacker);
-  const use = useDistribution(result);
+  const use = perUseDistribution(result);
   const sturdy = sturdyHolds(result, defender, attacker, entry);
   const allNotes = sturdy ? [...notes, 'Sturdy'] : notes;
   const suffix = allNotes.length ? ` (com ${listNotes(allNotes)})` : '';
