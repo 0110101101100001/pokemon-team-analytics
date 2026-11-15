@@ -5,7 +5,7 @@ import SuggestField from '../SuggestField';
 import StatSpreadEditor from '../battle/StatSpreadEditor';
 import { fetchItemNames, fetchMoveSummary, officialSpriteUrl } from '../../services/api';
 import { formatSlug } from '../../utils/filters';
-import { clampLevel } from '../../utils/stats';
+import { TERA_TYPES, clampLevel } from '../../utils/stats';
 import { usePokemonBattleData } from '../../hooks/usePokemonBattleData';
 
 const DAMAGE_CLASS_LABELS = { physical: 'Físico', special: 'Especial', status: 'Status' };
@@ -36,13 +36,15 @@ function MoveField({ index, move, learnset, onPick }) {
   );
 }
 
-/** Editor do set de um membro do time: item, nível, natureza, EVs/IVs e os quatro golpes. */
+/** Editor do set de um membro do time: item, habilidade, Tera, nível, natureza, EVs/IVs e os quatro golpes. */
 function TeamMemberEditor({ member, onChange }) {
   const { id, name, types, set } = member;
   const battle = usePokemonBattleData(name);
 
   const patch = useCallback((changes) => onChange(id, changes), [id, onChange]);
   const pickItem = useCallback((slug) => patch({ item: slug ?? '' }), [patch]);
+  // Uma habilidade que a espécie não tem (set vindo de outra forma) aparece mesmo assim, para não sumir em silêncio.
+  const abilities = set.ability && !battle.abilities.includes(set.ability) ? [set.ability, ...battle.abilities] : battle.abilities;
 
   const pickMove = useCallback((index, slug) => {
     const place = (move) => onChange(id, (current) => ({ moves: current.moves.map((kept, i) => (i === index ? move : kept)) }));
@@ -94,6 +96,37 @@ function TeamMemberEditor({ member, onChange }) {
               loadOptions={fetchItemNames}
               onPick={pickItem}
             />
+          </div>
+
+          <div className="grid grid-cols-2 gap-3">
+            <label>
+              <span className="paper-label">Habilidade</span>
+              {/* Sem habilidade no set vale a primeira da espécie, e é ela que o campo mostra. */}
+              <select
+                value={set.ability || abilities[0] || ''}
+                onChange={(e) => patch({ ability: e.target.value })}
+                disabled={!abilities.length}
+                className="paper-field cursor-pointer"
+              >
+                {!abilities.length && <option value="">Carregando...</option>}
+                {abilities.map((ability) => (
+                  <option key={ability} value={ability}>
+                    {formatSlug(ability)}{ability === battle.hiddenAbility ? ' (oculta)' : ''}
+                  </option>
+                ))}
+              </select>
+            </label>
+            <label>
+              <span className="paper-label">Tera</span>
+              <select
+                value={set.teraType ?? ''}
+                onChange={(e) => patch({ teraType: e.target.value || null })}
+                className="paper-field cursor-pointer"
+              >
+                <option value="">Sem Tera</option>
+                {TERA_TYPES.map((type) => <option key={type} value={type}>{formatSlug(type)}</option>)}
+              </select>
+            </label>
           </div>
 
           <div>

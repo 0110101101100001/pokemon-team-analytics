@@ -30,7 +30,10 @@ export const createSide = () => ({
   moves: Array.from({ length: MOVE_SLOTS }, () => createMoveSlot()),
 });
 
-/** Lado montado a partir de um Pokémon do Team Builder: traz o set, o item e os golpes escolhidos lá. */
+/**
+ * Lado montado a partir de um Pokémon do Team Builder: traz o set, o item, a habilidade, o Tera e os golpes.
+ * O Tera do set já entra ativo, como no fim do turno em que o Pokémon terastaliza.
+ */
 export function sideFromPokemon(pokemon, set = null) {
   const side = createSide();
   if (!set) return { ...side, pokemon };
@@ -39,6 +42,8 @@ export function sideFromPokemon(pokemon, set = null) {
     pokemon,
     set,
     item: set.item ?? '',
+    ability: set.ability ?? '',
+    tera: set.teraType ?? '',
     moves: side.moves.map((slot, index) => createMoveSlot(set.moves?.[index] ?? null)),
   };
 }

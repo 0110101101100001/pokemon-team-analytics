@@ -42,15 +42,28 @@ export const MAX_EV_TOTAL = 508;
 export const MAX_IV = 31;
 export const MAX_LEVEL = 100;
 
+// Tera: os 18 tipos e Stellar.
+export const TERA_TYPES = [
+  'normal', 'fire', 'water', 'grass', 'electric', 'ice', 'fighting', 'poison', 'ground',
+  'flying', 'psychic', 'bug', 'rock', 'ghost', 'dragon', 'dark', 'steel', 'fairy', 'stellar',
+];
+const TERA_TYPE_SET = new Set(TERA_TYPES);
+const SLUG = /^[a-z0-9]+(-[a-z0-9]+)*$/;
+
 const fill = (value) => Object.fromEntries(STAT_KEYS.map((key) => [key, value]));
 
 const clamp = (value, min, max) => Math.min(Math.max(Math.trunc(Number(value)) || 0, min), max);
 
-/** Set de batalha de um Pokémon recém-adicionado: nível 100, IVs máximos, sem EVs, natureza neutra. */
+/**
+ * Set de batalha de um Pokémon recém-adicionado: nível 100, IVs máximos, sem EVs, natureza neutra.
+ * `ability` é o slug da PokéAPI ('' = a primeira da espécie); `teraType`, um de TERA_TYPES ou null.
+ */
 export const createBattleSet = () => ({
   level: MAX_LEVEL,
   nature: 'hardy',
   item: '',
+  ability: '',
+  teraType: null,
   evs: fill(0),
   ivs: fill(MAX_IV),
   moves: [null, null, null, null],
@@ -64,6 +77,9 @@ export function normalizeBattleSet(stored) {
     level: clamp(stored.level ?? base.level, 1, MAX_LEVEL),
     nature: NATURE_BY_NAME.has(stored.nature) ? stored.nature : base.nature,
     item: typeof stored.item === 'string' ? stored.item : '',
+    // Sets salvos antes destes campos chegam sem eles.
+    ability: typeof stored.ability === 'string' && SLUG.test(stored.ability) ? stored.ability : '',
+    teraType: TERA_TYPE_SET.has(stored.teraType) ? stored.teraType : null,
     evs: Object.fromEntries(STAT_KEYS.map((key) => [key, clamp(stored.evs?.[key], 0, MAX_EV)])),
     ivs: Object.fromEntries(STAT_KEYS.map((key) => [key, clamp(stored.ivs?.[key] ?? MAX_IV, 0, MAX_IV)])),
     moves: base.moves.map((_, index) => (stored.moves?.[index]?.slug ? stored.moves[index] : null)),

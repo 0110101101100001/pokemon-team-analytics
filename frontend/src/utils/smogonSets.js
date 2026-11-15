@@ -64,8 +64,8 @@ function normalizeSet(name, raw) {
 
 let request = null;
 
-/** O arquivo tem ~1 MB: é baixado à parte, uma vez, quando a aba Builds é aberta. */
-function loadAllSets() {
+/** O arquivo tem ~1 MB: é baixado à parte, uma vez, quando a aba Builds ou o esboço precisam dele. */
+export function loadAllSets() {
   request ??= import('../data/gen9.json').then((module) => module.default).catch((error) => {
     request = null;
     throw error;
