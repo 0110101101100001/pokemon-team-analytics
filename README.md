@@ -32,6 +32,11 @@ O frontend busca na PokéAPI os dados de espécies, golpes e habilidades, e no b
   - Os textos vêm da PokéAPI em pt-BR quando existem e caem para o inglês, com aviso, quando não há tradução. Hoje a PokéAPI tem pouca tradução em português.
 - **Team Builder:** time de até 6 Pokémon.
   - Sugere candidatos por cobertura de tipos e sinergia no meta da Smogon.
+  - Sugestões: o melhor próximo Pokémon para a vaga seguinte, pelo time atual e pelo meta do OU.
+  - Esboço: monta times inteiros para um plano (tier de singles, estilo como Balance, Chuva ou Trick Room, Pokémon proibidos e limite de tipos repetidos). Cada time cobre as funções do estilo (armadilhas, remoção, pivô…), vem com sets completos (item, habilidade, Tera, EVs e golpes das builds da Smogon) e leva uma nota do teste do meta: cada membro duela com as 20 ameaças mais usadas do tier (com Stealth Rock na entrada, prioridade, a versão boostada pelo setup e a com Tera), a nota premia ter mais de uma resposta sólida e desconta quem carrega o time sozinho ou é 4x fraco a Rock sem Boots. O card explica as duas notas e mostra quem responde a cada ameaça.
+  - Esboço editável: cada card aceita fixar membros, trocar um membro vendo antes o efeito de cada opção nas notas (teste do meta, encaixe e ameaças resolvidas ou pioradas), corrigir a pior ameaça com uma troca que não baixa o teste do meta, regenerar o resto mantendo os fixos e desfazer qualquer edição.
+  - Habilidade e Tera no set de cada Pokémon, usados também pela calculadora de dano.
+  - Exportação do time para o Pokémon Showdown.
   - Mostra a tabela de fraquezas e cobertura do time.
   - Times salvos na conta do usuário.
 - **Mobile:** em telas pequenas, blur, sombras longas, a inclinação 3D dos cards e o embed do mascote ficam desligados.
@@ -91,7 +96,22 @@ As `VITE_*` são embutidas no bundle durante o build. Depois de alterá-las no N
 
 `ALLOWED_ORIGINS` precisa incluir `https://smearglepedia.netlify.app`, sem barra no final.
 
-No plano gratuito o Render suspende o serviço após 15 minutos sem tráfego, e a primeira requisição seguinte demora para responder. O Supabase gratuito também pausa projetos inativos.
+No plano gratuito o Render suspende o serviço após 15 minutos sem tráfego, e a primeira requisição seguinte demora para responder. Por isso as leituras da Smogon (selo da grade, ficha, meta do team builder) vão direto ao Supabase, liberadas pela política `smogon_stats_public_read`; o backend fica com a recomendação e a sincronização. O Supabase gratuito também pausa projetos inativos.
+
+### CI
+
+`ci.yml` roda em push na `main` e na `futuras-atualizacoes` e em todo pull request:
+
+- frontend: `npm run lint` e `npm run build`;
+- backend: `ruff check .` e `pytest` (Supabase falso em memória, sem rede).
+
+Com tudo verde em um push na `main`, o job `deploy-backend` chama o deploy hook do Render. Para usar, desligue o auto-deploy do serviço no Render e salve a URL do hook no secret `RENDER_DEPLOY_HOOK_URL`; sem o secret, o job não faz nada.
+
+```bash
+cd backend
+pip install -r requirements.txt -r requirements-dev.txt
+ruff check . && pytest
+```
 
 ### Tarefas agendadas (GitHub Actions)
 
@@ -116,7 +136,9 @@ python -m app.scrapers.update_smogon            # mês anterior ao atual
 python -m app.scrapers.update_smogon 2026-10    # mês específico
 ```
 
-A API usa sempre o mês mais recente que existir na tabela.
+A API usa sempre o mês mais recente que existir na tabela. A recomendação monta as matrizes de afinidade uma vez por tier e mês e as mantém em memória até chegar um mês novo.
+
+As migrations ficam em `supabase/migrations/`. A `name_key` (nome em minúsculas, coluna gerada) e o índice `(tier, name_key, date)` atendem a busca de um Pokémon por nome.
 
 ## API
 
@@ -139,20 +161,24 @@ backend/
     core/            configuração e validação do JWT
     routers/         estatísticas da Smogon
     scrapers/        importação da Smogon
-    services/        recomendação e PokéAPI
+    services/        recomendação, PokéAPI e consultas à smogon_stats
+  tests/             pytest com Supabase falso em memória
     schemas/         modelos Pydantic
 frontend/
   src/
     sections/        uma tela por aba: Pokédex, Itens, Gym Leaders, Team Builder, Damage Calculator
     components/      grade, ficha, modais; layout/ (header, abas, filtros contextuais), team/, calc/, items/, leaders/
     navigation/      lista das abas e rotas por hash (#/pokedex, #/itens…)
-    data/            jogos e dexes regionais, líderes de ginásio, TMs por jogo
+    data/            jogos e dexes regionais, líderes de ginásio, TMs por jogo, índice da Pokédex
     hooks/           filtros da Pokédex, dex regional, dados de batalha, pontuação do team builder
-    services/        PokéAPI, backend e Supabase
+    services/        PokéAPI (com cache no IndexedDB), backend e Supabase
     utils/           filtros, tabela de tipos, atributos (EVs/IVs/natureza), cálculo de dano
 scripts/
-  build-machines.mjs gera frontend/src/data/machines.json a partir dos CSVs da PokéAPI
-.github/workflows/   keep-alives, sincronização mensal e commit de atividade
+  build-machines.mjs       gera frontend/src/data/machines.json a partir dos CSVs da PokéAPI
+  build-pokedex-index.mjs  gera frontend/src/data/pokedex-index.json (variedades, espécies, tipos, grupos de ovos)
+  build-battle-data.mjs    gera frontend/src/data/battle-data.json (atributos base e golpes, para o esboço)
+supabase/migrations/ políticas e índices da tabela smogon_stats
+.github/workflows/   CI, keep-alives, sincronização mensal e commit de atividade
 netlify.toml         build e headers do frontend
 docker-compose.yml   backend local
 ```

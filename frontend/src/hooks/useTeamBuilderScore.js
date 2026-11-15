@@ -1,7 +1,6 @@
-import { useDeferredValue, useEffect, useMemo, useState } from 'react';
-import { fetchSmogonMeta } from '../services/smogonMeta';
-import { buildMeta } from '../utils/metaScore';
+import { useMemo } from 'react';
 import { rankCandidates } from '../utils/teamScore';
+import { useSmogonMeta } from './useSmogonMeta';
 
 /**
  * Sugestões pontuadas para completar o time.
@@ -10,22 +9,7 @@ import { rankCandidates } from '../utils/teamScore';
  * se a consulta falhar, as sugestões continuam só com tipos.
  */
 export function useTeamBuilderScore(team, pool, { limit = 10, tier = 'gen9ou' } = {}) {
-  const deferredPool = useDeferredValue(pool);
-  const [rows, setRows] = useState(null);
-
-  useEffect(() => {
-    let active = true;
-    setRows(null);
-    fetchSmogonMeta(tier)
-      .then((data) => active && setRows(data))
-      .catch((error) => console.warn('Dados da Smogon indisponíveis para as sugestões:', error));
-    return () => { active = false; };
-  }, [tier]);
-
-  const meta = useMemo(
-    () => (rows?.length ? buildMeta(rows, deferredPool) : null),
-    [rows, deferredPool],
-  );
+  const { meta, pool: deferredPool } = useSmogonMeta(pool, tier);
 
   return useMemo(
     () => rankCandidates(team, deferredPool, { limit, meta }),

@@ -10,7 +10,8 @@ const SUGGESTION_LIMIT = 8;
 
 const listTypes = (types) => types.map(capitalize).join(', ');
 
-function describeReasons({ patched, newCoverage, countered, usage, partners = [], answers = [], core }) {
+/** Motivos de uma sugestão em uma linha curta (também usado pelo esboço). */
+export function describeReasons({ patched, newCoverage, countered, usage, partners = [], answers = [], core }) {
   const parts = [];
   if (usage != null) parts.push(`${usage.toFixed(1)}% de uso`);
   if (partners.length) parts.push(`par de ${partners.join(', ')}`);
@@ -50,11 +51,17 @@ function TeamSuggestions({ team, pool, onAdd }) {
   const suggestions = useTeamBuilderScore(team, pool, { limit: SUGGESTION_LIMIT });
 
   return (
-    <ul className="space-y-1.5">
-      {suggestions.map(({ pokemon, score, reasons }) => (
-        <SuggestionRow key={pokemon.id} pokemon={pokemon} score={score} detail={describeReasons(reasons)} onAdd={onAdd} />
-      ))}
-    </ul>
+    <div className="space-y-3">
+      <p className="font-serif text-xs italic text-smeargle-textDim/90">
+        Qual é o próximo Pokémon? As melhores escolhas para a vaga seguinte, pelo time como ele está agora e pelo meta do OU.
+        Para montar o time inteiro de uma vez, com estilo e teste contra o meta, use a aba esboço.
+      </p>
+      <ul className="space-y-1.5">
+        {suggestions.map(({ pokemon, score, reasons }) => (
+          <SuggestionRow key={pokemon.id} pokemon={pokemon} score={score} detail={describeReasons(reasons)} onAdd={onAdd} />
+        ))}
+      </ul>
+    </div>
   );
 }
 

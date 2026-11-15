@@ -1,9 +1,11 @@
 import { useCallback, useMemo, useState } from 'react';
-import { BookOpen, Crosshair, ShieldHalf, Sparkles } from 'lucide-react';
+import { BookOpen, Crosshair, PenLine, ShieldHalf, Sparkles } from 'lucide-react';
 import PokemonPicker from '../components/battle/PokemonPicker';
 import CollectionPicks from '../components/team/CollectionPicks';
+import CopyShowdownButton from '../components/team/CopyShowdownButton';
 import SectionHeading from '../components/layout/SectionHeading';
 import MoveCoverage from '../components/team/MoveCoverage';
+import SketchPanel from '../components/team/SketchPanel';
 import TeamMemberEditor from '../components/team/TeamMemberEditor';
 import TeamSlots from '../components/team/TeamSlots';
 import TeamSuggestions from '../components/team/TeamSuggestions';
@@ -16,6 +18,7 @@ const PANELS = [
   { key: 'coverage', label: 'cobertura dos golpes', icon: Crosshair },
   { key: 'defense', label: 'fraquezas', icon: ShieldHalf },
   { key: 'suggestions', label: 'sugestões', icon: Sparkles },
+  { key: 'sketch', label: 'esboço', icon: PenLine },
 ];
 
 export default function TeamBuilderSection({ team, onTeamChange, pool, session, collections, entryByName }) {
@@ -54,11 +57,20 @@ export default function TeamBuilderSection({ team, onTeamChange, pool, session, 
     setSelectedId(null);
   }, [pool, onTeamChange]);
 
+  // Com o esboço aplicado o time fica completo: a análise volta para a cobertura dos golpes.
+  const loadSketch = useCallback((members) => {
+    loadTeam(members);
+    setPanel('coverage');
+  }, [loadTeam]);
+
+  const getTeam = useCallback(() => team, [team]);
   const openManager = useCallback(() => setManagerOpen(true), []);
   const closeManager = useCallback(() => setManagerOpen(false), []);
 
-  // Com o time completo não há o que sugerir.
-  const activePanel = isFull && panel === 'suggestions' ? 'coverage' : panel;
+  // Com o time completo não há o que sugerir; o esboço também precisa de um rascunho.
+  const isPanelDisabled = (key) =>
+    (key === 'suggestions' && isFull) || (key === 'sketch' && (isFull || team.length === 0));
+  const activePanel = isPanelDisabled(panel) ? 'coverage' : panel;
 
   return (
     <div className="space-y-6">
@@ -71,14 +83,17 @@ export default function TeamBuilderSection({ team, onTeamChange, pool, session, 
         )}
         subtitle="Monte e analise seu time competitivo"
         aside={(
-          <button
-            type="button"
-            onClick={openManager}
-            className="btn-outline cursor-pointer font-serif"
-          >
-            <BookOpen className="h-4 w-4" aria-hidden="true" />
-            Salvar / Meus times
-          </button>
+          <div className="flex flex-wrap gap-2">
+            <CopyShowdownButton getTeam={getTeam} disabled={team.length === 0} className="btn-outline cursor-pointer font-serif" />
+            <button
+              type="button"
+              onClick={openManager}
+              className="btn-outline cursor-pointer font-serif"
+            >
+              <BookOpen className="h-4 w-4" aria-hidden="true" />
+              Salvar / Meus times
+            </button>
+          </div>
         )}
       />
 
@@ -118,7 +133,7 @@ export default function TeamBuilderSection({ team, onTeamChange, pool, session, 
                 type="button"
                 role="tab"
                 aria-selected={activePanel === key}
-                disabled={key === 'suggestions' && isFull}
+                disabled={isPanelDisabled(key)}
                 onClick={() => setPanel(key)}
                 className="ink-tab"
               >
@@ -136,8 +151,10 @@ export default function TeamBuilderSection({ team, onTeamChange, pool, session, 
             <MoveCoverage team={team} />
           ) : activePanel === 'defense' ? (
             <TeamTypeTable team={team} />
-          ) : (
+          ) : activePanel === 'suggestions' ? (
             <TeamSuggestions team={team} pool={pool} onAdd={addPokemon} />
+          ) : (
+            <SketchPanel team={team} pool={pool} onLoadTeam={loadSketch} />
           )}
         </section>
       </div>

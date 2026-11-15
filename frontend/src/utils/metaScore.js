@@ -94,6 +94,11 @@ export function buildMeta(rows, entries) {
       usage,
       affinity: buildAffinity(row.teammates ?? {}, usageByName),
       checkedBy: new Map((row.checks_and_counters ?? []).map((check) => [check.pokemon, check.score / 100])),
+      // % de uso de cada golpe, item, habilidade e spread ("Jolly:0/252/0/0/4/252"), como na Smogon.
+      moves: row.moves ?? {},
+      items: row.items ?? {},
+      abilities: row.abilities ?? {},
+      spreads: row.spreads ?? {},
     });
   }
 
