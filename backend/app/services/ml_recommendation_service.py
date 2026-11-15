@@ -5,7 +5,6 @@ import numpy as np
 from sklearn.metrics.pairwise import cosine_similarity
 
 from app.services.pokeapi_service import (
-    fetch_many_pokemon_data,
     get_pokemon_types_from_pokeapi,
 )
 
@@ -50,15 +49,15 @@ def build_teammate_affinity_matrix(
 
     all_names = sorted(list(all_names))
 
-    matrix = pd.DataFrame(
-        0.0, index=all_names, columns=all_names, dtype=float
-    )
+    position = {name: i for i, name in enumerate(all_names)}
+    values = np.zeros((len(all_names), len(all_names)), dtype=float)
 
     for name, teammates in teammate_data.items():
+        row = position[name]
         for t_name, pct in teammates.items():
-            if t_name in matrix.columns:
-                matrix.loc[name, t_name] = pct
+            values[row, position[t_name]] = pct
 
+    matrix = pd.DataFrame(values, index=all_names, columns=all_names)
     return matrix, usage_map
 
 

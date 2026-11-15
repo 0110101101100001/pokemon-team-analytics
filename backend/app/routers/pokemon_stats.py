@@ -1,5 +1,5 @@
 import time
-from typing import Dict, List, Optional
+from typing import Dict, Optional
 
 from fastapi import APIRouter, HTTPException, Query, Path
 from supabase import Client, create_client
@@ -11,13 +11,17 @@ from app.core.config import (
     SUPABASE_URL,
 )
 from app.schemas.pokemon_stats import PokemonStatsResponse, SmogonNamesResponse
+from app.services.smogon_repository import latest_date, rows_at
 
 router = APIRouter(tags=["Pokemon Stats"])
 
 _supabase: Client = None  # type: ignore
 
-_PAGE_SIZE = 1000
 _NAMES_CACHE_TTL_S = 600
+_STATS_COLUMNS = (
+    "name, tier, date, raw_count, usage_percent, abilities, items, moves, "
+    "spreads, tera_types, teammates, checks_and_counters"
+)
 _names_cache: Dict[str, object] = {"expires": 0.0, "value": None}
 
 
@@ -26,36 +30,6 @@ def _get_supabase() -> Client:
     if _supabase is None:
         _supabase = create_client(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY)
     return _supabase
-
-
-def _latest_date(sb: Client, tier: str) -> Optional[str]:
-    rows = (
-        sb.table(SMOGON_STATS_TABLE)
-        .select("date")
-        .eq("tier", tier)
-        .order("date", desc=True)
-        .limit(1)
-        .execute()
-    ).data or []
-    return rows[0]["date"] if rows else None
-
-
-def _names_at(sb: Client, tier: str, date: str) -> List[str]:
-    names: List[str] = []
-    start = 0
-    while True:
-        rows = (
-            sb.table(SMOGON_STATS_TABLE)
-            .select("name")
-            .eq("tier", tier)
-            .eq("date", date)
-            .range(start, start + _PAGE_SIZE - 1)
-            .execute()
-        ).data or []
-        names.extend(row["name"] for row in rows)
-        if len(rows) < _PAGE_SIZE:
-            return names
-        start += _PAGE_SIZE
 
 
 @router.get(
@@ -78,11 +52,11 @@ def get_smogon_names():
     tiers: Dict[str, str] = {}
     names = set()
     for tier in SMOGON_BADGE_TIERS:
-        date = _latest_date(sb, tier)
+        date = latest_date(sb, tier)
         if date is None:
             continue
         tiers[tier] = date
-        names.update(_names_at(sb, tier, date))
+        names.update(row["name"] for row in rows_at(sb, tier, date, "name"))
 
     response = SmogonNamesResponse(tiers=tiers, names=sorted(names))
     _names_cache.update(expires=now + _NAMES_CACHE_TTL_S, value=response)
@@ -111,6 +85,7 @@ async def get_pokemon_stats(
     ),
 ):
     sb = _get_supabase()
+    name_key = name.strip().lower()
 
     # Se não houver data, busca a mais recente para este Pokémon/tier
     if date is None:
@@ -118,7 +93,7 @@ async def get_pokemon_stats(
             sb.table(SMOGON_STATS_TABLE)
             .select("date")
             .eq("tier", tier)
-            .ilike("name", name)
+            .eq("name_key", name_key)
             .order("date", desc=True)
             .limit(1)
             .execute()
@@ -137,10 +112,10 @@ async def get_pokemon_stats(
     # Consulta os dados completos
     response = (
         sb.table(SMOGON_STATS_TABLE)
-        .select("*")
+        .select(_STATS_COLUMNS)
         .eq("tier", tier)
         .eq("date", date)
-        .ilike("name", name)
+        .eq("name_key", name_key)
         .limit(1)
         .execute()
     )
