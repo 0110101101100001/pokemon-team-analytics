@@ -14,8 +14,9 @@ import { usePokedexFilters } from "./hooks/usePokedexFilters";
 import { useScrollCollapsed } from "./hooks/useScrollCollapsed";
 import { useUserCollections } from "./hooks/useUserCollections";
 import {
-  fetchEggGroupIndex, fetchPokemonList, fetchSmogonNames, fetchSpeciesList, fetchTypeIndex,
+  fetchEggGroupIndex, fetchPokemonList, fetchSpeciesList, fetchTypeIndex,
 } from "./services/api";
+import { fetchSmogonNames } from "./services/smogonMeta";
 import { buildPokedexEntries } from "./utils/pokedex";
 import { buildSmogonBadgeMap } from "./utils/smogon";
 import { createBattleSet } from "./utils/stats";
@@ -62,7 +63,7 @@ export default function App() {
     let active = true;
     // Espécies base + formas regionais/alternativas; Megas e Gigantamax ficam no drawer.
     // /pokemon?limit=2000 já traz todas as varieties numa só requisição (evita 1025 requisições a /pokemon-species).
-    // A lista da Smogon vem do backend próprio: não bloqueia a grade e, se falhar,
+    // A lista da Smogon vem do Supabase: não bloqueia a grade e, se falhar,
     // o selo continua sendo marcado pelo drawer como antes.
     const smogonNames = fetchSmogonNames().catch((err) => {
       console.warn("Selo Smogon indisponível:", err);

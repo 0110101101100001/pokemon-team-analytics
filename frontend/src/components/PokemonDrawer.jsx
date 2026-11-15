@@ -11,9 +11,9 @@ import PokemonBuilds from './PokemonBuilds';
 import FavoriteButton from './FavoriteButton';
 import { capitalize } from '../utils/typeColors';
 import {
-  fetchEvolutionChain, fetchMove, fetchPokemonDetail, fetchPokemonSpecies,
-  fetchSmogonNames, fetchSmogonStats, fetchTypeData, officialSpriteUrl,
+  fetchEvolutionChain, fetchMove, fetchPokemonDetail, fetchPokemonSpecies, fetchTypeData, officialSpriteUrl,
 } from '../services/api';
+import { fetchSmogonNames, fetchSmogonStats } from '../services/smogonMeta';
 import { resolveSmogonName } from '../utils/smogon';
 import SmeargleLoader from './SmeargleLoader';
 import { teamSlotFor } from '../utils/teamScore';
@@ -101,7 +101,6 @@ const PAPER_BG = {
 
 // As mesmas peças do resto do site: folha a nanquim, campo, pílula, botão redondo, bloco interno e rótulo.
 const SHEET = 'paper-card paper-card-quiet';
-const TILE = 'rounded-xl border border-[#2A2421]/12 bg-[#FFFEFB]';
 const LABEL = 'text-[10px] font-semibold uppercase tracking-wider text-[#785132]';
 const FIELD = 'h-9 cursor-pointer rounded-xl border-[1.5px] border-[#2A2421]/25 bg-[#FFFEFB] px-3 text-xs font-semibold text-[#2A2421] transition-colors hover:border-[#2A2421]/45 focus:border-paint-cobalt focus:outline-none focus:ring-2 focus:ring-paint-cobalt/40';
 const PILL = 'cursor-pointer rounded-full border px-3 py-1.5 text-xs font-semibold transition-[background-color,border-color,box-shadow] focus:outline-none focus-visible:ring-2 focus-visible:ring-paint-cobalt';

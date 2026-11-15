@@ -1,5 +1,6 @@
 import { supabase } from './supabase';
 import { HIDDEN_ITEM_CATEGORIES } from '../data/itemCategories';
+import { readCached, writeCached } from './persistentCache';
 
 const POKEAPI_BASE = 'https://pokeapi.co/api/v2';
 
@@ -11,13 +12,22 @@ const BACKEND_BASE = `${API_ORIGIN}/api`;
 
 const responseCache = new Map();
 
+async function fetchJson(url) {
+  const stored = await readCached(url);
+  if (stored !== undefined) return stored;
+
+  const res = await fetch(url);
+  if (!res.ok) throw new Error(`${res.status} ${url}`);
+  const data = await res.json();
+  writeCached(url, data);
+  return data;
+}
+
+/** Uma requisição por URL na sessão (memória) e entre visitas (IndexedDB); uma falha não fica em cache. */
 function cachedJson(url) {
   let pending = responseCache.get(url);
   if (!pending) {
-    pending = fetch(url).then((res) => {
-      if (!res.ok) throw new Error(`${res.status} ${url}`);
-      return res.json();
-    });
+    pending = fetchJson(url);
     pending.catch(() => responseCache.delete(url));
     responseCache.set(url, pending);
   }
@@ -31,24 +41,27 @@ export const TYPE_NAMES = [
   'flying', 'psychic', 'bug', 'rock', 'ghost', 'dragon', 'dark', 'steel', 'fairy',
 ];
 
-/** Mapa id → [tipo1, tipo2] para todos os Pokémon e formas, a partir dos 18 endpoints de tipo. */
-export async function fetchTypeIndex() {
-  const results = await Promise.all(TYPE_NAMES.map(fetchTypeData));
-  const index = new Map();
-  results.forEach((data, i) => {
-    data?.pokemon.forEach(({ pokemon, slot }) => {
-      const id = idFromUrl(pokemon.url);
-      const types = index.get(id) ?? [];
-      types[slot - 1] = TYPE_NAMES[i];
-      index.set(id, types);
-    });
+// Variedades, espécies, tipos e grupos de ovos vêm de um índice estático (scripts/build-pokedex-index.mjs):
+// um arquivo de ~80 KB com cache imutável no lugar de mais de 40 requisições à PokéAPI por visita.
+let pokedexIndex = null;
+const loadPokedexIndex = () => {
+  pokedexIndex ??= import('../data/pokedex-index.json').then((module) => module.default).catch((error) => {
+    pokedexIndex = null;
+    throw error;
   });
-  return index;
-}
+  return pokedexIndex;
+};
+
+const asNamedResources = (entries, resource) =>
+  entries.map(([id, name]) => ({ name, url: `${POKEAPI_BASE}/${resource}/${id}/` }));
+
+/** Mapa id → [tipo1, tipo2] para todos os Pokémon e formas. */
+export const fetchTypeIndex = () =>
+  loadPokedexIndex().then((index) => new Map(Object.entries(index.types).map(([id, types]) => [Number(id), types])));
 
 /** Todas as variedades (Pokémon base e formas alternativas) como { name, url }. */
-export const fetchPokemonList = (limit = 2000) =>
-  cachedJson(`${POKEAPI_BASE}/pokemon?limit=${limit}`).then((data) => data.results);
+export const fetchPokemonList = () =>
+  loadPokedexIndex().then((index) => asNamedResources(index.pokemon, 'pokemon'));
 
 // Ids ≥ 10000 são entradas fora dos jogos principais (golpes Shadow, habilidades de spin-offs).
 const MAIN_SERIES_MAX_ID = 10000;
@@ -62,17 +75,11 @@ export const fetchMoveNames = () => fetchNamedList(`${POKEAPI_BASE}/move?limit=1
 
 /** { names, index }: os nomes dos grupos de ovos e um mapa id da espécie → [grupos]. */
 export async function fetchEggGroupIndex() {
-  const { results } = await cachedJson(`${POKEAPI_BASE}/egg-group?limit=50`);
-  const groups = await Promise.all(results.map((r) => cachedJson(r.url)));
-  const index = new Map();
-  for (const group of groups) {
-    for (const species of group.pokemon_species) {
-      const id = idFromUrl(species.url);
-      if (!index.has(id)) index.set(id, []);
-      index.get(id).push(group.name);
-    }
-  }
-  return { names: groups.map((g) => g.name), index };
+  const { eggGroups } = await loadPokedexIndex();
+  const index = new Map(
+    Object.entries(eggGroups.bySpecies).map(([id, groups]) => [Number(id), groups.map((g) => eggGroups.names[g])]),
+  );
+  return { names: eggGroups.names, index };
 }
 
 /** Ids de todos os Pokémon com a habilidade (normal ou oculta). */
@@ -98,8 +105,8 @@ export async function fetchBattleForms(name) {
 }
 
 /** Todas as espécies como { name, url }; o id da espécie é o número na Pokédex nacional. */
-export const fetchSpeciesList = (limit = 1025) =>
-  cachedJson(`${POKEAPI_BASE}/pokemon-species?limit=${limit}`).then((data) => data.results);
+export const fetchSpeciesList = () =>
+  loadPokedexIndex().then((index) => asNamedResources(index.species, 'pokemon-species'));
 
 /** Mapa número nacional → número na Pokédex regional (`slug` de /pokedex, ex.: "paldea"). */
 export const fetchRegionalDex = (slug) =>
@@ -112,49 +119,6 @@ export const fetchPokemonDetail = (nameOrId) =>
 
 export const fetchPokemonSpecies = (nameOrId) =>
   cachedJson(`${POKEAPI_BASE}/pokemon-species/${encodeURIComponent(nameOrId)}`).catch(() => null);
-
-/** `name` é o nome exato na Smogon ("Urshifu-Rapid-Strike"), vindo de `resolveSmogonName`. */
-export async function fetchSmogonStats(name, tier = 'gen9ou', { date, signal } = {}) {
-  const params = new URLSearchParams({ tier });
-  if (date) {
-    params.append('date', date);
-  }
-
-  const response = await fetch(`${BACKEND_BASE}/pokemon/${encodeURIComponent(name)}/stats?${params}`, {
-    headers: { Accept: 'application/json' },
-    signal,
-  });
-
-  if (response.status === 404) {
-    return null;
-  }
-
-  if (!response.ok) {
-    throw new Error(`Erro ao buscar estatísticas do Smogon (${response.status})`);
-  }
-
-  return response.json();
-}
-
-let smogonNamesRequest = null;
-
-/**
- * Nomes (formato Smogon) de todos os Pokémon com estatísticas em pelo menos um tier.
- * Uma requisição por sessão, compartilhado pela grade e pela ficha; uma falha não fica em cache.
- */
-export function fetchSmogonNames() {
-  smogonNamesRequest ??= fetch(`${BACKEND_BASE}/smogon/names`, { headers: { Accept: 'application/json' } })
-    .then((response) => {
-      if (!response.ok) throw new Error(`Erro ao buscar a lista da Smogon (${response.status})`);
-      return response.json();
-    })
-    .then((data) => data.names ?? [])
-    .catch((error) => {
-      smogonNamesRequest = null;
-      throw error;
-    });
-  return smogonNamesRequest;
-}
 
 const LOGIN_REQUIRED = 'Não autorizado. Faça login no Supabase para receber recomendações.';
 
