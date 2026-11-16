@@ -5,7 +5,7 @@ import { ROLE_LABELS, ROLE_USAGE_CUTOFF, coveredRoles } from './teamRoles';
   - required: funções obrigatórias (um time completo sem elas é descartado);
   - core: funções básicas que contam para a nota e aparecem como "falta: …", mas não descartam o time;
   - desired: [{ roles, min }] quantos membros deveriam ter pelo menos uma dessas funções;
-  - excess: { função: máximo } acima do qual cada membro a mais pesa contra (recuperação em Hyper Offense);
+  - excess: { função: máximo } acima do qual cada membro a mais pesa contra (Recovery em Hyper Offense);
   - speed: faixa da velocidade base média { min?, max? };
   - weather: clima do estilo; conta quem aproveita e pesa contra quem é atrapalhado;
   - excludes: funções que tiram o Pokémon da busca (setters de outro clima em um time de clima);
@@ -74,7 +74,7 @@ export const ARCHETYPES = [
   {
     key: 'free',
     label: 'Livre',
-    description: 'Só as funções básicas: armadilhas, remoção e controle de velocidade.',
+    description: 'Só as funções básicas: Hazards, Hazard Control e Speed Control.',
     required: [],
     core: BASICS,
     desired: [],
@@ -82,7 +82,7 @@ export const ARCHETYPES = [
   {
     key: 'hyperOffense',
     label: 'Hyper Offense',
-    description: 'Armadilhas e atacantes rápidos de setup que derrubam antes de apanhar.',
+    description: 'Hazards e Setup Sweepers rápidos que derrubam antes de apanhar.',
     required: ['hazards'],
     core: [],
     desired: [{ roles: ['setup', 'wallbreaker'], min: 3 }],
@@ -92,7 +92,7 @@ export const ARCHETYPES = [
   {
     key: 'bulkyOffense',
     label: 'Bulky Offense',
-    description: 'Atacantes resistentes com pivôs para trocar com vantagem.',
+    description: 'Atacantes resistentes e Pivots para ganhar momentum nas trocas.',
     required: ['hazards', 'pivot'],
     core: ['removal'],
     desired: [{ roles: ['wallbreaker'], min: 2 }],
@@ -101,7 +101,7 @@ export const ARCHETYPES = [
   {
     key: 'balance',
     label: 'Balance',
-    description: 'Armadilhas, remoção e pivôs, com defensores que se curam.',
+    description: 'Hazards, Hazard Control e Pivots, com defensivos que têm Recovery.',
     required: ['hazards', 'removal', 'pivot'],
     core: [],
     desired: [{ roles: ['recovery'], min: 2 }],
@@ -109,16 +109,16 @@ export const ARCHETYPES = [
   {
     key: 'stall',
     label: 'Stall',
-    description: 'Muralhas com recuperação e cura do time; vence pelo desgaste.',
+    description: 'Walls com Recovery e um Cleric; vence pelo desgaste.',
     required: ['hazards', 'removal', 'cleric'],
     core: [],
     desired: [{ roles: ['recovery'], min: 4 }],
     penalize: ['wallbreaker'],
   },
-  weatherStyle('sun', 'Sol', 'Um setter de sol e quem ganha com ele: Chlorophyll, Protosynthesis, golpes de Fire.'),
-  weatherStyle('rain', 'Chuva', 'Um setter de chuva e quem ganha com ela: Swift Swim, golpes de Water, Hurricane.'),
-  weatherStyle('sand', 'Areia', 'Um setter de areia e quem ganha com ela: Sand Rush, Sand Force, tipo Rock.'),
-  weatherStyle('snow', 'Neve', 'Um setter de neve e quem ganha com ela: Slush Rush, Aurora Veil, tipo Ice.'),
+  weatherStyle('sun', 'Sol', 'Um Sun Setter e os abusers do sol: Chlorophyll, Protosynthesis, golpes de Fire.'),
+  weatherStyle('rain', 'Chuva', 'Um Rain Setter e os abusers da chuva: Swift Swim, golpes de Water, Hurricane.'),
+  weatherStyle('sand', 'Areia', 'Um Sand Setter e os abusers da areia: Sand Rush, Sand Force, tipo Rock.'),
+  weatherStyle('snow', 'Neve', 'Um Snow Setter e os abusers da neve: Slush Rush, Aurora Veil, tipo Ice.'),
   {
     key: 'trickRoom',
     label: 'Trick Room',

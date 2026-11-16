@@ -12,19 +12,19 @@ export const ROLES = [
 ];
 
 export const ROLE_LABELS = {
-  hazards: 'armadilhas',
-  removal: 'remoção',
-  pivot: 'pivô',
-  speedControl: 'controle de velocidade',
-  setup: 'setup',
-  recovery: 'recuperação',
-  cleric: 'cura do time',
+  hazards: 'Hazards',
+  removal: 'Hazard Control',
+  pivot: 'Pivot',
+  speedControl: 'Speed Control',
+  setup: 'Setup Sweeper',
+  recovery: 'Recovery',
+  cleric: 'Cleric',
   trickRoom: 'Trick Room',
-  'weather:sun': 'sol',
-  'weather:rain': 'chuva',
-  'weather:sand': 'areia',
-  'weather:snow': 'neve',
-  wallbreaker: 'wallbreaker',
+  'weather:sun': 'Sun Setter',
+  'weather:rain': 'Rain Setter',
+  'weather:sand': 'Sand Setter',
+  'weather:snow': 'Snow Setter',
+  wallbreaker: 'Wallbreaker',
 };
 
 // Golpes e habilidades com os nomes como a Smogon os grava.
@@ -57,6 +57,12 @@ const ITEM_ROLES = {
   wallbreaker: ['Choice Band', 'Choice Specs'],
 };
 
+const ROLE_SOURCES = [
+  ...Object.entries(ITEM_ROLES).map(([role, names]) => ['items', role, names]),
+  ...Object.entries(MOVE_ROLES).map(([role, names]) => ['moves', role, names]),
+  ...Object.entries(ABILITY_ROLES).map(([role, names]) => ['abilities', role, names]),
+];
+
 const usedEnough = (usage, names) => names.some((name) => (usage?.[name] ?? 0) >= ROLE_USAGE_CUTOFF);
 
 /**
@@ -77,6 +83,30 @@ export function rolesOf(smogonStat, baseStats = null) {
   }
   if (baseStats && Math.max(baseStats.atk, baseStats.spa) >= WALLBREAKER_BASE_STAT) roles.add('wallbreaker');
   return roles;
+}
+
+/**
+ * O que sustenta cada função (Map role → nome como a Smogon grava), item antes de golpe:
+ * - `set`: o set exibido ({ item, ability, moves: [{ slug }] }, em slugs da PokéAPI);
+ * - `smogonStat`: sem `set`, o mais usado entre os que passam do corte.
+ */
+export function roleEvidence({ set = null, smogonStat = null }) {
+  const evidence = new Map();
+  const inSet = set && {
+    items: new Set([set.item].filter(Boolean)),
+    abilities: new Set([set.ability].filter(Boolean)),
+    moves: new Set((set.moves ?? []).filter(Boolean).map((move) => move.slug)),
+  };
+  for (const [field, role, names] of ROLE_SOURCES) {
+    if (evidence.has(role)) continue;
+    const found = inSet
+      ? names.find((name) => inSet[field].has(toPokeApiSlug(name)))
+      : names
+        .filter((name) => (smogonStat?.[field]?.[name] ?? 0) >= ROLE_USAGE_CUTOFF)
+        .sort((a, b) => smogonStat[field][b] - smogonStat[field][a])[0];
+    if (found) evidence.set(role, found);
+  }
+  return evidence;
 }
 
 // Tipos dos golpes de dano usados em ≥ 30% dos sets.

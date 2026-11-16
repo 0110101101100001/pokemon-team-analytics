@@ -10,7 +10,7 @@ describe('rolesOf', () => {
     expect([...rolesOf(stat({ moves: { 'Stealth Rock': 30, 'Rapid Spin': 29.9 } }))]).toEqual(['hazards']);
   });
 
-  it('Sticky Web é armadilha e controle de velocidade', () => {
+  it('Sticky Web é Hazards e Speed Control', () => {
     expect(rolesOf(stat({ moves: { 'Sticky Web': 80 } }))).toEqual(new Set(['hazards', 'speedControl']));
   });
 
@@ -24,7 +24,7 @@ describe('rolesOf', () => {
     expect(rolesOf(stat({ abilities: { 'Sand Stream': 10 } }))).toEqual(new Set());
   });
 
-  it('Choice Scarf ≥ 30% é controle de velocidade; Band ou Specs, wallbreaker', () => {
+  it('Choice Scarf ≥ 30% é Speed Control; Band ou Specs, Wallbreaker', () => {
     expect(rolesOf(stat({ items: { 'Choice Scarf': 31 } }))).toEqual(new Set(['speedControl']));
     expect(rolesOf(stat({ items: { 'Choice Scarf': 20, 'Choice Band': 45 } }))).toEqual(new Set(['wallbreaker']));
   });

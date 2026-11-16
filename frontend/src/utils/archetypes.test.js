@@ -5,11 +5,11 @@ import { META, byName } from './sketchFixtures';
 const team = (...names) => names.map(byName);
 
 describe('archetypeFit', () => {
-  it('Balance sem remoção acusa a falta', () => {
-    // Kingambit: setup; Dragapult: pivô (+ wallbreaker); Toxapex: armadilhas e recuperação.
+  it('Balance sem Hazard Control acusa a falta', () => {
+    // Kingambit: setup; Dragapult: Pivot (+ Wallbreaker); Toxapex: Hazards e Recovery.
     const fit = archetypeFit(team('kingambit', 'dragapult', 'toxapex'), archetypeByKey('balance'), META);
     expect(fit.missing).toEqual(['removal']);
-    expect(fit.notes[0]).toBe('falta: remoção');
+    expect(fit.notes[0]).toBe('falta: Hazard Control');
     expect(fit.label).toBe('Balance');
     expect(fit.parts.checklist).toBeCloseTo(2 / 3, 5);
     expect(fit.score).toBeLessThan(1);
@@ -30,13 +30,13 @@ describe('archetypeFit', () => {
     expect(desiredCurve(3, 2) - desiredCurve(2, 2)).toBeLessThan(desiredCurve(2, 2) - desiredCurve(1, 2));
   });
 
-  it('Hyper Offense pesa contra recuperação demais', () => {
+  it('Hyper Offense pesa contra Recovery demais', () => {
     const fit = archetypeFit(team('great-tusk', 'corviknight', 'toxapex', 'gholdengo'), archetypeByKey('hyperOffense'), META);
-    expect(fit.parts.penalties).toContainEqual({ label: '2 com recuperação além de 1', value: 0.16 });
+    expect(fit.parts.penalties).toContainEqual({ label: '2 com Recovery além de 1', value: 0.16 });
   });
 
   describe('clima', () => {
-    // Torkoal: setter, armadilhas e remoção. Abusers de sol: Great Tusk (Protosynthesis), Volcarona (Morning Sun),
+    // Torkoal: setter, Hazards e Hazard Control. Abusers de sol: Great Tusk (Protosynthesis), Volcarona (Morning Sun),
     // Venusaur (Chlorophyll).
     const sun = archetypeByKey('sun');
 

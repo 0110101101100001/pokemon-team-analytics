@@ -71,7 +71,7 @@ describe('sketchTeams', () => {
     }
   });
 
-  it('Balance cobre armadilhas, remoção e pivô em todos os times', () => {
+  it('Balance cobre Hazards, Hazard Control e Pivot em todos os times', () => {
     const result = sketchTeams(SEED, POOL, META, { archetype: archetypeByKey('balance') });
     expect(result.length).toBeGreaterThan(0);
     for (const variation of result) expect(variation.roles.covered).toEqual(['hazards', 'removal', 'pivot']);
@@ -108,7 +108,7 @@ describe('sketchTeams', () => {
     expect(sketchTeams(POOL.slice(0, TEAM_SIZE), POOL, META)).toEqual([]);
     expect(sketchTeams(SEED, POOL, null)).toEqual([]);
     expect(sketchTeams(SEED, POOL, attachRoles(buildMeta([], POOL), POOL, battleData))).toEqual([]);
-    // Stall pede cura do time, e ninguém neste meta tem Heal Bell, Aromatherapy ou Wish.
+    // Stall pede Cleric, e ninguém neste meta tem Heal Bell, Aromatherapy ou Wish.
     expect(sketchTeams(SEED, POOL, META, { archetype: archetypeByKey('stall') })).toEqual([]);
   });
 });

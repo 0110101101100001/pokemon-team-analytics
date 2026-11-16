@@ -66,7 +66,7 @@ function fitLines(fit) {
 
 function ScoreBadge({ value, caption, title }) {
   return (
-    <span className="flex flex-col items-center rounded-sketch bg-[#78614E] px-2.5 py-1 text-[#FFFEFB]" title={title}>
+    <span className="flex flex-col items-center rounded-sketch bg-[#78614E] px-2.5 py-1 text-paper" title={title}>
       <span className="font-mono text-xl font-bold leading-none tabular-nums">{value}</span>
       <span className="text-[9px] uppercase tracking-wider">{caption}</span>
     </span>
@@ -106,7 +106,7 @@ function GauntletGrid({ threats, changed }) {
                 // pointerdown já seleciona. O click (teclado, mouse) também, sem alternar.
                 onPointerDown={() => setActive(threat.name)}
                 onClick={() => setActive(threat.name)}
-                className={`flex h-9 w-9 cursor-pointer items-center justify-center rounded-full bg-[#FFFEFB] ring-[2.5px] transition-transform hover:scale-110 focus:outline-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-paint-cobalt ${STATUS[threat.status].ring} ${active === threat.name ? 'scale-110' : ''} ${changed?.has(threat.name) ? 'motion-safe:animate-pulse ring-[3.5px]' : ''}`}
+                className={`flex h-9 w-9 cursor-pointer items-center justify-center rounded-full bg-paper ring-[2.5px] transition-transform hover:scale-110 focus:outline-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-paint-cobalt ${STATUS[threat.status].ring} ${active === threat.name ? 'scale-110' : ''} ${changed?.has(threat.name) ? 'motion-safe:animate-pulse ring-[3.5px]' : ''}`}
               >
                 <img src={thumbnailSpriteUrl(threat.id)} alt="" width={32} height={32} loading="lazy" decoding="async" className="h-8 w-8 object-contain" />
               </button>
@@ -127,18 +127,25 @@ function GauntletGrid({ threats, changed }) {
   );
 }
 
+// Pílula de função: altura fixa, rótulo da função e quem cobre em tom mais leve.
+const rolePill = 'inline-flex h-6 items-center gap-1.5 rounded-[3px] border px-2.5 text-[11px] leading-none tracking-[0.01em]';
+const roleName = 'font-semibold';
+
 function RoleChecklist({ checklist, coveredBy }) {
   return (
-    <ul className="flex flex-wrap gap-1" aria-label="Funções do estilo">
+    <ul className="flex flex-wrap gap-1.5" aria-label="Funções do estilo">
       {checklist.map((role) => {
         const members = coveredBy[role] ?? [];
         return members.length ? (
-          <li key={role} className="rounded-full border border-[#829b72]/50 bg-[#829b72]/10 px-2 py-0.5 text-[11px] font-semibold text-[#4C6440]">
-            {ROLE_LABELS[role]} · <span className="font-normal">{members.slice(0, 2).map(formatSlug).join(', ')}</span>
+          <li key={role} className={`${rolePill} border-[#5F7A52]/40 bg-[#829b72]/10 text-[#3F5535]`}>
+            <span className={roleName}>{ROLE_LABELS[role]}</span>
+            <span className="h-3 w-px bg-[#5F7A52]/35" aria-hidden="true" />
+            <span className="text-smeargle-textDim">{members.slice(0, 2).map(formatSlug).join(', ')}</span>
           </li>
         ) : (
-          <li key={role} className="rounded-full border border-dashed border-[#7A1F2B]/60 bg-[#7A1F2B]/10 px-2 py-0.5 text-[11px] font-bold text-[#7A1F2B]">
-            falta: {ROLE_LABELS[role]}
+          <li key={role} className={`${rolePill} border-dashed border-[#7A1F2B]/55 bg-[#7A1F2B]/[0.06] text-[#7A1F2B]`}>
+            <span className="text-[10px] uppercase tracking-wider opacity-80">falta</span>
+            <span className={roleName}>{ROLE_LABELS[role]}</span>
           </li>
         );
       })}
@@ -152,7 +159,14 @@ function PickReasons({ members }) {
       {members.map(({ pokemon, explain }) => (
         <li key={pokemon.id} className="font-serif text-[11px] leading-snug text-smeargle-textDim/90">
           <span className="font-semibold text-smeargle-text">{formatSlug(pokemon.name)}:</span>{' '}
-          {explain ? [explain.roles.join(', '), ...explain.short].filter(Boolean).join(' · ') || 'completa o time' : 'escolhido por você'}
+          {explain ? (
+            <>
+              {explain.roles.length > 0 && <span className="text-smeargle-text">{explain.roles.join(', ')}</span>}
+              {explain.roles.length > 0 && explain.short.length > 0 && ' · '}
+              {explain.short.join(' · ')}
+              {!explain.roles.length && !explain.short.length && 'completa o time'}
+            </>
+          ) : 'escolhido por você'}
           {explain?.rest.length > 0 && (
             <Expandable summary="detalhes" className="ml-1 inline-block align-top">
               <span className="italic">{explain.rest.join(' · ')}</span>
@@ -164,7 +178,7 @@ function PickReasons({ members }) {
   );
 }
 
-const toolButton = 'inline-flex min-h-9 cursor-pointer items-center gap-1.5 rounded-full border border-[#2A2421]/25 bg-[#FFFEFB] px-3 text-xs font-semibold text-smeargle-text transition-colors hover:border-[#2A2421]/55 hover:bg-[#829b72]/10 focus:outline-none focus-visible:ring-2 focus-visible:ring-paint-cobalt disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:bg-[#FFFEFB]';
+const toolButton = 'inline-flex min-h-9 cursor-pointer items-center gap-1.5 rounded-[3px] border border-[#2A2421]/25 bg-paper px-3 text-xs font-semibold text-smeargle-text transition-colors hover:border-[#2A2421]/55 hover:bg-[#829b72]/10 focus:outline-none focus-visible:ring-2 focus-visible:ring-paint-cobalt disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:bg-paper';
 
 /**
  * Um esboço editável: fixar e trocar membros, corrigir a pior ameaça, regenerar e desfazer, com as notas
@@ -227,12 +241,12 @@ function SketchCard({ index, card, ctx, checklist, busy, applying, disabled, onE
   }, [index, onRegenerate]);
 
   return (
-    <li className="min-w-0 rounded-sketch border border-[#2A2421]/20 bg-[#FFFEFB]/70 p-3 shadow-card sm:p-4">
+    <li className="min-w-0 rounded-sketch border border-[#2A2421]/20 bg-paper/70 p-3 shadow-card sm:p-4">
       <div className="mb-3 flex flex-wrap items-start justify-between gap-2">
         <div className="min-w-0">
           <h3 className="flex flex-wrap items-center gap-x-1.5 font-serif text-base font-bold leading-tight text-smeargle-text">
             {evaluation.title} <span className="font-sans text-xs font-semibold text-smeargle-textDim/70">#{index + 1}</span>
-            {edited && <span className="rounded-full bg-paint-ochre/20 px-2 py-0.5 font-hand text-sm font-normal leading-4 text-[#7A5512]">editado</span>}
+            {edited && <span className="rounded-[3px] bg-paint-ochre/20 px-2 py-0.5 font-hand text-sm font-normal leading-4 text-[#7A5512]">editado</span>}
           </h3>
           {evaluation.fit.averageSpeed != null && (
             <p className="text-[11px] text-smeargle-textDim">velocidade base média {Math.round(evaluation.fit.averageSpeed)}</p>
@@ -301,7 +315,7 @@ function SketchCard({ index, card, ctx, checklist, busy, applying, disabled, onE
           />
         </div>
       )}
-      {notice && <p role="status" className="mt-2 rounded-xl border border-[#B5543C]/30 bg-[#B5543C]/5 p-2.5 font-serif text-xs text-smeargle-text">{notice}</p>}
+      {notice && <p role="status" className="mt-2 rounded-[4px] border border-[#B5543C]/30 bg-[#B5543C]/5 p-2.5 font-reading text-xs text-smeargle-text">{notice}</p>}
 
       <div className="mt-3 space-y-3">
         <div className="space-y-1">

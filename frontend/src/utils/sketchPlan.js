@@ -56,7 +56,7 @@ export function sketchContext({ pool, meta, battleData, allSets, tier, archetype
   const setOf = (pokemon) => (hasMoves(pokemon.set) ? pokemon.set : probable(pokemon));
   const rate = (team) => runGauntlet(gauntlet, team.map((member) => gauntletMember(member, setOf(member), battleData)));
   const explain = (pick, team) =>
-    explainPick(pick, roleMeta, new Set(team.map((pokemon) => roleMeta.names.get(pokemon.name)).filter(Boolean)));
+    explainPick(pick, roleMeta, new Set(team.map((pokemon) => roleMeta.names.get(pokemon.name)).filter(Boolean)), setOf(pick.pokemon));
 
   return {
     meta: roleMeta,
