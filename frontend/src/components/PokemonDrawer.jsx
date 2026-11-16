@@ -588,12 +588,6 @@ export default function PokemonDrawer({
             {shiny && (
               <Sparkles className="absolute -top-1 -right-1 w-5 h-5 text-[#C9A66B] md:drop-shadow-sm" aria-hidden="true" />
             )}
-            {/* A sombra do sprite é uma mancha sólida na tinta do tipo, como a dos cards. */}
-            <span
-              aria-hidden="true"
-              className="absolute bottom-2 left-1/2 h-4 w-14 -translate-x-1/2 rounded-[48%_52%_45%_55%/60%_55%_45%_40%] sm:bottom-3 sm:w-16"
-              style={{ backgroundColor: `color-mix(in srgb, ${primaryInk.border} 45%, #F2EAD9)` }}
-            />
             <div className="w-16 h-16 sm:w-20 sm:h-20">
               <HeroSprite key={`${detail.id}-${shiny}`} sources={heroSources} alt={displayName} />
             </div>

@@ -142,7 +142,7 @@ export default function App() {
       case "moves":
         return <MovesSection entryByName={entryByName} onSelectPokemon={handleSelect} />;
       case "items":
-        return <ItemsSection />;
+        return <ItemsSection entryByName={entryByName} onSelectPokemon={handleSelect} />;
       case "gymLeaders":
         return <GymLeadersSection entryByName={entryByName} onSelectPokemon={handleSelect} />;
       case "teamBuilder":

@@ -1,6 +1,5 @@
 import { memo } from 'react';
-import { ChevronDown, Users } from 'lucide-react';
-import MoveLearners from './MoveLearners';
+import { LearnersRow, LearnersToggle } from './LearnersToggle';
 import PokemonTypeBadge from '../PokemonTypeBadge';
 import { formatSlug } from '../../utils/filters';
 import { CELL, DAMAGE_CLASS_LABELS, HEAD, MOVE_NAME_BUTTON, ROW } from './moveTableStyles';
@@ -11,6 +10,7 @@ const learnersPanelId = (move) => `aprendem-${move}`;
 
 const MoveRow = memo(function MoveRow({ move, open, onToggle, onSelectMove, entryByName, onSelectPokemon }) {
   const { slug, type, damageClass, power, accuracy, pp } = move;
+  const panelId = learnersPanelId(slug);
   return (
     <>
       <tr className={`${ROW} ${open ? 'bg-[#829b72]/10' : ''}`}>
@@ -25,33 +25,17 @@ const MoveRow = memo(function MoveRow({ move, open, onToggle, onSelectMove, entr
         <td className={`${CELL} text-right font-mono tabular-nums max-sm:hidden`}>{accuracy ? `${accuracy}%` : '—'}</td>
         <td className={`${CELL} text-right font-mono tabular-nums max-md:hidden`}>{pp ?? '—'}</td>
         <td className={`${CELL} text-right`}>
-          <button
-            type="button"
-            onClick={() => onToggle(slug)}
-            aria-expanded={open}
-            aria-controls={open ? learnersPanelId(slug) : undefined}
-            aria-label={`Pokémon que aprendem ${formatSlug(slug)}`}
-            className={`inline-flex h-8 cursor-pointer items-center gap-1.5 rounded-[3px] border-[1.5px] border-[#1C1A17] px-2 font-reading text-[13px] font-semibold leading-none text-[#1C1A17] transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-paint-cobalt sm:px-2.5 ${
-              open ? 'bg-[#E6D9BE]' : 'bg-paper hover:bg-[#E6D9BE]'
-            }`}
-          >
-            <Users className="h-3.5 w-3.5 shrink-0" aria-hidden="true" />
-            <span className="max-sm:hidden">Pokémon</span>
-            <ChevronDown className={`h-3.5 w-3.5 shrink-0 transition-transform motion-reduce:transition-none ${open ? 'rotate-180' : ''}`} aria-hidden="true" />
-          </button>
+          <LearnersToggle move={slug} open={open} panelId={panelId} onToggle={() => onToggle(slug)} />
         </td>
       </tr>
       {open && (
-        <tr className="border-b border-[#5C4033]/10 bg-[#E6D9BE]/35">
-          <td colSpan={COLUMN_COUNT} className="px-3">
-            <MoveLearners
-              id={learnersPanelId(slug)}
-              move={slug}
-              entryByName={entryByName}
-              onSelectPokemon={onSelectPokemon}
-            />
-          </td>
-        </tr>
+        <LearnersRow
+          columns={COLUMN_COUNT}
+          id={panelId}
+          move={slug}
+          entryByName={entryByName}
+          onSelectPokemon={onSelectPokemon}
+        />
       )}
     </>
   );

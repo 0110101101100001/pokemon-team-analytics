@@ -18,19 +18,21 @@ function toLearners(list, entryByName) {
     .sort((a, b) => (a.number ?? Infinity) - (b.number ?? Infinity) || a.id - b.id);
 }
 
-function useMoveLearners(move, entryByName) {
-  const [state, setState] = useState({ move: null, status: 'loading', list: [] });
+// `load(move)` resolve [{ name, id }]: por padrão, todos os que aprendem o golpe em algum jogo.
+function useMoveLearners(move, load, entryByName) {
+  const [state, setState] = useState({ move: null, load: null, status: 'loading', list: [] });
 
   useEffect(() => {
     let active = true;
-    fetchMoveLearners(move)
-      .then((list) => active && setState({ move, status: 'ready', list }))
-      .catch(() => active && setState({ move, status: 'error', list: [] }));
+    load(move)
+      .then((list) => active && setState({ move, load, status: 'ready', list }))
+      .catch(() => active && setState({ move, load, status: 'error', list: [] }));
     return () => { active = false; };
-  }, [move]);
+  }, [move, load]);
 
   const learners = useMemo(() => toLearners(state.list, entryByName), [state.list, entryByName]);
-  return state.move === move ? { status: state.status, learners } : { status: 'loading', learners: [] };
+  const current = state.move === move && state.load === load;
+  return current ? { status: state.status, learners } : { status: 'loading', learners: [] };
 }
 
 const LearnerButton = memo(function LearnerButton({ learner, onSelect }) {
@@ -63,9 +65,12 @@ const LearnerButton = memo(function LearnerButton({ learner, onSelect }) {
   );
 });
 
-/** Quem aprende o golpe: uma busca por nome ou número e a lista; o clique abre a ficha do Pokémon. */
-function MoveLearners({ id, move, entryByName, onSelectPokemon }) {
-  const { status, learners } = useMoveLearners(move, entryByName);
+/**
+ * Quem aprende o golpe: uma busca por nome ou número e a lista; o clique abre a ficha do Pokémon.
+ * `context` completa a contagem ("por TM em Scarlet / Violet").
+ */
+function MoveLearners({ id, move, load = fetchMoveLearners, context = '', entryByName, onSelectPokemon }) {
+  const { status, learners } = useMoveLearners(move, load, entryByName);
   const [query, setQuery] = useState('');
   const deferredQuery = useDeferredValue(query);
 
@@ -98,7 +103,7 @@ function MoveLearners({ id, move, entryByName, onSelectPokemon }) {
       <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
         <p className="font-reading text-sm text-[#785132]">
           <span className="font-semibold tabular-nums text-[#2A2421]">{learners.length}</span>{' '}
-          {learners.length === 1 ? 'Pokémon aprende' : 'Pokémon aprendem'} {formatSlug(move)}
+          {learners.length === 1 ? 'Pokémon aprende' : 'Pokémon aprendem'} {formatSlug(move)}{context && ` ${context}`}
         </p>
         <label className="relative block sm:w-72">
           <span className="sr-only">Pesquisar Pokémon que aprendem {formatSlug(move)}</span>

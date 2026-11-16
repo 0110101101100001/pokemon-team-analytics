@@ -57,13 +57,15 @@ function useItemIndex(enabled) {
   return state;
 }
 
-export default function ItemsSection() {
+export default function ItemsSection({ entryByName, onSelectPokemon }) {
   const [view, setView] = useState('items');
   const [query, setQuery] = useState('');
   const [group, setGroup] = useState('');
   const [category, setCategory] = useState('');
   const [gameId, setGameId] = useState(DEFAULT_GAME_ID);
   const [moveType, setMoveType] = useState('');
+  // Código da máquina com a lista de quem aprende aberta (ex.: "tm26").
+  const [openMachine, setOpenMachine] = useState(null);
   // { kind: 'item' | 'move', name }
   const [detail, setDetail] = useState(null);
 
@@ -107,6 +109,12 @@ export default function ItemsSection() {
   const selectItem = useCallback((name) => setDetail({ kind: 'item', name }), []);
   const selectMove = useCallback((name) => setDetail({ kind: 'move', name }), []);
   const closeDetail = useCallback(() => setDetail(null), []);
+  const toggleMachine = useCallback((code) => setOpenMachine((current) => (current === code ? null : code)), []);
+  const handleGame = useCallback((e) => {
+    setGameId(e.target.value);
+    setOpenMachine(null);
+  }, []);
+  const gameLabel = MACHINE_GAMES.find((game) => game.id === gameId)?.label ?? formatSlug(gameId);
 
   const count = showingItems ? items.length : machines.length;
 
@@ -146,7 +154,7 @@ export default function ItemsSection() {
             </div>
           ) : (
             <div className="grid grid-cols-2 gap-1.5 sm:gap-2 lg:contents">
-              <HeaderSelect label="Jogo dos itens" value={gameId} onChange={(e) => setGameId(e.target.value)} className="lg:w-44 lg:shrink-0">
+              <HeaderSelect label="Jogo dos itens" value={gameId} onChange={handleGame} className="lg:w-44 lg:shrink-0">
                 <GameOptions games={MACHINE_GAMES} />
               </HeaderSelect>
               <HeaderSelect label="Filtrar por tipo do golpe" value={moveType} onChange={(e) => setMoveType(e.target.value)}>
@@ -175,7 +183,16 @@ export default function ItemsSection() {
       />
 
       {!showingItems ? (
-        <MachineTable machines={machines} onSelectMove={selectMove} />
+        <MachineTable
+          machines={machines}
+          gameId={gameId}
+          gameLabel={gameLabel}
+          openCode={openMachine}
+          onToggle={toggleMachine}
+          onSelectMove={selectMove}
+          entryByName={entryByName}
+          onSelectPokemon={onSelectPokemon}
+        />
       ) : index.status === 'ready' ? (
         <ItemGrid items={items} onSelect={selectItem} />
       ) : index.status === 'error' ? (
