@@ -41,12 +41,12 @@ function LeaderCard({ leader, entryByName, onSelectPokemon }) {
                 type="button"
                 onClick={() => onSelectPokemon(slug)}
                 disabled={!entry}
-                className="flex w-full cursor-pointer flex-col items-center rounded-xl px-1 py-1.5 transition-colors hover:bg-[#829b72]/15 focus:outline-none focus-visible:ring-2 focus-visible:ring-paint-cobalt disabled:cursor-default disabled:hover:bg-transparent"
+                className="flex w-full cursor-pointer flex-col items-center rounded-[4px] px-1 py-1.5 transition-colors hover:bg-[#829b72]/15 focus:outline-none focus-visible:ring-2 focus-visible:ring-paint-cobalt disabled:cursor-default disabled:hover:bg-transparent"
               >
                 {entry && (
                   <img src={thumbnailSpriteUrl(entry.id)} alt="" width={56} height={56} loading="lazy" decoding="async" className="h-14 w-14 object-contain" />
                 )}
-                <span className="w-full truncate text-center font-serif text-xs font-semibold text-smeargle-text">{formatSlug(slug)}</span>
+                <span className="w-full truncate text-center font-reading text-xs font-semibold text-smeargle-text">{formatSlug(slug)}</span>
                 <span className="font-mono text-[11px] font-bold tabular-nums text-[#78614E]">Nv. {level}</span>
               </button>
             </li>

@@ -13,7 +13,7 @@ const RARITY_STYLES = {
 
 const EncounterLocation = memo(function EncounterLocation({ location }) {
   return (
-    <li className="p-2.5 rounded-lg bg-[#F7F3EE]/60 border border-[#2A2421]/10 space-y-1.5">
+    <li className="p-2.5 rounded-[4px] bg-[#F7F3EE]/60 border border-[#2A2421]/10 space-y-1.5">
       <div className="flex items-start justify-between gap-2">
         <span className="text-xs font-bold text-[#2A2421] leading-snug">{location.name}</span>
         {location.levelRange && (
@@ -21,7 +21,7 @@ const EncounterLocation = memo(function EncounterLocation({ location }) {
         )}
       </div>
       {location.exclusiveTo && (
-        <span className="inline-block px-1.5 py-px rounded bg-[#FFFEFB] border border-[#2A2421]/15 text-[9px] font-bold uppercase tracking-wider text-[#78614E]">
+        <span className="inline-block px-1.5 py-px rounded bg-paper border border-[#2A2421]/15 text-[9px] font-bold uppercase tracking-wider text-[#78614E]">
           Só em {location.exclusiveTo.join(', ')}
         </span>
       )}
@@ -45,7 +45,7 @@ const EncounterGroup = memo(function EncounterGroup({ group, open, onToggle }) {
   const panelId = `encounters-${group.key}`;
 
   return (
-    <div className="rounded-xl border border-[#2A2421]/15 bg-[#FFFEFB] overflow-hidden">
+    <div className="rounded-[4px] border border-[#2A2421]/15 bg-paper overflow-hidden">
       <button
         type="button"
         onClick={() => onToggle(group.key)}
@@ -105,7 +105,7 @@ function PokemonEncounters({ pokemonId }) {
           <h3 className="font-serif text-base font-bold tracking-tight text-[#2A2421]">Rotas de Encontro</h3>
         </div>
         {status === 'ready' && groups.length > 0 && (
-          <span className="rounded-full border border-[#2A2421]/60 bg-[#829b72] px-2.5 py-1 text-[10px] font-bold text-white shadow-[2px_2px_0_rgba(42,36,33,0.2)]">
+          <span className="rounded-[3px] border border-[#2A2421]/60 bg-[#829b72] px-2.5 py-1 text-[10px] font-bold text-paper shadow-[2px_2px_0_rgba(42,36,33,0.2)]">
             {groups.length} {groups.length === 1 ? 'jogo' : 'jogos'}
           </span>
         )}

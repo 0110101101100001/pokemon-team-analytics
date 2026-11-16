@@ -151,7 +151,7 @@ export default function ItemsSection() {
               </HeaderSelect>
               <HeaderSelect label="Filtrar por tipo do golpe" value={moveType} onChange={(e) => setMoveType(e.target.value)}>
                 <option value="" className={OPTION_CLASS}>Todos os tipos</option>
-                {TYPE_NAMES.map((type) => <option key={type} value={type} className={OPTION_CLASS}>{formatSlug(type)}</option>)}
+                {TYPE_NAMES.map((type) => <option key={type} value={type} data-type={type} className={OPTION_CLASS}>{formatSlug(type)}</option>)}
               </HeaderSelect>
             </div>
           )}

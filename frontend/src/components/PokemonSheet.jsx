@@ -17,7 +17,7 @@ export default function PokemonSheet({ pokemonName, onClose, ...drawerProps }) {
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center bg-[#2A2421]/60 p-4 animate-fade-in motion-reduce:animate-none md:bg-[#2A2421]/45 md:backdrop-blur-sm sm:p-6"
+      className="fixed inset-0 z-50 flex items-center justify-center bg-[#2A2421]/60 p-4 animate-fade-in motion-reduce:animate-none md:bg-[#2A2421]/45 sm:p-6"
       onClick={onClose}
     >
       <div
@@ -26,7 +26,7 @@ export default function PokemonSheet({ pokemonName, onClose, ...drawerProps }) {
         aria-modal="true"
         aria-label={`Ficha de ${formatSlug(pokemonName)}`}
         tabIndex={-1}
-        className="flex h-[90vh] w-full max-w-5xl flex-col overflow-hidden rounded-[1.8rem_1.5rem_1.9rem_1.4rem/1.5rem_1.9rem_1.4rem_1.8rem] border-[1.5px] border-[#2A2421] bg-[#FFFEFB] shadow-panel animate-bubble-pop focus:outline-none motion-reduce:animate-none sm:h-[85vh]"
+        className="flex h-[90vh] w-full max-w-5xl flex-col overflow-hidden rounded-[4px] border-[1.5px] border-[#1C1A17] bg-[#F7F3EE] shadow-panel animate-bubble-pop focus:outline-none motion-reduce:animate-none sm:h-[85vh]"
         onClick={(e) => e.stopPropagation()}
       >
         <Suspense fallback={<DrawerFallback />}>

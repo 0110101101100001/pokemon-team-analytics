@@ -89,18 +89,18 @@ function HeldBySection({ groups }) {
   if (groups.length === 0) return null;
   return (
     <section className="space-y-2">
-      <h3 className="text-[10px] font-bold uppercase tracking-wider text-[#78614E]">Onde encontrar</h3>
-      <p className="text-xs text-[#78614E]">Segurado por Pokémon selvagens; capture ou use Thief/Covet para pegar.</p>
+      <h3 className="border-b border-ink/30 pb-1 font-reading text-xs font-semibold uppercase tracking-wider text-ink-soft">Onde encontrar</h3>
+      <p className="font-reading text-sm text-ink-soft">Segurado por Pokémon selvagens; capture ou use Thief/Covet para pegar.</p>
       <ul className="space-y-2">
         {groups.map(({ versions, holders }) => (
-          <li key={versions.join(',')} className="rounded-xl border border-[#2A2421]/10 bg-[#F7F3EE]/70 px-3 py-2">
-            <p className="font-serif text-xs font-bold text-[#2A2421]">{versions.map(versionLabel).join(' · ')}</p>
+          <li key={versions.join(',')} className="rounded-[3px] border-[1.5px] border-ink/70 bg-paper-2 px-3 py-2">
+            <p className="font-reading text-sm font-semibold text-ink">{versions.map(versionLabel).join(' · ')}</p>
             <ul className="mt-1.5 flex flex-wrap gap-1.5">
               {holders.map(({ name, id, rarity }) => (
-                <li key={name} className="flex items-center gap-1 rounded-full border border-[#2A2421]/10 bg-[#FFFEFB] py-0.5 pl-0.5 pr-2">
+                <li key={name} className="flex items-center gap-1 rounded-[2px] border-[1.5px] border-ink/50 bg-paper py-0.5 pl-0.5 pr-2">
                   <img src={thumbnailSpriteUrl(id)} alt="" width={24} height={24} loading="lazy" decoding="async" className="h-6 w-6 object-contain" />
-                  <span className="text-xs font-semibold text-[#3E3A35]">{formatSlug(name)}</span>
-                  <span className="font-mono text-[11px] font-bold tabular-nums text-[#5B7856]">{rarity}%</span>
+                  <span className="font-reading text-sm font-medium text-ink">{formatSlug(name)}</span>
+                  <span className="font-mono text-[11px] font-bold tabular-nums text-[#56643A]">{rarity}%</span>
                 </li>
               ))}
             </ul>
@@ -119,13 +119,13 @@ function TextBlock({ title, entries }) {
   if (shown.length === 0) return null;
   return (
     <section className="space-y-1.5">
-      <h3 className="text-[10px] font-bold uppercase tracking-wider text-[#78614E]">{title}</h3>
+      <h3 className="border-b border-ink/30 pb-1 font-reading text-xs font-semibold uppercase tracking-wider text-ink-soft">{title}</h3>
       {shown.map((entry, index) => (
         <p
           key={entry.text}
           lang={entry.translated ? 'pt-BR' : 'en'}
-          className={`whitespace-pre-line text-sm leading-relaxed ${
-            index === 0 && shown.length > 1 ? 'font-semibold text-[#2A2421]' : 'text-[#3E3A35]'
+          className={`whitespace-pre-line font-reading text-[15px] leading-relaxed ${
+            index === 0 && shown.length > 1 ? 'font-semibold text-ink' : 'text-ink'
           }`}
         >
           {entry.text}
@@ -169,17 +169,17 @@ function MoveAbilityModal({ kind, name, onClose }) {
   // Portal: fica fora do drawer, que tem rolagem própria e cantos recortados.
   return createPortal(
     <div
-      className="fixed inset-0 z-[70] flex items-center justify-center bg-[#2A2421]/60 p-4 animate-fade-in motion-reduce:animate-none md:bg-[#2A2421]/45 md:backdrop-blur-sm"
+      className="fixed inset-0 z-[70] flex items-center justify-center bg-[#2A2421]/60 p-4 animate-fade-in motion-reduce:animate-none md:bg-[#2A2421]/45"
       onMouseDown={(e) => e.target === e.currentTarget && onClose()}
     >
       <div
         role="dialog"
         aria-modal="true"
         aria-labelledby={titleId}
-        className="relative flex max-h-[85vh] w-full max-w-lg flex-col rounded-[1.5rem_1.25rem_1.6rem_1.15rem/1.25rem_1.6rem_1.15rem_1.5rem] border-[1.5px] border-[#2A2421] bg-[#FFFEFB] shadow-panel animate-bubble-pop motion-reduce:animate-none"
+        className="paper-card relative flex max-h-[85vh] w-full max-w-lg flex-col shadow-panel animate-bubble-pop motion-reduce:animate-none"
       >
-        <header className="flex items-start gap-3 border-b border-[#5C4033]/25 px-6 pb-4 pt-5">
-          <span className="mt-0.5 flex h-10 w-10 shrink-0 items-center justify-center rounded-full border border-[#829b72]/40 bg-[#829b72]/15 text-[#5B7856]">
+        <header className="flex items-start gap-3 border-b-[1.5px] border-ink px-6 pb-4 pt-5">
+          <span className="mt-0.5 flex h-11 w-11 shrink-0 items-center justify-center rounded-full border-[1.5px] border-ink bg-paper-2 text-ink shadow-[2px_2px_0_#4A463E]">
             {state.info?.sprite ? (
               <img src={state.info.sprite} alt="" width={30} height={30} className="h-[30px] w-[30px] object-contain [image-rendering:pixelated]" />
             ) : (
@@ -187,11 +187,11 @@ function MoveAbilityModal({ kind, name, onClose }) {
             )}
           </span>
           <div className="min-w-0 flex-1">
-            <p className="font-hand text-lg leading-none text-[#78614E]">{label}</p>
+            <p className="font-hand text-lg leading-none text-ink-soft">{label}</p>
             <h2
               id={titleId}
               lang={title.translated ? 'pt-BR' : 'en'}
-              className="mt-0.5 font-serif text-2xl font-black capitalize leading-tight tracking-tight text-[#2A2421]"
+              className="mt-0.5 font-serif text-2xl font-black capitalize leading-tight tracking-tight text-ink"
             >
               {title.text}
             </h2>
@@ -201,7 +201,7 @@ function MoveAbilityModal({ kind, name, onClose }) {
             type="button"
             onClick={onClose}
             aria-label="Fechar"
-            className="inline-flex h-9 w-9 shrink-0 cursor-pointer items-center justify-center rounded-full border border-[#2A2421]/20 bg-[#FFFEFB] text-[#78614E] transition-colors hover:border-[#2A2421]/40 hover:text-[#2A2421] focus:outline-none focus-visible:ring-2 focus-visible:ring-paint-cobalt"
+            className="inline-flex h-9 w-9 shrink-0 cursor-pointer items-center justify-center rounded-[3px] border-[1.5px] border-ink bg-paper text-ink transition-colors hover:bg-paper-2"
           >
             <X className="h-5 w-5" aria-hidden="true" />
           </button>
@@ -209,14 +209,14 @@ function MoveAbilityModal({ kind, name, onClose }) {
 
         <div className="space-y-4 overflow-y-auto overscroll-contain px-6 pb-6 pt-4" aria-live="polite">
           {status === 'loading' && (
-            <p className="flex items-center justify-center gap-2 py-10 text-xs font-medium text-[#78614E]">
+            <p className="flex items-center justify-center gap-2 py-10 font-reading text-sm italic text-ink-soft">
               <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" />
               Consultando a PokéAPI...
             </p>
           )}
 
           {status === 'error' && (
-            <p className="flex items-center justify-center gap-2 py-10 text-center text-xs font-medium text-[#8A3B27]">
+            <p className="flex items-center justify-center gap-2 py-10 text-center font-reading text-sm text-vermilion">
               <TriangleAlert className="h-4 w-4 shrink-0" aria-hidden="true" />
               Não foi possível carregar os dados de “{formatSlug(slug)}”.
             </p>
@@ -226,9 +226,9 @@ function MoveAbilityModal({ kind, name, onClose }) {
             <>
               <dl className="grid grid-cols-2 gap-2 sm:grid-cols-3">
                 {attributesFor(info).map(([term, value]) => (
-                  <div key={term} className="rounded-xl border border-[#2A2421]/10 bg-[#F7F3EE]/70 px-3 py-2">
-                    <dt className="text-[10px] font-semibold uppercase tracking-wider text-[#78614E]">{term}</dt>
-                    <dd className="mt-0.5 text-sm font-bold text-[#2A2421]">{value}</dd>
+                  <div key={term} className="rounded-[3px] border-[1.5px] border-ink/70 bg-paper-2 px-3 py-2">
+                    <dt className="font-reading text-[11px] font-semibold uppercase tracking-wider text-ink-soft">{term}</dt>
+                    <dd className="mt-0.5 font-reading text-[15px] font-semibold text-ink">{value}</dd>
                   </div>
                 ))}
               </dl>
@@ -238,11 +238,11 @@ function MoveAbilityModal({ kind, name, onClose }) {
               {info.heldBy && <HeldBySection groups={info.heldBy} />}
 
               {!info.description && !info.shortEffect && !info.effect && (
-                <p className="text-xs italic text-[#78614E]">A PokéAPI ainda não tem descrição para este registro.</p>
+                <p className="font-reading text-sm italic text-ink-soft">A PokéAPI ainda não tem descrição para este registro.</p>
               )}
 
               {untranslated && (
-                <p className="flex items-start gap-1.5 border-t border-[#5C4033]/20 pt-3 text-[11px] italic leading-snug text-[#78614E]/85">
+                <p className="flex items-start gap-1.5 border-t border-ink/30 pt-3 font-reading text-xs italic leading-snug text-ink-soft">
                   <Languages className="mt-px h-3.5 w-3.5 shrink-0" aria-hidden="true" />
                   A PokéAPI ainda não tem tradução em português para este texto; ele aparece em inglês.
                 </p>

@@ -4,26 +4,69 @@
 
 /*
   Tinta sobre papel: fundo de papel com fibra, contornos a nanquim (#2A2421), aguadas de sépia e oliva
-  e manchas de pincel. Um só estilo de card (.paper-card), de campo (.paper-field) e de botão (.btn-*).
+  e manchas de pincel. Cards, campos e botões impressos: contorno a tinta e sombra deslocada sem desfoque.
 */
 
 @layer base {
   :root {
-    --ink: #2a2421;
+    /*
+      Superfícies e tintas: a fonte única das cores de base. O tailwind.config.js repete os mesmos valores
+      (paper, paper-2, ink, ink-soft, vermilion) para as classes utilitárias. Não há branco puro no app.
+    */
+    --page: #f7f3ee; /* fundo da página */
+    --paper: #f2ead9; /* fundo de campo, cards e texto claro sobre tinta */
+    --paper-2: #e6d9be; /* áreas agrupadas */
+    --ink: #1c1a17;
+    --ink-soft: #4a463e;
+    --vermilion: #b8402a;
     --ink-sepia: #5c4033;
     --ink-brown: #785132;
     --ink-olive: #829b72;
-    --paper: #f7f3ee;
-    --paper-bright: #fffefb;
+    /*
+      Cores de tipo: o fundo do chip e a cor do texto (tinta ou papel), escolhida para contraste WCAG AA de 4,5:1.
+      Ground, Flying, Psychic, Rock e Steel foram ajustados alguns pontos a partir da paleta proposta para passar.
+    */
+    --type-normal: #8e8a7a;
+    --type-normal-text: var(--ink);
+    --type-fire: #b8402a;
+    --type-fire-text: var(--paper);
+    --type-water: #2f5f8a;
+    --type-water-text: var(--paper);
+    --type-electric: #c9a227;
+    --type-electric-text: var(--ink);
+    --type-grass: #56643a;
+    --type-grass-text: var(--paper);
+    --type-ice: #6fa3a8;
+    --type-ice-text: var(--ink);
+    --type-fighting: #7a3b2e;
+    --type-fighting-text: var(--paper);
+    --type-poison: #6b3a7d;
+    --type-poison-text: var(--paper);
+    --type-ground: #a97930;
+    --type-ground-text: var(--ink);
+    --type-flying: #7282aa;
+    --type-flying-text: var(--ink);
+    --type-psychic: #a74b70;
+    --type-psychic-text: var(--paper);
+    --type-bug: #7d8b2e;
+    --type-bug-text: var(--ink);
+    --type-rock: #78684d;
+    --type-rock-text: var(--paper);
+    --type-ghost: #4e4670;
+    --type-ghost-text: var(--paper);
+    --type-dragon: #4a4fa0;
+    --type-dragon-text: var(--paper);
+    --type-dark: #3a3430;
+    --type-dark-text: var(--paper);
+    --type-steel: #646a75;
+    --type-steel-text: var(--paper);
+    --type-fairy: #b9708f;
+    --type-fairy-text: var(--ink);
     /* Tubos de tinta do ateliê. */
     --paint-pistachio: #a4c294;
     --paint-cobalt: #4f6d8a;
     --paint-magenta: #9e3d64;
     --paint-ochre: #b98428;
-    --splatter-olive: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 160 160'%3E%3Cg fill='%23829b72' fill-opacity='.16'%3E%3Cpath d='M62 58c10-9 26-8 33 2 6 8 3 15 10 20 9 6 5 19-6 21-9 2-12 10-22 9-12-1-15-11-24-14-11-4-12-17-3-24 6-5 6-9 12-14z'/%3E%3Ccircle cx='118' cy='46' r='6'/%3E%3Ccircle cx='132' cy='34' r='3.5'/%3E%3Ccircle cx='143' cy='26' r='2'/%3E%3Ccircle cx='30' cy='112' r='5'/%3E%3Ccircle cx='18' cy='126' r='2.5'/%3E%3Ccircle cx='104' cy='122' r='3'/%3E%3Ccircle cx='46' cy='38' r='2.5'/%3E%3Ccircle cx='122' cy='96' r='2'/%3E%3Cpath d='M98 98c6 6 14 14 22 30 1 3-2 5-4 3-8-10-14-19-20-29z'/%3E%3C/g%3E%3C/svg%3E");
-    --splatter-cobalt: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 160 160'%3E%3Cg fill='%234F6D8A' fill-opacity='.16'%3E%3Cpath d='M62 58c10-9 26-8 33 2 6 8 3 15 10 20 9 6 5 19-6 21-9 2-12 10-22 9-12-1-15-11-24-14-11-4-12-17-3-24 6-5 6-9 12-14z'/%3E%3Ccircle cx='118' cy='46' r='6'/%3E%3Ccircle cx='132' cy='34' r='3.5'/%3E%3Ccircle cx='143' cy='26' r='2'/%3E%3Ccircle cx='30' cy='112' r='5'/%3E%3Ccircle cx='18' cy='126' r='2.5'/%3E%3Ccircle cx='104' cy='122' r='3'/%3E%3Ccircle cx='46' cy='38' r='2.5'/%3E%3Ccircle cx='122' cy='96' r='2'/%3E%3Cpath d='M98 98c6 6 14 14 22 30 1 3-2 5-4 3-8-10-14-19-20-29z'/%3E%3C/g%3E%3C/svg%3E");
-    --splatter-magenta: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 160 160'%3E%3Cg fill='%239E3D64' fill-opacity='.16'%3E%3Cpath d='M62 58c10-9 26-8 33 2 6 8 3 15 10 20 9 6 5 19-6 21-9 2-12 10-22 9-12-1-15-11-24-14-11-4-12-17-3-24 6-5 6-9 12-14z'/%3E%3Ccircle cx='118' cy='46' r='6'/%3E%3Ccircle cx='132' cy='34' r='3.5'/%3E%3Ccircle cx='143' cy='26' r='2'/%3E%3Ccircle cx='30' cy='112' r='5'/%3E%3Ccircle cx='18' cy='126' r='2.5'/%3E%3Ccircle cx='104' cy='122' r='3'/%3E%3Ccircle cx='46' cy='38' r='2.5'/%3E%3Ccircle cx='122' cy='96' r='2'/%3E%3Cpath d='M98 98c6 6 14 14 22 30 1 3-2 5-4 3-8-10-14-19-20-29z'/%3E%3C/g%3E%3C/svg%3E");
-    --splatter-ochre: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 160 160'%3E%3Cg fill='%23B98428' fill-opacity='.16'%3E%3Cpath d='M62 58c10-9 26-8 33 2 6 8 3 15 10 20 9 6 5 19-6 21-9 2-12 10-22 9-12-1-15-11-24-14-11-4-12-17-3-24 6-5 6-9 12-14z'/%3E%3Ccircle cx='118' cy='46' r='6'/%3E%3Ccircle cx='132' cy='34' r='3.5'/%3E%3Ccircle cx='143' cy='26' r='2'/%3E%3Ccircle cx='30' cy='112' r='5'/%3E%3Ccircle cx='18' cy='126' r='2.5'/%3E%3Ccircle cx='104' cy='122' r='3'/%3E%3Ccircle cx='46' cy='38' r='2.5'/%3E%3Ccircle cx='122' cy='96' r='2'/%3E%3Cpath d='M98 98c6 6 14 14 22 30 1 3-2 5-4 3-8-10-14-19-20-29z'/%3E%3C/g%3E%3C/svg%3E");
     --marker-ochre: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 200 22'%3E%3Cg fill='%23B98428'%3E%3Cpath opacity='.85' d='M3 9c22-4 52-6 84-5 34 1 62 3 100 1 6 0 8 6 3 8-30 5-66 3-102 4-31 1-58 4-82 3-6 0-8-9-3-11z'/%3E%3Cpath opacity='.45' d='M14 15c40-2 90 0 140-1 10 0 18 1 26 2-1 3-6 4-12 4-50 1-100 0-150 1-5 0-6-5-4-6z'/%3E%3C/g%3E%3C/svg%3E");
     /* Fibra do papel: ruído fractal em tons de sépia, bem fraco. */
     --paper-grain: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='220' height='220'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 0.36 0 0 0 0 0.25 0 0 0 0 0.2 0 0 0 0.09 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
@@ -46,10 +89,10 @@
 
   body {
     @apply text-smeargle-text antialiased;
-    font-family: 'Inter', system-ui, sans-serif;
+    font-family: 'Newsreader', Georgia, serif;
     min-height: 100vh;
     overflow-x: hidden;
-    background-color: var(--paper);
+    background-color: var(--page);
     /*
       Retícula suave de pontos sépia, a fibra do papel e as aguadas largas de tinta, rolando com a página
       (nada fixo para repintar). A retícula alterna duas grades deslocadas, como a trama de uma impressão.
@@ -63,6 +106,91 @@
       radial-gradient(ellipse 35% 25% at 85% 8%, color-mix(in srgb, var(--section-wash) 12%, transparent), transparent 70%);
     background-size: 11px 11px, 11px 11px, 220px 220px, 100% 100%, 100% 100%, 100% 100%;
     background-position: 0 0, 5.5px 5.5px, 0 0, 0 0, 0 0, 0 0;
+  }
+
+  /*
+    Selects fora do header: sem a seta do navegador; no lugar, a gota de tinta do marcador (InkMarker).
+    Os do header já desenham o próprio marcador e têm `appearance-none`.
+  */
+  select:not(.appearance-none) {
+    appearance: none;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 12 10'%3E%3Cpath fill='%231C1A17' d='M1 2.5C4 1.6 8 1.4 11 2.2c.9.3 1 1.2.4 1.9L7 9.4c-.6.7-1.5.7-2-.1L.6 4.2C.1 3.5.3 2.7 1 2.5z'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 0.5rem center;
+    background-size: 0.7rem 0.6rem;
+    padding-right: 1.6rem;
+  }
+
+  /* Opções de select fora do header (o header usa as suas, escuras, via OPTION_CLASS). */
+  option {
+    background-color: var(--paper);
+    color: var(--ink);
+  }
+
+  /* Números: sem as setas brancas do navegador; teclado e roda continuam valendo. */
+  input[type='number'] {
+    -moz-appearance: textfield;
+    appearance: textfield;
+  }
+
+  input[type='number']::-webkit-inner-spin-button,
+  input[type='number']::-webkit-outer-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+  }
+
+  /* Checkbox de papel: contorno a tinta; marcado, bloco de tinta com o visto em papel. */
+  input[type='checkbox'] {
+    appearance: none;
+    display: inline-grid;
+    place-content: center;
+    flex-shrink: 0;
+    width: 1rem;
+    height: 1rem;
+    border: 1.5px solid var(--ink);
+    border-radius: 2px;
+    background-color: var(--paper);
+  }
+
+  input[type='checkbox']::before {
+    content: '';
+    width: 0.5rem;
+    height: 0.28rem;
+    border-bottom: 2px solid var(--paper);
+    border-left: 2px solid var(--paper);
+    transform: translateY(-1px) rotate(-45deg) scale(0);
+  }
+
+  input[type='checkbox']:checked {
+    background-color: var(--ink);
+  }
+
+  input[type='checkbox']:checked::before {
+    transform: translateY(-1px) rotate(-45deg) scale(1);
+  }
+
+  input[type='checkbox']:disabled {
+    opacity: 0.45;
+  }
+
+  /*
+    Foco dos campos no papel (conteúdo e modais): contorno vermelhão deslocado, sem brilho. O !important vence
+    os anéis (focus:ring-*) espalhados nos componentes. O header, escuro, mantém o sublinhado pistache.
+  */
+  :where(main, [role='dialog'], [role='alertdialog']) :is(input, select, textarea, button):focus-visible,
+  :where(main, [role='dialog'], [role='alertdialog']) :is(input:not([type='checkbox']), select, textarea):focus {
+    outline: 2px solid var(--vermilion) !important;
+    outline-offset: 2px;
+    box-shadow: none !important;
+  }
+
+  :where(main, [role='dialog'], [role='alertdialog']) ::placeholder {
+    color: var(--ink-soft) !important;
+    opacity: 1;
+  }
+
+  html {
+    scrollbar-color: var(--ink-soft) var(--paper-2);
   }
 
   ::selection {
@@ -94,53 +222,12 @@
 }
 
 @layer components {
-  /* Botões: no hover, uma aguada clara se abre por trás do texto (::before). */
-  .btn-action,
-  .btn-outline {
-    position: relative;
-    isolation: isolate;
-    overflow: hidden;
-  }
-
-  .btn-action::before,
-  .btn-outline::before {
-    content: '';
-    position: absolute;
-    inset: -40%;
-    z-index: -1;
-    border-radius: 46% 54% 42% 58% / 55% 45% 55% 45%;
-    opacity: 0;
-    transform: scale(0.2);
-    transition: transform 0.45s cubic-bezier(0.22, 1, 0.36, 1), opacity 0.3s ease-out;
-  }
-
-  .btn-action::before {
-    background: radial-gradient(circle, rgba(255, 254, 251, 0.32), rgba(164, 194, 148, 0.25) 45%, transparent 70%);
-  }
-
-  .btn-outline::before {
-    background: radial-gradient(circle, rgba(164, 194, 148, 0.4), rgba(185, 132, 40, 0.14) 50%, transparent 72%);
-  }
-
-  .btn-action:hover::before,
-  .btn-outline:hover::before {
-    opacity: 1;
-    transform: scale(1);
-  }
-
-  @media (prefers-reduced-motion: reduce) {
-    .btn-action::before,
-    .btn-outline::before {
-      transition: none;
-    }
-  }
-
   /*
-    Botão principal: pílula verde-oliva com borda fina no mesmo tom e sombra difusa. No hover sobe um pouco
-    e a sombra abre; ao apertar, volta ao lugar. O texto tem altura de linha 1, para o ícone ficar centrado nele.
+    Botões impressos: retângulo com contorno a tinta e sombra deslocada sem desfoque, como os cards da Pokédex.
+    No hover sobem para cima e para a esquerda e a sombra cresce; ao apertar, assentam no papel.
   */
   .btn-action {
-    @apply inline-flex h-11 items-center justify-center gap-2 rounded-full border border-[#6E8B6E] bg-smeargle-olive px-5 text-sm font-semibold leading-none text-white shadow-[0_1px_2px_rgba(42,36,33,0.12),0_6px_16px_-6px_rgba(91,120,86,0.55)] transition-[transform,box-shadow,background-color] duration-200 ease-out hover:-translate-y-px hover:bg-[#789364] hover:shadow-[0_2px_4px_rgba(42,36,33,0.12),0_12px_24px_-8px_rgba(91,120,86,0.6)] active:translate-y-0 active:shadow-[0_1px_2px_rgba(42,36,33,0.15)] focus:outline-none focus-visible:ring-2 focus-visible:ring-paint-cobalt focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-60 motion-reduce:transition-none motion-reduce:hover:translate-y-0;
+    @apply inline-flex h-11 items-center justify-center gap-2 rounded-[3px] border-[1.5px] border-[#1C1A17] bg-smeargle-olive px-5 font-reading text-[15px] font-semibold leading-none text-ink shadow-[3px_3px_0_#4A463E] transition-[transform,box-shadow,background-color] duration-150 ease-out hover:-translate-x-px hover:-translate-y-px hover:bg-[#789364] hover:shadow-[4px_4px_0_#4A463E] active:translate-x-px active:translate-y-px active:shadow-[1px_1px_0_#4A463E] focus:outline-none focus-visible:ring-2 focus-visible:ring-paint-cobalt focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-60 motion-reduce:transition-none motion-reduce:hover:translate-x-0 motion-reduce:hover:translate-y-0;
   }
 
   .btn-action > svg {
@@ -148,7 +235,7 @@
   }
 
   .btn-outline {
-    @apply inline-flex min-h-11 items-center justify-center gap-2 px-4 py-2 rounded-xl border-[1.5px] border-[#2A2421]/80 bg-[#FFFEFB] text-smeargle-ink-darkBrown text-sm font-medium shadow-[3px_3px_0_rgba(42,36,33,0.3)] transition-[transform,box-shadow,color] duration-150 hover:translate-x-px hover:translate-y-px hover:text-smeargle-text hover:shadow-[2px_2px_0_rgba(42,36,33,0.3),0_10px_22px_-10px_rgba(185,132,40,0.55)] active:translate-x-[3px] active:translate-y-[3px] active:shadow-none focus:outline-none focus-visible:ring-2 focus-visible:ring-paint-cobalt focus-visible:ring-offset-2;
+    @apply inline-flex min-h-11 items-center justify-center gap-2 rounded-[3px] border-[1.5px] border-[#1C1A17] bg-[#F2EAD9] px-4 py-2 font-reading text-[15px] font-medium text-[#1C1A17] shadow-[3px_3px_0_#4A463E] transition-[transform,box-shadow,background-color] duration-150 ease-out hover:-translate-x-px hover:-translate-y-px hover:bg-[#E6D9BE] hover:shadow-[4px_4px_0_#4A463E] active:translate-x-px active:translate-y-px active:shadow-[1px_1px_0_#4A463E] focus:outline-none focus-visible:ring-2 focus-visible:ring-paint-cobalt focus-visible:ring-offset-2 motion-reduce:transition-none motion-reduce:hover:translate-x-0 motion-reduce:hover:translate-y-0;
   }
 
   /* Título de bloco: o ponto é uma gota de tinta. */
@@ -193,116 +280,17 @@
   }
 
   /*
-    Folha a nanquim: o cartão das seções. Contorno de tinta com cantos de pincel, papel claro com fibra,
-    uma aguada de oliva num canto e o traço deslocado no lugar de sombra difusa.
+    Folha impressa: o cartão das seções, no mesmo desenho do card da Pokédex (.print-card), mas sem hover.
+    Papel com fibra, contorno sólido a tinta e sombra de impressão deslocada em tinta suave.
   */
   .paper-card {
     position: relative;
-    border: 1.5px solid rgba(42, 36, 33, 0.62);
-    border-radius: 1.4rem 1.15rem 1.5rem 1.05rem / 1.1rem 1.45rem 1.05rem 1.35rem;
-    background-color: var(--paper-bright);
-    --card-splatter: var(--splatter-olive);
-    background-image:
-      var(--card-splatter),
-      radial-gradient(ellipse 55% 45% at 100% 0%, rgba(164, 194, 148, 0.16), transparent 70%),
-      var(--paper-grain);
-    background-size: 7.5rem 7.5rem, auto, 220px 220px;
-    background-position: -1.75rem calc(100% + 1.75rem), 0 0, 0 0;
-    background-repeat: no-repeat, no-repeat, repeat;
-    box-shadow: 3px 3px 0 rgba(42, 36, 33, 0.13);
-  }
-
-  .paper-card:nth-of-type(4n + 2) {
-    --card-splatter: var(--splatter-cobalt);
-  }
-
-  .paper-card:nth-of-type(4n + 3) {
-    --card-splatter: var(--splatter-ochre);
-  }
-
-  .paper-card:nth-of-type(4n) {
-    --card-splatter: var(--splatter-magenta);
-  }
-
-  /* Folhas pequenas e repetidas em grade (itens): sem respingo, que ali viraria ruído. */
-  .paper-card.paper-card-quiet {
-    --card-splatter: none;
-  }
-
-  /* Estado vazio: respingos de tinta nos dois cantos, bem fracos, atrás do conteúdo. */
-  .ink-scatter {
-    position: relative;
-    isolation: isolate;
-  }
-
-  .ink-scatter::before {
-    content: '';
-    position: absolute;
-    inset: 0;
-    z-index: -1;
-    pointer-events: none;
-    opacity: 0.85;
-    background-image: var(--splatter-cobalt), var(--splatter-ochre);
-    background-size: 9rem 9rem, 7rem 7rem;
-    background-position: 8% 18%, 92% 88%;
-    background-repeat: no-repeat;
-  }
-
-  /*
-    Hover do card da Pokédex: um respingo de tinta na cor do tipo estoura atrás do sprite
-    e um contorno de pincel se desenha em volta do card. A cor do respingo vem de --splat.
-  */
-  .ink-splat {
-    isolation: isolate;
-  }
-
-  .ink-splat::before {
-    content: '';
-    position: absolute;
-    left: 50%;
-    top: 44%;
-    z-index: -1;
-    width: 72%;
-    aspect-ratio: 1;
-    pointer-events: none;
-    background: var(--splat, #829b72);
-    -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 200 200'%3E%3Cpath d='M100.0 42.0C106.3 41.8 112.8 50.5 119.1 53.8C125.5 57.1 133.5 57.4 138.2 61.8C142.8 66.3 143.3 74.1 147.1 80.5C150.9 86.8 161.3 93.6 161.0 100.0C160.7 106.4 149.0 112.3 145.3 118.8C141.6 125.2 143.1 134.0 138.9 138.9C134.7 143.8 126.4 144.7 119.9 148.0C113.4 151.4 106.4 159.6 100.0 159.0C93.6 158.4 87.8 148.1 81.6 144.3C75.5 140.6 68.0 140.9 63.2 136.8C58.4 132.6 56.8 125.6 52.9 119.5C49.0 113.4 39.8 106.4 40.0 100.0C40.2 93.6 50.4 87.5 53.8 80.9C57.2 74.3 55.8 64.8 60.4 60.4C65.0 56.0 74.6 57.8 81.2 54.7C87.8 51.7 93.7 42.2 100.0 42.0Z'/%3E%3Ccircle cx='158' cy='44' r='6.5'/%3E%3Ccircle cx='174' cy='66' r='3.5'/%3E%3Ccircle cx='40' cy='48' r='5'/%3E%3Ccircle cx='28' cy='124' r='5.5'/%3E%3Ccircle cx='48' cy='160' r='3'/%3E%3Ccircle cx='150' cy='162' r='5'/%3E%3Ccircle cx='176' cy='128' r='3'/%3E%3Ccircle cx='100' cy='22' r='3.5'/%3E%3Ccircle cx='114' cy='178' r='2.5'/%3E%3C/svg%3E") center / contain no-repeat;
-    mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 200 200'%3E%3Cpath d='M100.0 42.0C106.3 41.8 112.8 50.5 119.1 53.8C125.5 57.1 133.5 57.4 138.2 61.8C142.8 66.3 143.3 74.1 147.1 80.5C150.9 86.8 161.3 93.6 161.0 100.0C160.7 106.4 149.0 112.3 145.3 118.8C141.6 125.2 143.1 134.0 138.9 138.9C134.7 143.8 126.4 144.7 119.9 148.0C113.4 151.4 106.4 159.6 100.0 159.0C93.6 158.4 87.8 148.1 81.6 144.3C75.5 140.6 68.0 140.9 63.2 136.8C58.4 132.6 56.8 125.6 52.9 119.5C49.0 113.4 39.8 106.4 40.0 100.0C40.2 93.6 50.4 87.5 53.8 80.9C57.2 74.3 55.8 64.8 60.4 60.4C65.0 56.0 74.6 57.8 81.2 54.7C87.8 51.7 93.7 42.2 100.0 42.0Z'/%3E%3Ccircle cx='158' cy='44' r='6.5'/%3E%3Ccircle cx='174' cy='66' r='3.5'/%3E%3Ccircle cx='40' cy='48' r='5'/%3E%3Ccircle cx='28' cy='124' r='5.5'/%3E%3Ccircle cx='48' cy='160' r='3'/%3E%3Ccircle cx='150' cy='162' r='5'/%3E%3Ccircle cx='176' cy='128' r='3'/%3E%3Ccircle cx='100' cy='22' r='3.5'/%3E%3Ccircle cx='114' cy='178' r='2.5'/%3E%3C/svg%3E") center / contain no-repeat;
-    opacity: 0;
-    transform: translate(-50%, -50%) scale(0.35);
-    transition: transform 0.45s cubic-bezier(0.34, 1.56, 0.64, 1), opacity 0.2s ease-out;
-  }
-
-  .ink-splat:hover::before,
-  .ink-splat:focus-visible::before {
-    opacity: 0.5;
-    transform: translate(-50%, -50%) scale(1);
-  }
-
-  /* Contorno de pincel: o traço percorre a borda do card, começando no canto de cima. */
-  .ink-outline {
-    fill: none;
-    stroke: var(--ink);
-    stroke-width: 2.25;
-    stroke-linecap: round;
-    stroke-linejoin: round;
-    /* O traço escondido fica todo antes do início do caminho: sem isso, a ponta redonda aparece como um ponto. */
-    stroke-dasharray: 1 2;
-    stroke-dashoffset: 1.05;
-    opacity: 0.85;
-    transition: stroke-dashoffset 0.6s cubic-bezier(0.65, 0, 0.35, 1);
-  }
-
-  .ink-splat:hover .ink-outline,
-  .ink-splat:focus-visible .ink-outline {
-    stroke-dashoffset: 0;
-  }
-
-  @media (prefers-reduced-motion: reduce) {
-    .ink-splat::before,
-    .ink-outline {
-      transition: none;
-    }
+    border: 1.5px solid #1c1a17;
+    border-radius: 4px;
+    background-color: #f2ead9;
+    background-image: var(--paper-grain);
+    background-size: 220px 220px;
+    box-shadow: 3px 3px 0 #4a463e;
   }
 
   /* Sublinhado de marcador de ponta porosa sob uma anotação. */
@@ -314,68 +302,35 @@
     background-position: 0 100%;
   }
 
-  /* Aguada de tinta por trás de um bloco de texto em destaque (estado vazio, aviso). */
-  .ink-wash {
-    background-image:
-      radial-gradient(ellipse 70% 60% at 15% 30%, rgba(120, 81, 50, 0.1), transparent 70%),
-      radial-gradient(ellipse 50% 50% at 90% 85%, rgba(130, 155, 114, 0.14), transparent 70%),
-      var(--paper-grain);
-    background-size: auto, auto, 220px 220px;
-  }
-
-  /*
-    Pingo de aquarela no canto de cima da folha, por dentro da borda: centro claro, borda mais carregada
-    onde a tinta secou e respingos miúdos em volta. Fica atrás do conteúdo
-    (isolation + z-index -1), sem cobrir texto nem botões.
-  */
-  .ink-blotted {
-    isolation: isolate;
-  }
-
-  .ink-blotted::before {
-    content: '';
-    position: absolute;
-    top: 0.5rem;
-    right: 0.6rem;
-    z-index: -1;
-    width: 3.4rem;
-    height: 2.55rem;
-    pointer-events: none;
-    background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 120 90'%3E%3Cdefs%3E%3CradialGradient id='w' cx='45%' cy='42%' r='62%'%3E%3Cstop offset='0' stop-color='%23829b72' stop-opacity='.16'/%3E%3Cstop offset='.7' stop-color='%23829b72' stop-opacity='.3'/%3E%3Cstop offset='1' stop-color='%23829b72' stop-opacity='.55'/%3E%3C/radialGradient%3E%3C/defs%3E%3Cpath d='M96.0 46.0C95.1 49.3 91.4 51.7 89.9 55.0C88.4 58.2 89.4 62.4 87.0 65.5C84.6 68.6 80.2 72.3 75.7 73.4C71.2 74.5 64.6 73.1 60.0 72.0C55.4 70.9 52.2 68.1 48.2 66.7C44.1 65.2 39.9 65.1 35.8 63.5C31.7 61.8 25.6 59.9 23.4 56.9C21.2 54.0 21.5 49.3 22.6 46.0C23.7 42.7 28.0 40.0 30.1 37.0C32.1 34.0 32.6 31.0 35.1 28.0C37.5 25.0 40.4 20.4 44.6 19.1C48.7 17.8 55.4 19.0 60.0 20.0C64.6 21.0 68.1 23.4 72.1 24.9C76.1 26.3 80.1 27.0 83.9 28.7C87.8 30.5 93.2 32.6 95.3 35.5C97.3 38.3 96.9 42.7 96.0 46.0Z' fill='url(%23w)' stroke='%23829b72' stroke-opacity='.5' stroke-width='1.6'/%3E%3Ccircle cx='102' cy='70' r='4.2' fill='%23829b72' fill-opacity='.4'/%3E%3Ccircle cx='18' cy='20' r='3.2' fill='%23829b72' fill-opacity='.45'/%3E%3Ccircle cx='10' cy='34' r='1.8' fill='%23829b72' fill-opacity='.38'/%3E%3Ccircle cx='106' cy='22' r='2.4' fill='%23829b72' fill-opacity='.4'/%3E%3C/svg%3E") center / contain no-repeat;
-  }
-
   .paper-field {
-    @apply h-10 w-full rounded-xl border-[1.5px] border-[#2A2421]/25 bg-[#FFFEFB] px-3 text-sm text-smeargle-text shadow-[inset_1px_2px_0_rgba(42,36,33,0.05)] transition-colors placeholder:italic placeholder:text-[#78614E]/60 hover:border-[#2A2421]/45 focus:border-paint-cobalt focus:outline-none focus:ring-2 focus:ring-paint-cobalt/40 disabled:cursor-not-allowed disabled:opacity-60;
+    @apply h-10 w-full rounded-[3px] border-[1.5px] border-ink bg-paper px-3 font-reading text-[15px] text-ink transition-colors placeholder:italic disabled:cursor-not-allowed disabled:opacity-60;
   }
 
   .paper-label {
-    @apply mb-1 block font-hand text-base font-semibold leading-none text-[#78614E];
+    @apply mb-1 block font-reading text-sm font-semibold leading-none text-[#4A463E];
   }
 
-  /* Abas de seção: o nome em serifa e a pincelada de tinta sublinhando a ativa. */
+  /* Abas de seção: o nome na serifa de leitura e uma pincelada vermelhão sublinhando a ativa, sem fundo. */
   .ink-tab {
-    @apply relative inline-flex min-h-11 cursor-pointer items-center gap-1.5 px-2.5 pb-2 font-serif text-base font-semibold leading-none text-[#5C4033]/55 transition-colors hover:text-[#5C4033] focus:outline-none focus-visible:ring-2 focus-visible:ring-paint-cobalt disabled:cursor-not-allowed disabled:opacity-40;
+    @apply relative inline-flex min-h-11 cursor-pointer items-center gap-1.5 px-2.5 pb-2 font-reading text-base font-medium leading-none text-[#4A463E] transition-colors hover:text-[#5C4033] focus:outline-none focus-visible:ring-2 focus-visible:ring-paint-cobalt disabled:cursor-not-allowed disabled:opacity-40;
   }
 
   .ink-tab[aria-selected='true'] {
-    @apply text-[#2A2421];
+    @apply font-semibold text-[#1C1A17];
   }
 
   .ink-tab[aria-selected='true']::after {
     content: '';
     position: absolute;
-    inset: auto 0.35rem 0.25rem;
-    height: 0.45rem;
-    background: rgba(130, 155, 114, 0.6);
+    inset: auto 0.5rem 0.2rem;
+    height: 0.28rem;
+    background: #b8402a;
     border-radius: 60% 40% 55% 45% / 70% 60% 40% 30%;
-    transform: rotate(-1deg);
-    z-index: -1;
   }
 
-  /* Selo de tinta: anel cheio, levemente torto, para ícones e números de destaque. */
+  /* Selo de tinta: anel com contorno a tinta e sombra de impressão, para ícones e números de destaque. */
   .ink-stamp {
-    @apply inline-flex items-center justify-center rounded-full border-[1.5px] border-[#2A2421]/70 bg-[#FFFEFB] text-[#5C4033] shadow-[2px_2px_0_rgba(42,36,33,0.18)];
-    transform: rotate(-4deg);
+    @apply inline-flex items-center justify-center rounded-full border-[1.5px] border-[#1C1A17] bg-[#F2EAD9] text-[#1C1A17] shadow-[2px_2px_0_#4A463E];
   }
 }
 
@@ -393,7 +348,7 @@
   .brush-bar {
     height: 100%;
     background-image:
-      repeating-linear-gradient(180deg, rgba(255, 255, 255, 0.22) 0 1px, transparent 1px 3px),
+      repeating-linear-gradient(180deg, rgba(242, 234, 217, 0.22) 0 1px, transparent 1px 3px),
       linear-gradient(90deg, rgba(42, 36, 33, 0.1), transparent 30%, transparent 85%, rgba(42, 36, 33, 0.18));
     -webkit-mask:
       linear-gradient(#000, #000) left / calc(100% - 13px) 100% no-repeat,
@@ -441,11 +396,184 @@
   }
 
   /*
-    Anotação a nanquim em Playfair itálico. O ajuste de altura mantém o tamanho visual que a fonte manuscrita
+    Anotação a nanquim em Newsreader itálico. O ajuste de altura mantém o tamanho visual que a fonte manuscrita
     anterior tinha nas mesmas classes text-*, sem precisar reescrever cada uso.
   */
   .font-hand {
     font-style: italic;
     font-size-adjust: 0.4;
+  }
+}
+
+/*
+  Card da grade da Pokédex, impresso: papel, contorno sólido a tinta e uma sombra de impressão deslocada em tinta suave,
+  sem desfoque. No hover o card sobe para cima e para a esquerda e a sombra cresce, como uma folha levantada.
+*/
+@layer components {
+  .print-card {
+    position: relative;
+    border: 1.5px solid #1c1a17;
+    border-radius: 4px;
+    background-color: #f2ead9;
+    background-image: var(--paper-grain);
+    background-size: 220px 220px;
+    box-shadow: 3px 3px 0 #4a463e;
+    transition: transform 0.18s ease-out, box-shadow 0.18s ease-out;
+  }
+
+  .print-card:hover,
+  .print-card:has(> button:focus-visible) {
+    transform: translate(-2px, -2px);
+    box-shadow: 5px 5px 0 #4a463e;
+  }
+
+  .print-card[data-selected='true'] {
+    box-shadow: 3px 3px 0 #b8402a;
+  }
+
+  .print-card[data-selected='true']:hover {
+    box-shadow: 5px 5px 0 #b8402a;
+  }
+
+  /* Mancha de tinta atrás do sprite: sólida, com cantos desiguais. */
+  .print-blot {
+    border-radius: 58% 42% 55% 45% / 46% 60% 40% 54%;
+  }
+
+  /*
+    Chip de tipo: bloco preenchido na cor do tipo (data-type), texto em caixa alta com contraste AA, cantos retos.
+    O nome do tipo continua escrito: a cor nunca é o único indicador. Tipo desconhecido sai em tinta suave.
+  */
+  .type-chip {
+    display: inline-flex;
+    align-items: center;
+    padding: 0.32rem 0.45rem;
+    border-radius: 2px;
+    background-color: var(--chip-bg, var(--ink-soft));
+    color: var(--chip-text, var(--paper));
+    font-family: 'JetBrains Mono', ui-monospace, monospace;
+    font-size: 0.68rem;
+    font-weight: 600;
+    line-height: 1;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+  }
+
+  /* Opções do select de tipo: a mesma cor do chip (o Chrome no Windows e no Linux pinta; no macOS o menu é nativo). */
+  option[data-type] {
+    background-color: var(--chip-bg);
+    color: var(--chip-text);
+  }
+
+  .type-chip[data-type='normal'],
+  option[data-type='normal'] {
+    --chip-bg: var(--type-normal);
+    --chip-text: var(--type-normal-text);
+  }
+  .type-chip[data-type='fire'],
+  option[data-type='fire'] {
+    --chip-bg: var(--type-fire);
+    --chip-text: var(--type-fire-text);
+  }
+  .type-chip[data-type='water'],
+  option[data-type='water'] {
+    --chip-bg: var(--type-water);
+    --chip-text: var(--type-water-text);
+  }
+  .type-chip[data-type='electric'],
+  option[data-type='electric'] {
+    --chip-bg: var(--type-electric);
+    --chip-text: var(--type-electric-text);
+  }
+  .type-chip[data-type='grass'],
+  option[data-type='grass'] {
+    --chip-bg: var(--type-grass);
+    --chip-text: var(--type-grass-text);
+  }
+  .type-chip[data-type='ice'],
+  option[data-type='ice'] {
+    --chip-bg: var(--type-ice);
+    --chip-text: var(--type-ice-text);
+  }
+  .type-chip[data-type='fighting'],
+  option[data-type='fighting'] {
+    --chip-bg: var(--type-fighting);
+    --chip-text: var(--type-fighting-text);
+  }
+  .type-chip[data-type='poison'],
+  option[data-type='poison'] {
+    --chip-bg: var(--type-poison);
+    --chip-text: var(--type-poison-text);
+  }
+  .type-chip[data-type='ground'],
+  option[data-type='ground'] {
+    --chip-bg: var(--type-ground);
+    --chip-text: var(--type-ground-text);
+  }
+  .type-chip[data-type='flying'],
+  option[data-type='flying'] {
+    --chip-bg: var(--type-flying);
+    --chip-text: var(--type-flying-text);
+  }
+  .type-chip[data-type='psychic'],
+  option[data-type='psychic'] {
+    --chip-bg: var(--type-psychic);
+    --chip-text: var(--type-psychic-text);
+  }
+  .type-chip[data-type='bug'],
+  option[data-type='bug'] {
+    --chip-bg: var(--type-bug);
+    --chip-text: var(--type-bug-text);
+  }
+  .type-chip[data-type='rock'],
+  option[data-type='rock'] {
+    --chip-bg: var(--type-rock);
+    --chip-text: var(--type-rock-text);
+  }
+  .type-chip[data-type='ghost'],
+  option[data-type='ghost'] {
+    --chip-bg: var(--type-ghost);
+    --chip-text: var(--type-ghost-text);
+  }
+  .type-chip[data-type='dragon'],
+  option[data-type='dragon'] {
+    --chip-bg: var(--type-dragon);
+    --chip-text: var(--type-dragon-text);
+  }
+  .type-chip[data-type='dark'],
+  option[data-type='dark'] {
+    --chip-bg: var(--type-dark);
+    --chip-text: var(--type-dark-text);
+  }
+  .type-chip[data-type='steel'],
+  option[data-type='steel'] {
+    --chip-bg: var(--type-steel);
+    --chip-text: var(--type-steel-text);
+  }
+  .type-chip[data-type='fairy'],
+  option[data-type='fairy'] {
+    --chip-bg: var(--type-fairy);
+    --chip-text: var(--type-fairy-text);
+  }
+
+  /* Carimbo (selo Smogon): retângulo com contorno e uma cor só, sem fundo. */
+  .type-stamp {
+    display: inline-flex;
+    align-items: center;
+    padding: 0.3rem 0.45rem;
+    border: 1.5px solid currentColor;
+    border-radius: 2px;
+    font-family: 'JetBrains Mono', ui-monospace, monospace;
+    font-size: 0.68rem;
+    font-weight: 600;
+    line-height: 1;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .print-card {
+      transition: none;
+    }
   }
 }

@@ -42,12 +42,12 @@ function SwapPanel({ members, slotIndex, ctx, before, onSwap, onClose }) {
         role="dialog"
         aria-modal="false"
         aria-label={`Trocar ${name}`}
-        className="fixed inset-x-0 bottom-0 z-50 flex max-h-[85vh] flex-col rounded-t-sketch border border-[#2A2421]/25 bg-[#FBF7EE] shadow-[0_-12px_32px_-12px_rgba(42,36,33,0.45)] sm:absolute sm:inset-x-0 sm:bottom-auto sm:top-full sm:z-30 sm:mt-2 sm:max-h-[28rem] sm:rounded-sketch sm:shadow-[0_14px_32px_-14px_rgba(42,36,33,0.5)]"
+        className="fixed inset-x-0 bottom-0 z-50 flex max-h-[85vh] flex-col rounded-t-sketch border border-[#2A2421]/25 bg-paper shadow-[0_-12px_32px_-12px_rgba(42,36,33,0.45)] sm:absolute sm:inset-x-0 sm:bottom-auto sm:top-full sm:z-30 sm:mt-2 sm:max-h-[28rem] sm:rounded-sketch sm:shadow-[3px_3px_0_#4A463E]"
       >
         {/* Seta do popover apontando para o sprite (só no desktop). */}
         <span
           aria-hidden="true"
-          className="absolute -top-1.5 hidden h-3 w-3 rotate-45 border-l border-t border-[#2A2421]/25 bg-[#FBF7EE] sm:block"
+          className="absolute -top-1.5 hidden h-3 w-3 rotate-45 border-l border-t border-[#2A2421]/25 bg-paper sm:block"
           style={{ left: `calc(${((slotIndex + 0.5) / members.length) * 100}% - 6px)` }}
         />
         {/* A rolagem fica aqui dentro, para não cortar a seta do popover. */}
@@ -64,7 +64,7 @@ function SwapPanel({ members, slotIndex, ctx, before, onSwap, onClose }) {
               {options.map((option) => <SwapOptionRow key={option.pokemon.id} option={option} onSwap={onSwap} />)}
             </ul>
           ) : (
-            <p className="font-serif text-xs italic text-smeargle-textDim">Nenhum Pokémon do tier cabe neste slot com as regras do plano.</p>
+            <p className="font-reading text-xs italic text-smeargle-textDim">Nenhum Pokémon do tier cabe neste slot com as regras do plano.</p>
           )}
 
           <div className="mt-3 border-t border-[#78614E]/15 pt-2.5">

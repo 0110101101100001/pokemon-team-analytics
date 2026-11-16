@@ -1,11 +1,16 @@
-import { ChevronDown, Search } from 'lucide-react';
+import { Search } from 'lucide-react';
+import { BrushUnderline, InkMarker } from '../InkDecor';
 
+// Campo de papel: só o sublinhado a tinta, sem caixa. No foco o sublinhado engrossa e pega o pistache.
 export const FIELD_CLASS =
-  'h-9 sm:h-10 w-full rounded-xl border border-[#F7F3EE]/30 bg-[#3E2A1F]/90 text-[#F7F3EE] [color-scheme:dark] shadow-inner transition-[border-color,box-shadow] hover:border-[#F7F3EE]/50 hover:shadow-[inset_0_2px_4px_rgba(0,0,0,0.25),0_0_16px_-6px_rgba(164,194,148,0.6)] focus:outline-none focus:ring-2 focus:ring-[#A4C294]/70 focus:border-[#A4C294]';
-export const SELECT_CLASS = `${FIELD_CLASS} appearance-none pl-2.5 pr-7 sm:pl-3 sm:pr-9 text-xs font-serif font-semibold tracking-wide cursor-pointer`;
-export const TEXT_INPUT_BASE = `${FIELD_CLASS} pl-9 text-sm font-serif placeholder:italic placeholder:text-[#F7F3EE]/70`;
+  'h-9 sm:h-10 w-full rounded-none border-0 border-b-[1.5px] border-[#F7F3EE]/50 bg-transparent text-paper [color-scheme:dark] transition-[border-color,border-width] hover:border-[#F7F3EE]/85 focus:outline-none focus:border-b-[2.5px] focus:border-[#A4C294]';
+export const SELECT_CLASS = `${FIELD_CLASS} appearance-none pl-1 pr-6 sm:pr-7 font-reading text-sm font-medium cursor-pointer`;
+export const TEXT_INPUT_BASE = `${FIELD_CLASS} pl-7 font-reading text-[15px] placeholder:italic placeholder:text-[#F7F3EE]/75`;
+// Botão do header: retângulo de contorno, como um carimbo.
+export const HEADER_BUTTON_CLASS =
+  'relative h-9 sm:h-10 inline-flex items-center justify-center gap-2 rounded-[3px] border-[1.5px] border-[#F7F3EE]/55 px-3 font-reading text-sm font-medium text-paper transition-colors cursor-pointer hover:bg-[#F7F3EE]/10 focus:outline-none focus-visible:ring-2 focus-visible:ring-[#A4C294]/70';
 export const TEXT_INPUT_CLASS = `${TEXT_INPUT_BASE} pr-3`;
-export const OPTION_CLASS = 'bg-[#2A1C14] text-[#F7F3EE] font-sans';
+export const OPTION_CLASS = 'bg-[#2A1C14] text-[#F7F3EE] font-reading';
 export const ICON_CLASS = 'pointer-events-none absolute top-1/2 -translate-y-1/2 w-4 h-4 text-[#F7F3EE]/80';
 
 /**
@@ -27,7 +32,7 @@ export function HeaderSelect({ label, placeholder, value, onChange, disabled = f
         {!controlled && <option value="" hidden>{placeholder}</option>}
         {children}
       </select>
-      <ChevronDown className={`${ICON_CLASS} right-2 sm:right-3`} aria-hidden="true" />
+      <InkMarker className="pointer-events-none absolute right-1 top-1/2 h-2.5 w-3 -translate-y-1/2 text-[#F7F3EE]/90 sm:right-1.5" />
     </div>
   );
 }
@@ -35,7 +40,7 @@ export function HeaderSelect({ label, placeholder, value, onChange, disabled = f
 export function HeaderSearch({ label, placeholder, value, onChange, className = 'min-w-0 lg:flex-1' }) {
   return (
     <label className={`relative block w-full ${className}`}>
-      <Search className={`${ICON_CLASS} left-3`} aria-hidden="true" />
+      <Search className={`${ICON_CLASS} left-1`} aria-hidden="true" />
       <input
         type="search"
         className={TEXT_INPUT_CLASS}
@@ -48,13 +53,10 @@ export function HeaderSearch({ label, placeholder, value, onChange, className = 
   );
 }
 
+/** Alternador do header: opções em texto, a ativa marcada por uma pincelada pistache em vez de fundo. */
 export function HeaderSegmented({ label, options, value, onChange, className = 'sm:shrink-0' }) {
   return (
-    <div
-      role="group"
-      aria-label={label}
-      className={`flex h-9 rounded-xl border border-[#F7F3EE]/30 bg-[#3E2A1F]/90 p-0.5 shadow-inner sm:h-10 ${className}`}
-    >
+    <div role="group" aria-label={label} className={`flex h-9 items-stretch gap-1 sm:h-10 ${className}`}>
       {options.map((option) => {
         const selected = option.value === value;
         return (
@@ -63,11 +65,12 @@ export function HeaderSegmented({ label, options, value, onChange, className = '
             type="button"
             aria-pressed={selected}
             onClick={() => onChange(option.value)}
-            className={`flex-1 cursor-pointer whitespace-nowrap rounded-[0.95rem] px-2.5 font-serif text-xs font-semibold tracking-wide transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-[#A4C294]/70 sm:px-3.5 ${
-              selected ? 'bg-[#A4C294] text-[#2A1C14] shadow-[0_0_14px_-2px_rgba(164,194,148,0.65)]' : 'text-[#F7F3EE]/75 hover:text-[#F7F3EE]'
+            className={`relative flex-1 cursor-pointer whitespace-nowrap px-2 font-reading text-sm transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-[#A4C294]/70 sm:px-2.5 ${
+              selected ? 'font-semibold text-paper' : 'text-[#F7F3EE]/75 hover:text-paper'
             }`}
           >
             {option.label}
+            <BrushUnderline color="#A4C294" active={selected} className="inset-x-1.5 bottom-1 h-[4px] w-[calc(100%-0.75rem)]" />
           </button>
         );
       })}

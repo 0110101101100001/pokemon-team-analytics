@@ -26,7 +26,7 @@ const STEP_BUTTON = 'flex h-full w-6 shrink-0 cursor-pointer items-center justif
 /** Estágio de um atributo, de −6 a +6: o nome em cima e o contador com menos e mais embaixo. */
 function BoostStepper({ stat, value, onChange }) {
   const label = STAT_LABELS[stat];
-  const tone = value > 0 ? 'border-smeargle-olive bg-smeargle-olive/10 text-smeargle-ink-darkGreen' : value < 0 ? 'border-[#B5543C]/50 bg-[#B5543C]/5 text-[#8A3B27]' : 'border-[#78614E]/25 bg-[#FFFEFB]/80 text-smeargle-text';
+  const tone = value > 0 ? 'border-smeargle-olive bg-smeargle-olive/10 text-smeargle-ink-darkGreen' : value < 0 ? 'border-[#B5543C]/50 bg-[#B5543C]/5 text-[#8A3B27]' : 'border-[#78614E]/25 bg-paper/80 text-smeargle-text';
   return (
     <div className="min-w-0" role="group" aria-label={`Estágio de ${label}`}>
       <span className="mb-0.5 block text-center text-[10px] font-bold uppercase tracking-wider text-[#78614E]">{label}</span>
@@ -51,7 +51,7 @@ function TeamSourcePicker({ teams, value, onChange }) {
     return (
       <span className="mr-1 inline-flex items-baseline gap-1">
         {label}
-        <span className="max-w-[10rem] truncate font-serif text-xs font-semibold text-[#5C4033]">{teams[0].label}</span>
+        <span className="max-w-[10rem] truncate font-reading text-xs font-semibold text-[#5C4033]">{teams[0].label}</span>
       </span>
     );
   }
@@ -63,7 +63,7 @@ function TeamSourcePicker({ teams, value, onChange }) {
           value={value}
           onChange={(e) => onChange(e.target.value)}
           aria-label="Time dos atalhos"
-          className="paper-field h-8 max-w-[11rem] cursor-pointer appearance-none truncate py-0 pl-2.5 pr-7 font-serif text-xs font-semibold"
+          className="paper-field h-8 max-w-[11rem] cursor-pointer appearance-none truncate py-0 pl-2.5 pr-7 font-reading text-xs font-semibold"
         >
           {teams.map((source) => <option key={source.id} value={source.id}>{source.label}</option>)}
         </select>
@@ -126,7 +126,7 @@ function CombatantPanel({ caption, title, pickerPlaceholder, side, battle, forms
               onClick={() => pickFromTeam(member)}
               aria-label={`Usar ${formatSlug(member.name)} do time`}
               title={formatSlug(member.name)}
-              className={`cursor-pointer rounded-full border bg-[#FFFEFB] transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-paint-cobalt ${
+              className={`cursor-pointer rounded-[3px] border bg-paper transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-paint-cobalt ${
                 pokemon?.id === member.id ? 'border-smeargle-olive ring-1 ring-smeargle-olive' : 'border-[#78614E]/25 hover:border-[#78614E]/60'
               }`}
             >
@@ -150,7 +150,7 @@ function CombatantPanel({ caption, title, pickerPlaceholder, side, battle, forms
                   <PokemonTypeBadge key={type} type={type} className={side.tera && side.tera !== 'stellar' ? 'line-through opacity-50' : ''} />
                 ))}
                 {side.tera && (
-                  <span className="inline-flex items-center gap-1 rounded-full border border-[#BFA2F2]/70 bg-[#BFA2F2]/20 py-0.5 pl-1.5 pr-2 text-[10px] font-bold uppercase tracking-wider text-[#5B3F8C]">
+                  <span className="inline-flex items-center gap-1 rounded-[3px] border border-[#BFA2F2]/70 bg-[#BFA2F2]/20 py-0.5 pl-1.5 pr-2 text-[10px] font-bold uppercase tracking-wider text-[#5B3F8C]">
                     <Gem className="h-3 w-3" aria-hidden="true" />
                     Tera {formatSlug(side.tera)}
                   </span>
@@ -158,7 +158,7 @@ function CombatantPanel({ caption, title, pickerPlaceholder, side, battle, forms
                 {AIRBORNE_LABELS[airborne] && (
                   <span
                     title="No ar: imune a golpes Ground e fora dos efeitos de terreno e Spikes"
-                    className="inline-flex items-center gap-1 rounded-full border border-[#8FB8C9]/70 bg-[#8FB8C9]/20 py-0.5 pl-1.5 pr-2 text-[10px] font-bold uppercase tracking-wider text-[#2F5C6E]"
+                    className="inline-flex items-center gap-1 rounded-[3px] border border-[#8FB8C9]/70 bg-[#8FB8C9]/20 py-0.5 pl-1.5 pr-2 text-[10px] font-bold uppercase tracking-wider text-[#2F5C6E]"
                   >
                     <Feather className="h-3 w-3" aria-hidden="true" />
                     No ar · {AIRBORNE_LABELS[airborne]}
@@ -249,14 +249,14 @@ function CombatantPanel({ caption, title, pickerPlaceholder, side, battle, forms
             </Field>
           </div>
 
-          <div className="rounded-xl border border-[#5C4033]/25 bg-[#F7F3EE]/40 px-2.5 pb-2.5 pt-2" role="group" aria-labelledby={stagesId}>
+          <div className="rounded-[4px] border border-[#5C4033]/25 bg-[#F7F3EE]/40 px-2.5 pb-2.5 pt-2" role="group" aria-labelledby={stagesId}>
             <div className="mb-1.5 flex h-6 items-center justify-between gap-2">
               <span id={stagesId} className="font-hand text-base leading-none text-[#78614E]">estágios</span>
               {boosted && (
                 <button
                   type="button"
                   onClick={() => onChange({ boosts: NO_BOOSTS })}
-                  className="inline-flex cursor-pointer items-center gap-1 rounded-full px-2 py-0.5 font-hand text-base leading-none text-[#78614E] transition-colors hover:bg-[#78614E]/10 focus:outline-none focus-visible:ring-2 focus-visible:ring-paint-cobalt"
+                  className="inline-flex cursor-pointer items-center gap-1 rounded-[3px] px-2 py-0.5 font-hand text-base leading-none text-[#78614E] transition-colors hover:bg-[#78614E]/10 focus:outline-none focus-visible:ring-2 focus-visible:ring-paint-cobalt"
                 >
                   <RotateCcw className="h-3 w-3" aria-hidden="true" />
                   zerar
@@ -280,7 +280,7 @@ function CombatantPanel({ caption, title, pickerPlaceholder, side, battle, forms
             </ul>
           </div>
 
-          <details className="group rounded-xl border border-[#5C4033]/30 bg-[#F7F3EE]/50">
+          <details className="group rounded-[4px] border border-[#5C4033]/30 bg-[#F7F3EE]/50">
             <summary className="flex cursor-pointer list-none items-center gap-2 px-3 py-2 focus:outline-none focus-visible:ring-2 focus-visible:ring-paint-cobalt [&::-webkit-details-marker]:hidden">
               <span className="font-hand text-lg leading-none text-[#5C4033]">natureza, EVs e IVs</span>
               <span className="ml-auto truncate font-mono text-xs tabular-nums text-[#78614E]">

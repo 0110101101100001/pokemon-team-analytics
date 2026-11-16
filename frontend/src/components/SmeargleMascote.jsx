@@ -23,7 +23,7 @@ function SmeargleMascote({ className = '' }) {
       title={shiny ? 'Smeargle shiny' : 'Smeargle'}
       className={`group relative block h-20 w-20 cursor-pointer rounded-full focus:outline-none focus-visible:ring-2 focus-visible:ring-[#A4C294]/70 ${className}`}
     >
-      <span className="absolute inset-1 overflow-hidden rounded-full border-[3px] border-[#FFFDF9] bg-[#F7F3EE] shadow-[0_0_0_1.5px_rgba(42,36,33,0.6),3px_3px_0_rgba(42,36,33,0.28),inset_0_-4px_8px_rgba(42,36,33,0.12)]">
+      <span className="absolute inset-1 overflow-hidden rounded-full border-[3px] border-paper bg-[#F7F3EE] shadow-[0_0_0_1.5px_rgba(42,36,33,0.6),3px_3px_0_rgba(42,36,33,0.28),inset_0_-4px_8px_rgba(42,36,33,0.12)]">
         {/* Respingo da cauda: estoura atrás do Smeargle no hover, na cor da tinta do momento. */}
         <span
           aria-hidden="true"

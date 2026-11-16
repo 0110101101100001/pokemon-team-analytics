@@ -10,7 +10,7 @@ const CELL = 'px-3 py-1.5';
 function MachineTable({ machines, onSelectMove }) {
   if (machines.length === 0) {
     return (
-      <p className="py-16 text-center font-serif text-sm italic text-smeargle-textDim/80">
+      <p className="py-16 text-center font-reading text-sm italic text-smeargle-textDim/80">
         Nenhum item encontrado. Ajuste a busca ou o tipo.
       </p>
     );
@@ -18,7 +18,7 @@ function MachineTable({ machines, onSelectMove }) {
 
   return (
     <div className="paper-card overflow-x-auto">
-      <table className="w-full border-collapse font-serif text-sm text-smeargle-text">
+      <table className="w-full border-collapse font-reading text-sm text-smeargle-text">
         <thead>
           <tr className="border-b border-[#78614E]/20 text-left">
             <th scope="col" className={HEAD}>Nº</th>

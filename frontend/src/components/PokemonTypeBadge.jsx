@@ -22,18 +22,13 @@ export const TYPE_INK = {
   flying:  { bg: '#ede7f3', border: '#8a70b8', text: '#54466e' },
 };
 
-export default function PokemonTypeBadge({ type, className }) {
-  const ink = TYPE_INK[type] || TYPE_INK.normal;
-
+/** Chip de tipo: a cor vem de data-type (index.css, .type-chip); o nome do tipo fica sempre escrito. */
+export default function PokemonTypeBadge({ type, className = '' }) {
   return (
-    // Gota de tinta: cantos desiguais e a tinta mais carregada na borda de baixo, onde escorreu e secou.
-    <span className={`inline-flex items-center gap-1 border border-b-[1.5px] px-2.5 py-0.5 text-[10px] font-semibold uppercase tracking-wider rounded-[0.8rem_0.65rem_0.85rem_0.6rem/0.6rem_0.8rem_0.7rem_0.9rem] ${className || ''}`} style={{
-      backgroundColor: ink.bg,
-      borderColor: ink.border + '55',
-      borderBottomColor: ink.border + '99',
-      color: ink.text,
-    }}>
+    <span className={`type-chip ${className}`} data-type={type}>
       {capitalize(type)}
     </span>
   );
 }
+
+export { PokemonTypeBadge as TypeStamp };

@@ -30,15 +30,15 @@ export function createSearchMatcher(rawTerm) {
 }
 
 export const GENERATIONS = [
-  { value: '1', label: 'Gen 1 · Kanto' },
-  { value: '2', label: 'Gen 2 · Johto' },
-  { value: '3', label: 'Gen 3 · Hoenn' },
-  { value: '4', label: 'Gen 4 · Sinnoh' },
-  { value: '5', label: 'Gen 5 · Unova' },
-  { value: '6', label: 'Gen 6 · Kalos' },
-  { value: '7', label: 'Gen 7 · Alola' },
-  { value: '8', label: 'Gen 8 · Galar' },
-  { value: '9', label: 'Gen 9 · Paldea' },
+  { value: '1', label: '1ª geração · Kanto' },
+  { value: '2', label: '2ª geração · Johto' },
+  { value: '3', label: '3ª geração · Hoenn' },
+  { value: '4', label: '4ª geração · Sinnoh' },
+  { value: '5', label: '5ª geração · Unova' },
+  { value: '6', label: '6ª geração · Kalos' },
+  { value: '7', label: '7ª geração · Alola' },
+  { value: '8', label: '8ª geração · Galar' },
+  { value: '9', label: '9ª geração · Paldea' },
 ];
 
 // Nomes oficiais em inglês (os slugs da PokéAPI vêm das versões japonesas: ground = Field, plant = Grass…).
@@ -100,7 +100,7 @@ export const SINGLE_VALUE_FILTERS = new Set(['mega', 'gmax', 'builds']);
 /** Cria o objeto de filtro com a etiqueta da pílula. */
 export function createFilter(type, value) {
   if (type === 'generation') {
-    return { type, value, label: GENERATIONS.find((g) => g.value === value)?.label ?? `Gen ${value}` };
+    return { type, value, label: GENERATIONS.find((g) => g.value === value)?.label ?? `${value}ª geração` };
   }
   if (FIXED_FILTERS[type]) {
     return { type, value, label: FIXED_FILTERS[type].find((option) => option.value === value)?.label ?? value };

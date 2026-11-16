@@ -6,10 +6,10 @@ import { formatSlug } from '../../utils/filters';
 import { capitalize } from '../../utils/typeColors';
 
 const TIERS = {
-  super: { label: '2×', className: 'border-smeargle-olive/50 bg-smeargle-olive/15', badge: 'bg-smeargle-olive text-[#FFFEFB]' },
-  neutral: { label: '1×', className: 'border-[#78614E]/15 bg-[#FFFEFB]/70', badge: 'bg-[#78614E]/15 text-[#78614E]' },
-  resisted: { label: '½', className: 'border-[#B5543C]/35 bg-[#B5543C]/10', badge: 'bg-[#B5543C]/80 text-[#FFFEFB]' },
-  immune: { label: '0', className: 'border-[#2A2421]/35 bg-[#2A2421]/10', badge: 'bg-[#2A2421]/80 text-[#FFFEFB]' },
+  super: { label: '2×', className: 'border-smeargle-olive/50 bg-smeargle-olive/15', badge: 'bg-smeargle-olive text-paper' },
+  neutral: { label: '1×', className: 'border-[#78614E]/15 bg-paper/70', badge: 'bg-[#78614E]/15 text-[#78614E]' },
+  resisted: { label: '½', className: 'border-[#B5543C]/35 bg-[#B5543C]/10', badge: 'bg-[#B5543C]/80 text-paper' },
+  immune: { label: '0', className: 'border-[#2A2421]/35 bg-[#2A2421]/10', badge: 'bg-[#2A2421]/80 text-paper' },
 };
 
 const tierOf = (best) => {
@@ -42,7 +42,7 @@ function MoveCoverage({ team }) {
 
   if (attackCount === 0) {
     return (
-      <p className="py-8 text-center font-serif text-sm italic text-smeargle-textDim/70">
+      <p className="py-8 text-center font-reading text-sm italic text-smeargle-textDim/70">
         Escolha golpes de ataque nos Pokémon do time para ver quais tipos eles acertam com dano super efetivo.
       </p>
     );
@@ -53,7 +53,7 @@ function MoveCoverage({ team }) {
 
   return (
     <div>
-      <p className="mb-3 font-serif text-sm text-smeargle-text">
+      <p className="mb-3 font-reading text-sm text-smeargle-text">
         <span className="ink-splotch font-black tabular-nums">{covered.length}</span>
         <span className="ml-2">de {TYPE_NAMES.length} tipos levam dano super efetivo de {attackCount} golpe{attackCount !== 1 ? 's' : ''}.</span>
       </p>
@@ -62,7 +62,7 @@ function MoveCoverage({ team }) {
         {rows.map(({ type, best, hitters }) => {
           const tier = tierOf(best);
           return (
-            <li key={type} className={`flex min-h-[3.25rem] flex-col justify-center gap-1 rounded-xl border px-2 py-1.5 ${tier.className}`}>
+            <li key={type} className={`flex min-h-[3.25rem] flex-col justify-center gap-1 rounded-[4px] border px-2 py-1.5 ${tier.className}`}>
               <div className="flex items-center justify-between gap-1">
                 <PokemonTypeBadge type={type} className="!px-1.5 !text-[9px]" />
                 <span className={`inline-flex h-5 min-w-6 items-center justify-center rounded-md px-1 font-mono text-xs font-bold ${tier.badge}`}>{tier.label}</span>

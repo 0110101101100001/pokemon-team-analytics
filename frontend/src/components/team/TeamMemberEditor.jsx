@@ -56,7 +56,7 @@ function TeamMemberEditor({ member, onChange }) {
   }, [id, onChange]);
 
   return (
-    <section className="paper-card ink-blotted p-4 pt-5 sm:p-5 sm:pt-6" aria-label={`Set de ${formatSlug(name)}`}>
+    <section className="paper-card p-4 pt-5 sm:p-5 sm:pt-6" aria-label={`Set de ${formatSlug(name)}`}>
       <header className="flex items-center gap-3 border-b border-[#5C4033]/25 pb-3">
         <img src={officialSpriteUrl(id)} alt="" width={72} height={72} decoding="async" className="h-[72px] w-[72px] shrink-0 object-contain" />
         <div className="min-w-0 flex-1">

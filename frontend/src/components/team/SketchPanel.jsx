@@ -47,7 +47,7 @@ const teamKey = (team) => team.map((member) => member.id).join('-');
 const nextTask = () => new Promise((resolve) => { setTimeout(resolve, 0); });
 
 const Message = ({ children }) => (
-  <p className="py-6 text-center font-serif text-sm italic text-smeargle-textDim/80">{children}</p>
+  <p className="py-6 text-center font-reading text-sm italic text-smeargle-textDim/80">{children}</p>
 );
 
 /**
@@ -151,7 +151,7 @@ function SketchPanel({ team, pool, onLoadTeam }) {
 
   return (
     <div className="space-y-4">
-      <p className="font-serif text-xs italic text-smeargle-textDim/90">
+      <p className="font-reading text-xs italic text-smeargle-textDim/90">
         Monte times inteiros para um plano e melhore cada um: fixe quem fica, troque um membro vendo o efeito nas notas,
         corrija a pior ameaça ou regenere o resto. Cada esboço traz as funções cobertas, os sets completos e uma nota
         contra as 20 ameaças mais usadas do tier.
@@ -168,11 +168,11 @@ function SketchPanel({ team, pool, onLoadTeam }) {
       />
 
       {confirming && (
-        <div role="alertdialog" aria-label="Descartar edições" className="flex flex-wrap items-center gap-2 rounded-xl border border-[#B5543C]/35 bg-[#B5543C]/5 p-3 font-serif text-sm text-smeargle-text">
+        <div role="alertdialog" aria-label="Descartar edições" className="flex flex-wrap items-center gap-2 rounded-[4px] border border-[#B5543C]/35 bg-[#B5543C]/5 p-3 font-reading text-sm text-smeargle-text">
           <p className="flex-1">
             Você editou {editedCount === 1 ? '1 esboço' : `${editedCount} esboços`}. Gerar de novo descarta {editedCount === 1 ? 'essa edição' : 'essas edições'}.
           </p>
-          <button type="button" onClick={generate} className="btn-action !h-9 !px-4 font-serif !text-xs">Gerar de novo</button>
+          <button type="button" onClick={generate} className="btn-action !h-9 !px-4 font-reading !text-xs">Gerar de novo</button>
           <button type="button" onClick={() => setConfirming(false)} className="btn-outline !min-h-9 !px-3 !py-1 !text-xs">Cancelar</button>
         </div>
       )}

@@ -64,7 +64,7 @@ const formatSpeciesName = (slug) =>
 const EvolutionBadge = memo(function EvolutionBadge({ icon, text }) {
   const Icon = BADGE_ICONS[icon] ?? Sparkles;
   return (
-    <span className="inline-flex items-center gap-1 px-1.5 py-[2px] rounded-md bg-[#FFFEFB] border border-[#785132]/30 text-[10px] font-semibold text-[#2A2421] leading-tight shadow-2xs">
+    <span className="inline-flex items-center gap-1 px-1.5 py-[2px] rounded-md bg-paper border border-[#785132]/30 text-[10px] font-semibold text-[#2A2421] leading-tight shadow-2xs">
       <Icon className="w-3 h-3 shrink-0 text-[#78614E]" aria-hidden="true" />
       {text}
     </span>
@@ -86,7 +86,7 @@ const SpeciesNode = memo(function SpeciesNode({ node, current }) {
       title={node.outOfLine ? 'Não faz parte desta linha evolutiva' : undefined}
     >
       <div
-        className={`relative flex items-center justify-center rounded-full bg-[#FFFEFB] border-2 transition-shadow ${ring}`}
+        className={`relative flex items-center justify-center rounded-[3px] bg-paper border-2 transition-shadow ${ring}`}
         style={{ width: SPRITE_R * 2, height: SPRITE_R * 2 }}
       >
         <img
@@ -98,7 +98,7 @@ const SpeciesNode = memo(function SpeciesNode({ node, current }) {
           className="object-contain md:drop-shadow-sm"
         />
         {regional && (
-          <span className="absolute -bottom-1.5 left-1/2 -translate-x-1/2 px-1.5 rounded-full bg-[#5B7856] text-[8px] font-bold uppercase tracking-wider text-[#F7F3EE] shadow-2xs">
+          <span className="absolute -bottom-1.5 left-1/2 -translate-x-1/2 px-1.5 rounded-[3px] bg-[#5B7856] text-[8px] font-bold uppercase tracking-wider text-[#F7F3EE] shadow-2xs">
             {node.regionLabel}
           </span>
         )}
@@ -266,13 +266,13 @@ function EvolutionTree({ chain, currentSpecies, currentForm, currentFormId }) {
         <p className="mt-2 flex flex-wrap items-center justify-center gap-x-3 gap-y-1 text-[10px] text-[#78614E]">
           {region && (
             <span className="inline-flex items-center gap-1.5">
-              <span className="w-3 h-3 rounded-full border-2 border-dashed border-[#5B7856]/70" aria-hidden="true" />
+              <span className="w-3 h-3 rounded-[3px] border-2 border-dashed border-[#5B7856]/70" aria-hidden="true" />
               Linha evolutiva de {REGIONS[region].label}
             </span>
           )}
           {hasOutOfLine && (
             <span className="inline-flex items-center gap-1.5">
-              <span className="w-3 h-3 rounded-full bg-[#785132]/25" aria-hidden="true" />
+              <span className="w-3 h-3 rounded-[3px] bg-[#785132]/25" aria-hidden="true" />
               {region ? 'esmaecido: não pertence a esta variante' : 'esmaecido: só uma forma regional evolui para esta espécie'}
             </span>
           )}

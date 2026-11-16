@@ -1,38 +1,46 @@
 import { memo } from 'react';
-import { Heart } from 'lucide-react';
+
+const HEART_PATH = 'M12 20.5s-7.5-4.6-9.2-9.4C1.6 7.6 3.9 4 7.4 4c2 0 3.6 1.1 4.6 2.7C13 5.1 14.6 4 16.6 4c3.5 0 5.8 3.6 4.6 7.1-1.7 4.8-9.2 9.4-9.2 9.4z';
+
+/** Coração do card: traço firme de tinta, sem caixa; favoritado, cheio de vermelhão. */
+function CardHeart({ active }) {
+  return (
+    <svg
+      viewBox="0 0 24 24"
+      aria-hidden="true"
+      className={`h-[22px] w-[22px] transition-colors ${active ? 'text-[#B8402A]' : 'text-[#1C1A17] group-hover/fav:text-[#B8402A]'}`}
+    >
+      <path d={HEART_PATH} fill={active ? 'currentColor' : 'none'} stroke="currentColor" strokeWidth="2.4" strokeLinejoin="round" />
+    </svg>
+  );
+}
 
 const VARIANTS = {
-  // Dentro do card, que também é clicável.
-  card: 'h-7 w-7 border-[#4A3B32]/15 bg-[#FFFEFB]/85 shadow-xs',
-  // No cabeçalho da ficha, ao lado de shiny e cry.
-  header: 'h-9 w-9 border-[1.5px] border-[#2A2421]/25 bg-[#FFFEFB] hover:shadow-[2px_2px_0_rgba(42,36,33,0.15)]',
+  // No topo do card da Pokédex, por cima do botão que abre a ficha.
+  card: {
+    className: 'group/fav h-8 w-8 rounded-[3px]',
+    Icon: CardHeart,
+  },
+  // No cabeçalho da ficha, ao lado de shiny e cry: retângulo de contorno, como as outras ações.
+  header: {
+    className: 'group/fav h-9 w-9 rounded-[3px] border-[1.5px] border-[#1C1A17]/60 hover:border-[#1C1A17] hover:bg-[#E6D9BE]',
+    Icon: CardHeart,
+  },
 };
 
 /** `name` volta em `onToggle(name)`, para o pai usar um único callback estável para todos os cards. */
-function FavoriteButton({ name, label, active, onToggle, variant = 'card' }) {
-  // O card pai abre a ficha no clique e em Enter/Espaço; aqui os dois eventos param no botão.
-  const stop = (e) => e.stopPropagation();
-
+function FavoriteButton({ name, label, active, onToggle, variant = 'card', className = '' }) {
+  const { className: variantClass, Icon } = VARIANTS[variant];
   return (
     <button
       type="button"
-      onClick={(e) => { stop(e); onToggle(name); }}
-      onKeyDown={stop}
+      onClick={() => onToggle(name)}
       aria-pressed={active}
       aria-label={active ? `Remover ${label} dos favoritos` : `Favoritar ${label}`}
       title={active ? 'Remover dos favoritos' : 'Favoritar'}
-      className={`inline-flex shrink-0 cursor-pointer items-center justify-center rounded-full border transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-paint-cobalt ${VARIANTS[variant]} ${
-        active ? 'text-[#B5654A] hover:text-[#8A4A34]' : 'text-[#78614E]/70 hover:border-[#B5654A]/50 hover:text-[#B5654A]'
-      }`}
+      className={`inline-flex shrink-0 cursor-pointer items-center justify-center transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-paint-cobalt ${variantClass} ${className}`}
     >
-      {/* O contorno fica; por cima, o coração cheio sobe como tinta num pincel mergulhado. */}
-      <span className={`relative h-4 w-4 transition-transform duration-300 ${active ? 'scale-110' : ''}`} aria-hidden="true">
-        <Heart className="absolute inset-0 h-4 w-4" />
-        <Heart
-          className="absolute inset-0 h-4 w-4 fill-current transition-[clip-path] duration-500 ease-[cubic-bezier(0.22,1,0.36,1)] motion-reduce:transition-none"
-          style={{ clipPath: active ? 'inset(0 0 0 0)' : 'inset(100% 0 0 0)' }}
-        />
-      </span>
+      <Icon active={active} />
     </button>
   );
 }

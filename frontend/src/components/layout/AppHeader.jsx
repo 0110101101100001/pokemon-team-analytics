@@ -37,7 +37,7 @@ function AppHeader({ activeId, collapsed, toolbarRef, children }) {
               aria-label="Smearglepedia: ir para a Pokédex"
               className="block min-w-0 rounded-xl px-1 py-1 focus:outline-none focus-visible:ring-2 focus-visible:ring-[#A4C294]/70"
             >
-              <h1 className={`font-serif font-black leading-none tracking-tight text-[#FFFDF9] ${EASE} ${collapsed ? 'text-xl sm:text-2xl' : 'text-2xl sm:text-[2.4rem]'}`}>
+              <h1 className={`font-serif font-black leading-none tracking-tight text-paper ${EASE} ${collapsed ? 'text-xl sm:text-2xl' : 'text-2xl sm:text-[2.4rem]'}`}>
                 Smeargle
                 <span className="relative isolate text-[#B7D99F]">
                   pedia
@@ -47,7 +47,7 @@ function AppHeader({ activeId, collapsed, toolbarRef, children }) {
                   </svg>
                 </span>
               </h1>
-              <p className={`hidden overflow-hidden font-hand text-lg leading-none text-[#F7F3EE]/80 sm:block ${EASE} ${collapsed ? 'mt-0 max-h-0 opacity-0' : 'mt-2 max-h-6 opacity-100'}`}>
+              <p className={`hidden overflow-hidden font-hand text-lg leading-none text-paper sm:block ${EASE} ${collapsed ? 'mt-0 max-h-0 opacity-0' : 'mt-2 max-h-6 opacity-100'}`}>
                 guia de campo competitivo
               </p>
             </a>

@@ -21,7 +21,7 @@ const describeError = (error) =>
   ERROR_MESSAGES[error?.code] ?? error?.message ?? 'Algo deu errado. Tente novamente.';
 
 const FIELD_CLASS =
-  'h-11 w-full rounded-xl border border-[#78614E]/25 bg-[#FFFEFB]/70 pl-10 pr-3 text-sm text-smeargle-text font-serif placeholder:italic placeholder:text-[#78614E]/55 shadow-inner transition-colors hover:border-[#78614E]/45 focus:outline-none focus:ring-2 focus:ring-smeargle-olive/60 focus:border-smeargle-olive';
+  'h-11 w-full rounded-xl border border-[#78614E]/25 bg-paper/70 pl-10 pr-3 text-sm text-smeargle-text font-serif placeholder:italic placeholder:text-[#78614E]/55 shadow-inner transition-colors hover:border-[#78614E]/45 focus:outline-none focus:ring-2 focus:ring-smeargle-olive/60 focus:border-smeargle-olive';
 
 const Field = forwardRef(function Field({ id, label, icon: Icon, ...inputProps }, ref) {
   return (
@@ -117,7 +117,7 @@ export default function AuthModal({ open, onClose, onAuthChange }) {
         role="dialog"
         aria-modal="true"
         aria-labelledby={`${ids}-title`}
-        className="relative w-full max-w-sm rounded-panel border border-[#78614E]/30 bg-[#FFFEFB] p-7 shadow-lg md:bg-[#FFFEFB]/85 md:shadow-panel md:backdrop-blur-xl animate-bubble-pop"
+        className="relative w-full max-w-sm rounded-panel border border-[#78614E]/30 bg-paper p-7 shadow-lg md:bg-paper/85 md:shadow-panel md:backdrop-blur-xl animate-bubble-pop"
       >
         <button
           type="button"
@@ -145,7 +145,7 @@ export default function AuthModal({ open, onClose, onAuthChange }) {
               role="tab"
               aria-selected={mode === key}
               onClick={() => switchMode(key)}
-              className={`relative z-10 py-1.5 text-xs font-semibold uppercase tracking-wider transition-colors duration-300 ${mode === key ? 'text-[#FFFEFB]' : 'text-[#78614E]/75 hover:text-[#78614E]'}`}
+              className={`relative z-10 py-1.5 text-xs font-semibold uppercase tracking-wider transition-colors duration-300 ${mode === key ? 'text-paper' : 'text-[#78614E]/75 hover:text-[#78614E]'}`}
             >
               {key === 'login' ? 'Entrar' : 'Cadastro'}
             </button>
@@ -193,7 +193,7 @@ export default function AuthModal({ open, onClose, onAuthChange }) {
           <button
             type="submit"
             disabled={loading}
-            className="flex h-11 w-full items-center justify-center gap-2 rounded-xl bg-[#78614E] font-semibold tracking-wide text-[#FFFEFB] shadow-hard transition-all hover:translate-x-[2px] hover:translate-y-[2px] hover:shadow-hard-hover focus:outline-none focus-visible:ring-2 focus-visible:ring-paint-cobalt disabled:cursor-wait disabled:opacity-70"
+            className="flex h-11 w-full items-center justify-center gap-2 rounded-xl bg-[#78614E] font-semibold tracking-wide text-paper shadow-hard transition-all hover:translate-x-[2px] hover:translate-y-[2px] hover:shadow-hard-hover focus:outline-none focus-visible:ring-2 focus-visible:ring-paint-cobalt disabled:cursor-wait disabled:opacity-70"
           >
             {loading && <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" />}
             {copy.submit}

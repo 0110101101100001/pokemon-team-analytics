@@ -58,10 +58,10 @@ function PokemonPicker({ pool, onPick, label, placeholder, excludedSpecies, disa
                 <button
                   type="button"
                   onClick={() => pick(pokemon)}
-                  className="flex w-full cursor-pointer items-center gap-3 rounded-xl border border-[#78614E]/15 bg-[#FFFEFB]/70 px-3 py-1.5 text-left transition-colors hover:border-smeargle-olive hover:bg-smeargle-olive/10 focus:outline-none focus-visible:ring-2 focus-visible:ring-paint-cobalt"
+                  className="flex w-full cursor-pointer items-center gap-3 rounded-[4px] border border-[#78614E]/15 bg-paper/70 px-3 py-1.5 text-left transition-colors hover:border-smeargle-olive hover:bg-smeargle-olive/10 focus:outline-none focus-visible:ring-2 focus-visible:ring-paint-cobalt"
                 >
                   <img src={thumbnailSpriteUrl(pokemon.id)} alt="" width={40} height={40} loading="lazy" decoding="async" className="h-10 w-10 shrink-0 object-contain" />
-                  <span className="min-w-0 flex-1 truncate font-serif text-sm font-semibold text-smeargle-text">{formatSlug(pokemon.name)}</span>
+                  <span className="min-w-0 flex-1 truncate font-reading text-sm font-semibold text-smeargle-text">{formatSlug(pokemon.name)}</span>
                   <span className="flex shrink-0 gap-0.5">
                     {pokemon.types.map((type) => <PokemonTypeBadge key={type} type={type} className="!px-1.5 !text-[8px]" />)}
                   </span>
@@ -70,7 +70,7 @@ function PokemonPicker({ pool, onPick, label, placeholder, excludedSpecies, disa
             ))}
           </ul>
         ) : (
-          <p className="py-4 text-center font-serif text-sm italic text-smeargle-textDim/70">Nenhum Pokémon encontrado.</p>
+          <p className="py-4 text-center font-reading text-sm italic text-smeargle-textDim/70">Nenhum Pokémon encontrado.</p>
         )
       )}
     </div>

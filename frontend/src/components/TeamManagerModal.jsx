@@ -29,7 +29,7 @@ const TeamSprites = memo(function TeamSprites({ pokemons }) {
         <li
           key={pokemon.id}
           title={formatSlug(pokemon.name)}
-          className="h-9 w-9 rounded-full border border-[#78614E]/25 bg-[#FFFEFB] shadow-sm"
+          className="h-9 w-9 rounded-full border border-[#78614E]/25 bg-paper shadow-sm"
         >
           <img src={thumbnailSpriteUrl(pokemon.id)} alt={formatSlug(pokemon.name)} width={36} height={36} loading="lazy" decoding="async" className="h-full w-full object-contain" />
         </li>
@@ -52,7 +52,7 @@ const SavedTeamRow = memo(function SavedTeamRow({ team, onLoad, onDelete }) {
   }, [onDelete, team.id]);
 
   return (
-    <li className="rounded-xl border border-[#78614E]/20 bg-[#FFFEFB]/70 px-3 py-2.5 shadow-card">
+    <li className="rounded-xl border border-[#78614E]/20 bg-paper/70 px-3 py-2.5 shadow-card">
       <div className="flex items-center gap-3">
         <div className="min-w-0 flex-1">
           <p className="truncate font-display text-base font-bold text-[#78614E]">{team.name}</p>
@@ -79,7 +79,7 @@ const SavedTeamRow = memo(function SavedTeamRow({ team, onLoad, onDelete }) {
               type="button"
               onClick={handleDelete}
               disabled={deleting}
-              className="inline-flex items-center gap-1.5 rounded-lg bg-[#B5543C] px-3 py-1.5 text-xs font-semibold text-[#FFFEFB] transition-colors hover:bg-[#8A3B27] focus:outline-none focus-visible:ring-2 focus-visible:ring-[#B5543C]/50 disabled:cursor-wait disabled:opacity-70"
+              className="inline-flex items-center gap-1.5 rounded-lg bg-[#B5543C] px-3 py-1.5 text-xs font-semibold text-paper transition-colors hover:bg-[#8A3B27] focus:outline-none focus-visible:ring-2 focus-visible:ring-[#B5543C]/50 disabled:cursor-wait disabled:opacity-70"
             >
               {deleting && <Loader2 className="h-3.5 w-3.5 animate-spin" aria-hidden="true" />}
               Apagar
@@ -203,7 +203,7 @@ export default function TeamManagerModal({ open, onClose, session, team = [], on
         role="dialog"
         aria-modal="true"
         aria-labelledby={`${ids}-title`}
-        className="relative flex max-h-[85vh] w-full max-w-md flex-col rounded-panel border border-[#78614E]/30 bg-[#FFFEFB] p-7 shadow-lg md:bg-[#FFFEFB]/85 md:shadow-panel md:backdrop-blur-xl animate-bubble-pop"
+        className="relative flex max-h-[85vh] w-full max-w-md flex-col rounded-panel border border-[#78614E]/30 bg-paper p-7 shadow-lg md:bg-paper/85 md:shadow-panel md:backdrop-blur-xl animate-bubble-pop"
       >
         <button
           type="button"
@@ -239,12 +239,12 @@ export default function TeamManagerModal({ open, onClose, session, team = [], on
                   maxLength={MAX_NAME_LENGTH}
                   placeholder={team.length ? 'Nome do time' : 'Adicione Pokémon ao time primeiro'}
                   disabled={!team.length}
-                  className="h-11 min-w-0 flex-1 rounded-xl border border-[#78614E]/25 bg-[#FFFEFB]/70 px-3 font-serif text-sm text-smeargle-text shadow-inner transition-colors placeholder:italic placeholder:text-[#78614E]/55 hover:border-[#78614E]/45 focus:border-smeargle-olive focus:outline-none focus:ring-2 focus:ring-smeargle-olive/60 disabled:cursor-not-allowed disabled:opacity-60"
+                  className="h-11 min-w-0 flex-1 rounded-[3px] border-[1.5px] border-ink bg-paper px-3 font-reading text-[15px] text-ink transition-colors placeholder:italic disabled:cursor-not-allowed disabled:opacity-60"
                 />
                 <button
                   type="submit"
                   disabled={!canSave}
-                  className="inline-flex h-11 shrink-0 items-center gap-2 rounded-xl bg-[#78614E] px-4 text-sm font-semibold tracking-wide text-[#FFFEFB] shadow-hard transition-all hover:translate-x-[2px] hover:translate-y-[2px] hover:shadow-hard-hover focus:outline-none focus-visible:ring-2 focus-visible:ring-paint-cobalt disabled:pointer-events-none disabled:opacity-50"
+                  className="inline-flex h-11 shrink-0 items-center gap-2 rounded-xl bg-[#78614E] px-4 text-sm font-semibold tracking-wide text-paper shadow-hard transition-all hover:translate-x-[2px] hover:translate-y-[2px] hover:shadow-hard-hover focus:outline-none focus-visible:ring-2 focus-visible:ring-paint-cobalt disabled:pointer-events-none disabled:opacity-50"
                 >
                   {saving ? <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" /> : <Save className="h-4 w-4" aria-hidden="true" />}
                   Salvar

@@ -26,11 +26,11 @@ const names = (threats) => {
 function SwapOptionRow({ option, onSwap, actionLabel = 'Trocar' }) {
   const { pokemon, delta, fixed, worsened, rolesGained, rolesLost } = option;
   return (
-    <li className="flex items-start gap-2.5 rounded-xl border border-[#78614E]/15 bg-[#FFFEFB] p-2">
+    <li className="flex items-start gap-2.5 rounded-[4px] border border-[#78614E]/15 bg-paper p-2">
       <img src={thumbnailSpriteUrl(pokemon.id)} alt="" width={40} height={40} loading="lazy" decoding="async" className="h-10 w-10 shrink-0 object-contain" />
       <div className="min-w-0 flex-1 space-y-0.5 text-[11px] leading-snug">
         <p className="flex flex-wrap items-center gap-1">
-          <span className="font-serif text-sm font-semibold text-smeargle-text">{formatSlug(pokemon.name)}</span>
+          <span className="font-reading text-sm font-semibold text-smeargle-text">{formatSlug(pokemon.name)}</span>
           {pokemon.types.map((type) => <PokemonTypeBadge key={type} type={type} className="!px-1.5 !text-[8px]" />)}
         </p>
         <p className="flex flex-wrap gap-x-2">
@@ -45,7 +45,7 @@ function SwapOptionRow({ option, onSwap, actionLabel = 'Trocar' }) {
           </p>
         )}
       </div>
-      <button type="button" onClick={() => onSwap(option)} className="btn-outline !min-h-8 shrink-0 self-center !px-3 !py-1 font-serif !text-xs">
+      <button type="button" onClick={() => onSwap(option)} className="btn-outline !min-h-8 shrink-0 self-center !px-3 !py-1 font-reading !text-xs">
         {actionLabel}
       </button>
     </li>

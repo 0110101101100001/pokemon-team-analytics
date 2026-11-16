@@ -84,13 +84,13 @@ const TABS = [
 
 const EFFECTIVENESS_ROWS = {
   weak: [
-    { key: 'quadruple', multiplier: '4×', label: 'Fraqueza extrema', tone: 'bg-[#780000] text-white' },
-    { key: 'double', multiplier: '2×', label: 'Fraqueza', tone: 'bg-[#C15454] text-white' },
+    { key: 'quadruple', multiplier: '4×', label: 'Fraqueza extrema', tone: 'bg-[#780000] text-paper' },
+    { key: 'double', multiplier: '2×', label: 'Fraqueza', tone: 'bg-[#A23C3C] text-paper' },
   ],
   resist: [
-    { key: 'half', multiplier: '½×', label: 'Resistência', tone: 'bg-[#5B7856] text-white' },
-    { key: 'quarter', multiplier: '¼×', label: 'Resistência dupla', tone: 'bg-[#3A4F38] text-white' },
-    { key: 'immune', multiplier: '0×', label: 'Imunidade', tone: 'bg-[#2A2421] text-white' },
+    { key: 'half', multiplier: '½×', label: 'Resistência', tone: 'bg-[#5B7856] text-paper' },
+    { key: 'quarter', multiplier: '¼×', label: 'Resistência dupla', tone: 'bg-[#3A4F38] text-paper' },
+    { key: 'immune', multiplier: '0×', label: 'Imunidade', tone: 'bg-[#2A2421] text-paper' },
   ],
 };
 
@@ -99,15 +99,16 @@ const PAPER_BG = {
   backgroundSize: '220px 220px',
 };
 
-// As mesmas peças do resto do site: folha a nanquim, campo, pílula, botão redondo, bloco interno e rótulo.
-const SHEET = 'paper-card paper-card-quiet';
-const LABEL = 'text-[10px] font-semibold uppercase tracking-wider text-[#785132]';
-const FIELD = 'h-9 cursor-pointer rounded-xl border-[1.5px] border-[#2A2421]/25 bg-[#FFFEFB] px-3 text-xs font-semibold text-[#2A2421] transition-colors hover:border-[#2A2421]/45 focus:border-paint-cobalt focus:outline-none focus:ring-2 focus:ring-paint-cobalt/40';
-const PILL = 'cursor-pointer rounded-full border px-3 py-1.5 text-xs font-semibold transition-[background-color,border-color,box-shadow] focus:outline-none focus-visible:ring-2 focus-visible:ring-paint-cobalt';
-const PILL_ON = 'border-[#2A2421]/70 bg-[#829b72] text-white shadow-[2px_2px_0_rgba(42,36,33,0.25)]';
-const PILL_OFF = 'border-[#2A2421]/20 bg-[#FFFEFB] text-[#2A2421] hover:border-[#2A2421]/50';
-const ROUND_BUTTON = 'inline-flex h-9 cursor-pointer items-center justify-center gap-1.5 rounded-full border-[1.5px] transition-[border-color,box-shadow,color,background-color] focus:outline-none focus-visible:ring-2 focus-visible:ring-paint-cobalt';
-const ROUND_IDLE = 'border-[#2A2421]/25 bg-[#FFFEFB] text-[#5C4033] hover:border-[#2A2421]/60 hover:text-[#2A2421] hover:shadow-[2px_2px_0_rgba(42,36,33,0.15)]';
+// As mesmas peças do resto do site impresso: folha, rótulo, campo, carimbo de opção e botão de contorno.
+const SHEET = 'paper-card';
+const LABEL = 'font-reading text-xs font-semibold uppercase tracking-wider text-[#4A463E]';
+const FIELD = 'h-9 cursor-pointer rounded-[3px] border-[1.5px] border-ink bg-paper px-3 font-reading text-sm font-medium text-[#1C1A17] transition-colors hover:border-[#1C1A17] focus:border-paint-cobalt focus:outline-none focus:ring-2 focus:ring-paint-cobalt/40';
+// Opções (formas, tiers): carimbos de contorno; a escolhida sai em vermelhão, sem fundo preenchido.
+const PILL = 'cursor-pointer rounded-[3px] border-[1.5px] px-3 py-1.5 font-reading text-sm transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-paint-cobalt';
+const PILL_ON = 'border-[#B8402A] font-semibold text-[#B8402A]';
+const PILL_OFF = 'border-[#1C1A17]/40 font-medium text-[#1C1A17] hover:border-[#1C1A17]';
+const ROUND_BUTTON = 'inline-flex h-9 cursor-pointer items-center justify-center gap-1.5 rounded-[3px] border-[1.5px] font-reading text-sm transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-paint-cobalt';
+const ROUND_IDLE = 'border-[#1C1A17]/60 text-[#1C1A17] hover:border-[#1C1A17] hover:bg-[#E6D9BE]';
 // Habilidades e golpes que abrem o modal de detalhes.
 const CLICKABLE = 'transition-colors enabled:cursor-pointer enabled:hover:border-[#829b72] enabled:hover:bg-[#F7F3EE] focus:outline-none focus-visible:ring-2 focus-visible:ring-paint-cobalt';
 
@@ -280,7 +281,7 @@ const HeroSprite = memo(function HeroSprite({ sources, alt }) {
       height={80}
       decoding="async"
       onError={() => setIndex((i) => (i + 1 < sources.length ? i + 1 : i))}
-      className={`relative h-full w-full object-contain drop-shadow-[0_4px_3px_rgba(42,36,33,0.18)] ${animated ? '[image-rendering:pixelated] scale-[1.35]' : ''}`}
+      className={`relative h-full w-full object-contain ${animated ? '[image-rendering:pixelated] scale-[1.35]' : ''}`}
     />
   );
 });
@@ -316,8 +317,8 @@ const StatBar = memo(function StatBar({ name, value }) {
 const EffectivenessRow = memo(function EffectivenessRow({ types, multiplier, label, tone }) {
   if (!types?.length) return null;
   return (
-    <div className="flex items-start gap-3 p-2.5 rounded-xl border border-[#2A2421]/12 bg-[#FFFEFB]">
-      <span className={`shrink-0 w-11 py-1 rounded-lg text-center text-[11px] font-black ${tone}`}>{multiplier}</span>
+    <div className="flex items-start gap-3 p-2.5 rounded-[4px] border border-[#2A2421]/12 bg-paper">
+      <span className={`shrink-0 w-11 py-1 rounded-[4px] text-center text-[11px] font-black ${tone}`}>{multiplier}</span>
       <div className="space-y-1">
         <span className={`block ${LABEL}`}>{label}</span>
         <div className="flex flex-wrap gap-1.5">
@@ -334,9 +335,9 @@ const UsageChip = memo(function UsageChip({ name, pct, onSelect }) {
   return (
     <Tag
       {...interactive}
-      className={`inline-flex items-center gap-1.5 rounded-full border border-[#2A2421]/20 bg-[#FFFEFB] px-3 py-1.5 text-xs font-semibold capitalize ${onSelect ? CLICKABLE : ''}`}
+      className={`inline-flex items-center gap-1.5 rounded-[3px] border border-[#2A2421]/20 bg-paper px-3 py-1.5 text-xs font-semibold capitalize ${onSelect ? CLICKABLE : ''}`}
     >
-      <span className="w-1.5 h-1.5 rounded-full bg-[#829b72]" aria-hidden="true" />
+      <span className="w-1.5 h-1.5 rounded-[3px] bg-[#829b72]" aria-hidden="true" />
       <span className="text-[#2A2421]">{name}</span>
       <span className="text-[10px] font-bold text-[#78614E]">{pct.toFixed(1)}%</span>
     </Tag>
@@ -347,7 +348,7 @@ const UsageChip = memo(function UsageChip({ name, pct, onSelect }) {
 const SpreadCard = memo(function SpreadCard({ index, nature, evs, pct }) {
   const [hp, atk, def, spa, spd, spe] = evs;
   return (
-    <div className="p-3 rounded-xl border border-[#2A2421]/12 bg-[#FFFEFB]">
+    <div className="p-3 rounded-[4px] border border-[#2A2421]/12 bg-paper">
       <div className="flex items-center justify-between mb-1.5 text-xs font-bold text-[#2A2421]">
         <span>
           Build {index + 1}
@@ -575,26 +576,23 @@ export default function PokemonDrawer({
   return (
     <div className="relative flex h-full flex-col overflow-y-auto bg-[#F7F3EE]" style={PAPER_BG}>
       {/* Cabeçalho imersivo e fixo */}
-      <header
-        className="sticky top-0 z-20 border-b border-[#2A2421]/15"
-        style={{ background: `radial-gradient(ellipse 55% 140% at 100% 0%, ${primaryInk.bg}, transparent 70%), radial-gradient(ellipse 40% 120% at 0% 100%, ${primaryInk.bg}99, transparent 70%), #FFFEFB` }}
-      >
+      <header className="sticky top-0 z-20 border-b-[1.5px] border-[#1C1A17] bg-[#F2EAD9]" style={PAPER_BG}>
         {/*
           Celular: as ações ocupam a primeira linha, alinhadas à direita, e sprite + nome ficam com a largura toda.
           sm+: uma linha só, com as ações no fim.
         */}
         <div className="flex flex-wrap items-center gap-x-3 gap-y-2 px-4 pt-3 pb-3 sm:flex-nowrap sm:gap-4 sm:px-5 sm:pt-4">
           <div
-            className="relative flex h-20 w-20 shrink-0 items-center justify-center rounded-full border-[1.5px] border-[#2A2421]/30 bg-[#FFFEFB] shadow-[3px_3px_0_rgba(42,36,33,0.12)] sm:h-24 sm:w-24"
+            className="relative flex h-20 w-20 shrink-0 items-center justify-center rounded-full border-[1.5px] border-[#1C1A17] bg-paper shadow-[3px_3px_0_#4A463E] sm:h-24 sm:w-24"
           >
             {shiny && (
               <Sparkles className="absolute -top-1 -right-1 w-5 h-5 text-[#C9A66B] md:drop-shadow-sm" aria-hidden="true" />
             )}
-            {/* A sombra do sprite é uma poça de aquarela na tinta do tipo. */}
+            {/* A sombra do sprite é uma mancha sólida na tinta do tipo, como a dos cards. */}
             <span
               aria-hidden="true"
-              className="absolute bottom-2 left-1/2 h-4 w-14 -translate-x-1/2 rounded-[48%_52%_45%_55%/60%_55%_45%_40%] blur-[1.5px] sm:bottom-3 sm:w-16"
-              style={{ background: `radial-gradient(ellipse at 50% 45%, ${primaryInk.border}99, ${primaryInk.border}33 60%, transparent 75%)` }}
+              className="absolute bottom-2 left-1/2 h-4 w-14 -translate-x-1/2 rounded-[48%_52%_45%_55%/60%_55%_45%_40%] sm:bottom-3 sm:w-16"
+              style={{ backgroundColor: `color-mix(in srgb, ${primaryInk.border} 45%, #F2EAD9)` }}
             />
             <div className="w-16 h-16 sm:w-20 sm:h-20">
               <HeroSprite key={`${detail.id}-${shiny}`} sources={heroSources} alt={displayName} />
@@ -673,7 +671,7 @@ export default function PokemonDrawer({
                 type="button"
                 onClick={() => handleTabChange(value)}
                 aria-current={active ? 'page' : undefined}
-                className={`relative inline-flex flex-1 cursor-pointer items-center justify-center gap-1.5 whitespace-nowrap px-1 pb-3 pt-2.5 font-serif text-xs font-semibold transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-paint-cobalt sm:flex-none sm:px-3 sm:text-[13px] ${
+                className={`relative inline-flex flex-1 cursor-pointer items-center justify-center gap-1.5 whitespace-nowrap px-1 pb-3 pt-2.5 font-reading text-xs font-semibold transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-paint-cobalt sm:flex-none sm:px-3 sm:text-[13px] ${
                   active ? 'text-[#2A2421]' : 'text-[#785132]/80 hover:text-[#2A2421]'
                 }`}
               >
@@ -714,7 +712,7 @@ export default function PokemonDrawer({
               <SectionCard
                 icon={Cpu}
                 title="Status Base"
-                action={<span className="rounded-full border border-[#2A2421]/60 bg-[#829b72] px-2.5 py-1 font-mono text-[11px] font-bold tabular-nums text-white shadow-[2px_2px_0_rgba(42,36,33,0.2)]">Total {totalStat}</span>}
+                action={<span className="rounded-[3px] border border-[#2A2421]/60 bg-[#829b72] px-2.5 py-1 font-mono text-[11px] font-bold tabular-nums text-paper shadow-[2px_2px_0_rgba(42,36,33,0.2)]">Total {totalStat}</span>}
               >
                 <div className="space-y-2">
                   {baseStats.map((stat) => <StatBar key={stat.name} {...stat} />)}
@@ -728,7 +726,7 @@ export default function PokemonDrawer({
                       key={a.ability.name}
                       type="button"
                       onClick={() => openAbility(a.ability.name)}
-                      className={`rounded-lg border border-[#2A2421]/20 bg-[#FFFEFB] px-2.5 py-1 text-[11px] font-medium capitalize text-[#2A2421] ${CLICKABLE}`}
+                      className={`rounded-[4px] border border-[#2A2421]/20 bg-paper px-2.5 py-1 text-[11px] font-medium capitalize text-[#2A2421] ${CLICKABLE}`}
                     >
                       {a.ability.name.replace(/-/g, ' ')}
                       {a.is_hidden && <span className="ml-1 text-[9px] font-bold text-[#78614E]">(oculta)</span>}
@@ -736,14 +734,14 @@ export default function PokemonDrawer({
                   ))}
                 </div>
                 <div className="grid grid-cols-2 gap-2">
-                  <div className="flex items-center gap-2 p-2.5 rounded-xl bg-[#FFFEFB]/80 border border-[#2A2421]/10">
+                  <div className="flex items-center gap-2 p-2.5 rounded-[4px] bg-paper/80 border border-[#2A2421]/10">
                     <Ruler className="w-4 h-4 text-[#78614E]" aria-hidden="true" />
                     <div>
                       <span className="block text-[10px] font-semibold uppercase text-[#78614E]">Altura</span>
                       <span className="text-xs font-bold text-[#2A2421]">{(detail.height / 10).toFixed(1)} m</span>
                     </div>
                   </div>
-                  <div className="flex items-center gap-2 p-2.5 rounded-xl bg-[#FFFEFB]/80 border border-[#2A2421]/10">
+                  <div className="flex items-center gap-2 p-2.5 rounded-[4px] bg-paper/80 border border-[#2A2421]/10">
                     <Weight className="w-4 h-4 text-[#78614E]" aria-hidden="true" />
                     <div>
                       <span className="block text-[10px] font-semibold uppercase text-[#78614E]">Peso</span>
@@ -756,7 +754,7 @@ export default function PokemonDrawer({
                     <span className={`mb-1 block ${LABEL}`}>Grupos de ovo</span>
                     <div className="flex flex-wrap gap-1">
                       {species.egg_groups.map((g) => (
-                        <span key={g.name} className="rounded-md border border-[#2A2421]/20 bg-[#FFFEFB] px-2 py-0.5 text-[10px] font-medium capitalize text-[#2A2421]">
+                        <span key={g.name} className="rounded-md border border-[#2A2421]/20 bg-paper px-2 py-0.5 text-[10px] font-medium capitalize text-[#2A2421]">
                           {g.name}
                         </span>
                       ))}
@@ -815,7 +813,7 @@ export default function PokemonDrawer({
               <SmeargleLoader label="Sincronizando estatísticas..." className="py-8" />
             ) : smogon ? (
               <div className="space-y-4">
-                <div className="p-4 rounded-xl border border-[#2A2421]/12 bg-[#FFFEFB]">
+                <div className="p-4 rounded-[4px] border border-[#2A2421]/12 bg-paper">
                   <div className="mb-2 flex items-center justify-between">
                     <span className={LABEL}>Taxa de uso no tier</span>
                     <span className="font-serif text-2xl font-black tabular-nums text-[#5B7856]">{smogon.usage_percent?.toFixed(2)}%</span>
@@ -835,7 +833,7 @@ export default function PokemonDrawer({
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div className="space-y-2">
-                    <h4 className="flex items-center gap-2 font-serif text-sm font-bold text-[#2A2421]">
+                    <h4 className="flex items-center gap-2 font-reading text-sm font-bold text-[#2A2421]">
                       <Cpu className="w-4 h-4 text-[#829b72]" aria-hidden="true" /> Spreads EV
                     </h4>
                     {spreads.length > 0 ? (
@@ -872,7 +870,7 @@ export default function PokemonDrawer({
                         type="button"
                         onClick={() => openMove(name)}
                         disabled={isSmogonPlaceholder(name)}
-                        className={`flex items-center justify-between gap-3 p-2.5 text-left rounded-xl border border-[#2A2421]/12 bg-[#FFFEFB] ${CLICKABLE}`}
+                        className={`flex items-center justify-between gap-3 p-2.5 text-left rounded-[4px] border border-[#2A2421]/12 bg-paper ${CLICKABLE}`}
                       >
                         <span className="text-xs font-bold capitalize text-[#2A2421]">{name.replace(/-/g, ' ')}</span>
                         <span className="flex items-center gap-2 w-1/3">
@@ -887,7 +885,7 @@ export default function PokemonDrawer({
                 </div>
               </div>
             ) : (
-              <p className="ink-wash p-4 text-center text-xs text-[#785132] rounded-xl border border-[#2A2421]/12 bg-[#FFFEFB]">
+              <p className="p-4 text-center text-xs text-[#785132] rounded-[4px] border border-[#2A2421]/12 bg-paper">
                 {smogonError
                   ? 'Não foi possível consultar a Smogon agora. Tente de novo em instantes.'
                   : isAlternateForm
@@ -936,10 +934,10 @@ export default function PokemonDrawer({
               ))}
             </div>
 
-            <div className="overflow-x-auto rounded-xl border border-[#2A2421]/12 bg-[#FFFEFB]">
+            <div className="overflow-x-auto rounded-[4px] border border-[#2A2421]/12 bg-paper">
               <table className="w-full text-left border-collapse">
                 <thead>
-                  <tr className="border-b border-[#2A2421]/15 bg-[#F7F3EE] font-serif text-xs font-bold text-[#5C4033]">
+                  <tr className="border-b border-[#2A2421]/15 bg-[#F7F3EE] font-reading text-xs font-bold text-[#5C4033]">
                     <th className="py-2.5 px-3">Aprender</th>
                     <th className="py-2.5 px-3">Nome</th>
                     <th className="py-2.5 px-3">Tipo</th>

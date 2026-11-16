@@ -1,5 +1,6 @@
 import { memo, useCallback, useId, useMemo, useState } from 'react';
 import { ChevronDown, Heart, History, Loader2 } from 'lucide-react';
+import { BrushUnderline } from '../InkDecor';
 import { thumbnailSpriteUrl } from '../../services/api';
 import { formatSlug } from '../../utils/filters';
 
@@ -63,7 +64,7 @@ function CollectionPicks({ collections, entryByName, takenSpecies, disabled, onP
   } else if (collections.status === 'error') {
     content = <p className="text-sm text-[#8A3B27]">Não foi possível carregar seus dados agora. Tente de novo em instantes.</p>;
   } else if (pokemon.length === 0) {
-    content = <p className="font-serif text-sm italic text-smeargle-textDim/80">{active.empty}</p>;
+    content = <p className="font-reading text-sm italic text-smeargle-textDim/80">{active.empty}</p>;
   } else {
     content = (
       <ul className="-mx-1 flex gap-1 overflow-x-auto px-1 pb-1">
@@ -78,7 +79,7 @@ function CollectionPicks({ collections, entryByName, takenSpecies, disabled, onP
                 disabled={disabled || taken}
                 title={taken ? `${name} já está no time` : `Adicionar ${name}`}
                 aria-label={taken ? `${name} já está no time` : `Adicionar ${name} ao time`}
-                className="flex w-[4.5rem] cursor-pointer flex-col items-center rounded-xl border border-transparent px-1 py-1 transition-colors hover:border-smeargle-olive/50 hover:bg-smeargle-olive/10 focus:outline-none focus-visible:ring-2 focus-visible:ring-paint-cobalt disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:border-transparent disabled:hover:bg-transparent"
+                className="flex w-[4.5rem] cursor-pointer flex-col items-center rounded-[4px] border border-transparent px-1 py-1 transition-colors hover:border-smeargle-olive/50 hover:bg-smeargle-olive/10 focus:outline-none focus-visible:ring-2 focus-visible:ring-paint-cobalt disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:border-transparent disabled:hover:bg-transparent"
               >
                 <img src={thumbnailSpriteUrl(entry.id)} alt="" width={48} height={48} loading="lazy" decoding="async" className="h-12 w-12 object-contain" />
                 <span className="w-full truncate text-center font-serif text-[11px] font-semibold text-smeargle-text">{name}</span>
@@ -97,7 +98,7 @@ function CollectionPicks({ collections, entryByName, takenSpecies, disabled, onP
         onClick={toggleOpen}
         aria-expanded={open}
         aria-controls={panelId}
-        className="flex w-full cursor-pointer items-center justify-between gap-2 rounded-xl text-left focus:outline-none focus-visible:ring-2 focus-visible:ring-paint-cobalt"
+        className="flex w-full cursor-pointer items-center justify-between gap-2 rounded-[4px] text-left focus:outline-none focus-visible:ring-2 focus-visible:ring-paint-cobalt"
       >
         <span className="font-hand text-xl leading-none text-[#78614E]">dos favoritos e vistos</span>
         <ChevronDown
@@ -108,7 +109,7 @@ function CollectionPicks({ collections, entryByName, takenSpecies, disabled, onP
 
       {open && (
       <div id={panelId} className="mt-2.5">
-      <div role="tablist" className="mb-2.5 flex flex-wrap gap-1">
+      <div role="tablist" className="mb-2.5 flex flex-wrap gap-1 border-b-[1.5px] border-[#1C1A17]/70">
         {SOURCES.map(({ key, label, icon: Icon }) => {
           const selected = key === source;
           const count = key === 'favorites' ? collections.favorites.length : collections.history.length;
@@ -119,15 +120,16 @@ function CollectionPicks({ collections, entryByName, takenSpecies, disabled, onP
               role="tab"
               aria-selected={selected}
               onClick={() => setSource(key)}
-              className={`inline-flex h-8 cursor-pointer items-center gap-1.5 rounded-full px-3 font-serif text-xs font-semibold transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-paint-cobalt ${
-                selected ? 'bg-[#78614E] text-[#FFFDF9] shadow-sm' : 'text-[#78614E] hover:bg-[#78614E]/10'
+              className={`relative inline-flex h-8 cursor-pointer items-center gap-1.5 rounded-[2px] px-3 font-reading text-sm transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-paint-cobalt ${
+                selected ? 'font-semibold text-[#1C1A17]' : 'text-[#4A463E] hover:text-[#1C1A17]'
               }`}
             >
               <Icon className="h-3.5 w-3.5" aria-hidden="true" />
               {label}
               {count > 0 && (
-                <span className={`rounded-full px-1.5 font-sans text-[10px] font-bold tabular-nums ${selected ? 'bg-[#FFFDF9]/25' : 'bg-[#78614E]/15'}`}>{count}</span>
+                <span className="font-mono text-[11px] tabular-nums text-[#4A463E]">{count}</span>
               )}
+              <BrushUnderline color="#B8402A" active={selected} className="inset-x-2 -bottom-0.5 h-[5px] w-[calc(100%-1rem)]" />
             </button>
           );
         })}

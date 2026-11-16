@@ -5,7 +5,7 @@ import { TYPE_NAMES, effectiveness } from '../utils/typeChart';
 import { formatSlug } from '../utils/filters';
 
 const MULTIPLIER_STYLE = {
-  0: { label: '0', className: 'bg-[#2A2421]/80 text-[#FFFEFB] font-bold' },
+  0: { label: '0', className: 'bg-[#2A2421]/80 text-paper font-bold' },
   0.25: { label: '¼', className: 'bg-smeargle-olive/35 text-smeargle-ink-darkGreen font-bold' },
   0.5: { label: '½', className: 'bg-smeargle-olive/15 text-smeargle-ink-darkGreen font-semibold' },
   2: { label: '2', className: 'bg-[#B5543C]/15 text-[#8A3B27] font-semibold' },
@@ -40,11 +40,11 @@ function TeamTypeTable({ team }) {
 
   return (
     <div>
-      <div className="overflow-x-auto rounded-xl border border-[#78614E]/20 bg-[#FFFEFB]/70">
-        <table className="w-full border-collapse font-serif text-xs text-smeargle-text">
+      <div className="overflow-x-auto rounded-[4px] border border-[#78614E]/20 bg-paper/70">
+        <table className="w-full border-collapse font-reading text-xs text-smeargle-text">
           <thead>
             <tr className="border-b border-[#78614E]/20">
-              <th scope="col" className={`${HEAD} sticky left-0 bg-[#FFFEFB] pl-3 pt-2 text-left`}>Ataque</th>
+              <th scope="col" className={`${HEAD} sticky left-0 bg-paper pl-3 pt-2 text-left`}>Ataque</th>
               {team.map((member) => (
                 <th key={member.id} scope="col" className={`${HEAD} pt-1`} title={formatSlug(member.name)}>
                   <img src={thumbnailSpriteUrl(member.id)} alt={formatSlug(member.name)} width={36} height={36} loading="lazy" decoding="async" className="mx-auto h-9 w-9 object-contain" />
@@ -58,7 +58,7 @@ function TeamTypeTable({ team }) {
           <tbody>
             {rows.map(({ type, multipliers, weak, resist, coverage }) => (
               <tr key={type} className="border-b border-[#5C4033]/10 last:border-0">
-                <th scope="row" className="sticky left-0 bg-[#FFFEFB] py-1 pl-3 pr-2 text-left font-normal">
+                <th scope="row" className="sticky left-0 bg-paper py-1 pl-3 pr-2 text-left font-normal">
                   <PokemonTypeBadge type={type} className="!px-1.5 !text-[9px]" />
                 </th>
                 {multipliers.map((value, index) => {

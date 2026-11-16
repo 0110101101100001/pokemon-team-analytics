@@ -136,3 +136,34 @@ export const PaintSpeckle = memo(function PaintSpeckle({ className = '', color =
     </svg>
   );
 });
+
+/**
+ * Pincelada de seleção: um traço curto que cresce da esquerda para a direita sob o item ativo
+ * (abas, recortes, coleções), no lugar do fundo preenchido. Posicione com `className`.
+ */
+export const BrushUnderline = memo(function BrushUnderline({ color, active, className = '' }) {
+  return (
+    <svg
+      aria-hidden="true"
+      viewBox="0 0 120 10"
+      preserveAspectRatio="none"
+      className={`pointer-events-none absolute origin-left transition-[transform,opacity] duration-300 ease-out motion-reduce:transition-none ${
+        active ? 'scale-x-100 opacity-100' : 'scale-x-0 opacity-0'
+      } ${className}`}
+    >
+      <path
+        fill={color}
+        d="M2 6.1C14 3.3 27 2.5 41 3.1c13 .6 24 1.8 38 1.2 13-.6 25-2.3 38-1.5 1.7.1 2 2.4.3 2.9-12 3.5-25 3.2-38 3.5-14 .3-27-1-41-.7-12 .3-23 1.7-35 1.2C.9 9.6.3 6.5 2 6.1z"
+      />
+    </svg>
+  );
+});
+
+/** Marcador de tinta dos selects: uma gota em ponta, no lugar da seta. */
+export const InkMarker = memo(function InkMarker({ className = '' }) {
+  return (
+    <svg aria-hidden="true" viewBox="0 0 12 10" className={className}>
+      <path fill="currentColor" d="M1 2.5C4 1.6 8 1.4 11 2.2c.9.3 1 1.2.4 1.9L7 9.4c-.6.7-1.5.7-2-.1L.6 4.2C.1 3.5.3 2.7 1 2.5z" />
+    </svg>
+  );
+});

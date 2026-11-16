@@ -14,7 +14,7 @@ const share = (value, hp) => `${Math.min((value / hp) * 100, 100)}%`;
 function DamageResult({ entry, hint }) {
   if (!entry) {
     return (
-      <section className="paper-card ink-wash ink-blotted px-5 py-6" aria-label="Resultado" aria-live="polite">
+      <section className="paper-card px-5 py-6" aria-label="Resultado" aria-live="polite">
         <p className="font-hand text-2xl leading-tight text-[#785132]">a conta ainda está em branco…</p>
         <p className="mt-1 font-serif text-lg font-semibold leading-snug text-[#2A2421]">{hint}</p>
       </section>
@@ -25,7 +25,7 @@ function DamageResult({ entry, hint }) {
   const { rolls, extraRolls, hits, min, max, hp, typeMultiplier, stab, crit, reason } = result;
 
   return (
-    <section className="paper-card ink-blotted px-4 pb-3.5 pt-5" aria-label="Resultado" aria-live="polite">
+    <section className="paper-card px-4 pb-3.5 pt-5" aria-label="Resultado" aria-live="polite">
       <p className="font-hand text-lg leading-none text-[#78614E]">
         {formatSlug(attackerName)} usa {formatSlug(move.slug)}{crit ? ' (crítico)' : ''} em {formatSlug(defenderName)}
       </p>
@@ -44,12 +44,12 @@ function DamageResult({ entry, hint }) {
             </p>
           </div>
           <p className="mt-1 font-serif text-base font-bold text-[#2A2421]">{ko.text}</p>
-          <p className="font-serif text-xs italic text-smeargle-textDim">
+          <p className="font-reading text-xs italic text-smeargle-textDim">
             {effectLabel(typeMultiplier)}{stab ? ' · com STAB' : ''}{hits > 1 ? ` · ${hits} acertos` : ''}{extraRolls ? ' · Parental Bond (2º acerto ×0,25)' : ''}
           </p>
 
           {/* Barra de HP do alvo: o trecho escuro cai sempre; o listrado depende do fator aleatório. */}
-          <div className="relative mt-2.5 h-3 overflow-hidden rounded-full border border-[#78614E]/25 bg-smeargle-olive/45" role="img" aria-label={`O alvo perde de ${damagePercent(min, hp)}% a ${damagePercent(max, hp)}% do HP`}>
+          <div className="relative mt-2.5 h-3 overflow-hidden rounded-[3px] border border-[#78614E]/25 bg-smeargle-olive/45" role="img" aria-label={`O alvo perde de ${damagePercent(min, hp)}% a ${damagePercent(max, hp)}% do HP`}>
             <span className="absolute inset-y-0 right-0 bg-[#B5543C]/35 [background-image:repeating-linear-gradient(135deg,transparent_0_4px,rgba(138,59,39,0.45)_4px_7px)]" style={{ width: share(max, hp) }} />
             <span className="absolute inset-y-0 right-0 bg-[#8A3B27]" style={{ width: share(min, hp) }} />
           </div>

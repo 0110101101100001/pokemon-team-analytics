@@ -31,7 +31,7 @@ function ResultsList({ directions, selected, onSelect }) {
                       isSelected ? 'border-smeargle-olive bg-smeargle-olive/15' : 'border-transparent hover:border-[#78614E]/25 hover:bg-[#78614E]/5'
                     }`}
                   >
-                    <span className="truncate font-serif text-sm font-semibold text-smeargle-text">
+                    <span className="truncate font-reading text-sm font-semibold text-smeargle-text">
                       {formatSlug(move.slug)}{move.crit ? ' (crít.)' : ''}
                     </span>
                     <span className="font-mono text-xs font-bold tabular-nums text-[#78614E]">

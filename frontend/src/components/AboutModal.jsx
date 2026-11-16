@@ -38,7 +38,7 @@ function AboutModal({ onClose }) {
         role="dialog"
         aria-modal="true"
         aria-labelledby={titleId}
-        className="relative flex max-h-[85vh] w-full max-w-md flex-col rounded-panel border border-[#78614E]/30 bg-[#FFFEFB] shadow-lg md:shadow-panel animate-bubble-pop"
+        className="relative flex max-h-[85vh] w-full max-w-md flex-col rounded-panel border border-[#78614E]/30 bg-paper shadow-lg md:shadow-panel animate-bubble-pop"
       >
         <header className="flex items-start gap-3 border-b border-[#5C4033]/25 px-6 pb-4 pt-5">
           <div className="min-w-0 flex-1">
@@ -52,7 +52,7 @@ function AboutModal({ onClose }) {
             type="button"
             onClick={onClose}
             aria-label="Fechar"
-            className="inline-flex h-9 w-9 shrink-0 cursor-pointer items-center justify-center rounded-full border border-[#4A3B32]/20 bg-[#FFFEFB] text-[#78614E] transition-colors hover:border-[#4A3B32]/40 hover:text-[#2A2421] focus:outline-none focus-visible:ring-2 focus-visible:ring-paint-cobalt"
+            className="inline-flex h-9 w-9 shrink-0 cursor-pointer items-center justify-center rounded-full border border-[#4A3B32]/20 bg-paper text-[#78614E] transition-colors hover:border-[#4A3B32]/40 hover:text-[#2A2421] focus:outline-none focus-visible:ring-2 focus-visible:ring-paint-cobalt"
           >
             <X className="h-5 w-5" aria-hidden="true" />
           </button>

@@ -2,6 +2,7 @@ import { Suspense, lazy, useCallback, useEffect, useMemo, useState } from "react
 import AuthModal from "./components/AuthModal";
 import AuthButton from "./components/AuthButton";
 import AboutButton from "./components/AboutButton";
+import BackToTopButton from "./components/BackToTopButton";
 import AppHeader from "./components/layout/AppHeader";
 import SmeargleLoader from "./components/SmeargleLoader";
 import PokemonSheet, { loadPokemonDrawer } from "./components/PokemonSheet";
@@ -187,13 +188,19 @@ export default function App() {
         </AppHeader>
 
         <main className="relative max-w-[1700px] mx-auto px-4 sm:px-6 lg:px-8 pt-6 sm:pt-10 pb-16">
-          <InkSplatter className="hidden md:block absolute -left-24 top-[22rem] w-44 h-44 opacity-[0.06] mix-blend-multiply -rotate-12" color="#785132" />
-          <InkSplatter className="hidden md:block absolute right-0 bottom-40 w-28 h-28 opacity-[0.08] mix-blend-multiply rotate-[160deg]" color="#829b72" />
+          {/* Manchas de tinta sólida nas margens, nas cores das manchas dos cards (grama, fogo, elétrico, água, voador). */}
+          <InkSplatter className="hidden md:block absolute -left-24 top-[22rem] w-44 h-44 -rotate-12" color="#D0D2BA" />
+          <InkSplatter className="hidden md:block absolute -right-16 top-[max(14rem,38%)] w-32 h-32 rotate-45" color="#E0C2AE" />
+          <InkSplatter className="hidden md:block absolute -left-14 top-[max(34rem,62%)] w-24 h-24 rotate-[100deg]" color="#E9D9B3" />
+          <InkSplatter className="hidden md:block absolute right-0 top-[max(28rem,72%)] w-28 h-28 rotate-[160deg]" color="#CAD1CE" />
+          <InkSplatter className="hidden md:block absolute -right-10 top-[max(38rem,92%)] w-20 h-20 -rotate-[30deg]" color="#D3C5CF" />
 
           <div key={section.id} className="relative animate-section-in motion-reduce:animate-none">
             <Suspense fallback={<SectionFallback />}>{renderSection()}</Suspense>
           </div>
         </main>
+
+        <BackToTopButton />
 
         {selectedPokemon && (
           <PokemonSheet

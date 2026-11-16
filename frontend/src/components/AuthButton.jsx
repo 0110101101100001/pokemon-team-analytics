@@ -1,16 +1,17 @@
 import { memo, useCallback, useState } from 'react';
 import { Loader2, LogIn, LogOut } from 'lucide-react';
 import { supabase } from '../services/supabase';
+import { HEADER_BUTTON_CLASS } from './layout/HeaderControls';
 
-const BASE_CLASS =
-  'h-9 sm:h-10 inline-flex items-center gap-2 rounded-xl border border-[#F7F3EE]/30 bg-[#3E2A1F]/90 text-[#F7F3EE] shadow-inner transition-colors hover:border-[#F7F3EE]/50 focus:outline-none focus-visible:ring-2 focus-visible:ring-[#A4C294]/70';
+// O nome que aparece no header: o primeiro nome do perfil (Google), nunca o e-mail.
+const firstName = (user) => (user.user_metadata?.full_name ?? user.user_metadata?.name ?? '').trim().split(/\s+/)[0] || null;
 
 function Avatar({ user }) {
   const url = user.user_metadata?.avatar_url;
-  if (url) return <img src={url} alt="" width={28} height={28} loading="lazy" decoding="async" className="h-7 w-7 rounded-full border border-[#F7F3EE]/40 object-cover" />;
+  if (url) return <img src={url} alt="" width={28} height={28} loading="lazy" decoding="async" className="h-6 w-6 rounded-full border border-[#F7F3EE]/40 object-cover" />;
   return (
-    <span aria-hidden="true" className="flex h-7 w-7 items-center justify-center rounded-full bg-[#A4C294] font-serif text-sm font-bold uppercase text-[#2A1C14]">
-      {user.email?.[0] ?? '?'}
+    <span aria-hidden="true" className="flex h-6 w-6 items-center justify-center rounded-full bg-[#A4C294] font-reading text-sm font-bold uppercase text-[#2A1C14]">
+      {(firstName(user) ?? user.email)?.[0] ?? '?'}
     </span>
   );
 }
@@ -29,28 +30,29 @@ function AuthButton({ session, onOpen }) {
       <button
         type="button"
         onClick={onOpen}
-        aria-label="Entrar / Cadastrar"
-        className={`${BASE_CLASS} px-3 sm:px-4 text-xs font-serif font-semibold tracking-wide`}
+        className={HEADER_BUTTON_CLASS}
       >
         <LogIn className="h-4 w-4" aria-hidden="true" />
+        <span className="sm:hidden">Entrar</span>
         <span className="hidden sm:inline">Entrar / Cadastrar</span>
       </button>
     );
   }
 
   const { user } = session;
+  const name = firstName(user);
 
   return (
-    <div className={`${BASE_CLASS} pl-1.5 pr-1`}>
+    <div className="inline-flex h-9 items-center gap-1.5 rounded-[3px] border-[1.5px] border-[#F7F3EE]/55 pl-1.5 pr-1 font-reading text-sm font-medium text-paper sm:h-10">
       <Avatar user={user} />
-      <span className="hidden max-w-[10rem] truncate text-xs font-serif sm:inline" title={user.email}>{user.email}</span>
+      {name && <span className="hidden max-w-[8rem] truncate sm:inline">{name}</span>}
       <button
         type="button"
         onClick={handleSignOut}
         disabled={signingOut}
         aria-label="Sair"
         title="Sair"
-        className="rounded-lg p-1.5 text-[#F7F3EE]/80 transition-colors hover:bg-[#F7F3EE]/10 hover:text-[#F7F3EE] focus:outline-none focus-visible:ring-2 focus-visible:ring-[#A4C294]/70 disabled:cursor-wait"
+        className="rounded-[2px] p-1.5 text-[#F7F3EE]/80 transition-colors hover:bg-[#F7F3EE]/10 hover:text-[#F7F3EE] focus:outline-none focus-visible:ring-2 focus-visible:ring-[#A4C294]/70 disabled:cursor-wait"
       >
         {signingOut ? <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" /> : <LogOut className="h-4 w-4" aria-hidden="true" />}
       </button>

@@ -35,7 +35,7 @@ function SketchPlanForm({ plan, onChange, seed, pool, onRun, running, disabled }
 
   return (
     <form
-      className="space-y-4 rounded-sketch border border-[#2A2421]/15 bg-[#FFFEFB]/60 p-3 sm:p-4"
+      className="space-y-4 rounded-sketch border border-[#2A2421]/15 bg-paper/60 p-3 sm:p-4"
       onSubmit={(event) => {
         event.preventDefault();
         onRun();
@@ -45,7 +45,7 @@ function SketchPlanForm({ plan, onChange, seed, pool, onRun, running, disabled }
         <span className="paper-label">Fixos</span>
         <ul className="flex flex-wrap items-center gap-1.5" aria-label="Pokémon fixos do rascunho">
           {seed.map((pokemon) => (
-            <li key={pokemon.id} className="flex items-center gap-1 rounded-full border border-[#78614E]/25 bg-[#FFFEFB] py-0.5 pl-0.5 pr-2.5 font-serif text-xs font-semibold text-smeargle-text">
+            <li key={pokemon.id} className="flex items-center gap-1 rounded-[3px] border border-[#78614E]/25 bg-paper py-0.5 pl-0.5 pr-2.5 font-reading text-xs font-semibold text-smeargle-text">
               <MiniSprite pokemon={pokemon} />
               {formatSlug(pokemon.name)}
             </li>
@@ -70,17 +70,17 @@ function SketchPlanForm({ plan, onChange, seed, pool, onRun, running, disabled }
               aria-pressed={plan.archetype === option.key}
               title={option.description}
               onClick={() => onChange({ archetype: option.key })}
-              className={`cursor-pointer rounded-full border px-3 py-1.5 text-xs font-semibold transition-[background-color,border-color,box-shadow] focus:outline-none focus-visible:ring-2 focus-visible:ring-paint-cobalt ${
+              className={`cursor-pointer rounded-[3px] border px-3 py-1.5 text-xs font-semibold transition-[background-color,border-color,box-shadow] focus:outline-none focus-visible:ring-2 focus-visible:ring-paint-cobalt ${
                 plan.archetype === option.key
-                  ? 'border-[#2A2421]/70 bg-[#829b72] text-white shadow-[2px_2px_0_rgba(42,36,33,0.25)]'
-                  : 'border-[#2A2421]/20 bg-[#FFFEFB] text-smeargle-text hover:border-[#2A2421]/45'
+                  ? 'border-[#2A2421]/70 bg-[#829b72] text-ink shadow-[2px_2px_0_rgba(42,36,33,0.25)]'
+                  : 'border-[#2A2421]/20 bg-paper text-smeargle-text hover:border-[#2A2421]/45'
               }`}
             >
               {option.label}
             </button>
           ))}
         </div>
-        <p className="mt-1.5 font-serif text-xs italic text-smeargle-textDim/90">{archetype.description}</p>
+        <p className="mt-1.5 font-reading text-xs italic text-smeargle-textDim/90">{archetype.description}</p>
       </fieldset>
 
       <div>
@@ -100,7 +100,7 @@ function SketchPlanForm({ plan, onChange, seed, pool, onRun, running, disabled }
                   type="button"
                   onClick={() => unban(pokemon.name)}
                   aria-label={`Voltar a usar ${formatSlug(pokemon.name)}`}
-                  className="flex cursor-pointer items-center gap-1 rounded-full border border-[#9E3D64]/30 bg-[#9E3D64]/5 py-0.5 pl-0.5 pr-2 font-serif text-xs text-smeargle-text transition-colors hover:bg-[#9E3D64]/15 focus:outline-none focus-visible:ring-2 focus-visible:ring-paint-cobalt"
+                  className="flex cursor-pointer items-center gap-1 rounded-[3px] border border-[#9E3D64]/30 bg-[#9E3D64]/5 py-0.5 pl-0.5 pr-2 font-reading text-xs text-smeargle-text transition-colors hover:bg-[#9E3D64]/15 focus:outline-none focus-visible:ring-2 focus-visible:ring-paint-cobalt"
                 >
                   <MiniSprite pokemon={pokemon} faded />
                   <span className="line-through decoration-[#9E3D64]/60">{formatSlug(pokemon.name)}</span>
@@ -112,7 +112,7 @@ function SketchPlanForm({ plan, onChange, seed, pool, onRun, running, disabled }
         )}
       </div>
 
-      <label className="flex cursor-pointer items-center gap-2 font-serif text-sm text-smeargle-text">
+      <label className="flex cursor-pointer items-center gap-2 font-reading text-sm text-smeargle-text">
         <input
           type="checkbox"
           checked={plan.maxTwoPerType}

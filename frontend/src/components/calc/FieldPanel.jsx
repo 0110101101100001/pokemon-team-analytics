@@ -31,8 +31,8 @@ function Chip({ pressed, onToggle, title, children }) {
       aria-pressed={pressed}
       onClick={onToggle}
       title={title}
-      className={`h-7 cursor-pointer rounded-full border px-2.5 font-serif text-[11px] font-semibold transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-paint-cobalt ${
-        pressed ? 'border-smeargle-olive bg-smeargle-olive text-[#FFFEFB] shadow-sm' : 'border-[#78614E]/25 bg-[#FFFEFB]/70 text-[#78614E] hover:border-[#78614E]/50'
+      className={`h-7 cursor-pointer rounded-[3px] border px-2.5 font-serif text-[11px] font-semibold transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-paint-cobalt ${
+        pressed ? 'border-smeargle-olive bg-smeargle-olive text-paper shadow-sm' : 'border-[#78614E]/25 bg-paper/70 text-[#78614E] hover:border-[#78614E]/50'
       }`}
     >
       {children}
@@ -42,18 +42,18 @@ function Chip({ pressed, onToggle, title, children }) {
 
 function SideConditions({ title, conditions, onChange }) {
   return (
-    <fieldset className="min-w-0 rounded-xl border border-[#5C4033]/25 p-2">
+    <fieldset className="min-w-0 rounded-[4px] border border-[#5C4033]/25 p-2">
       <legend className="px-1 font-hand text-base leading-none text-[#5C4033]">{title}</legend>
       <div className="flex flex-wrap gap-1">
         {SIDE_TOGGLES.map(({ key, label }) => (
           <Chip key={key} pressed={conditions[key]} onToggle={() => onChange({ [key]: !conditions[key] })}>{label}</Chip>
         ))}
-        <label className="flex h-7 items-center gap-1 rounded-full border border-[#78614E]/25 bg-[#FFFEFB]/70 pl-2.5 pr-1 font-serif text-[11px] font-semibold text-[#78614E]">
+        <label className="flex h-7 items-center gap-1 rounded-[3px] border border-[#78614E]/25 bg-paper/70 pl-2.5 pr-1 font-serif text-[11px] font-semibold text-[#78614E]">
           Spikes
           <select
             value={conditions.spikes}
             onChange={(e) => onChange({ spikes: Number(e.target.value) })}
-            className="h-5 cursor-pointer rounded-full bg-transparent font-mono text-[11px] focus:outline-none focus-visible:ring-2 focus-visible:ring-paint-cobalt"
+            className="h-5 cursor-pointer rounded-[3px] bg-transparent font-mono text-[11px] focus:outline-none focus-visible:ring-2 focus-visible:ring-paint-cobalt"
           >
             {[0, 1, 2, 3].map((layers) => <option key={layers} value={layers}>{layers}</option>)}
           </select>

@@ -1,10 +1,12 @@
 import { memo, useMemo } from 'react';
 import { Loader2, TriangleAlert } from 'lucide-react';
 import CollectionTabs, { CollectionNotice } from '../components/CollectionTabs';
+import { BrushUnderline } from '../components/InkDecor';
 import FiltersBar, { ActiveFilters, AdvancedFilters } from '../components/FiltersBar';
 import PokemonGrid from '../components/PokemonGrid';
+import { SmogonSeal } from '../components/PokemonCard';
 import HeaderToolbar, { ToolbarRow } from '../components/layout/HeaderToolbar';
-import SectionHeading, { HEADING_PILL_CLASS } from '../components/layout/SectionHeading';
+import SectionHeading from '../components/layout/SectionHeading';
 import { useHeaderCollapsed } from '../components/layout/headerContext';
 import { buildRegionalEntries, useRegionalDex } from '../hooks/useRegionalDex';
 
@@ -23,10 +25,20 @@ function RegionalNotice({ status }) {
   );
 }
 
+/** Legenda do selo dos cards: sem ela, a falta do selo parece dado faltando. */
+function SmogonLegend() {
+  return (
+    <p className="flex max-w-xs items-center gap-2 text-xs leading-snug text-[#4A463E]">
+      <SmogonSeal />
+      <span>marca os Pokémon com estatísticas de uso nos tiers da Smogon.</span>
+    </p>
+  );
+}
+
 /** Seletor das dexes de um jogo que tem mais de uma (Kalos em três partes, DLCs de Galar e Paldea). */
 function DexAreaTabs({ dexes, value, onChange }) {
   return (
-    <div role="tablist" aria-label="Área da Pokédex regional" className="inline-flex flex-wrap gap-1 rounded-2xl border border-[#4A3B32]/15 bg-[#FFFEFB] p-1 shadow-xs">
+    <div role="tablist" aria-label="Área da Pokédex regional" className="inline-flex flex-wrap gap-1 border-b-[1.5px] border-[#1C1A17]/70">
       {dexes.map((dex) => {
         const selected = dex.slug === value;
         return (
@@ -36,11 +48,12 @@ function DexAreaTabs({ dexes, value, onChange }) {
             role="tab"
             aria-selected={selected}
             onClick={() => onChange(dex.slug)}
-            className={`h-8 cursor-pointer rounded-full px-3 font-serif text-xs font-semibold transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-paint-cobalt ${
-              selected ? 'bg-[#829b72] text-[#FFFDF9] shadow-sm' : 'text-[#78614E] hover:bg-[#78614E]/10'
+            className={`relative h-9 cursor-pointer rounded-[2px] px-3 font-reading text-[15px] transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-paint-cobalt ${
+              selected ? 'font-semibold text-[#1C1A17]' : 'text-[#4A463E] hover:text-[#1C1A17]'
             }`}
           >
             {dex.label}
+            <BrushUnderline color="#B8402A" active={selected} className="inset-x-2 -bottom-1 h-[5px] w-[calc(100%-1rem)]" />
           </button>
         );
       })}
@@ -92,7 +105,7 @@ function PokedexSection({
   const count = regionalPending || collectionBlocked ? 0 : filteredList.length;
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 font-reading">
       <HeaderToolbar>
         <ToolbarRow>
           <FiltersBar
@@ -131,17 +144,17 @@ function PokedexSection({
         title={isRegional ? 'Registro Regional' : 'Registro Nacional'}
         subtitle={(
           <>
-            <span className="font-semibold tabular-nums text-[#2A2421]">{count}</span> Pokémon encontrado{count !== 1 ? 's' : ''}
+            <span className="font-mono font-semibold tabular-nums text-[#2A2421]">{count}</span> Pokémon encontrado{count !== 1 ? 's' : ''}
             {searchTerm && <> para <span className="font-serif italic">“{searchTerm}”</span></>}
+            <span className="text-[#785132]/80">
+              {' · '}
+              {isRegional
+                ? `numeração regional, ${scopedList.length} entradas`
+                : `${speciesCount} espécies e ${pokemonList.length - speciesCount} formas até a 9ª geração`}
+            </span>
           </>
         )}
-        aside={(
-          <span className={HEADING_PILL_CLASS}>
-            {isRegional
-              ? `Numeração regional · ${scopedList.length} entradas`
-              : `Até Gen 9 · ${speciesCount} espécies · ${pokemonList.length - speciesCount} formas`}
-          </span>
-        )}
+        aside={<SmogonLegend />}
       />
 
       {regionalPending ? (

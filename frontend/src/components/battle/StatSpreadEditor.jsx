@@ -6,7 +6,7 @@ import {
 import { formatSlug } from '../../utils/filters';
 
 const NUMBER_CLASS =
-  'h-8 w-full rounded-lg border border-[#78614E]/25 bg-[#FFFEFB]/70 px-1.5 text-center font-mono text-sm tabular-nums text-smeargle-text shadow-inner transition-colors hover:border-[#78614E]/45 focus:border-smeargle-olive focus:outline-none focus:ring-2 focus:ring-smeargle-olive/60';
+  'h-8 w-full rounded-[3px] border-[1.5px] border-ink bg-paper px-1.5 text-center font-mono text-sm tabular-nums text-ink';
 const HEAD_CLASS = 'pb-1 text-[10px] font-bold uppercase tracking-wider text-[#78614E]';
 
 const natureLabel = ({ name, plus, minus }) =>
@@ -53,7 +53,7 @@ function StatSpreadEditor({ baseStats, set, onChange }) {
         <tbody>
           {STAT_KEYS.map((key) => (
             <tr key={key}>
-              <th scope="row" className="text-left font-serif text-sm font-semibold text-smeargle-text">{STAT_LABELS[key]}</th>
+              <th scope="row" className="text-left font-reading text-sm font-semibold text-smeargle-text">{STAT_LABELS[key]}</th>
               <td className="text-center font-mono text-sm tabular-nums text-smeargle-textDim">{baseStats?.[key] ?? '—'}</td>
               <td>
                 <input
@@ -87,9 +87,9 @@ function StatSpreadEditor({ baseStats, set, onChange }) {
       </table>
 
       <div className="mt-1.5 flex items-center gap-2">
-        <div className="h-2 flex-1 overflow-hidden rounded-full border border-[#78614E]/20 bg-[#F7F3EE]" aria-hidden="true">
+        <div className="h-2 flex-1 overflow-hidden rounded-[3px] border border-[#78614E]/20 bg-[#F7F3EE]" aria-hidden="true">
           <div
-            className={`h-full rounded-full transition-[width] duration-200 motion-reduce:transition-none ${remaining > 0 ? 'bg-smeargle-olive' : 'bg-[#5C4033]'}`}
+            className={`h-full rounded-[3px] transition-[width] duration-200 motion-reduce:transition-none ${remaining > 0 ? 'bg-smeargle-olive' : 'bg-[#5C4033]'}`}
             style={{ width: `${(used / MAX_EV_TOTAL) * 100}%` }}
           />
         </div>

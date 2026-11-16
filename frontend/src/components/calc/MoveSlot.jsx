@@ -27,7 +27,7 @@ function MoveSlot({ index, slot, learnset, onChange }) {
   }, [index, onChange]);
 
   return (
-    <li className="rounded-xl border border-[#5C4033]/25 bg-[#FFFEFB]/60 p-2">
+    <li className="rounded-[4px] border border-[#5C4033]/25 bg-paper/60 p-2">
       <div className="flex items-center gap-2">
         <div className="min-w-0 flex-1">
           <SuggestField
@@ -66,7 +66,7 @@ function MoveSlot({ index, slot, learnset, onChange }) {
                 value={slot.hits}
                 onChange={(e) => patch({ hits: Number(e.target.value) })}
                 aria-label={`Acertos do golpe ${index + 1}`}
-                className="h-7 cursor-pointer rounded-lg border border-[#78614E]/25 bg-[#FFFEFB]/80 px-1 font-mono text-xs tabular-nums text-smeargle-text shadow-inner focus:border-smeargle-olive focus:outline-none focus:ring-2 focus:ring-smeargle-olive/50"
+                className="h-7 cursor-pointer rounded-[3px] border-[1.5px] border-ink bg-paper px-1 font-mono text-xs tabular-nums text-ink"
               >
                 {hitRange(move).map((hits) => <option key={hits} value={hits}>{hits}×</option>)}
               </select>

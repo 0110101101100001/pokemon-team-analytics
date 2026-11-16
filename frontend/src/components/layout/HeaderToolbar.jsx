@@ -3,7 +3,7 @@ import { createPortal } from 'react-dom';
 import { HeaderContext } from './headerContext';
 
 /**
- * Zona de controle da seção ativa, desenhada dentro do header, logo abaixo da navegação: uma bandeja só
+ * Zona de controle da seção ativa, desenhada dentro do header, logo abaixo da navegação: uma faixa só
  * para a busca, os filtros e os filtros avançados. Cada seção monta os seus; ao trocar de aba
  * a seção sai da tela e leva os filtros junto, então uma aba nunca mostra os filtros de outra.
  */
@@ -11,7 +11,7 @@ export default function HeaderToolbar({ children }) {
   const { slot } = useContext(HeaderContext);
   if (!slot) return null;
   return createPortal(
-    <div className="rounded-2xl border border-[#F7F3EE]/15 bg-[#2A1C14]/20 p-1.5 shadow-inner">{children}</div>,
+    <div className="border-t border-[#F7F3EE]/25 pt-1">{children}</div>,
     slot,
   );
 }

@@ -26,7 +26,6 @@ export default function SectionHeading({ title, subtitle, aside }) {
   );
 }
 
-// Selo de tinta: contorno a nanquim e o texto em serifa, levemente torto como um carimbo.
-// O pingo de magenta queimado à esquerda é a tinta que sobrou no carimbo.
+// Carimbo do cabeçalho: contorno ocre escuro, reto, na serifa de leitura em itálico.
 export const HEADING_PILL_CLASS =
-  'inline-flex -rotate-1 items-center gap-1.5 rounded-full border-[1.5px] border-paint-ochre/80 bg-[#FFFAF0] px-3.5 py-1.5 font-serif text-[13px] font-semibold italic leading-none text-[#6E4E14] shadow-[2px_2px_0_rgba(185,132,40,0.28)] before:h-1.5 before:w-1.5 before:shrink-0 before:rounded-full before:bg-paint-magenta before:content-[""]';
+  'inline-flex items-center rounded-[2px] border-[1.5px] border-[#6B4A10] px-2.5 py-1 font-reading text-sm italic leading-none text-[#6B4A10]';

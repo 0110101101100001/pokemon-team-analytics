@@ -7,10 +7,14 @@ export default {
   theme: {
     extend: {
       colors: {
+        // Os mesmos valores dos tokens de index.css (:root), para as classes utilitárias.
+        paper: { DEFAULT: '#F2EAD9', 2: '#E6D9BE' },
+        ink: { DEFAULT: '#1C1A17', soft: '#4A463E' },
+        vermilion: '#B8402A',
         smeargle: {
-          bg: '#FBF8F3',            // creme quente / papel pergaminho
+          bg: '#F2EAD9',            // creme quente / papel pergaminho
           surface: '#F5F0E6',       // creme ligeiramente mais escuro
-          card: '#FBF8F3',          // creme nos cards (não branco puro)
+          card: '#F2EAD9',          // creme nos cards (não branco puro)
           border: '#5C4033',        // marrom sépia / terra
           borderDim: '#D9CEC2',     // borda mais suave
           text: '#2A2421',          // castanho escuro / carvão
@@ -19,7 +23,7 @@ export default {
           accentBright: '#829b72',  // verde oliva/sage suave (ação, tags)
           glow: 'rgba(130, 155, 114, 0.15)',
           olive: '#829b72',         // verde oliva/sage
-          cream: '#FBF8F3',
+          cream: '#F2EAD9',
           ink: {
             brown: '#785132',       // marrom clássico
             darkBrown: '#5C4033',
@@ -57,24 +61,27 @@ export default {
         },
       },
       fontFamily: {
-        sans: ['"Inter"', 'system-ui', 'sans-serif'],
+        // Texto corrido e rótulos na serifa de leitura; Playfair (serif/display) só em títulos; mono só em números.
+        sans: ['"Newsreader"', 'Georgia', 'serif'],
         serif: ['"Playfair Display"', 'Georgia', 'serif'],
         display: ['"Playfair Display"', 'Georgia', 'serif'],
-        // Anotações a nanquim: Playfair itálico (o estilo e o ajuste de altura ficam em index.css).
-        hand: ['"Playfair Display"', 'Georgia', 'serif'],
+        // Anotações a nanquim: Newsreader itálico (o estilo e o ajuste de altura ficam em index.css).
+        hand: ['"Newsreader"', 'Georgia', 'serif'],
         mono: ['"JetBrains Mono"', 'ui-monospace', 'monospace'],
+        // Serifa de leitura do texto corrido, rótulos e controles; mono fica só para números.
+        reading: ['"Newsreader"', 'Georgia', 'serif'],
       },
       borderRadius: {
         'xl': '1.25rem',
         'pill': '9999px',
-        'panel': '1.5rem',
-        // Cantos de um traço de pincel: levemente desiguais.
-        'sketch': '1.1rem 1.4rem 1.2rem 1rem / 1rem 1.2rem 1.1rem 1.3rem',
+        'panel': '4px',
+        // Cantos dos cards impressos: quase retos.
+        'sketch': '4px',
       },
       boxShadow: {
         'card': '3px 3px 0 rgba(42, 36, 33, 0.14)',
         'card-hover': '4px 5px 0 rgba(42, 36, 33, 0.2)',
-        'panel': '6px 7px 0 rgba(42, 36, 33, 0.18), 0 24px 60px -24px rgba(42, 36, 33, 0.35)',
+        'panel': '5px 5px 0 #4A463E',
         'hard': '3px 3px 0 #2A2421',
         'hard-hover': '2px 2px 0 #2A2421',
         'ink': '0 0 0 1px #2A2421, 3px 3px 0 #2A2421',
