@@ -4,12 +4,12 @@ import { BrushUnderline } from '../InkDecor';
 
 /**
  * Navegação principal: as abas em texto, a ativa marcada pela pincelada na tinta da seção.
- * No celular vira um bloco com os cinco ícones; `compact` esconde os rótulos ao rolar.
+ * No celular vira um bloco com os ícones de todas as seções; `compact` esconde os rótulos ao rolar.
  */
 function SectionTabs({ activeId, compact = false, className = '' }) {
   return (
     <nav aria-label="Seções" className={`flex justify-center ${className}`}>
-      <ul className="grid w-full grid-cols-5 gap-0.5 sm:flex sm:w-auto sm:items-center sm:gap-1">
+      <ul className="grid w-full grid-cols-6 gap-0.5 sm:flex sm:w-auto sm:items-center sm:gap-1">
         {SECTIONS.map((section) => {
           const { id, label, shortLabel, icon: Icon, pigment } = section;
           const active = id === activeId;

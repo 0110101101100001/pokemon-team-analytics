@@ -1,10 +1,7 @@
 import { memo } from 'react';
 import PokemonTypeBadge from '../PokemonTypeBadge';
 import { formatSlug } from '../../utils/filters';
-
-const DAMAGE_CLASS_LABELS = { physical: 'Físico', special: 'Especial', status: 'Status' };
-const HEAD = 'px-3 pb-1.5 pt-3 font-hand text-lg font-semibold leading-none text-[#78614E]';
-const CELL = 'px-3 py-1.5';
+import { CELL, DAMAGE_CLASS_LABELS, HEAD, MOVE_NAME_BUTTON, ROW } from '../moves/moveTableStyles';
 
 /** Lista de TMs, HMs e TRs de um jogo. `machines`: [{ code, move, type, damageClass, power, accuracy }]. */
 function MachineTable({ machines, onSelectMove }) {
@@ -31,13 +28,13 @@ function MachineTable({ machines, onSelectMove }) {
         </thead>
         <tbody>
           {machines.map(({ code, move, type, damageClass, power, accuracy }) => (
-            <tr key={code} className="border-b border-[#5C4033]/10 transition-colors last:border-0 hover:bg-[#829b72]/10">
+            <tr key={code} className={ROW}>
               <td className={`${CELL} whitespace-nowrap font-mono text-xs font-bold tracking-wider text-[#4A3B32]`}>{code.toUpperCase()}</td>
               <td className={CELL}>
                 <button
                   type="button"
                   onClick={() => onSelectMove(move)}
-                  className="cursor-pointer rounded font-semibold underline decoration-[#78614E]/35 decoration-dashed underline-offset-4 transition-colors hover:text-[#5B7856] hover:decoration-[#5B7856] focus:outline-none focus-visible:ring-2 focus-visible:ring-paint-cobalt"
+                  className={MOVE_NAME_BUTTON}
                 >
                   {formatSlug(move)}
                 </button>

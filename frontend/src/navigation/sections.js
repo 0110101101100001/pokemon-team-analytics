@@ -1,8 +1,9 @@
-import { Backpack, BookOpen, Calculator, Medal, Swords } from 'lucide-react';
+import { Backpack, BookOpen, Calculator, Disc3, Medal, Swords } from 'lucide-react';
 
 // `pigment` é a tinta da seção: pinta a pincelada da aba ativa e a mancha do header.
 export const SECTIONS = [
   { id: 'pokedex', path: 'pokedex', label: 'Pokédex', shortLabel: 'Pokédex', icon: BookOpen, pigment: '#A4C294' },
+  { id: 'moves', path: 'movimentos', label: 'Movimentos', shortLabel: 'Golpes', icon: Disc3, pigment: '#F2D27A' },
   { id: 'items', path: 'itens', label: 'Itens', shortLabel: 'Itens', icon: Backpack, pigment: '#F0B37E' },
   { id: 'gymLeaders', path: 'ginasios', label: 'Líderes de Ginásio', shortLabel: 'Líderes', icon: Medal, pigment: '#F28FB8' },
   { id: 'teamBuilder', path: 'times', label: 'Montador de Times', shortLabel: 'Times', icon: Swords, pigment: '#BFA2F2' },

@@ -366,7 +366,7 @@ const SpreadCard = memo(function SpreadCard({ index, nature, evs, pct }) {
 /* ---------------------------------------------------------------- drawer */
 
 export default function PokemonDrawer({
-  pokemonName, onClose, onSmogonDataFound, favorites, gridEntries, onToggleFavorite, team, onToggleTeam,
+  pokemonName, onClose, onSmogonDataFound, favorites, gridEntries, onToggleFavorite, team, onToggleTeam, onSelectPokemon,
 }) {
   const [detail, setDetail] = useState(null);
   const [species, setSpecies] = useState(null);
@@ -788,6 +788,7 @@ export default function PokemonDrawer({
                   currentSpecies={species?.name}
                   currentForm={detail.name}
                   currentFormId={detail.id}
+                  onSelectPokemon={onSelectPokemon}
                 />
               ) : (
                 <p className="text-xs text-[#78614E]">Sem dados evolutivos.</p>

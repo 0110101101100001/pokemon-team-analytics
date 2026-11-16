@@ -30,7 +30,8 @@ export default function PokemonSheet({ pokemonName, onClose, ...drawerProps }) {
         onClick={(e) => e.stopPropagation()}
       >
         <Suspense fallback={<DrawerFallback />}>
-          <PokemonDrawer pokemonName={pokemonName} onClose={onClose} {...drawerProps} />
+          {/* A chave remonta a ficha ao trocar de Pokémon (pela árvore evolutiva): volta ao topo e à aba inicial. */}
+          <PokemonDrawer key={pokemonName} pokemonName={pokemonName} onClose={onClose} {...drawerProps} />
         </Suspense>
       </div>
     </div>

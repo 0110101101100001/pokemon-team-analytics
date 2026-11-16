@@ -24,6 +24,7 @@ import { createBattleSet } from "./utils/stats";
 import { speciesOf, teamSlotFor } from "./utils/teamScore";
 
 // A Pokédex é a tela de entrada; as outras seções só são baixadas quando a aba é aberta.
+const MovesSection = lazy(() => import("./sections/MovesSection"));
 const ItemsSection = lazy(() => import("./sections/ItemsSection"));
 const GymLeadersSection = lazy(() => import("./sections/GymLeadersSection"));
 const TeamBuilderSection = lazy(() => import("./sections/TeamBuilderSection"));
@@ -138,6 +139,8 @@ export default function App() {
 
   const renderSection = () => {
     switch (section.id) {
+      case "moves":
+        return <MovesSection entryByName={entryByName} onSelectPokemon={handleSelect} />;
       case "items":
         return <ItemsSection />;
       case "gymLeaders":
@@ -212,6 +215,7 @@ export default function App() {
             onToggleFavorite={handleToggleFavorite}
             team={team}
             onToggleTeam={handleToggleTeam}
+            onSelectPokemon={handleSelect}
           />
         )}
       </div>

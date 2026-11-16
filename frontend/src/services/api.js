@@ -92,6 +92,11 @@ export const fetchPokemonIdsLearningMove = (move) =>
   cachedJson(`${POKEAPI_BASE}/move/${encodeURIComponent(move)}`)
     .then((data) => new Set(data.learned_by_pokemon.map((p) => idFromUrl(p.url))));
 
+/** Todos os Pokémon (formas incluídas) que aprendem o golpe em algum jogo, como { name, id }. */
+export const fetchMoveLearners = (move) =>
+  cachedJson(`${POKEAPI_BASE}/move/${encodeURIComponent(move)}`)
+    .then((data) => data.learned_by_pokemon.map((p) => ({ name: p.name, id: idFromUrl(p.url) })));
+
 const escapeRegExp = (text) => text.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 
 /**

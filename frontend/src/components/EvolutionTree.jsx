@@ -1,4 +1,4 @@
-import { memo, useEffect, useId, useMemo, useState } from 'react';
+import { memo, useCallback, useEffect, useId, useMemo, useState } from 'react';
 import {
   ArrowLeftRight, Castle, CloudRain, Dumbbell, Gem, Heart, MapPin, Moon, Package,
   RotateCcw, Sparkles, Sun, Sunset, Swords, TrendingUp, User, Users, Zap,
@@ -71,7 +71,10 @@ const EvolutionBadge = memo(function EvolutionBadge({ icon, text }) {
   );
 });
 
-const SpeciesNode = memo(function SpeciesNode({ node, current }) {
+// Espécies cuja variedade padrão tem outro nome ("lycanroc" → "lycanroc-midday") só abrem pelo nome da variedade.
+const defaultVarietyOf = (species) => species?.varieties?.find((v) => v.is_default)?.pokemon.name;
+
+const SpeciesNode = memo(function SpeciesNode({ node, current, onSelect }) {
   const regional = Boolean(node.regionLabel);
   const ring = current
     ? 'border-[#829b72] shadow-[0_0_0_4px_rgba(130,155,114,0.18)]'
@@ -79,14 +82,27 @@ const SpeciesNode = memo(function SpeciesNode({ node, current }) {
       ? 'border-dashed border-[#5B7856]/70 shadow-[0_0_0_3px_rgba(164,194,148,0.25)]'
       : 'border-[#785132]/35 shadow-2xs';
 
+  const name = formatSpeciesName(node.id);
+  const Tag = onSelect && !current ? 'button' : 'div';
+  const interactive = Tag === 'button' && {
+    type: 'button',
+    onClick: () => onSelect(node),
+    'aria-label': `Abrir a ficha de ${name}`,
+  };
+
   return (
-    <div
-      className={`absolute flex flex-col items-center transition-opacity ${node.outOfLine ? 'opacity-40 grayscale' : ''}`}
+    <Tag
+      {...interactive}
+      className={`group absolute flex flex-col items-center transition-opacity ${node.outOfLine ? 'opacity-40 grayscale' : ''} ${
+        interactive ? 'cursor-pointer rounded-[3px] focus:outline-none focus-visible:ring-2 focus-visible:ring-paint-cobalt' : ''
+      }`}
       style={{ left: nodeX(node.stage), top: nodeY(node.row), width: NODE_W }}
       title={node.outOfLine ? 'Não faz parte desta linha evolutiva' : undefined}
     >
       <div
-        className={`relative flex items-center justify-center rounded-[3px] bg-paper border-2 transition-shadow ${ring}`}
+        className={`relative flex items-center justify-center rounded-[3px] bg-paper border-2 transition-[box-shadow,transform] ${ring} ${
+          interactive ? 'group-hover:-translate-x-px group-hover:-translate-y-px group-hover:border-[#2A2421] group-hover:shadow-[2px_2px_0_#4A463E] motion-reduce:group-hover:translate-x-0 motion-reduce:group-hover:translate-y-0' : ''
+        }`}
         style={{ width: SPRITE_R * 2, height: SPRITE_R * 2 }}
       >
         <img
@@ -106,14 +122,14 @@ const SpeciesNode = memo(function SpeciesNode({ node, current }) {
       <span
         className={`mt-1.5 text-[11px] font-serif text-center leading-tight ${
           current ? 'font-black text-[#2A2421]' : 'font-bold text-[#2A2421]/85'
-        }`}
+        } ${interactive ? 'underline decoration-transparent decoration-dashed underline-offset-2 group-hover:decoration-[#78614E]/60' : ''}`}
       >
-        {formatSpeciesName(node.id)}
+        {name}
       </span>
       <span className="text-[9px] font-mono tracking-wide text-[#78614E]">
         #{String(node.speciesId).padStart(3, '0')}
       </span>
-    </div>
+    </Tag>
   );
 });
 
@@ -136,7 +152,7 @@ function useChainSpecies(baseLayout) {
   return state.key === key ? state.speciesByName : null;
 }
 
-function EvolutionTree({ chain, currentSpecies, currentForm, currentFormId }) {
+function EvolutionTree({ chain, currentSpecies, currentForm, currentFormId, onSelectPokemon }) {
   const uid = useId();
   const region = detectRegion(currentForm);
   const baseLayout = useMemo(() => layoutEvolutionChain(chain), [chain]);
@@ -156,6 +172,12 @@ function EvolutionTree({ chain, currentSpecies, currentForm, currentFormId }) {
     };
   }, [conditioned, speciesByName, region, currentSpecies, currentFormId]);
   const nodeById = useMemo(() => new Map(layout.nodes.map((n) => [n.id, n])), [layout]);
+  // Um nó regional abre a forma regional (Raichu de Alola); os demais, a variedade padrão da espécie.
+  const selectNode = useCallback(
+    (node) => onSelectPokemon(node.formName ?? defaultVarietyOf(speciesByName?.get(node.id)) ?? node.id),
+    [onSelectPokemon, speciesByName],
+  );
+  const handleSelect = onSelectPokemon ? selectNode : undefined;
 
   if (region && !speciesByName) {
     return (
@@ -258,7 +280,7 @@ function EvolutionTree({ chain, currentSpecies, currentForm, currentFormId }) {
         })}
 
         {layout.nodes.map((node) => (
-          <SpeciesNode key={node.id} node={node} current={node.id === currentSpecies} />
+          <SpeciesNode key={node.id} node={node} current={node.id === currentSpecies} onSelect={handleSelect} />
         ))}
       </div>
 
