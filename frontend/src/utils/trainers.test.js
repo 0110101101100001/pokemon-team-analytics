@@ -1,5 +1,8 @@
 import { describe, expect, it } from 'vitest';
-import { MIXED_TYPE, battleLabel, createNameMatcher, groupTrainers, matchingBattles, trainerSpriteUrl } from './trainers';
+import {
+  MIXED_TYPE, battleLabel, createNameMatcher, groupTrainers, matchingBattles, moveSlug, resolveTrainerPokemon,
+  trainerMemberSet, trainerSpriteUrl,
+} from './trainers';
 
 const row = (fields) => ({
   Card_ID: `${fields.Trainer_Slug}-${fields.Generation}-${fields.Role}`,
@@ -55,8 +58,8 @@ describe('matchingBattles', () => {
     expect(matchingBattles(bySlug('koga'), { region: [] })).toHaveLength(2);
   });
 
-  it('filtra geração e tipo', () => {
-    expect(matchingBattles(bySlug('lance'), { generation: ['2'], type: ['dragon'] })).toHaveLength(1);
+  it('filtra tipo, inclusive a especialidade mista', () => {
+    expect(matchingBattles(bySlug('lance'), { region: ['Johto'], type: ['dragon'] })).toHaveLength(1);
     expect(matchingBattles(bySlug('blue'), { type: [MIXED_TYPE] })).toHaveLength(1);
   });
 });
@@ -70,10 +73,31 @@ describe('detalhes', () => {
   it('monta o sprite do Showdown sem hífens, com exceções', () => {
     expect(trainerSpriteUrl('crasher-wake')).toMatch(/\/crasherwake\.png$/);
     expect(trainerSpriteUrl('phoebe')).toMatch(/\/phoebe-gen6\.png$/);
-    expect(trainerSpriteUrl('kommo-o-totem')).toBeNull();
   });
 
   it('rotula a variante com jogo, time e revanche', () => {
     expect(battleLabel(bySlug('blue').battles[0])).toBe('Red / Blue · Squirtle');
+  });
+});
+
+describe('time do treinador na calculadora', () => {
+  it('converte o nome do golpe no slug da PokéAPI', () => {
+    expect(moveSlug('Will-O-Wisp')).toBe('will-o-wisp');
+    expect(moveSlug("King's Shield")).toBe('kings-shield');
+    expect(moveSlug('Power Up Punch')).toBe('power-up-punch');
+  });
+
+  it('monta o set com o nível e os golpes, deixando vazio o que não existe', () => {
+    const summaries = { flail: { slug: 'flail' }, surf: { slug: 'surf' } };
+    const set = trainerMemberSet({ level: 44, moves: ['Fla', 'Surf'] }, (slug) => summaries[slug] ?? null);
+    expect(set.level).toBe(44);
+    expect(set.moves).toEqual([null, { slug: 'surf' }, null, null]);
+  });
+
+  it('resolve a espécie para a forma padrão da Pokédex', () => {
+    const entries = new Map([['onix', { id: 95 }], ['aegislash-shield', { id: 681 }], ['aegislash-blade', { id: 10026 }]]);
+    expect(resolveTrainerPokemon(entries, 'onix').id).toBe(95);
+    expect(resolveTrainerPokemon(entries, 'aegislash').id).toBe(681);
+    expect(resolveTrainerPokemon(entries, 'missingno')).toBeNull();
   });
 });

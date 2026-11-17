@@ -1,3 +1,5 @@
+import { createBattleSet } from './stats';
+
 // Treinadores da tabela PokemonTrainers: cada linha é uma batalha (jogo, papel, revanche, time por inicial);
 // as linhas do mesmo Trainer_Slug viram um treinador só, com as batalhas como variantes.
 
@@ -7,7 +9,6 @@ export const REGIONS = ['Kanto', 'Johto', 'Hoenn', 'Sinnoh', 'Unova', 'Kalos', '
 export const ROLES = {
   'Gym Leader': { label: 'Líder de Ginásio', rank: 1 },
   'Trial Captain': { label: 'Capitão de Provação', rank: 2 },
-  'Totem Trial': { label: 'Provação Totem', rank: 3 },
   'Island Kahuna': { label: 'Kahuna', rank: 4 },
   'Champion Cup': { label: 'Copa dos Campeões', rank: 5 },
   'Elite Four': { label: 'Elite 4', rank: 6 },
@@ -19,7 +20,6 @@ const GIMMICKS = {
   'Z-Move': 'Golpe Z',
   'Dynamax / Gigantamax': 'Dynamax / Gigantamax',
   Terastallize: 'Terastal',
-  'Totem Aura': 'Aura Totem',
 };
 
 // Especialidade "Multi-type" vira este valor nos filtros e no card.
@@ -28,7 +28,7 @@ export const MIXED_TYPE = 'mixed';
 export const roleLabel = (role) => ROLES[role]?.label ?? role;
 const roleRank = (role) => ROLES[role]?.rank ?? 99;
 
-// O Showdown não tem todos os slugs sem sufixo; quem não tem sprite usa o do Pokémon ás.
+// O Showdown não tem todos os slugs sem sufixo.
 const SPRITE_NAMES = {
   agatha: 'agatha-gen3',
   drake: 'drake-gen3',
@@ -36,10 +36,7 @@ const SPRITE_NAMES = {
   phoebe: 'phoebe-gen6',
   'tate-and-liza': 'tateandliza-gen6',
 };
-const WITHOUT_SPRITE = new Set(['kommo-o-totem']);
-
 export function trainerSpriteUrl(slug) {
-  if (WITHOUT_SPRITE.has(slug)) return null;
   const name = SPRITE_NAMES[slug] ?? slug.replace(/-/g, '');
   return `https://play.pokemonshowdown.com/sprites/trainers/${name}.png`;
 }
@@ -111,11 +108,10 @@ export function groupTrainers(rows) {
     });
 }
 
-export const FILTER_GROUPS = ['region', 'generation', 'type', 'role'];
+export const FILTER_GROUPS = ['region', 'type', 'role'];
 
 const battleValue = {
   region: (battle) => battle.region,
-  generation: (battle) => String(battle.generation),
   type: (battle) => battle.type,
   role: (battle) => battle.role,
 };
@@ -144,4 +140,33 @@ export function battleLabel(battle) {
   return [battle.games, battle.teamVariant, battle.rematch && 'revanche']
     .filter(Boolean)
     .join(' · ');
+}
+
+/**
+ * Entrada da Pokédex de um Pokémon do time. A tabela usa o nome da espécie, e algumas só existem com a forma
+ * ("aegislash" → "aegislash-shield"); a primeira forma no índice é a padrão.
+ */
+export function resolveTrainerPokemon(entryByName, slug) {
+  const exact = entryByName.get(slug);
+  if (exact) return exact;
+  for (const [name, entry] of entryByName) {
+    if (name.startsWith(`${slug}-`)) return entry;
+  }
+  return null;
+}
+
+/** "Will-O-Wisp" → "will-o-wisp"; "King's Shield" → "kings-shield". */
+export const moveSlug = (name) => name.toLowerCase().replace(/['’.,]/g, '').trim().replace(/\s+/g, '-');
+
+/**
+ * Set de batalha de um Pokémon do treinador: o nível e os golpes do jogo; o resto fica no padrão do Team Builder.
+ * `summaryOf(slug)` devolve o golpe no formato da calculadora, ou null se não existir.
+ */
+export function trainerMemberSet(member, summaryOf) {
+  const set = createBattleSet();
+  return {
+    ...set,
+    level: member.level,
+    moves: set.moves.map((_, index) => (member.moves[index] ? summaryOf(moveSlug(member.moves[index])) : null)),
+  };
 }

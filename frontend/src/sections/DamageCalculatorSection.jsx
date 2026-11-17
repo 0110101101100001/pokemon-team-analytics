@@ -3,6 +3,7 @@ import CombatantPanel from '../components/calc/CombatantPanel';
 import DamageResult from '../components/calc/DamageResult';
 import FieldPanel from '../components/calc/FieldPanel';
 import ResultsList from '../components/calc/ResultsList';
+import TrainerTeamPicker from '../components/calc/TrainerTeamPicker';
 import { createField, createSide, resolveSlot, sideFromPokemon } from '../components/calc/calcState';
 import SectionHeading, { HEADING_PILL_CLASS } from '../components/layout/SectionHeading';
 import { useBattleForms, useFormBattleData } from '../hooks/usePokemonBattleData';
@@ -11,9 +12,10 @@ import { PRIMAL_WEATHERS, TERRAIN_ABILITIES, WEATHER_ABILITIES, WEATHER_SUPPRESS
 import { airborneBy, calcSpeed, calculateDamage, describeKnockout, isCalculable } from '../utils/damage';
 import { calcStats } from '../utils/stats';
 
+// `trainers`: o lado pode puxar o time de um líder, Elite 4 ou campeão.
 const SIDES = [
   { title: 'Seu Pokémon', caption: 'do seu lado', picker: 'Escolher seu Pokémon por nome ou número...', field: 'Seu lado' },
-  { title: 'Oponente', caption: 'do outro lado', picker: 'Escolher o oponente por nome ou número...', field: 'Lado do oponente' },
+  { title: 'Oponente', caption: 'do outro lado', picker: 'Escolher o oponente por nome ou número...', field: 'Lado do oponente', trainers: true },
 ];
 
 /**
@@ -231,6 +233,9 @@ export default function DamageCalculatorSection({ pool, team, session }) {
             faster={actsFirst(speeds, index, field.trickRoom)}
             pool={pool}
             teams={teamSources}
+            extraSource={meta.trainers && (
+              <TrainerTeamPicker pool={pool} currentId={sides[index].pokemon?.id} onPick={handlers[index].pick} />
+            )}
             onChange={handlers[index].change}
             onMoveChange={handlers[index].move}
             onPick={handlers[index].pick}

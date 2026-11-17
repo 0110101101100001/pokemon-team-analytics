@@ -24,11 +24,6 @@ const option = (value, label) => ({ value, label });
 const FILTER_SELECTS = [
   { group: 'region', placeholder: 'Região', options: REGIONS.map((region) => option(region, region)) },
   {
-    group: 'generation',
-    placeholder: 'Geração',
-    options: Array.from({ length: 9 }, (_, index) => option(String(index + 1), `${index + 1}ª geração`)),
-  },
-  {
     group: 'type',
     placeholder: 'Tipo',
     options: [...TYPE_NAMES.map((type) => option(type, formatSlug(type))), option(MIXED_TYPE, 'Vários tipos')],
@@ -110,7 +105,7 @@ export default function TrainersSection({ entryByName, onSelectPokemon }) {
             value={query}
             onChange={(e) => setQuery(e.target.value)}
           />
-          <div className="grid grid-cols-2 gap-1.5 sm:grid-cols-4 sm:gap-2 lg:contents">
+          <div className="grid grid-cols-3 gap-1.5 sm:gap-2 lg:contents">
             {FILTER_SELECTS.map(({ group, placeholder, options }) => (
               <HeaderSelect
                 key={group}

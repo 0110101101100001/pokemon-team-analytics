@@ -6,7 +6,7 @@ import TrainerSprite from './TrainerSprite';
 import { SpecialtyStamp, blotColor } from './TrainerCard';
 import { thumbnailSpriteUrl } from '../../services/api';
 import { useModalBehavior } from '../../hooks/useModalBehavior';
-import { battleLabel, roleLabel } from '../../utils/trainers';
+import { battleLabel, resolveTrainerPokemon, roleLabel } from '../../utils/trainers';
 
 const LABEL = 'font-reading text-xs font-semibold uppercase tracking-wider text-[#4A463E]';
 const PILL = 'cursor-pointer rounded-[3px] border-[1.5px] px-3 py-1.5 font-reading text-sm transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-paint-cobalt';
@@ -29,17 +29,6 @@ function battleFacts(battle) {
     ['Mecânica', battle.gimmick],
     ['Nível médio', battle.avgLevel != null && `Nv. ${Math.round(battle.avgLevel * 10) / 10}`],
   ].filter(([, value]) => value);
-}
-
-// A tabela usa o nome da espécie; na Pokédex algumas só existem com a forma ("aegislash" → "aegislash-shield").
-// A primeira forma no índice é a padrão.
-function resolveEntry(entryByName, slug) {
-  const exact = entryByName.get(slug);
-  if (exact) return exact;
-  for (const [name, entry] of entryByName) {
-    if (name.startsWith(`${slug}-`)) return entry;
-  }
-  return null;
 }
 
 function TeamMember({ member, entry, onSelectPokemon, onSelectMove }) {
@@ -177,7 +166,7 @@ export default function TrainerModal({ trainer, initialBattleId, entryByName, on
                 <TeamMember
                   key={`${member.slug}-${index}`}
                   member={member}
-                  entry={resolveEntry(entryByName, member.slug)}
+                  entry={resolveTrainerPokemon(entryByName, member.slug)}
                   onSelectPokemon={onSelectPokemon}
                   onSelectMove={setMove}
                 />

@@ -3,7 +3,7 @@ import { thumbnailSpriteUrl } from '../../services/api';
 import { trainerSpriteUrl } from '../../utils/trainers';
 
 /**
- * Sprite do treinador no Showdown (80px, tamanho original). Sem sprite (Kommo-o Totem) ou se ele não carregar,
+ * Sprite do treinador no Showdown (80px, tamanho original). Se ele não carregar,
  * mostra o Pokémon ás; sem nenhum dos dois, um ponto de interrogação a tinta.
  */
 export default function TrainerSprite({ trainer, entryByName }) {

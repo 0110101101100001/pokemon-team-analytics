@@ -88,7 +88,7 @@ function Field({ label, children, className = '' }) {
  * Um lado da calculadora: o Pokémon (pela busca ou do time), Mega/Primal, Tera, nível, habilidade, item, status,
  * os estágios de cada atributo, os quatro golpes e, recolhidos, natureza, EVs e IVs.
  */
-function CombatantPanel({ caption, title, pickerPlaceholder, side, battle, forms, ability, speed, faster, airborne, pool, teams, onChange, onMoveChange, onPick, className = '' }) {
+function CombatantPanel({ caption, title, pickerPlaceholder, side, battle, forms, ability, speed, faster, airborne, pool, teams, extraSource, onChange, onMoveChange, onPick, className = '' }) {
   const { pokemon, set, boosts } = side;
 
   const patchSet = useCallback((changes) => onChange({ set: { ...set, ...changes } }), [set, onChange]);
@@ -135,6 +135,8 @@ function CombatantPanel({ caption, title, pickerPlaceholder, side, battle, forms
           ))}
         </div>
       )}
+
+      {extraSource}
 
       {pokemon && (
         <div className="mt-4 space-y-3.5 border-t border-[#5C4033]/25 pt-4">
