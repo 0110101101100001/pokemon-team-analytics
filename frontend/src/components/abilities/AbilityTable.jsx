@@ -1,9 +1,13 @@
 import { memo } from 'react';
+import ShowMoreButton from '../ShowMoreButton';
 import { LearnersRow, LearnersToggle } from '../moves/LearnersToggle';
+import { useIncrementalList } from '../../hooks/useIncrementalList';
 import { CELL, HEAD, MOVE_NAME_BUTTON, ROW } from '../moves/moveTableStyles';
 import { formatSlug } from '../../utils/filters';
 
 const COLUMN_COUNT = 5;
+// Linhas montadas por lote; as seguintes entram conforme a tabela rola.
+const BATCH_SIZE = 60;
 
 const HOLDER_COPY = {
   loading: 'Procurando quem tem...',
@@ -58,6 +62,8 @@ const AbilityRow = memo(function AbilityRow({ ability, open, onToggle, onSelectA
  * `abilities`: [{ slug, generation, effect, holders }].
  */
 function AbilityTable({ abilities, openAbility, onToggleAbility, onSelectAbility, loadHolders, entryByName, onSelectPokemon }) {
+  const batch = useIncrementalList(abilities, BATCH_SIZE);
+
   if (abilities.length === 0) {
     return (
       <p className="py-16 text-center font-reading text-sm italic text-smeargle-textDim/80">
@@ -67,33 +73,36 @@ function AbilityTable({ abilities, openAbility, onToggleAbility, onSelectAbility
   }
 
   return (
-    <div className="paper-card overflow-x-auto">
-      <table className="w-full border-collapse font-reading text-sm text-smeargle-text">
-        <thead>
-          <tr className="border-b border-[#78614E]/20 text-left">
-            <th scope="col" className={HEAD}>Habilidade</th>
-            <th scope="col" className={`${HEAD} max-md:hidden`}>Efeito</th>
-            <th scope="col" className={`${HEAD} text-right max-sm:hidden`}>Geração</th>
-            <th scope="col" className={`${HEAD} text-right`}>Pokémon</th>
-            <th scope="col" className={`${HEAD} text-right`}><span className="sr-only">Quem tem</span></th>
-          </tr>
-        </thead>
-        <tbody>
-          {abilities.map((ability) => (
-            <AbilityRow
-              key={ability.slug}
-              ability={ability}
-              open={ability.slug === openAbility}
-              onToggle={onToggleAbility}
-              onSelectAbility={onSelectAbility}
-              loadHolders={loadHolders}
-              entryByName={entryByName}
-              onSelectPokemon={onSelectPokemon}
-            />
-          ))}
-        </tbody>
-      </table>
-    </div>
+    <>
+      <div className="paper-card overflow-x-auto">
+        <table className="w-full border-collapse font-reading text-sm text-smeargle-text">
+          <thead>
+            <tr className="border-b border-[#78614E]/20 text-left">
+              <th scope="col" className={HEAD}>Habilidade</th>
+              <th scope="col" className={`${HEAD} max-md:hidden`}>Efeito</th>
+              <th scope="col" className={`${HEAD} text-right max-sm:hidden`}>Geração</th>
+              <th scope="col" className={`${HEAD} text-right`}>Pokémon</th>
+              <th scope="col" className={`${HEAD} text-right`}><span className="sr-only">Quem tem</span></th>
+            </tr>
+          </thead>
+          <tbody>
+            {batch.visible.map((ability) => (
+              <AbilityRow
+                key={ability.slug}
+                ability={ability}
+                open={ability.slug === openAbility}
+                onToggle={onToggleAbility}
+                onSelectAbility={onSelectAbility}
+                loadHolders={loadHolders}
+                entryByName={entryByName}
+                onSelectPokemon={onSelectPokemon}
+              />
+            ))}
+          </tbody>
+        </table>
+      </div>
+      <ShowMoreButton list={batch} />
+    </>
   );
 }
 

@@ -178,6 +178,7 @@ scripts/
   build-pokedex-index.mjs  gera frontend/src/data/pokedex-index.json (variedades, espécies, tipos, grupos de ovos)
   build-battle-data.mjs    gera frontend/src/data/battle-data.json (atributos base e golpes, para o esboço)
   build-abilities.mjs      gera frontend/src/data/abilities.json (habilidades, efeito curto e quem tem cada uma)
+  build-items.mjs          gera frontend/src/data/items.json (itens com categoria e bolso, para a aba Itens)
 supabase/migrations/ políticas e índices da tabela smogon_stats
 .github/workflows/   CI, keep-alives, sincronização mensal e commit de atividade
 netlify.toml         build e headers do frontend

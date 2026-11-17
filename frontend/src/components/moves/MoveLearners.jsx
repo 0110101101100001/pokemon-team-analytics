@@ -1,9 +1,14 @@
-import { memo, useDeferredValue, useEffect, useMemo, useState } from 'react';
+import { memo, useDeferredValue, useEffect, useMemo, useRef, useState } from 'react';
 import { Loader2, Search, TriangleAlert } from 'lucide-react';
 import PokemonTypeBadge from '../PokemonTypeBadge';
+import ShowMoreButton from '../ShowMoreButton';
+import { useIncrementalList } from '../../hooks/useIncrementalList';
 import { fetchMoveLearners, thumbnailSpriteUrl } from '../../services/api';
 import { DEX_SIZE } from '../../utils/pokedex';
 import { formatSlug } from '../../utils/filters';
+
+// Pokémon montados por lote dentro da lista com rolagem (Protect tem mais de mil).
+const BATCH_SIZE = 48;
 
 const formatDexNumber = (number) => (number ? `#${String(number).padStart(4, '0')}` : '');
 
@@ -88,6 +93,9 @@ function MoveLearners({ id, move, load = fetchMoveLearners, context = '', copy =
     return learners.filter((l) => l.label.toLowerCase().includes(term) || String(l.number ?? '') === term);
   }, [learners, deferredQuery]);
 
+  const scrollRef = useRef(null);
+  const batch = useIncrementalList(visible, BATCH_SIZE, scrollRef);
+
   if (status === 'loading') {
     return (
       <p id={id} className="flex items-center justify-center gap-2 py-6 text-sm font-medium text-[#78614E]">
@@ -131,11 +139,14 @@ function MoveLearners({ id, move, load = fetchMoveLearners, context = '', copy =
           {learners.length === 0 ? copy.empty : 'Nenhum Pokémon encontrado.'}
         </p>
       ) : (
-        <ul className="grid max-h-[22rem] grid-cols-1 gap-1.5 overflow-y-auto pr-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-          {visible.map((learner) => (
-            <LearnerButton key={learner.name} learner={learner} onSelect={onSelectPokemon} />
-          ))}
-        </ul>
+        <div ref={scrollRef} className="max-h-[22rem] overflow-y-auto pr-1">
+          <ul className="grid grid-cols-1 gap-1.5 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+            {batch.visible.map((learner) => (
+              <LearnerButton key={learner.name} learner={learner} onSelect={onSelectPokemon} />
+            ))}
+          </ul>
+          <ShowMoreButton list={batch} className="mt-3" />
+        </div>
       )}
     </div>
   );

@@ -232,23 +232,15 @@ export const fetchItemNames = () =>
     data.results.filter((item) => !isBagCopy(item.name)).map((item) => item.name.replace(HELD_SUFFIX, '')));
 
 /**
- * Os itens relevantes como { name, id, category, pocket }; as categorias de HIDDEN_ITEM_CATEGORIES nem são baixadas.
- * A lista de itens não traz a categoria: vem de uma requisição por categoria.
+ * Os itens relevantes como { name, id, category, pocket }, sem as categorias de HIDDEN_ITEM_CATEGORIES.
+ * Vêm de um índice estático (scripts/build-items.mjs), baixado só ao abrir a aba: pela API REST a categoria
+ * de cada item custaria uma requisição por categoria.
  */
 export async function fetchItemIndex() {
-  const { results } = await cachedJson(`${POKEAPI_BASE}/item-category?limit=100`);
-  const visible = results.filter((category) => !HIDDEN_ITEM_CATEGORIES.has(category.name));
-  const categories = await Promise.all(visible.map((category) => cachedJson(category.url)));
-  // A PokéAPI repete alguns itens dentro da mesma categoria (Roseli Berry); cada nome entra uma vez só.
-  const byName = new Map();
-  for (const category of categories) {
-    for (const item of category.items) {
-      const name = item.name.replace(HELD_SUFFIX, '');
-      if (isBagCopy(item.name) || byName.has(name)) continue;
-      byName.set(name, { name, id: idFromUrl(item.url), category: category.name, pocket: category.pocket.name });
-    }
-  }
-  return [...byName.values()].sort((a, b) => a.id - b.id);
+  const { categories, items } = (await import('../data/items.json')).default;
+  return items
+    .map(([id, name, categoryIndex]) => ({ name, id, category: categories[categoryIndex][0], pocket: categories[categoryIndex][1] }))
+    .filter((item) => !HIDDEN_ITEM_CATEGORIES.has(item.category));
 }
 
 /**
