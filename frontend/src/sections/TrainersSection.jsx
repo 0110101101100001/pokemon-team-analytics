@@ -12,7 +12,7 @@ import { fetchTrainers } from '../services/trainers';
 import { useDebouncedValue } from '../hooks/useDebouncedValue';
 import { formatSlug } from '../utils/filters';
 import {
-  FILTER_GROUPS, MIXED_TYPE, REGIONS, ROLES, createNameMatcher, matchingBattles, roleLabel,
+  FILTER_GROUPS, MIXED_TYPE, REGIONS, ROLES, createNameMatcher, gamesOf, matchingBattles, roleLabel,
 } from '../utils/trainers';
 
 const SEARCH_DEBOUNCE_MS = 200;
@@ -21,8 +21,10 @@ const EMPTY_FILTERS = Object.fromEntries(FILTER_GROUPS.map((group) => [group, []
 
 const option = (value, label) => ({ value, label });
 
-const FILTER_SELECTS = [
+// Os jogos vêm dos próprios treinadores; os outros filtros têm opções fixas.
+const filterSelects = (games) => [
   { group: 'region', placeholder: 'Região', options: REGIONS.map((region) => option(region, region)) },
+  { group: 'game', placeholder: 'Jogo', options: games.map((game) => option(game, game)) },
   {
     group: 'type',
     placeholder: 'Tipo',
@@ -30,11 +32,6 @@ const FILTER_SELECTS = [
   },
   { group: 'role', placeholder: 'Papel', options: Object.keys(ROLES).map((role) => option(role, roleLabel(role))) },
 ];
-
-const LABELS = Object.fromEntries(FILTER_SELECTS.map(({ group, options }) => [
-  group,
-  new Map(options.map(({ value, label }) => [value, label])),
-]));
 
 const HEADING_TITLE = 'Rumo à Liga';
 
@@ -57,6 +54,12 @@ export default function TrainersSection({ entryByName, onSelectPokemon }) {
   const [filters, setFilters] = useState(EMPTY_FILTERS);
   const [opened, setOpened] = useState(null);
 
+  const selects = useMemo(() => filterSelects(gamesOf(trainers)), [trainers]);
+  const labels = useMemo(() => Object.fromEntries(selects.map(({ group, options }) => [
+    group,
+    new Map(options.map(({ value, label }) => [value, label])),
+  ])), [selects]);
+
   const visible = useMemo(() => {
     const matchesName = createNameMatcher(debouncedQuery);
     return trainers
@@ -71,7 +74,7 @@ export default function TrainersSection({ entryByName, onSelectPokemon }) {
     .filter(({ entries }) => entries.length > 0), [visible]);
 
   const activeFilters = useMemo(() => FILTER_GROUPS.flatMap((group) =>
-    filters[group].map((value) => ({ type: group, value, label: LABELS[group].get(value) ?? value }))), [filters]);
+    filters[group].map((value) => ({ type: group, value, label: labels[group].get(value) ?? value }))), [filters, labels]);
 
   const addFilter = useCallback((group) => (e) => {
     const { value } = e.target;
@@ -105,8 +108,8 @@ export default function TrainersSection({ entryByName, onSelectPokemon }) {
             value={query}
             onChange={(e) => setQuery(e.target.value)}
           />
-          <div className="grid grid-cols-3 gap-1.5 sm:gap-2 lg:contents">
-            {FILTER_SELECTS.map(({ group, placeholder, options }) => (
+          <div className="grid grid-cols-2 gap-1.5 sm:grid-cols-4 sm:gap-2 lg:contents">
+            {selects.map(({ group, placeholder, options }) => (
               <HeaderSelect
                 key={group}
                 label={`Filtrar por ${placeholder.toLowerCase()}`}

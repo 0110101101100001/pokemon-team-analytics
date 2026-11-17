@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import {
-  MIXED_TYPE, battleLabel, createNameMatcher, groupTrainers, matchingBattles, moveSlug, resolveTrainerPokemon,
+  MIXED_TYPE, battleLabel, createNameMatcher, gamesOf, groupTrainers, matchingBattles, moveSlug, resolveTrainerPokemon,
   trainerMemberSet, trainerSpriteUrl,
 } from './trainers';
 
@@ -52,6 +52,15 @@ describe('matchingBattles', () => {
   it('exige todos os grupos na mesma batalha', () => {
     expect(matchingBattles(bySlug('koga'), { region: ['Kanto'], role: ['Elite Four'] })).toEqual([]);
     expect(matchingBattles(bySlug('koga'), { region: ['Johto'], role: ['Elite Four'] })).toHaveLength(1);
+  });
+
+  it('filtra por jogo individual dentro do rótulo', () => {
+    expect(matchingBattles(bySlug('koga'), { game: ['Blue'] }).map((battle) => battle.role)).toEqual(['Gym Leader']);
+    expect(matchingBattles(bySlug('koga'), { game: ['Silver', 'Yellow'] }).map((battle) => battle.role)).toEqual(['Elite Four']);
+  });
+
+  it('lista os jogos em ordem de lançamento', () => {
+    expect(gamesOf(trainers)).toEqual(['Red', 'Blue', 'Gold', 'Silver']);
   });
 
   it('sem filtros devolve todas as batalhas', () => {

@@ -5,6 +5,15 @@ import { createBattleSet } from './stats';
 
 export const REGIONS = ['Kanto', 'Johto', 'Hoenn', 'Sinnoh', 'Unova', 'Kalos', 'Alola', 'Galar', 'Paldea'];
 
+// Ordem de lançamento dos jogos principais; um jogo fora da lista vai para o fim.
+const GAME_ORDER = [
+  'Red', 'Blue', 'Yellow', 'Gold', 'Silver', 'Crystal', 'Ruby', 'Sapphire', 'Emerald', 'FireRed', 'LeafGreen',
+  'Diamond', 'Pearl', 'Platinum', 'HeartGold', 'SoulSilver', 'Black', 'White', 'Black 2', 'White 2', 'X', 'Y',
+  'Omega Ruby', 'Alpha Sapphire', 'Sun', 'Moon', 'Ultra Sun', 'Ultra Moon', "Let's Go Pikachu", "Let's Go Eevee",
+  'Sword', 'Shield', 'Brilliant Diamond', 'Shining Pearl', 'Legends: Arceus', 'Scarlet', 'Violet',
+];
+const gameRank = (game) => (GAME_ORDER.includes(game) ? GAME_ORDER.indexOf(game) : GAME_ORDER.length);
+
 // Ordem do caminho até a Liga; `rank` também ordena os papéis no card.
 export const ROLES = {
   'Gym Leader': { label: 'Líder de Ginásio', rank: 1 },
@@ -56,6 +65,7 @@ function toBattle(row) {
     generation: row.Generation,
     region: row.Region,
     games: row.Games_Label,
+    gameList: row.Games_JSON?.length ? row.Games_JSON : row.Games_Label.split(' / '),
     stage: STAGES[row.Battle_Stage] ?? STAGES['Main Story'],
     role: row.Role,
     order: row.Order,
@@ -116,12 +126,20 @@ export function groupTrainers(rows) {
     });
 }
 
-export const FILTER_GROUPS = ['region', 'type', 'role'];
+/** Jogos individuais presentes nos treinadores ("Red", "Blue"…), em ordem de lançamento. */
+export function gamesOf(trainers) {
+  const games = new Set(trainers.flatMap((trainer) => trainer.battles.flatMap((battle) => battle.gameList)));
+  return [...games].sort((a, b) => gameRank(a) - gameRank(b) || a.localeCompare(b));
+}
 
-const battleValue = {
-  region: (battle) => battle.region,
-  type: (battle) => battle.type,
-  role: (battle) => battle.role,
+export const FILTER_GROUPS = ['region', 'game', 'type', 'role'];
+
+// Valores de cada batalha num grupo; uma batalha de "Red / Blue" vale para os dois jogos.
+const battleValues = {
+  region: (battle) => [battle.region],
+  game: (battle) => battle.gameList,
+  type: (battle) => [battle.type],
+  role: (battle) => [battle.role],
 };
 
 /**
@@ -132,7 +150,7 @@ export function matchingBattles(trainer, filters) {
   const groups = FILTER_GROUPS.filter((group) => filters[group]?.length);
   if (groups.length === 0) return trainer.battles;
   return trainer.battles.filter((battle) =>
-    groups.every((group) => filters[group].includes(battleValue[group](battle))));
+    groups.every((group) => battleValues[group](battle).some((value) => filters[group].includes(value))));
 }
 
 const normalize = (text) => text.normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase();
