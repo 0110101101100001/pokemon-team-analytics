@@ -13,6 +13,14 @@ export const ROLES = {
   'Champion Cup': { label: 'Copa dos Campeões', rank: 5 },
   'Elite Four': { label: 'Elite 4', rank: 6 },
   Champion: { label: 'Campeão', rank: 7 },
+  'Former Champion': { label: 'Ex-campeão', rank: 8 },
+};
+
+// Etapa da batalha na história; a principal não aparece no rótulo.
+const STAGES = {
+  'Main Story': { label: null, rank: 0 },
+  Rematch: { label: 'revanche', rank: 1 },
+  'Post-Game': { label: 'pós-jogo', rank: 2 },
 };
 
 const GIMMICKS = {
@@ -48,7 +56,7 @@ function toBattle(row) {
     generation: row.Generation,
     region: row.Region,
     games: row.Games_Label,
-    rematch: row.Battle_Stage === 'Rematch',
+    stage: STAGES[row.Battle_Stage] ?? STAGES['Main Story'],
     role: row.Role,
     order: row.Order,
     location: row.Location,
@@ -70,7 +78,7 @@ function toBattle(row) {
 
 const byBattleOrder = (a, b) =>
   a.generation - b.generation
-  || a.rematch - b.rematch
+  || a.stage.rank - b.stage.rank
   || roleRank(a.role) - roleRank(b.role)
   || a.games.localeCompare(b.games)
   || (a.teamVariant ?? '').localeCompare(b.teamVariant ?? '');
@@ -135,9 +143,9 @@ export function createNameMatcher(query) {
   return (trainer) => normalize(trainer.name).includes(term);
 }
 
-/** Rótulo de uma batalha no seletor de variantes: jogo, variante do time (inicial do jogador) e revanche. */
+/** Rótulo de uma batalha no seletor de variantes: jogo, variante do time (inicial do jogador) e etapa (revanche, pós-jogo). */
 export function battleLabel(battle) {
-  return [battle.games, battle.teamVariant, battle.rematch && 'revanche']
+  return [battle.games, battle.teamVariant, battle.stage.label]
     .filter(Boolean)
     .join(' · ');
 }

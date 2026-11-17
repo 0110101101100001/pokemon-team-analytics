@@ -75,8 +75,12 @@ describe('detalhes', () => {
     expect(trainerSpriteUrl('phoebe')).toMatch(/\/phoebe-gen6\.png$/);
   });
 
-  it('rotula a variante com jogo, time e revanche', () => {
+  it('rotula a variante com jogo, time e etapa', () => {
     expect(battleLabel(bySlug('blue').battles[0])).toBe('Red / Blue · Squirtle');
+    const [steven] = groupTrainers([
+      row({ Trainer_Slug: 'steven', Trainer_Name: 'Steven', Games_Label: 'Emerald', Role: 'Former Champion', Battle_Stage: 'Post-Game' }),
+    ]);
+    expect(battleLabel(steven.battles[0])).toBe('Emerald · pós-jogo');
   });
 });
 
