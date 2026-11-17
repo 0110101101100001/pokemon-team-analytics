@@ -26,7 +26,7 @@ import { speciesOf, teamSlotFor } from "./utils/teamScore";
 // A Pokédex é a tela de entrada; as outras seções só são baixadas quando a aba é aberta.
 const MovesSection = lazy(() => import("./sections/MovesSection"));
 const ItemsSection = lazy(() => import("./sections/ItemsSection"));
-const GymLeadersSection = lazy(() => import("./sections/GymLeadersSection"));
+const TrainersSection = lazy(() => import("./sections/TrainersSection"));
 const TeamBuilderSection = lazy(() => import("./sections/TeamBuilderSection"));
 const DamageCalculatorSection = lazy(() => import("./sections/DamageCalculatorSection"));
 // O "Sobre" e a ficha (em PokemonSheet) só abrem por ação do usuário: ficam fora do pacote inicial.
@@ -143,8 +143,8 @@ export default function App() {
         return <MovesSection entryByName={entryByName} onSelectPokemon={handleSelect} />;
       case "items":
         return <ItemsSection entryByName={entryByName} onSelectPokemon={handleSelect} />;
-      case "gymLeaders":
-        return <GymLeadersSection entryByName={entryByName} onSelectPokemon={handleSelect} />;
+      case "trainers":
+        return <TrainersSection entryByName={entryByName} onSelectPokemon={handleSelect} />;
       case "teamBuilder":
         return (
           <TeamBuilderSection

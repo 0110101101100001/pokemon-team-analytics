@@ -96,7 +96,7 @@ As `VITE_*` são embutidas no bundle durante o build. Depois de alterá-las no N
 
 `ALLOWED_ORIGINS` precisa incluir `https://smearglepedia.netlify.app`, sem barra no final.
 
-No plano gratuito o Render suspende o serviço após 15 minutos sem tráfego, e a primeira requisição seguinte demora para responder. Por isso as leituras da Smogon (selo da grade, ficha, meta do team builder) vão direto ao Supabase, liberadas pela política `smogon_stats_public_read`; o backend fica com a recomendação e a sincronização. O Supabase gratuito também pausa projetos inativos.
+No plano gratuito o Render suspende o serviço após 15 minutos sem tráfego, e a primeira requisição seguinte demora para responder. Por isso as leituras da Smogon (selo da grade, ficha, meta do team builder) vão direto ao Supabase, liberadas pela política `smogon_stats_public_read` (os treinadores, pela `pokemon_trainers_public_read`); o backend fica com a recomendação e a sincronização. O Supabase gratuito também pausa projetos inativos.
 
 ### CI
 
@@ -169,7 +169,7 @@ frontend/
     sections/        uma tela por aba: Pokédex, Itens, Gym Leaders, Team Builder, Damage Calculator
     components/      grade, ficha, modais; layout/ (header, abas, filtros contextuais), team/, calc/, items/, leaders/
     navigation/      lista das abas e rotas por hash (#/pokedex, #/itens…)
-    data/            jogos e dexes regionais, líderes de ginásio, TMs por jogo, índice da Pokédex
+    data/            jogos e dexes regionais, TMs por jogo, índice da Pokédex
     hooks/           filtros da Pokédex, dex regional, dados de batalha, pontuação do team builder
     services/        PokéAPI (com cache no IndexedDB), backend e Supabase
     utils/           filtros, tabela de tipos, atributos (EVs/IVs/natureza), cálculo de dano
