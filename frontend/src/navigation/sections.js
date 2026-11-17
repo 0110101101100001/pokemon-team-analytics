@@ -7,8 +7,8 @@ export const SECTIONS = [
   { id: 'abilities', path: 'habilidades', label: 'Habilidades', shortLabel: 'Habilid.', icon: Sparkles, pigment: '#E89A8A' },
   { id: 'items', path: 'itens', label: 'Itens', shortLabel: 'Itens', icon: Backpack, pigment: '#F0B37E' },
   { id: 'trainers', path: 'treinadores', label: 'Treinadores', shortLabel: 'Treinadores', icon: Medal, pigment: '#F28FB8' },
-  { id: 'teamBuilder', path: 'times', label: 'Montador de Times', shortLabel: 'Times', icon: Swords, pigment: '#BFA2F2' },
-  { id: 'damageCalculator', path: 'calculadora', label: 'Calculadora de Dano', shortLabel: 'Dano', icon: Calculator, pigment: '#8FD6E8' },
+  { id: 'teamBuilder', path: 'times', label: 'Times', shortLabel: 'Times', icon: Swords, pigment: '#BFA2F2' },
+  { id: 'damageCalculator', path: 'calculadora', label: 'Calculadora', shortLabel: 'Dano', icon: Calculator, pigment: '#8FD6E8' },
 ];
 
 export const DEFAULT_SECTION = SECTIONS[0];
