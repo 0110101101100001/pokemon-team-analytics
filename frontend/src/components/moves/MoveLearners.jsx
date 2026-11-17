@@ -7,18 +7,25 @@ import { formatSlug } from '../../utils/filters';
 
 const formatDexNumber = (number) => (number ? `#${String(number).padStart(4, '0')}` : '');
 
+// Textos da lista; a aba Habilidades troca "aprende" por "tem".
+export const LEARNER_COPY = {
+  loading: 'Procurando quem aprende...',
+  count: (total) => (total === 1 ? 'Pokémon aprende' : 'Pokémon aprendem'),
+  empty: 'Nenhum Pokémon aprende este golpe.',
+};
+
 // Formas que não estão na grade (Megas, Gigantamax) ficam sem número e vão para o fim, na ordem da PokéAPI.
 function toLearners(list, entryByName) {
   return list
-    .map(({ name, id }) => {
+    .map(({ name, id, hidden = false }) => {
       const entry = entryByName.get(name);
       const number = entry?.number ?? (id <= DEX_SIZE ? id : null);
-      return { name, id, number, types: entry?.types ?? [], label: formatSlug(name) };
+      return { name, id, number, hidden, types: entry?.types ?? [], label: formatSlug(name) };
     })
     .sort((a, b) => (a.number ?? Infinity) - (b.number ?? Infinity) || a.id - b.id);
 }
 
-// `load(move)` resolve [{ name, id }]: por padrão, todos os que aprendem o golpe em algum jogo.
+// `load(move)` resolve [{ name, id, hidden? }]: por padrão, todos os que aprendem o golpe em algum jogo.
 function useMoveLearners(move, load, entryByName) {
   const [state, setState] = useState({ move: null, load: null, status: 'loading', list: [] });
 
@@ -36,7 +43,7 @@ function useMoveLearners(move, load, entryByName) {
 }
 
 const LearnerButton = memo(function LearnerButton({ learner, onSelect }) {
-  const { name, id, number, types, label } = learner;
+  const { name, id, number, hidden, types, label } = learner;
   return (
     <li>
       <button
@@ -58,6 +65,7 @@ const LearnerButton = memo(function LearnerButton({ learner, onSelect }) {
           <span className="mt-1 flex flex-wrap items-center gap-1">
             {number && <span className="font-mono text-[10px] tracking-wide text-[#78614E]">{formatDexNumber(number)}</span>}
             {types.map((type) => <PokemonTypeBadge key={type} type={type} className="!px-1 !py-0.5 !text-[9px]" />)}
+            {hidden && <span className="type-stamp !px-1 !py-0.5 !text-[9px] font-bold text-[#B8402A]">oculta</span>}
           </span>
         </span>
       </button>
@@ -69,7 +77,7 @@ const LearnerButton = memo(function LearnerButton({ learner, onSelect }) {
  * Quem aprende o golpe: uma busca por nome ou número e a lista; o clique abre a ficha do Pokémon.
  * `context` completa a contagem ("por TM em Scarlet / Violet").
  */
-function MoveLearners({ id, move, load = fetchMoveLearners, context = '', entryByName, onSelectPokemon }) {
+function MoveLearners({ id, move, load = fetchMoveLearners, context = '', copy = LEARNER_COPY, entryByName, onSelectPokemon }) {
   const { status, learners } = useMoveLearners(move, load, entryByName);
   const [query, setQuery] = useState('');
   const deferredQuery = useDeferredValue(query);
@@ -84,7 +92,7 @@ function MoveLearners({ id, move, load = fetchMoveLearners, context = '', entryB
     return (
       <p id={id} className="flex items-center justify-center gap-2 py-6 text-sm font-medium text-[#78614E]">
         <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" />
-        Procurando quem aprende...
+        {copy.loading}
       </p>
     );
   }
@@ -103,10 +111,10 @@ function MoveLearners({ id, move, load = fetchMoveLearners, context = '', entryB
       <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
         <p className="font-reading text-sm text-[#785132]">
           <span className="font-semibold tabular-nums text-[#2A2421]">{learners.length}</span>{' '}
-          {learners.length === 1 ? 'Pokémon aprende' : 'Pokémon aprendem'} {formatSlug(move)}{context && ` ${context}`}
+          {copy.count(learners.length)} {formatSlug(move)}{context && ` ${context}`}
         </p>
         <label className="relative block sm:w-72">
-          <span className="sr-only">Pesquisar Pokémon que aprendem {formatSlug(move)}</span>
+          <span className="sr-only">Pesquisar na lista de {formatSlug(move)}</span>
           <Search className="pointer-events-none absolute left-2.5 top-1/2 h-4 w-4 -translate-y-1/2 text-[#78614E]" aria-hidden="true" />
           <input
             type="search"
@@ -120,7 +128,7 @@ function MoveLearners({ id, move, load = fetchMoveLearners, context = '', entryB
 
       {visible.length === 0 ? (
         <p className="py-4 text-center font-reading text-sm italic text-smeargle-textDim/80">
-          {learners.length === 0 ? 'Nenhum Pokémon aprende este golpe.' : 'Nenhum Pokémon encontrado.'}
+          {learners.length === 0 ? copy.empty : 'Nenhum Pokémon encontrado.'}
         </p>
       ) : (
         <ul className="grid max-h-[22rem] grid-cols-1 gap-1.5 overflow-y-auto pr-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">

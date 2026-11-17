@@ -27,7 +27,7 @@ O frontend busca na PokéAPI os dados de espécies, golpes e habilidades, e no b
   - status base, fraquezas e resistências, árvore evolutiva, locais de encontro e cry;
   - formas alternativas e versão shiny;
   - painel competitivo da Smogon por tier e learnset por geração.
-- **Modais de habilidades e golpes:** abrem ao clicar na ficha, no painel Smogon ou na tabela de movimentos.
+- **Modais de habilidades e golpes:** abrem ao clicar na ficha, no painel Smogon ou nas tabelas de movimentos e habilidades.
   - Mostram tipo, categoria, poder, precisão, PP, alvo e o efeito em batalha.
   - Os textos vêm da PokéAPI em pt-BR quando existem e caem para o inglês, com aviso, quando não há tradução. Hoje a PokéAPI tem pouca tradução em português.
 - **Team Builder:** time de até 6 Pokémon.
@@ -166,7 +166,7 @@ backend/
     schemas/         modelos Pydantic
 frontend/
   src/
-    sections/        uma tela por aba: Pokédex, Itens, Gym Leaders, Team Builder, Damage Calculator
+    sections/        uma tela por aba: Pokédex, Movimentos, Habilidades, Itens, Treinadores, Team Builder, Damage Calculator
     components/      grade, ficha, modais; layout/ (header, abas, filtros contextuais), team/, calc/, items/, leaders/
     navigation/      lista das abas e rotas por hash (#/pokedex, #/itens…)
     data/            jogos e dexes regionais, TMs por jogo, índice da Pokédex
@@ -177,6 +177,7 @@ scripts/
   build-machines.mjs       gera frontend/src/data/machines.json a partir dos CSVs da PokéAPI
   build-pokedex-index.mjs  gera frontend/src/data/pokedex-index.json (variedades, espécies, tipos, grupos de ovos)
   build-battle-data.mjs    gera frontend/src/data/battle-data.json (atributos base e golpes, para o esboço)
+  build-abilities.mjs      gera frontend/src/data/abilities.json (habilidades, efeito curto e quem tem cada uma)
 supabase/migrations/ políticas e índices da tabela smogon_stats
 .github/workflows/   CI, keep-alives, sincronização mensal e commit de atividade
 netlify.toml         build e headers do frontend

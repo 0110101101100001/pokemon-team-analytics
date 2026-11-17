@@ -5,11 +5,12 @@ import { BrushUnderline } from '../InkDecor';
 /**
  * Navegação principal: as abas em texto, a ativa marcada pela pincelada na tinta da seção.
  * No celular vira um bloco com os ícones de todas as seções; `compact` esconde os rótulos ao rolar.
+ * Até lg os rótulos são os curtos: os nomes completos das sete abas não cabem em uma linha.
  */
 function SectionTabs({ activeId, compact = false, className = '' }) {
   return (
     <nav aria-label="Seções" className={`flex justify-center ${className}`}>
-      <ul className="grid w-full grid-cols-6 gap-0.5 sm:flex sm:w-auto sm:items-center sm:gap-1">
+      <ul className="grid w-full grid-cols-7 gap-0.5 sm:flex sm:w-auto sm:items-center sm:gap-1">
         {SECTIONS.map((section) => {
           const { id, label, shortLabel, icon: Icon, pigment } = section;
           const active = id === activeId;
@@ -23,8 +24,8 @@ function SectionTabs({ activeId, compact = false, className = '' }) {
                 }`}
               >
                 <Icon className="h-4 w-4 shrink-0" style={active ? { color: pigment } : undefined} aria-hidden="true" />
-                <span className={`truncate text-[10px] leading-none sm:hidden ${compact ? 'sr-only' : ''}`}>{shortLabel}</span>
-                <span className="hidden whitespace-nowrap text-[15px] leading-none sm:inline">{label}</span>
+                <span className={`truncate text-[10px] leading-none sm:text-[13px] lg:hidden ${compact ? 'sr-only' : ''}`}>{shortLabel}</span>
+                <span className="hidden whitespace-nowrap text-[15px] leading-none lg:inline">{label}</span>
                 <BrushUnderline color={pigment} active={active} className="inset-x-3 bottom-0.5 h-[4px] w-[calc(100%-1.5rem)]" />
               </a>
             </li>

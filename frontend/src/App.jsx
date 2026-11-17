@@ -25,6 +25,7 @@ import { speciesOf, teamSlotFor } from "./utils/teamScore";
 
 // A Pokédex é a tela de entrada; as outras seções só são baixadas quando a aba é aberta.
 const MovesSection = lazy(() => import("./sections/MovesSection"));
+const AbilitiesSection = lazy(() => import("./sections/AbilitiesSection"));
 const ItemsSection = lazy(() => import("./sections/ItemsSection"));
 const TrainersSection = lazy(() => import("./sections/TrainersSection"));
 const TeamBuilderSection = lazy(() => import("./sections/TeamBuilderSection"));
@@ -141,6 +142,8 @@ export default function App() {
     switch (section.id) {
       case "moves":
         return <MovesSection entryByName={entryByName} onSelectPokemon={handleSelect} />;
+      case "abilities":
+        return <AbilitiesSection entryByName={entryByName} onSelectPokemon={handleSelect} />;
       case "items":
         return <ItemsSection entryByName={entryByName} onSelectPokemon={handleSelect} />;
       case "trainers":
