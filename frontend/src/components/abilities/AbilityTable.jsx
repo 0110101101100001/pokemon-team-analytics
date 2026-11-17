@@ -61,7 +61,7 @@ function AbilityTable({ abilities, openAbility, onToggleAbility, onSelectAbility
   if (abilities.length === 0) {
     return (
       <p className="py-16 text-center font-reading text-sm italic text-smeargle-textDim/80">
-        Nenhuma habilidade encontrada. Ajuste a busca, a geração ou o tipo.
+        Nenhuma habilidade encontrada. Ajuste a busca ou a geração.
       </p>
     );
   }
