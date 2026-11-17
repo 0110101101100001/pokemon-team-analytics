@@ -5,6 +5,7 @@ import { HeaderSearch, HeaderSelect, OPTION_CLASS } from '../components/layout/H
 import HeaderToolbar, { ToolbarRow } from '../components/layout/HeaderToolbar';
 import SectionHeading, { HEADING_PILL_CLASS } from '../components/layout/SectionHeading';
 import ABILITY_LIST from '../data/abilities.json';
+import { fetchPokemonList } from '../services/api';
 import { GENERATIONS, formatSlug } from '../utils/filters';
 
 // abilities.json (scripts/build-abilities.mjs): [slug, geração, efeito curto em inglês, [[id do Pokémon, oculta]]].
@@ -12,6 +13,25 @@ const ABILITIES = ABILITY_LIST.map(([slug, generation, effect, holders]) => ({
   slug, generation, effect, holders, label: formatSlug(slug).toLowerCase(),
 }));
 const HOLDERS_BY_SLUG = new Map(ABILITIES.map((ability) => [ability.slug, ability.holders]));
+
+// Nome de cada id pelo índice completo da Pokédex: as Megas e outras formas fora da grade também têm habilidade.
+let nameByIdRequest = null;
+const loadNameById = () => {
+  nameByIdRequest ??= fetchPokemonList()
+    .then((list) => new Map(list.map(({ name, url }) => [Number(url.split('/').at(-2)), name])))
+    .catch((error) => {
+      nameByIdRequest = null;
+      throw error;
+    });
+  return nameByIdRequest;
+};
+
+// Quem tem a habilidade, com a oculta marcada.
+const loadHolders = (slug) => loadNameById().then((nameById) =>
+  (HOLDERS_BY_SLUG.get(slug) ?? []).flatMap(([id, hidden]) => {
+    const name = nameById.get(id);
+    return name ? [{ name, id, hidden: hidden === 1 }] : [];
+  }));
 
 const toSearchTerm = (text) => text.trim().toLowerCase().replace(/-/g, ' ');
 
@@ -22,16 +42,6 @@ export default function AbilitiesSection({ entryByName, onSelectPokemon }) {
   const [detail, setDetail] = useState(null);
 
   const deferredQuery = useDeferredValue(query);
-
-  const entryById = useMemo(() => new Map([...entryByName.values()].map((entry) => [entry.id, entry])), [entryByName]);
-
-  // Quem tem cada habilidade, com a oculta marcada; fica fora quem não está no índice da Pokédex.
-  const loadHolders = useCallback((slug) => Promise.resolve(
-    (HOLDERS_BY_SLUG.get(slug) ?? []).flatMap(([id, hidden]) => {
-      const entry = entryById.get(id);
-      return entry ? [{ name: entry.name, id, hidden: hidden === 1 }] : [];
-    }),
-  ), [entryById]);
 
   const abilities = useMemo(() => {
     const term = toSearchTerm(deferredQuery);
