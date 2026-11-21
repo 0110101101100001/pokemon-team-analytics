@@ -37,9 +37,9 @@ jobs:
       - name: Testes
         run: npm test
         env:
-          # Com os secrets, o teste de dados confere a tabela PokemonTrainers; sem eles, é pulado.
+          # Com os secrets, o teste de dados confere a tabela PokemonTrainers com a chave anon; sem eles, é pulado.
           SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
-          SUPABASE_KEY: ${{ secrets.SUPABASE_KEY }}
+          SUPABASE_ANON_KEY: ${{ secrets.SUPABASE_ANON_KEY }}
       - name: Build
         run: npm run build
 

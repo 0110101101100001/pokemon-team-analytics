@@ -113,11 +113,11 @@ No plano gratuito o Render suspende o serviço após 15 minutos sem tráfego, e 
 - frontend: `npm run lint`, `npm test` e `npm run build`;
 - backend: `ruff check .` e `pytest` (Supabase falso em memória, sem rede).
 
-O `npm test` inclui `trainers-data.test.js`, que lê a tabela `PokemonTrainers` e falha se aparecer uma região, papel, etapa, mecânica ou jogo que o frontend não conhece. Ele usa os secrets `SUPABASE_URL` e `SUPABASE_KEY` e é pulado quando eles não estão definidos (pull requests de forks, por exemplo). Para rodar localmente:
+O `npm test` inclui `trainers-data.test.js`, que lê a tabela `PokemonTrainers` e falha se aparecer uma região, papel, etapa, mecânica ou jogo que o frontend não conhece. Ele lê com a chave anon, como o site, e usa os secrets `SUPABASE_URL` e `SUPABASE_ANON_KEY` (a mesma `VITE_SUPABASE_ANON_KEY` do Netlify). A `SUPABASE_KEY` do keep-alive é a service role, que não tem permissão na `PokemonTrainers`. Sem os secrets, o teste é pulado (pull requests de forks, por exemplo). Para rodar localmente:
 
 ```bash
 cd frontend
-SUPABASE_URL=... SUPABASE_KEY=... npx vitest run src/utils/trainers-data.test.js
+SUPABASE_URL=... SUPABASE_ANON_KEY=... npx vitest run src/utils/trainers-data.test.js
 ```
 
 Com tudo verde em um push na `main`, o job `deploy-backend` chama o deploy hook do Render. Para usar, desligue o auto-deploy do serviço no Render e salve a URL do hook no secret `RENDER_DEPLOY_HOOK_URL`; sem o secret, o job não faz nada.
@@ -135,7 +135,7 @@ ruff check . && pytest
 | `keep-alive.yml` | a cada 10 minutos | `GET /health` no Render, para o serviço não dormir | nenhum |
 | `smogon-sync.yml` | dia 2, 06:00 | `POST /api/admin/sync-smogon` e espera até todos os tiers estarem no mês anterior | `SUPABASE_JWT_SECRET` |
 | `supabase-keepalive.yml` | de 3 em 3 dias, 09:00 | consulta a tabela `smogon_stats` no Supabase | `SUPABASE_URL`, `SUPABASE_KEY` |
-| `trainer-data-check.yml` | segunda, 12:00 | o mesmo teste de dados da `PokemonTrainers`, porque a tabela muda direto no Supabase, sem push | `SUPABASE_URL`, `SUPABASE_KEY` |
+| `trainer-data-check.yml` | segunda, 12:00 | o mesmo teste de dados da `PokemonTrainers`, porque a tabela muda direto no Supabase, sem push | `SUPABASE_URL`, `SUPABASE_ANON_KEY` |
 | `keep-active.yml` | dia 1, 05:00 | commit vazio na `main`, para o GitHub não desativar os agendamentos | nenhum |
 
 Os secrets ficam em Settings > Secrets and variables > Actions. Todos os workflows também podem ser disparados manualmente na aba Actions.

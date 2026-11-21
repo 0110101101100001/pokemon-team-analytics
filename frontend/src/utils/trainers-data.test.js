@@ -2,9 +2,10 @@
 import { describe, expect, it } from 'vitest';
 import { unknownTrainerValues } from './trainers';
 
-// Confere a tabela de verdade: roda no CI com os secrets SUPABASE_URL e SUPABASE_KEY e é pulado sem eles.
+// Confere a tabela de verdade, com a chave anon, como o site lê: um problema de permissão também aparece aqui.
+// Roda no CI com os secrets SUPABASE_URL e SUPABASE_ANON_KEY e é pulado sem eles.
 const url = process.env.SUPABASE_URL;
-const key = process.env.SUPABASE_KEY;
+const key = process.env.SUPABASE_ANON_KEY;
 const COLUMNS = 'Card_ID,Region,Role,Battle_Stage,Battle_Gimmick,Games_Label,Games_JSON';
 const PAGE_SIZE = 1000;
 

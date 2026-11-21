@@ -27,11 +27,11 @@ jobs:
       - run: npm ci --no-audit --no-fund
       - name: Conferir a tabela PokemonTrainers
         run: |
-          if [ -z "$SUPABASE_URL" ] || [ -z "$SUPABASE_KEY" ]; then
-            echo "::error::Os secrets SUPABASE_URL e SUPABASE_KEY precisam estar definidos no repositório."
+          if [ -z "$SUPABASE_URL" ] || [ -z "$SUPABASE_ANON_KEY" ]; then
+            echo "::error::Os secrets SUPABASE_URL e SUPABASE_ANON_KEY precisam estar definidos no repositório. SUPABASE_ANON_KEY é a chave anon (a mesma VITE_SUPABASE_ANON_KEY do Netlify), não a service role."
             exit 1
           fi
           npx vitest run src/utils/trainers-data.test.js
         env:
           SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
-          SUPABASE_KEY: ${{ secrets.SUPABASE_KEY }}
+          SUPABASE_ANON_KEY: ${{ secrets.SUPABASE_ANON_KEY }}
