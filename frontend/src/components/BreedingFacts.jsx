@@ -1,5 +1,6 @@
 import { memo, useEffect, useMemo, useState } from 'react';
-import { ChevronDown } from 'lucide-react';
+import { ChevronDown, Search, X } from 'lucide-react';
+import { useDebouncedValue } from '../hooks/useDebouncedValue';
 import { fetchGenderlessSpecies, thumbnailSpriteUrl } from '../services/api';
 import { breedingPartners, genderRatio, hatchInfo } from '../utils/breeding';
 import { eggGroupLabel, formatSlug } from '../utils/filters';
@@ -12,6 +13,11 @@ const FEMALE = '#9E3D64';
 
 const percent = (value) => `${value.toLocaleString('pt-BR', { maximumFractionDigits: 1 })}%`;
 const eggGroupsOf = (species) => (species.egg_groups ?? []).map((group) => group.name);
+
+const SEARCH_DEBOUNCE_MS = 150;
+const normalizeName = (text) => text.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase();
+// O nome como aparece na tela ("Mr. Mime") e o slug ("mr-mime"): a busca acha pelos dois.
+const searchableName = (name) => normalizeName(`${formatSlug(name)} ${name}`);
 
 function GenderTile({ rate }) {
   const ratio = genderRatio(rate);
@@ -65,20 +71,34 @@ function PartnerGroup({ group, partners, onSelectPokemon }) {
         {eggGroupLabel(group)} <span className="font-mono font-medium tabular-nums text-[#78614E]">· {partners.length}</span>
       </p>
       {partners.length > 0 ? (
-        <ul className="flex max-h-40 flex-wrap gap-1 overflow-y-auto overscroll-contain" aria-label={`Cruza com o grupo ${eggGroupLabel(group)}`}>
-          {partners.map((entry) => (
-            <li key={entry.name}>
-              <button
-                type="button"
-                onClick={() => onSelectPokemon(entry.name)}
-                title={formatSlug(entry.name)}
-                aria-label={`Abrir a ficha de ${formatSlug(entry.name)}`}
-                className="cursor-pointer rounded-[3px] border border-[#78614E]/20 bg-paper transition-colors hover:border-[#78614E]/60 focus:outline-none focus-visible:ring-2 focus-visible:ring-paint-cobalt"
-              >
-                <img src={thumbnailSpriteUrl(entry.id)} alt="" width={36} height={36} loading="lazy" decoding="async" className="h-9 w-9 object-contain [image-rendering:pixelated]" />
-              </button>
-            </li>
-          ))}
+        // Colunas de no mínimo 4,5rem (cabe um nome de 12 letras) que se ajustam à largura; a altura cabe umas quatro linhas sem passar de metade da tela.
+        // O respiro (p-1) deixa o contorno de foco inteiro dentro da área rolável.
+        <ul
+          className="grid max-h-[min(19rem,55vh)] grid-cols-[repeat(auto-fill,minmax(4.5rem,1fr))] gap-1.5 overflow-y-auto overscroll-contain p-1"
+          aria-label={`Cruza com o grupo ${eggGroupLabel(group)}`}
+        >
+          {partners.map((entry) => {
+            const name = formatSlug(entry.name);
+            return (
+              <li key={entry.name}>
+                <button
+                  type="button"
+                  onClick={() => onSelectPokemon(entry.name)}
+                  aria-label={`Abrir a ficha de ${name}`}
+                  className="group/sprite relative flex w-full cursor-pointer justify-center overflow-hidden rounded-[3px] border border-[#78614E]/20 bg-paper transition-colors hover:border-[#78614E]/60 focus:outline-none focus-visible:ring-2 focus-visible:ring-paint-cobalt"
+                >
+                  <img src={thumbnailSpriteUrl(entry.id)} alt="" width={56} height={56} loading="lazy" decoding="async" className="h-14 w-14 object-contain [image-rendering:pixelated]" />
+                  {/* O nome aparece dentro do quadro no hover e no foco pelo teclado (a rolagem da grade não o corta); nome longo quebra a linha. */}
+                  <span
+                    aria-hidden="true"
+                    className="pointer-events-none absolute inset-x-0 bottom-0 bg-ink/85 px-0.5 py-0.5 text-center font-reading text-[10px] leading-[1.1] tracking-tight [overflow-wrap:anywhere] text-paper opacity-0 transition-opacity group-hover/sprite:opacity-100 group-focus-visible/sprite:opacity-100 motion-reduce:transition-none"
+                  >
+                    {name}
+                  </span>
+                </button>
+              </li>
+            );
+          })}
         </ul>
       ) : (
         <p className={NOTE}>Nenhuma outra espécie com gênero neste grupo.</p>
@@ -100,6 +120,35 @@ function useGenderless() {
   return genderless;
 }
 
+function PartnerSearch({ value, onChange }) {
+  return (
+    <div className="relative">
+      <label className="block">
+        <span className="sr-only">Buscar Pokémon nos grupos de ovo</span>
+        <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-[#78614E]/70" aria-hidden="true" />
+        <input
+          type="search"
+          value={value}
+          onChange={(e) => onChange(e.target.value)}
+          placeholder="Buscar pelo nome..."
+          autoComplete="off"
+          className="paper-field h-9 pl-9 pr-9 text-sm [&::-webkit-search-cancel-button]:hidden"
+        />
+      </label>
+      {value && (
+        <button
+          type="button"
+          onClick={() => onChange('')}
+          aria-label="Limpar a busca"
+          className="absolute right-1.5 top-1/2 flex h-6 w-6 -translate-y-1/2 cursor-pointer items-center justify-center rounded-[3px] text-[#78614E] transition-colors hover:bg-[#78614E]/10 hover:text-[#2A2421] focus:outline-none focus-visible:ring-2 focus-visible:ring-paint-cobalt"
+        >
+          <X className="h-4 w-4" aria-hidden="true" />
+        </button>
+      )}
+    </div>
+  );
+}
+
 function PartnerList({ species, entries, onSelectPokemon }) {
   const genderless = useGenderless();
   const breeding = useMemo(() => (genderless && entries ? breedingPartners({
@@ -109,6 +158,17 @@ function PartnerList({ species, entries, onSelectPokemon }) {
     entries: [...entries.values()],
     genderless,
   }) : null), [genderless, entries, species]);
+
+  // A busca vale para todos os grupos de uma vez; com ela, grupo sem resultado some e o contador mostra o filtrado.
+  const [query, setQuery] = useState('');
+  const term = normalizeName(useDebouncedValue(query, query ? SEARCH_DEBOUNCE_MS : 0).trim());
+  const groups = useMemo(() => {
+    const all = breeding?.groups ?? [];
+    if (!term) return all;
+    return all
+      .map((group) => ({ ...group, partners: group.partners.filter((entry) => searchableName(entry.name).includes(term)) }))
+      .filter((group) => group.partners.length > 0);
+  }, [breeding, term]);
 
   if (!breeding) return <p className={NOTE}>Procurando parceiros...</p>;
   if (breeding.kind === 'none') {
@@ -122,9 +182,14 @@ function PartnerList({ species, entries, onSelectPokemon }) {
   if (breeding.kind === 'dittoOnly') return <p className={NOTE}>Sem gênero: só cruza com Ditto.</p>;
   return (
     <div className="space-y-3">
-      {breeding.groups.map(({ group, partners }) => (
-        <PartnerGroup key={group} group={group} partners={partners} onSelectPokemon={onSelectPokemon} />
-      ))}
+      <PartnerSearch value={query} onChange={setQuery} />
+      {groups.length > 0 ? (
+        groups.map(({ group, partners }) => (
+          <PartnerGroup key={group} group={group} partners={partners} onSelectPokemon={onSelectPokemon} />
+        ))
+      ) : (
+        <p className={NOTE} role="status">Nenhum Pokémon com “{query.trim()}” nesses grupos de ovo.</p>
+      )}
       <p className={NOTE}>Também cruza com Ditto. Duas espécies que só têm machos (ou só fêmeas) não cruzam entre si.</p>
     </div>
   );
