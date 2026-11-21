@@ -3,7 +3,18 @@ import { createBattleSet } from './stats';
 // Treinadores da tabela PokemonTrainers: cada linha é uma batalha (jogo, papel, revanche, time por inicial);
 // as linhas do mesmo Trainer_Slug viram um treinador só, com as batalhas como variantes.
 
-export const REGIONS = ['Kanto', 'Johto', 'Hoenn', 'Sinnoh', 'Unova', 'Kalos', 'Alola', 'Galar', 'Paldea'];
+// Região → geração em que estreou, na ordem de lançamento (Hisui vem depois de Galar; Kitakami é DLC de Paldea).
+const REGION_GENERATION = {
+  Kanto: 1, Johto: 2, Hoenn: 3, Sinnoh: 4, Unova: 5, Kalos: 6, Alola: 7, Galar: 8, Hisui: 8, Paldea: 9, Kitakami: 9,
+};
+export const REGIONS = Object.keys(REGION_GENERATION);
+export const regionGeneration = (region) => REGION_GENERATION[region] ?? null;
+
+/** Regiões presentes nas batalhas: as conhecidas na ordem de lançamento; uma região nova na tabela vai para o fim. */
+export function regionsOf(battles) {
+  const present = new Set(battles.map((battle) => battle.region));
+  return [...REGIONS.filter((region) => present.has(region)), ...[...present].filter((region) => !REGIONS.includes(region)).sort()];
+}
 
 // Ordem de lançamento dos jogos principais; um jogo fora da lista vai para o fim.
 const GAME_ORDER = [

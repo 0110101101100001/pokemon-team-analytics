@@ -13,7 +13,7 @@ import { fetchTrainers } from '../services/trainers';
 import { useDebouncedValue } from '../hooks/useDebouncedValue';
 import { formatSlug } from '../utils/filters';
 import {
-  FILTER_GROUPS, MIXED_TYPE, REGIONS, createNameMatcher, gamesOf, matchingBattles, roleLabel, rolesOf,
+  FILTER_GROUPS, MIXED_TYPE, REGIONS, createNameMatcher, gamesOf, matchingBattles, regionGeneration, regionsOf, roleLabel, rolesOf,
 } from '../utils/trainers';
 
 const SEARCH_DEBOUNCE_MS = 200;
@@ -70,12 +70,13 @@ export default function TrainersSection({ entryByName, onSelectPokemon }) {
   }, [trainers, debouncedQuery, filters]);
 
   // Cada treinador entra na região da primeira batalha que passou nos filtros.
-  const byRegion = useMemo(() => REGIONS
-    .map((region) => ({ region, entries: visible.filter(({ battles }) => battles[0].region === region) }))
-    .filter(({ entries }) => entries.length > 0), [visible]);
-  // As regiões seguem a ordem das gerações: Kanto é a 1ª, Paldea a 9ª.
+  const byRegion = useMemo(() => regionsOf(visible.map(({ battles }) => battles[0]))
+    .map((region) => ({ region, entries: visible.filter(({ battles }) => battles[0].region === region) })), [visible]);
+  // As regiões seguem a ordem das gerações: Kanto é a 1ª, Hisui a 8ª, Paldea e Kitakami a 9ª.
   const jumpItems = useMemo(
-    () => byRegion.map(({ region }) => ({ key: region, generation: REGIONS.indexOf(region) + 1, region })),
+    () => byRegion.map(({ region, entries }) => ({
+      key: region, generation: regionGeneration(region) ?? entries[0].battles[0].generation, region,
+    })),
     [byRegion],
   );
   const regionRefs = useRef(new Map());

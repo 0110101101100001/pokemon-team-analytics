@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import {
   MIXED_TYPE, battleGroupsOf, battleLabel, hasTeamVariants, battleTabsOf, teamVariantsOf, createNameMatcher, gamesOf, groupTrainers, matchingBattles, moveSlug, resolveTrainerPokemon,
-  trainerMemberSet, trainerSpriteUrl, gameLabelsOf, gameListOf,
+  trainerMemberSet, trainerSpriteUrl, gameLabelsOf, gameListOf, regionGeneration, regionsOf,
 } from './trainers';
 
 const row = (fields) => ({
@@ -302,5 +302,18 @@ describe('batalhas na calculadora', () => {
       ['Sword / Shield · Champion Cup · Copa dos Campeões', []],
       ['Sword / Shield · Champion Cup · Copa dos Campeões · revanche', []],
     ]);
+  });
+});
+
+describe('regionsOf', () => {
+  it('ordena as regiões pela estreia, com Hisui e Kitakami, e põe uma região desconhecida no fim', () => {
+    const battles = ['Kitakami', 'Atlantis', 'Paldea', 'Hisui', 'Galar', 'Kanto'].map((region) => ({ region }));
+    expect(regionsOf(battles)).toEqual(['Kanto', 'Galar', 'Hisui', 'Paldea', 'Kitakami', 'Atlantis']);
+  });
+
+  it('dá a geração de cada região', () => {
+    expect(regionGeneration('Hisui')).toBe(8);
+    expect(regionGeneration('Kitakami')).toBe(9);
+    expect(regionGeneration('Atlantis')).toBeNull();
   });
 });
