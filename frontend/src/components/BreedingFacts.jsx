@@ -1,4 +1,5 @@
 import { memo, useEffect, useMemo, useState } from 'react';
+import { ChevronDown } from 'lucide-react';
 import { fetchGenderlessSpecies, thumbnailSpriteUrl } from '../services/api';
 import { breedingPartners, genderRatio, hatchInfo } from '../utils/breeding';
 import { eggGroupLabel, formatSlug } from '../utils/filters';
@@ -10,6 +11,7 @@ const MALE = '#4F6D8A';
 const FEMALE = '#9E3D64';
 
 const percent = (value) => `${value.toLocaleString('pt-BR', { maximumFractionDigits: 1 })}%`;
+const eggGroupsOf = (species) => (species.egg_groups ?? []).map((group) => group.name);
 
 function GenderTile({ rate }) {
   const ratio = genderRatio(rate);
@@ -33,6 +35,28 @@ function GenderTile({ rate }) {
     </div>
   );
 }
+
+/** Gênero, ciclos do ovo e grupos de ovo: ficam à vista em Habilidades & Morfologia. */
+export const BreedingBasics = memo(function BreedingBasics({ species }) {
+  const hatch = hatchInfo(species.hatch_counter);
+  const eggGroups = eggGroupsOf(species);
+  return (
+    <div className="grid grid-cols-2 gap-2">
+      <GenderTile rate={species.gender_rate} />
+      {hatch && (
+        <div className={TILE}>
+          <span className={LABEL}>Ovo</span>
+          <span className="block text-xs font-bold text-[#2A2421]">{hatch.cycles} ciclos</span>
+          <span className="text-[11px] text-[#4A463E]">cerca de {hatch.steps.toLocaleString('pt-BR')} passos</span>
+        </div>
+      )}
+      <div className={`${TILE} col-span-2`}>
+        <span className={LABEL}>Grupos de ovo</span>
+        <span className="text-xs font-bold text-[#2A2421]">{eggGroups.map(eggGroupLabel).join(' · ') || '—'}</span>
+      </div>
+    </div>
+  );
+});
 
 function PartnerGroup({ group, partners, onSelectPokemon }) {
   return (
@@ -63,7 +87,7 @@ function PartnerGroup({ group, partners, onSelectPokemon }) {
   );
 }
 
-/** Espécies sem gênero, buscadas uma vez (uma requisição em cache); null enquanto carrega ou se falhar. */
+/** Espécies sem gênero (uma requisição em cache); null enquanto carrega. */
 function useGenderless() {
   const [genderless, setGenderless] = useState(null);
   useEffect(() => {
@@ -76,65 +100,57 @@ function useGenderless() {
   return genderless;
 }
 
-/**
- * Criação na Ficha de Campo: proporção de gênero, ciclos para chocar, grupos de ovo e com quem a espécie cruza.
- * Parceiros são espécies de um grupo em comum; formas e espécies sem gênero ficam de fora.
- */
-function BreedingFacts({ species, entries, onSelectPokemon }) {
+function PartnerList({ species, entries, onSelectPokemon }) {
   const genderless = useGenderless();
-  const eggGroups = useMemo(() => (species.egg_groups ?? []).map((group) => group.name), [species]);
-  const hatch = hatchInfo(species.hatch_counter);
-
   const breeding = useMemo(() => (genderless && entries ? breedingPartners({
     speciesName: species.name,
-    eggGroups,
+    eggGroups: eggGroupsOf(species),
     isGenderless: species.gender_rate === -1,
     entries: [...entries.values()],
     genderless,
-  }) : null), [genderless, entries, species, eggGroups]);
+  }) : null), [genderless, entries, species]);
 
+  if (!breeding) return <p className={NOTE}>Procurando parceiros...</p>;
+  if (breeding.kind === 'none') {
+    return (
+      <p className={NOTE}>
+        {species.is_baby ? 'Bebês não se reproduzem: o ovo vem da forma evoluída.' : 'Não se reproduz (grupo Undiscovered).'}
+      </p>
+    );
+  }
+  if (breeding.kind === 'everyone') return <p className={NOTE}>Cruza com qualquer Pokémon que se reproduz, menos outro Ditto.</p>;
+  if (breeding.kind === 'dittoOnly') return <p className={NOTE}>Sem gênero: só cruza com Ditto.</p>;
   return (
     <div className="space-y-3">
-      <h4 className="font-reading text-sm font-bold text-[#2A2421]">Criação</h4>
-      <div className="grid grid-cols-1 gap-2 sm:grid-cols-3">
-        <GenderTile rate={species.gender_rate} />
-        {hatch && (
-          <div className={TILE}>
-            <span className={LABEL}>Ovo</span>
-            <span className="text-xs font-bold text-[#2A2421]">
-              {hatch.cycles} ciclos <span className="font-normal text-[#4A463E]">· cerca de {hatch.steps.toLocaleString('pt-BR')} passos</span>
-            </span>
-          </div>
-        )}
-        <div className={TILE}>
-          <span className={LABEL}>Grupos de ovo</span>
-          <span className="text-xs font-bold text-[#2A2421]">{eggGroups.map(eggGroupLabel).join(' · ') || '—'}</span>
-        </div>
-      </div>
-
-      <div className="space-y-2">
-        <span className={LABEL}>Com quem cruza</span>
-        {!breeding && <p className={NOTE}>Procurando parceiros...</p>}
-        {breeding?.kind === 'none' && (
-          <p className={NOTE}>
-            {species.is_baby
-              ? 'Bebês não se reproduzem: o ovo vem da forma evoluída.'
-              : 'Não se reproduz (grupo Undiscovered).'}
-          </p>
-        )}
-        {breeding?.kind === 'everyone' && <p className={NOTE}>Cruza com qualquer Pokémon que se reproduz, menos outro Ditto.</p>}
-        {breeding?.kind === 'dittoOnly' && <p className={NOTE}>Sem gênero: só cruza com Ditto.</p>}
-        {breeding?.kind === 'groups' && (
-          <>
-            {breeding.groups.map(({ group, partners }) => (
-              <PartnerGroup key={group} group={group} partners={partners} onSelectPokemon={onSelectPokemon} />
-            ))}
-            <p className={NOTE}>Também cruza com Ditto. Duas espécies que só têm machos (ou só fêmeas) não cruzam entre si.</p>
-          </>
-        )}
-      </div>
+      {breeding.groups.map(({ group, partners }) => (
+        <PartnerGroup key={group} group={group} partners={partners} onSelectPokemon={onSelectPokemon} />
+      ))}
+      <p className={NOTE}>Também cruza com Ditto. Duas espécies que só têm machos (ou só fêmeas) não cruzam entre si.</p>
     </div>
   );
 }
 
-export default memo(BreedingFacts);
+/**
+ * "Com quem cruza", recolhido: ao abrir, as espécies parceiras por grupo de ovo. A lista (e a busca das espécies
+ * sem gênero) só é montada na primeira abertura.
+ */
+function BreedingPartners({ species, entries, onSelectPokemon }) {
+  const [opened, setOpened] = useState(false);
+  return (
+    <details
+      className="group rounded-[4px] border border-[#2A2421]/12 bg-paper"
+      onToggle={(e) => e.currentTarget.open && setOpened(true)}
+    >
+      <summary className="flex cursor-pointer list-none items-center gap-2 px-3 py-2.5 focus:outline-none focus-visible:ring-2 focus-visible:ring-paint-cobalt [&::-webkit-details-marker]:hidden">
+        <span className="font-reading text-sm font-bold text-[#2A2421]">Com quem cruza</span>
+        <span className="text-xs text-[#78614E]">{eggGroupsOf(species).map(eggGroupLabel).join(' · ')}</span>
+        <ChevronDown className="ml-auto h-4 w-4 shrink-0 text-[#78614E] transition-transform group-open:rotate-180 motion-reduce:transition-none" aria-hidden="true" />
+      </summary>
+      <div className="border-t border-[#2A2421]/12 px-3 pb-3 pt-2.5">
+        {opened && <PartnerList species={species} entries={entries} onSelectPokemon={onSelectPokemon} />}
+      </div>
+    </details>
+  );
+}
+
+export default memo(BreedingPartners);

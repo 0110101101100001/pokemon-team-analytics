@@ -142,7 +142,8 @@ function resolveMoveType(move, attacker, field, teraBlast) {
 
 /** Motivo de o golpe não acertar ou não causar dano antes da tabela de tipos; null se acerta. */
 function immunityReason({ move, moveType, defenderAbility, defenderAirborne, defenderSide, field }) {
-  if (defenderSide.protect) return 'O alvo está protegido (Protect).';
+  // Golpes Z e Max atravessam Protect, com 1/4 do dano (ver os modificadores finais).
+  if (defenderSide.protect && !move.powered) return 'O alvo está protegido (Protect).';
   if (field.weather === 'harsh-sun' && moveType === 'water') return 'Golpes de Water evaporam no sol extremo.';
   if (field.weather === 'heavy-rain' && moveType === 'fire') return 'Golpes de Fire se apagam na chuva torrencial.';
   if (move.priority > 0) {
@@ -289,6 +290,7 @@ export function calculateDamage({ attacker, defender, move, field, defenderSide 
   const finalMods = [];
   const screened = (physical && defenderSide.reflect) || (!physical && defenderSide.lightScreen) || defenderSide.auroraVeil;
   if (screened && !crit && attacker.ability !== 'infiltrator') finalMods.push(2048);
+  if (move.powered && defenderSide.protect) finalMods.push(1024);
   if (['multiscale', 'shadow-shield'].includes(defenderAbility)) finalMods.push(2048);
   if (['filter', 'solid-rock', 'prism-armor'].includes(defenderAbility) && typeMultiplier > 1) finalMods.push(3072);
   if (defenderAbility === 'fluffy' && moveType === 'fire') finalMods.push(8192);
@@ -332,7 +334,8 @@ export function calculateDamage({ attacker, defender, move, field, defenderSide 
   const multiHit = move.maxHits > 1;
   const hits = multiHit && attacker.ability === 'skill-link' ? move.maxHits : Math.max(1, move.hits ?? 1);
   const rolls = rollsFor(null);
-  const extraRolls = attacker.ability === 'parental-bond' && !multiHit ? rollsFor(1024) : null;
+  // Parental Bond não dá o segundo golpe a golpes Z e Max.
+  const extraRolls = attacker.ability === 'parental-bond' && !multiHit && !move.powered ? rollsFor(1024) : null;
   return {
     rolls,
     extraRolls,

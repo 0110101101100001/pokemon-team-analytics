@@ -3,6 +3,7 @@ import PokemonTypeBadge from '../PokemonTypeBadge';
 import SuggestField from '../SuggestField';
 import { fetchMoveSummary } from '../../services/api';
 import { defaultHits } from './calcState';
+import { POWERED_MODES, canPowerUp, poweredMove } from '../../utils/poweredMoves';
 
 const CATEGORY_LABELS = { physical: 'Físico', special: 'Especial', status: 'Status' };
 
@@ -15,12 +16,13 @@ const hitRange = ({ minHits, maxHits }) => Array.from({ length: maxHits - minHit
 function MoveSlot({ index, slot, learnset, onChange }) {
   const { move } = slot;
   const isStatus = move?.damageClass === 'status';
-  const variableHits = move?.maxHits > move?.minHits;
+  const variableHits = move?.maxHits > move?.minHits && !slot.mode;
+  const powered = slot.mode && canPowerUp(move) ? poweredMove(move, slot.mode) : null;
 
   const patch = useCallback((changes) => onChange(index, changes), [index, onChange]);
   const pickMove = useCallback((slug) => {
     if (!slug) {
-      onChange(index, { move: null, hits: 1, crit: false });
+      onChange(index, { move: null, hits: 1, crit: false, mode: '' });
       return;
     }
     fetchMoveSummary(slug).then((summary) => summary && onChange(index, { move: summary, hits: defaultHits(summary) }));
@@ -56,8 +58,30 @@ function MoveSlot({ index, slot, learnset, onChange }) {
           <span>{CATEGORY_LABELS[move.damageClass]}</span>
           {isStatus ? (
             <span className="font-serif italic">· não causa dano</span>
+          ) : powered ? (
+            <span className="font-mono tabular-nums">
+              · {powered.name}, poder {move.power} → <strong className="text-[#2A2421]">{powered.power}</strong>
+            </span>
           ) : (
             <span className="font-mono tabular-nums">· poder {move.power ?? 'variável'}</span>
+          )}
+          {canPowerUp(move) && (
+            <span role="group" aria-label={`Golpe ${index + 1} como Z ou Max`} className="inline-flex overflow-hidden rounded-[3px] border-[1.5px] border-ink/60">
+              {[['', 'Normal'], ...Object.entries(POWERED_MODES)].map(([mode, label]) => (
+                <button
+                  key={mode || 'normal'}
+                  type="button"
+                  aria-pressed={(slot.mode ?? '') === mode}
+                  onClick={() => patch({ mode })}
+                  title={mode ? `Usar como golpe ${label}` : 'Usar o golpe normal'}
+                  className={`h-6 cursor-pointer px-1.5 font-reading text-[11px] font-semibold transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-paint-cobalt ${
+                    (slot.mode ?? '') === mode ? 'bg-[#B8402A] text-paper' : 'bg-paper text-ink hover:bg-[#E6D9BE]'
+                  }`}
+                >
+                  {label}
+                </button>
+              ))}
+            </span>
           )}
           {variableHits && (
             <label className="ml-auto flex items-center gap-1 font-hand text-base leading-none text-[#78614E]">
@@ -72,7 +96,7 @@ function MoveSlot({ index, slot, learnset, onChange }) {
               </select>
             </label>
           )}
-          {move.maxHits > 1 && !variableHits && <span>· {move.maxHits} acertos</span>}
+          {move.maxHits > 1 && !variableHits && !powered && <span>· {move.maxHits} acertos</span>}
         </div>
       )}
     </li>

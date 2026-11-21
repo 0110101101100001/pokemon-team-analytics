@@ -18,7 +18,7 @@ import { resolveSmogonName } from '../utils/smogon';
 import SmeargleLoader from './SmeargleLoader';
 import SpeedTierTable from './SpeedTierTable';
 import SpeciesFacts from './SpeciesFacts';
-import BreedingFacts from './BreedingFacts';
+import BreedingPartners, { BreedingBasics } from './BreedingFacts';
 import GmaxMoveCard from './GmaxMoveCard';
 import { gmaxMoveFor } from '../data/gmaxMoves';
 import { zMovesFor } from '../data/zMoves';
@@ -800,6 +800,7 @@ export default function PokemonDrawer({
                     </div>
                   </div>
                 </div>
+                {species && <BreedingBasics species={species} />}
               </SectionCard>
             </div>
 
@@ -812,9 +813,7 @@ export default function PokemonDrawer({
                   gridGeneration={gridEntries?.get(currentFormName)?.generation}
                   isAlternateForm={isAlternateForm}
                 />
-                <div className="border-t border-[#2A2421]/12 pt-4">
-                  <BreedingFacts species={species} entries={gridEntries} onSelectPokemon={onSelectPokemon} />
-                </div>
+                <BreedingPartners species={species} entries={gridEntries} onSelectPokemon={onSelectPokemon} />
               </SectionCard>
             )}
 

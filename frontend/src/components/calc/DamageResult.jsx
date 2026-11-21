@@ -27,7 +27,7 @@ function DamageResult({ entry, hint }) {
   return (
     <section className="paper-card px-4 pb-3.5 pt-5" aria-label="Resultado" aria-live="polite">
       <p className="font-hand text-lg leading-none text-[#78614E]">
-        {formatSlug(attackerName)} usa {formatSlug(move.slug)}{crit ? ' (crítico)' : ''} em {formatSlug(defenderName)}
+        {formatSlug(attackerName)} usa {formatSlug(move.slug)}{move.poweredFrom ? ` (${formatSlug(move.poweredFrom)})` : ''}{crit ? ' (crítico)' : ''} em {formatSlug(defenderName)}
       </p>
 
       {reason ? (

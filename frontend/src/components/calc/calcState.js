@@ -1,4 +1,5 @@
 import { createBattleSet } from '../../utils/stats';
+import { poweredMove } from '../../utils/poweredMoves';
 
 export const MOVE_SLOTS = 4;
 
@@ -12,8 +13,8 @@ export function defaultHits(move) {
   return Math.min(Math.max(3, move.minHits), move.maxHits);
 }
 
-/** Golpe num dos quatro espaços, com o crítico e os acertos escolhidos. */
-export const createMoveSlot = (move = null) => ({ move, hits: defaultHits(move), crit: false });
+/** Golpe num dos quatro espaços, com o crítico, os acertos e o modo ('' normal, 'z' ou 'max') escolhidos. */
+export const createMoveSlot = (move = null) => ({ move, hits: defaultHits(move), crit: false, mode: '' });
 
 export const createSide = () => ({
   pokemon: null,
@@ -69,8 +70,9 @@ export const createField = () => ({
   sides: [createSideConditions(), createSideConditions()],
 });
 
-/** O golpe como a fórmula espera, com o crítico e os acertos escolhidos no espaço. */
+/** O golpe como a fórmula espera, com o crítico e os acertos escolhidos no espaço; como Z ou Max, se escolhido. */
 export function resolveSlot(slot) {
   if (!slot.move) return null;
-  return { ...slot.move, category: slot.move.damageClass, hits: slot.hits, crit: slot.crit };
+  const move = poweredMove(slot.move, slot.mode);
+  return { ...move, category: move.damageClass, hits: move.powered ? 1 : slot.hits, crit: slot.crit };
 }
