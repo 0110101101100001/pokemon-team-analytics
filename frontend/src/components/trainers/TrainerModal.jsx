@@ -1,12 +1,15 @@
-import { useId, useRef, useState } from 'react';
+import { useId, useMemo, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
-import { X } from 'lucide-react';
+import { Calculator, X } from 'lucide-react';
 import MoveAbilityModal from '../MoveAbilityModal';
 import TrainerSprite from './TrainerSprite';
 import { SpecialtyStamp, blotColor } from './TrainerCard';
 import { thumbnailSpriteUrl } from '../../services/api';
 import { useModalBehavior } from '../../hooks/useModalBehavior';
-import { battleLabel, resolveTrainerPokemon, roleLabel } from '../../utils/trainers';
+import { calculatorTrainerHref } from '../../navigation/sections';
+import {
+  battleKey, battleTabsOf, gameListOf, hasTeamVariants, resolveTrainerPokemon, roleLabel,
+} from '../../utils/trainers';
 
 const LABEL = 'font-reading text-xs font-semibold uppercase tracking-wider text-[#4A463E]';
 const PILL = 'cursor-pointer rounded-[3px] border-[1.5px] px-3 py-1.5 font-reading text-sm transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-paint-cobalt';
@@ -29,6 +32,15 @@ function battleFacts(battle) {
     ['Mecânica', battle.gimmick],
     ['Nível médio', battle.avgLevel != null && `Nv. ${Math.round(battle.avgLevel * 10) / 10}`],
   ].filter(([, value]) => value);
+}
+
+function ChoiceGroup({ title, label, children }) {
+  return (
+    <section className="space-y-2">
+      <h3 className={LABEL}>{title}</h3>
+      <div role="group" aria-label={label} className="flex flex-wrap gap-2">{children}</div>
+    </section>
+  );
 }
 
 function TeamMember({ member, entry, onSelectPokemon, onSelectMove }) {
@@ -72,18 +84,29 @@ function TeamMember({ member, entry, onSelectPokemon, onSelectMove }) {
 }
 
 /**
- * Ficha do treinador: escolhe a batalha (jogo, variante do time, revanche) e mostra o time dela.
+ * Ficha do treinador: escolhe o jogo (começa pelo primeiro lançado), escolhe a batalha e, quando ela tiver, a variante do time (Rivais), e mostra o time.
  * Tocar num Pokémon abre a ficha dele por cima; tocar num golpe abre o golpe.
  */
 export default function TrainerModal({ trainer, initialBattleId, entryByName, onSelectPokemon, onClose }) {
-  const [battleId, setBattleId] = useState(initialBattleId ?? trainer.battles[0].id);
+  const initial = trainer.battles.find((candidate) => candidate.id === initialBattleId) ?? trainer.battles[0];
+  const games = useMemo(() => gameListOf(trainer.battles), [trainer.battles]);
+  const [game, setGame] = useState(games[0]);
+  const [selectedKey, setSelectedKey] = useState(() => battleKey(initial));
   const [move, setMove] = useState(null);
   const titleId = useId();
   const closeRef = useRef(null);
   useModalBehavior(onClose, closeRef);
 
-  const battle = trainer.battles.find((candidate) => candidate.id === battleId) ?? trainer.battles[0];
-  const hasTeamVariants = trainer.battles.some((candidate) => candidate.teamVariant);
+  const gameBattles = useMemo(
+    () => trainer.battles.filter((candidate) => candidate.gameList.includes(game)),
+    [trainer.battles, game],
+  );
+  const tabs = useMemo(() => battleTabsOf(gameBattles), [gameBattles]);
+  const tab = tabs.find((candidate) => candidate.key === selectedKey) ?? tabs[0];
+  // A variante escolhida vale para as outras batalhas que a tiverem (o mesmo inicial do jogador).
+  const [variant, setVariant] = useState(initial.teamVariant ?? null);
+  const showVariants = hasTeamVariants(tab);
+  const battle = (showVariants && tab.variants.find((candidate) => candidate.teamVariant === variant)) || tab.variants[0];
 
   return createPortal(
     <div
@@ -123,30 +146,59 @@ export default function TrainerModal({ trainer, initialBattleId, entryByName, on
         </header>
 
         <div className="space-y-5 overflow-y-auto overscroll-contain px-5 pb-6 pt-4 sm:px-6">
-          {trainer.battles.length > 1 && (
-            <section className="space-y-2">
-              <h3 className={LABEL}>Variantes</h3>
-              <div role="group" aria-label="Escolher a batalha" className="flex flex-wrap gap-2">
-                {trainer.battles.map((candidate) => {
-                  const selected = candidate.id === battle.id;
-                  return (
-                    <button
-                      key={candidate.id}
-                      type="button"
-                      aria-pressed={selected}
-                      onClick={() => setBattleId(candidate.id)}
-                      className={`${PILL} ${selected ? PILL_ON : PILL_OFF}`}
-                    >
-                      {battleLabel(candidate)}
-                      {trainer.roles.length > 1 && <span className="font-normal opacity-75"> · {roleLabel(candidate.role)}</span>}
-                    </button>
-                  );
-                })}
-              </div>
-              {hasTeamVariants && (
-                <p className="font-reading text-sm italic text-[#4A463E]">O time muda conforme a escolha do jogador no começo da aventura.</p>
-              )}
-            </section>
+          {games.length > 1 && (
+            <ChoiceGroup title="Jogo" label="Escolher o jogo">
+              {games.map((candidate) => (
+                <button
+                  key={candidate}
+                  type="button"
+                  aria-pressed={candidate === game}
+                  onClick={() => setGame(candidate)}
+                  className={`${PILL} ${candidate === game ? PILL_ON : PILL_OFF}`}
+                >
+                  {candidate}
+                </button>
+              ))}
+            </ChoiceGroup>
+          )}
+
+          {tabs.length > 1 && (
+            <ChoiceGroup title="Batalhas" label="Escolher a batalha">
+              {tabs.map((candidate) => {
+                const selected = candidate.key === tab.key;
+                return (
+                  <button
+                    key={candidate.key}
+                    type="button"
+                    aria-pressed={selected}
+                    onClick={() => setSelectedKey(candidate.key)}
+                    className={`${PILL} ${selected ? PILL_ON : PILL_OFF}`}
+                  >
+                    {candidate.label}
+                    {trainer.roles.length > 1 && <span className="font-normal opacity-75"> · {roleLabel(candidate.variants[0].role)}</span>}
+                  </button>
+                );
+              })}
+            </ChoiceGroup>
+          )}
+
+          {showVariants && (
+            <div className="space-y-2">
+              <ChoiceGroup title="Variante do time" label="Escolher a variante do time">
+                {tab.variants.map((candidate) => (
+                  <button
+                    key={candidate.id}
+                    type="button"
+                    aria-pressed={candidate.id === battle.id}
+                    onClick={() => setVariant(candidate.teamVariant)}
+                    className={`${PILL} ${candidate.id === battle.id ? PILL_ON : PILL_OFF}`}
+                  >
+                    {candidate.teamVariant ?? 'Padrão'}
+                  </button>
+                ))}
+              </ChoiceGroup>
+              <p className="font-reading text-sm italic text-[#4A463E]">O time muda conforme a escolha do jogador no começo da aventura.</p>
+            </div>
           )}
 
           <dl className="grid grid-cols-2 gap-x-4 gap-y-2.5 sm:grid-cols-3">
@@ -159,7 +211,13 @@ export default function TrainerModal({ trainer, initialBattleId, entryByName, on
           </dl>
 
           <section className="space-y-2">
-            <h3 className={LABEL}>Time · {battle.team.length} Pokémon</h3>
+            <div className="flex flex-wrap items-center justify-between gap-2">
+              <h3 className={LABEL}>Time · {battle.team.length} Pokémon</h3>
+              <a href={calculatorTrainerHref(battle.id)} className="btn-outline min-h-9 px-3 py-1.5 text-sm">
+                <Calculator className="h-4 w-4" aria-hidden="true" />
+                Abrir na Calculadora
+              </a>
+            </div>
             <ul className="grid grid-cols-1 gap-2.5 sm:grid-cols-2 lg:grid-cols-3">
               {battle.team.map((member, index) => (
                 // O mesmo Pokémon pode aparecer duas vezes num time (os dois Onix de Bruno), daí o índice na chave.

@@ -1,10 +1,11 @@
 import { memo, useCallback, useId, useMemo, useState } from 'react';
 import { ChevronDown, Feather, Gem, Loader2, Minus, Plus, RotateCcw, TriangleAlert, Wind } from 'lucide-react';
 import MoveSlot from './MoveSlot';
+import SavedTeamPicker from './SavedTeamPicker';
 import PokemonTypeBadge from '../PokemonTypeBadge';
 import PokemonPicker from '../battle/PokemonPicker';
 import StatSpreadEditor from '../battle/StatSpreadEditor';
-import { TYPE_NAMES, officialSpriteUrl, thumbnailSpriteUrl } from '../../services/api';
+import { TYPE_NAMES, animatedSpriteUrl, thumbnailSpriteUrl } from '../../services/api';
 import { ABILITY_EFFECTS, ITEM_GROUPS, KNOWN_ITEMS, STATUSES } from '../../data/battleModifiers';
 import { BOOST_STAGES } from '../../utils/damage';
 import { formatSlug } from '../../utils/filters';
@@ -22,6 +23,31 @@ const formLabel = (form, baseName) => formatSlug(form.slice(baseName.length + 1)
 
 const stageLabel = (stage) => (stage > 0 ? `+${stage}` : `${stage}`.replace('-', '−'));
 const STEP_BUTTON = 'flex h-full w-6 shrink-0 cursor-pointer items-center justify-center text-[#78614E] transition-colors hover:bg-[#78614E]/10 focus:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-paint-cobalt disabled:cursor-not-allowed disabled:opacity-30';
+
+/**
+ * Sprite 2D animado do combatente: o GIF em pixel art de Black/White. Ele só existe até o nº 649 e sem as formas
+ * novas; nesses casos fica o sprite 2D estático. Sempre sem suavizar.
+ */
+function BattleSprite({ id }) {
+  const sources = useMemo(() => [animatedSpriteUrl(id), thumbnailSpriteUrl(id)], [id]);
+  const [index, setIndex] = useState(0);
+  const [shownId, setShownId] = useState(id);
+  if (shownId !== id) {
+    setShownId(id);
+    setIndex(0);
+  }
+  return (
+    <span className="flex h-[72px] w-[72px] shrink-0 items-center justify-center sm:h-[88px] sm:w-[88px]">
+      <img
+        src={sources[index]}
+        alt=""
+        decoding="async"
+        onError={() => setIndex((i) => Math.min(i + 1, sources.length - 1))}
+        className="max-h-full max-w-full object-contain [image-rendering:pixelated]"
+      />
+    </span>
+  );
+}
 
 /** Estágio de um atributo, de −6 a +6: o nome em cima e o contador com menos e mais embaixo. */
 function BoostStepper({ stat, value, onChange }) {
@@ -44,35 +70,6 @@ function BoostStepper({ stat, value, onChange }) {
     </div>
   );
 }
-/** "do time:" seguido do nome do time; com mais de um time, o nome vira um seletor. */
-function TeamSourcePicker({ teams, value, onChange }) {
-  const label = <span className="font-hand text-base leading-none text-[#78614E]">do time:</span>;
-  if (teams.length === 1) {
-    return (
-      <span className="mr-1 inline-flex items-baseline gap-1">
-        {label}
-        <span className="max-w-[10rem] truncate font-reading text-xs font-semibold text-[#5C4033]">{teams[0].label}</span>
-      </span>
-    );
-  }
-  return (
-    <label className="mr-1 inline-flex items-center gap-1.5">
-      {label}
-      <span className="relative">
-        <select
-          value={value}
-          onChange={(e) => onChange(e.target.value)}
-          aria-label="Time dos atalhos"
-          className="paper-field h-8 max-w-[11rem] cursor-pointer appearance-none truncate py-0 pl-2.5 pr-7 font-reading text-xs font-semibold"
-        >
-          {teams.map((source) => <option key={source.id} value={source.id}>{source.label}</option>)}
-        </select>
-        <ChevronDown className="pointer-events-none absolute right-2 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-[#78614E]" aria-hidden="true" />
-      </span>
-    </label>
-  );
-}
-
 const abilityLabel = (slug) => (ABILITY_EFFECTS[slug] ? `${formatSlug(slug)} · ${ABILITY_EFFECTS[slug]}` : formatSlug(slug));
 
 function Field({ label, children, className = '' }) {
@@ -88,7 +85,7 @@ function Field({ label, children, className = '' }) {
  * Um lado da calculadora: o Pokémon (pela busca ou do time), Mega/Primal, Tera, nível, habilidade, item, status,
  * os estágios de cada atributo, os quatro golpes e, recolhidos, natureza, EVs e IVs.
  */
-function CombatantPanel({ caption, title, pickerPlaceholder, side, battle, forms, ability, speed, faster, airborne, pool, teams, extraSource, onChange, onMoveChange, onPick, className = '' }) {
+function CombatantPanel({ caption, title, pickerPlaceholder, side, battle, forms, ability, speed, faster, airborne, pool, teams, loggedIn, teamsOpen, extraSource, onChange, onMoveChange, onPick, onLogin, className = '' }) {
   const { pokemon, set, boosts } = side;
 
   const patchSet = useCallback((changes) => onChange({ set: { ...set, ...changes } }), [set, onChange]);
@@ -96,16 +93,6 @@ function CombatantPanel({ caption, title, pickerPlaceholder, side, battle, forms
 
   const boosted = BOOST_KEYS.some((key) => boosts[key] !== 0);
   const stagesId = useId();
-
-  // Cada lado escolhe o próprio time: dá para pôr um time salvo de um lado e outro do lado oposto.
-  // Se o time escolhido sair da lista (apagado, logout), volta para o primeiro.
-  const [teamId, setTeamId] = useState(null);
-  const activeTeam = teams.find((source) => source.id === teamId) ?? teams[0];
-
-  const pickFromTeam = (member) => {
-    const { set: memberSet, ...entry } = member;
-    onPick(entry, memberSet);
-  };
 
   return (
     <section className={`paper-card p-4 sm:p-5 ${className}`} aria-label={title}>
@@ -116,32 +103,22 @@ function CombatantPanel({ caption, title, pickerPlaceholder, side, battle, forms
 
       <PokemonPicker pool={pool} onPick={onPick} label={pickerPlaceholder} placeholder={pickerPlaceholder} />
 
-      {activeTeam && (
-        <div className="mt-2 flex flex-wrap items-center gap-1">
-          <TeamSourcePicker teams={teams} value={activeTeam.id} onChange={setTeamId} />
-          {activeTeam.members.map((member) => (
-            <button
-              key={`${activeTeam.id}-${member.id}`}
-              type="button"
-              onClick={() => pickFromTeam(member)}
-              aria-label={`Usar ${formatSlug(member.name)} do time`}
-              title={formatSlug(member.name)}
-              className={`cursor-pointer rounded-[3px] border bg-paper transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-paint-cobalt ${
-                pokemon?.id === member.id ? 'border-smeargle-olive ring-1 ring-smeargle-olive' : 'border-[#78614E]/25 hover:border-[#78614E]/60'
-              }`}
-            >
-              <img src={thumbnailSpriteUrl(member.id)} alt="" width={40} height={40} loading="lazy" decoding="async" className="h-10 w-10 object-contain" />
-            </button>
-          ))}
-        </div>
-      )}
+      {/* Cada lado escolhe o próprio time: dá para pôr um time salvo de um lado e outro do lado oposto. */}
+      <SavedTeamPicker
+        teams={teams}
+        loggedIn={loggedIn}
+        currentId={pokemon?.id}
+        defaultOpen={teamsOpen}
+        onPick={onPick}
+        onLogin={onLogin}
+      />
 
       {extraSource}
 
       {pokemon && (
         <div className="mt-4 space-y-3.5 border-t border-[#5C4033]/25 pt-4">
           <div className="flex items-center gap-3">
-            <img src={officialSpriteUrl(side.form && battle.id ? battle.id : pokemon.id)} alt="" width={88} height={88} decoding="async" className="h-[72px] w-[72px] shrink-0 object-contain drop-shadow-[0_6px_8px_rgba(62,46,36,0.2)] sm:h-[88px] sm:w-[88px]" />
+            <BattleSprite id={side.form && battle.id ? battle.id : pokemon.id} />
             <div className="min-w-0 flex-1">
               <p className="flex items-center gap-2 truncate font-serif text-xl font-black tracking-tight text-[#2A2421]">
                 {formatSlug(side.form || pokemon.name)}

@@ -1,6 +1,7 @@
 import { memo, useEffect, useMemo, useRef, useState } from 'react';
 import { Paintbrush } from 'lucide-react';
 import PokemonCard from './PokemonCard';
+import JumpIndex, { scrollToElement } from './JumpIndex';
 import { GENERATIONS } from '../utils/filters';
 
 const BATCH_SIZE = 24;
@@ -27,24 +28,6 @@ function generationStarts(list) {
 
 const REGION_OF = Object.fromEntries(GENERATIONS.map(({ value, label }) => [value, label.split(' · ')[1]]));
 
-function GenerationIndex({ starts, onJump }) {
-  return (
-    <nav aria-label="Ir para a geração" className="mb-5 flex flex-wrap items-center gap-1.5">
-      <span className="mr-1 font-reading text-sm italic text-[#4A463E]">Ir para:</span>
-      {starts.map(({ generation, index }) => (
-        <button
-          key={generation}
-          type="button"
-          onClick={() => onJump(index)}
-          className="h-8 cursor-pointer rounded-[2px] border-[1.5px] border-[#1C1A17]/70 px-2.5 font-reading text-sm text-[#1C1A17] transition-colors hover:bg-[#E6D9BE] focus:outline-none focus-visible:ring-2 focus-visible:ring-paint-cobalt"
-        >
-          <span className="font-mono text-xs tabular-nums">{generation}ª</span> · {REGION_OF[generation]}
-        </button>
-      ))}
-    </nav>
-  );
-}
-
 function PokemonGrid({
   pokemonList,
   selectedName,
@@ -59,6 +42,10 @@ function PokemonGrid({
   const sentinelRef = useRef(null);
   const gridRef = useRef(null);
   const starts = useMemo(() => generationStarts(pokemonList), [pokemonList]);
+  const jumpItems = useMemo(
+    () => starts?.map(({ generation, index }) => ({ key: index, generation, region: REGION_OF[generation] })),
+    [starts],
+  );
 
   // Busca ou filtro novo: volta ao primeiro lote em vez de manter centenas de cards montados.
   if (renderedList !== pokemonList) {
@@ -92,15 +79,13 @@ function PokemonGrid({
 
   useEffect(() => {
     if (jumpTarget === null) return;
-    const card = gridRef.current?.children[jumpTarget];
-    card?.scrollIntoView({ behavior: window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth', block: 'start' });
-    card?.querySelector('button')?.focus({ preventScroll: true });
+    scrollToElement(gridRef.current?.children[jumpTarget]);
     setJumpTarget(null);
   }, [jumpTarget]);
 
   return (
     <section className="w-full">
-      {starts && <GenerationIndex starts={starts} onJump={jumpTo} />}
+      {jumpItems && <JumpIndex label="Ir para a geração" items={jumpItems} onJump={jumpTo} />}
       {/* Grade sempre com 100% do espaço, de 1 a 5 colunas dependendo da tela. scroll-mt deixa o card do salto abaixo do header fixo. */}
       <div ref={gridRef} className="grid [&>*]:scroll-mt-40 grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4 lg:gap-5">
         {pokemonList.slice(0, shown).map(({ name, id, number, types }) => (

@@ -1,49 +1,138 @@
-import { memo, useMemo, useState } from 'react';
-import { ChevronDown, Loader2, TriangleAlert } from 'lucide-react';
-import { thumbnailSpriteUrl } from '../../services/api';
+import { memo, useDeferredValue, useEffect, useMemo, useState } from 'react';
+import { Loader2, Search, TriangleAlert } from 'lucide-react';
+import { MemberShortcut, SelectField, SourcePanel } from './SourcePanel';
 import { fetchTrainers } from '../../services/trainers';
 import { loadBattleData, moveSummaryOf } from '../../utils/battleData';
 import { formatSlug } from '../../utils/filters';
-import { REGIONS, battleLabel, resolveTrainerPokemon, roleLabel, trainerMemberSet } from '../../utils/trainers';
+import { battleGroupsOf, battleKey, createNameMatcher, gameLabelsOf, hasTeamVariants, resolveTrainerPokemon, trainerMemberSet } from '../../utils/trainers';
 
-const SELECT = 'paper-field h-9 w-full min-w-0 cursor-pointer appearance-none pl-2.5 pr-7 font-reading text-[13px]';
+const RESULT_LIMIT = 6;
 
-function SelectField({ label, value, onChange, children }) {
+/** Busca de treinador pelo nome, com os resultados logo abaixo do campo. Enter escolhe o primeiro. */
+function TrainerSearch({ trainers, onPick }) {
+  const [query, setQuery] = useState('');
+  const deferredQuery = useDeferredValue(query);
+  const searching = deferredQuery.trim().length > 0;
+
+  const results = useMemo(() => {
+    if (!searching) return [];
+    const matches = createNameMatcher(deferredQuery);
+    return trainers
+      .filter(matches)
+      .slice(0, RESULT_LIMIT);
+  }, [deferredQuery, searching, trainers]);
+
+  const pick = (trainer) => {
+    onPick(trainer.slug);
+    setQuery('');
+  };
+
   return (
-    <label className="block min-w-0">
-      <span className="mb-0.5 block font-hand text-base leading-none text-[#78614E]">{label}</span>
-      <span className="relative block">
-        <select value={value} onChange={(e) => onChange(e.target.value)} className={SELECT}>{children}</select>
-        <ChevronDown className="pointer-events-none absolute right-2 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-[#78614E]" aria-hidden="true" />
-      </span>
-    </label>
+    <div>
+      <label className="block">
+        <span className="mb-0.5 block font-hand text-base leading-none text-[#78614E]">treinador</span>
+        <span className="relative block">
+          <Search className="pointer-events-none absolute left-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-[#78614E]/70" aria-hidden="true" />
+          <input
+            type="search"
+            value={query}
+            onChange={(e) => setQuery(e.target.value)}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter' && results[0]) {
+                e.preventDefault();
+                pick(results[0]);
+              }
+            }}
+            placeholder="Nome do treinador..."
+            className="paper-field h-9 w-full pl-8 font-reading text-[13px]"
+          />
+        </span>
+      </label>
+
+      {searching && (
+        results.length ? (
+          <ul className="mt-1.5 space-y-1">
+            {results.map((trainer) => (
+              <li key={trainer.slug}>
+                <button
+                  type="button"
+                  onClick={() => pick(trainer)}
+                  className="block w-full cursor-pointer truncate rounded-[4px] border border-[#78614E]/15 bg-paper/70 px-2.5 py-1.5 text-left transition-colors hover:border-smeargle-olive hover:bg-smeargle-olive/10 focus:outline-none focus-visible:ring-2 focus-visible:ring-paint-cobalt"
+                >
+                  <span className="font-reading text-sm font-semibold text-smeargle-text">{trainer.name}</span>
+                </button>
+              </li>
+            ))}
+          </ul>
+        ) : (
+          <p className="py-2 text-center font-reading text-sm italic text-smeargle-textDim/70">Nenhum treinador encontrado.</p>
+        )
+      )}
+    </div>
   );
 }
 
 /**
- * Puxa o time de um líder, Elite 4 ou campeão para o lado do oponente: escolhe o treinador e a batalha,
- * e cada Pokémon do time vira um atalho com o nível e os golpes do jogo. Os dados só são buscados ao abrir.
+ * Puxa o time de um líder, Elite 4 ou campeão para o lado do oponente: escolhe o treinador, a batalha e,
+ * quando houver, a variante do time; cada Pokémon vira um atalho com o nível e os golpes do jogo.
+ * Os dados só são buscados ao abrir.
  */
-function TrainerTeamPicker({ pool, currentId, onPick }) {
+/** Jogo, batalha e variante escolhidos; o que estiver vazio ou não existir mais cai na primeira opção. */
+function resolveSelection(trainer, { game, groupKey, battleId }) {
+  if (!trainer) return { games: [], groups: [] };
+  const games = gameLabelsOf(trainer.battles);
+  const chosenGame = games.includes(game) ? game : games[0];
+  const groups = battleGroupsOf(trainer, chosenGame);
+  const group = groups.find((candidate) => candidate.key === groupKey) ?? groups[0];
+  const battle = group?.variants.find((candidate) => candidate.id === battleId) ?? group?.variants[0];
+  return { games, game: chosenGame, groups, group, battle };
+}
+
+/** Seleção que abre direto em uma batalha (o link "Abrir na Calculadora" do card da Liga), ou null. */
+function selectionForBattle(trainers, battleId) {
+  for (const trainer of trainers) {
+    const battle = trainer.battles.find((candidate) => candidate.id === battleId);
+    if (battle) return { slug: trainer.slug, game: battle.games, groupKey: battleKey(battle), battleId };
+  }
+  return null;
+}
+
+function TrainerTeamPicker({ pool, currentId, initialBattleId = null, onPick }) {
   const [state, setState] = useState({ status: 'idle', trainers: [], battleData: null });
-  const [selection, setSelection] = useState({ slug: '', battleId: '' });
+  const [selection, setSelection] = useState({ slug: '', game: '', groupKey: '', battleId: '' });
 
   const entryByName = useMemo(() => new Map(pool.map((entry) => [entry.name, entry])), [pool]);
+
+  // Ao trocar de treinador, jogo, batalha ou variante, o primeiro Pokémon do time já entra em campo.
+  // Trocar de jogo volta para a primeira batalha dele; trocar de batalha, para a primeira variante.
+  const apply = (next, trainers, battleData) => {
+    setSelection(next);
+    const lead = resolveSelection(trainers.find((candidate) => candidate.slug === next.slug), next).battle?.team[0];
+    const entry = lead && resolveTrainerPokemon(entryByName, lead.slug);
+    if (entry) onPick(entry, trainerMemberSet(lead, (moveSlug) => moveSummaryOf(battleData, moveSlug)));
+  };
+  const choose = (slug, game = '', groupKey = '', battleId = '') =>
+    apply({ slug, game, groupKey, battleId }, state.trainers, state.battleData);
 
   const load = () => {
     if (state.status !== 'idle' && state.status !== 'error') return;
     setState((current) => ({ ...current, status: 'loading' }));
     Promise.all([fetchTrainers(), loadBattleData()])
-      .then(([trainers, battleData]) => setState({ status: 'ready', trainers, battleData }))
+      .then(([trainers, battleData]) => {
+        setState({ status: 'ready', trainers, battleData });
+        const preset = initialBattleId && selectionForBattle(trainers, initialBattleId);
+        if (preset) apply(preset, trainers, battleData);
+      })
       .catch(() => setState({ status: 'error', trainers: [], battleData: null }));
   };
 
-  const byRegion = useMemo(() => REGIONS
-    .map((region) => ({ region, trainers: state.trainers.filter((trainer) => trainer.battles[0].region === region) }))
-    .filter((group) => group.trainers.length > 0), [state.trainers]);
+  // Com uma batalha pedida no endereço, o seletor já abre e carrega sozinho.
+  useEffect(() => {
+    if (initialBattleId) load();
+  }, []); // Só na montagem: a seção lê o endereço uma vez.
 
   const trainer = state.trainers.find((candidate) => candidate.slug === selection.slug);
-  const battle = trainer?.battles.find((candidate) => candidate.id === selection.battleId) ?? trainer?.battles[0];
+  const { games, game, groups, group, battle } = useMemo(() => resolveSelection(trainer, selection), [trainer, selection]);
 
   const members = useMemo(() => {
     if (!battle || !state.battleData) return [];
@@ -54,87 +143,75 @@ function TrainerTeamPicker({ pool, currentId, onPick }) {
       .map(({ member, entry }) => ({ member, entry, set: trainerMemberSet(member, summaryOf) }));
   }, [battle, state.battleData, entryByName]);
 
-  // Ao trocar de treinador ou de batalha, o primeiro Pokémon do time já entra em campo.
-  const choose = (slug, battleId) => {
-    setSelection({ slug, battleId });
-    const chosen = state.trainers.find((candidate) => candidate.slug === slug);
-    const chosenBattle = chosen?.battles.find((candidate) => candidate.id === battleId) ?? chosen?.battles[0];
-    const lead = chosenBattle?.team[0];
-    const entry = lead && resolveTrainerPokemon(entryByName, lead.slug);
-    if (entry) onPick(entry, trainerMemberSet(lead, (moveSlug) => moveSummaryOf(state.battleData, moveSlug)));
-  };
-
   return (
-    <details className="group mt-2 rounded-[4px] border border-[#5C4033]/30 bg-[#F7F3EE]/50" onToggle={(e) => e.currentTarget.open && load()}>
-      <summary className="flex cursor-pointer list-none items-center gap-2 px-3 py-2 focus:outline-none focus-visible:ring-2 focus-visible:ring-paint-cobalt [&::-webkit-details-marker]:hidden">
-        <span className="font-hand text-lg leading-none text-[#5C4033]">time de um treinador</span>
-        {trainer && <span className="ml-auto truncate font-reading text-xs font-semibold text-[#5C4033]">{trainer.name}</span>}
-        <ChevronDown className={`h-4 w-4 shrink-0 text-[#78614E] transition-transform group-open:rotate-180 motion-reduce:transition-none ${trainer ? '' : 'ml-auto'}`} aria-hidden="true" />
-      </summary>
+    <SourcePanel title="time de um treinador" selected={trainer?.name} defaultOpen={Boolean(initialBattleId)} onOpen={load}>
+      {state.status === 'loading' && (
+        <p className="flex items-center gap-2 py-2 font-reading text-sm italic text-[#78614E]">
+          <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" />
+          Chamando os treinadores...
+        </p>
+      )}
 
-      <div className="space-y-2.5 border-t border-[#5C4033]/25 px-3 pb-3 pt-2">
-        {state.status === 'loading' && (
-          <p className="flex items-center gap-2 py-2 font-reading text-sm italic text-[#78614E]">
-            <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" />
-            Chamando os treinadores...
-          </p>
-        )}
+      {state.status === 'error' && (
+        <p role="alert" className="flex items-center gap-2 py-1 text-xs font-medium text-[#8A3B27]">
+          <TriangleAlert className="h-3.5 w-3.5 shrink-0" aria-hidden="true" />
+          Não foi possível carregar os treinadores.
+          <button type="button" onClick={load} className="cursor-pointer underline underline-offset-2">Tentar de novo</button>
+        </p>
+      )}
 
-        {state.status === 'error' && (
-          <p role="alert" className="flex items-center gap-2 py-1 text-xs font-medium text-[#8A3B27]">
-            <TriangleAlert className="h-3.5 w-3.5 shrink-0" aria-hidden="true" />
-            Não foi possível carregar os treinadores.
-            <button type="button" onClick={load} className="cursor-pointer underline underline-offset-2">Tentar de novo</button>
-          </p>
-        )}
-
-        {state.status === 'ready' && (
-          <>
-            <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
-              <SelectField label="treinador" value={selection.slug} onChange={(slug) => choose(slug, '')}>
-                <option value="">Escolher...</option>
-                {byRegion.map(({ region, trainers }) => (
-                  <optgroup key={region} label={region}>
-                    {trainers.map((candidate) => <option key={candidate.slug} value={candidate.slug}>{candidate.name}</option>)}
-                  </optgroup>
-                ))}
-              </SelectField>
-              {trainer && trainer.battles.length > 1 && (
-                <SelectField label="batalha" value={battle.id} onChange={(battleId) => choose(trainer.slug, battleId)}>
-                  {trainer.battles.map((candidate) => (
-                    <option key={candidate.id} value={candidate.id}>
-                      {battleLabel(candidate)}{trainer.roles.length > 1 ? ` · ${roleLabel(candidate.role)}` : ''}
-                    </option>
-                  ))}
-                </SelectField>
+      {state.status === 'ready' && (
+        <>
+          <TrainerSearch trainers={state.trainers} onPick={choose} />
+          {group && (games.length > 1 || groups.length > 1 || hasTeamVariants(group)) && (
+            <div className="flex flex-wrap items-end gap-2">
+              {games.length > 1 && (
+                <div className="min-w-0 grow basis-40">
+                  <SelectField label="jogo" value={game} onChange={(nextGame) => choose(trainer.slug, nextGame)}>
+                    {games.map((label) => <option key={label} value={label}>{label}</option>)}
+                  </SelectField>
+                </div>
+              )}
+              {groups.length > 1 && (
+                <div className="min-w-0 grow-[2] basis-48">
+                  <SelectField label="batalha" value={group.key} onChange={(groupKey) => choose(trainer.slug, game, groupKey)}>
+                    {groups.map((candidate) => (
+                      <option key={candidate.key} value={candidate.key}>{candidate.label}</option>
+                    ))}
+                  </SelectField>
+                </div>
+              )}
+              {hasTeamVariants(group) && (
+                <div className="min-w-0 grow basis-32">
+                  <SelectField label="variante" value={battle.id} onChange={(battleId) => choose(trainer.slug, game, group.key, battleId)}>
+                    {group.variants.map((candidate) => (
+                      <option key={candidate.id} value={candidate.id}>{candidate.teamVariant}</option>
+                    ))}
+                  </SelectField>
+                </div>
               )}
             </div>
+          )}
 
-            {members.length > 0 && (
-              <ul className="flex flex-wrap gap-1.5" aria-label={`Time de ${trainer.name}`}>
-                {members.map(({ member, entry, set }, index) => (
-                  // O mesmo Pokémon pode aparecer duas vezes num time (os dois Onix de Bruno), daí o índice na chave.
-                  <li key={`${member.slug}-${index}`}>
-                    <button
-                      type="button"
-                      onClick={() => onPick(entry, set)}
-                      aria-label={`Usar ${member.name} (nível ${member.level}) de ${trainer.name}`}
-                      title={`${formatSlug(entry.name)} · Nv. ${member.level}`}
-                      className={`flex cursor-pointer flex-col items-center rounded-[3px] border bg-paper px-1 pb-0.5 transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-paint-cobalt ${
-                        currentId === entry.id ? 'border-smeargle-olive ring-1 ring-smeargle-olive' : 'border-[#78614E]/25 hover:border-[#78614E]/60'
-                      }`}
-                    >
-                      <img src={thumbnailSpriteUrl(entry.id)} alt="" width={40} height={40} loading="lazy" decoding="async" className="h-10 w-10 object-contain" />
-                      <span className="font-mono text-[10px] font-bold tabular-nums text-[#78614E]">Nv. {member.level}</span>
-                    </button>
-                  </li>
-                ))}
-              </ul>
-            )}
-          </>
-        )}
-      </div>
-    </details>
+          {members.length > 0 && (
+            <ul className="flex flex-wrap gap-1.5" aria-label={`Time de ${trainer.name}`}>
+              {members.map(({ member, entry, set }, index) => (
+                // O mesmo Pokémon pode aparecer duas vezes num time (os dois Onix de Bruno), daí o índice na chave.
+                <li key={`${member.slug}-${index}`}>
+                  <MemberShortcut
+                    spriteId={entry.id}
+                    label={`Usar ${formatSlug(entry.name)} (nível ${member.level}) de ${trainer.name}`}
+                    caption={`Nv. ${member.level}`}
+                    active={currentId === entry.id}
+                    onClick={() => onPick(entry, set)}
+                  />
+                </li>
+              ))}
+            </ul>
+          )}
+        </>
+      )}
+    </SourcePanel>
   );
 }
 

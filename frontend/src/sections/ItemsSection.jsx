@@ -4,6 +4,7 @@ import GameOptions from '../components/GameOptions';
 import MoveAbilityModal from '../components/MoveAbilityModal';
 import ItemGrid from '../components/items/ItemGrid';
 import MachineTable from '../components/items/MachineTable';
+import MegaGrid from '../components/items/MegaGrid';
 import { HeaderSearch, HeaderSegmented, HeaderSelect, OPTION_CLASS } from '../components/layout/HeaderControls';
 import HeaderToolbar, { ToolbarRow } from '../components/layout/HeaderToolbar';
 import SectionHeading, { HEADING_PILL_CLASS } from '../components/layout/SectionHeading';
@@ -12,11 +13,20 @@ import { ITEM_GROUPS, OTHER_GROUP, categoryOrder, itemGroupOf } from '../data/it
 import MACHINES from '../data/machines.json';
 import { TYPE_NAMES, fetchItemIndex } from '../services/api';
 import { formatSlug } from '../utils/filters';
+import { MEGAS, filterMegas } from '../utils/megas';
+import { resolveTrainerPokemon } from '../utils/trainers';
 
 const VIEWS = [
   { value: 'items', label: 'Itens' },
   { value: 'machines', label: 'TMs' },
+  { value: 'megas', label: 'Megas' },
 ];
+
+const SEARCH_LABELS = {
+  items: ['Pesquisar item por nome', 'Nome do item...'],
+  machines: ['Pesquisar item por golpe ou número', 'Golpe ou número (ex.: tm26)...'],
+  megas: ['Pesquisar Mega por Pokémon ou pedra', 'Pokémon ou pedra (ex.: charizardite)...'],
+};
 
 // As máquinas têm a sua própria visão; fora dela, o bolso "machines" só repetiria a lista.
 const MACHINE_POCKET = 'machines';
@@ -71,6 +81,7 @@ export default function ItemsSection({ entryByName, onSelectPokemon }) {
 
   const deferredQuery = useDeferredValue(query);
   const showingItems = view === 'items';
+  const showingMegas = view === 'megas';
   const index = useItemIndex(showingItems);
 
   // Só os grupos que têm itens; "Outros" aparece apenas se a PokéAPI trouxer uma categoria fora dos grupos.
@@ -101,6 +112,13 @@ export default function ItemsSection({ entryByName, onSelectPokemon }) {
       (!term || machine.move.includes(term) || machine.code.includes(term)));
   }, [gameMachines, moveType, deferredQuery]);
 
+  const megas = useMemo(() => filterMegas(MEGAS, { term: deferredQuery, type: moveType }), [deferredQuery, moveType]);
+  // A forma base pela entrada da Pokédex ("pyroar-male" → "pyroar"); sem ela, o nome fica sem atalho.
+  const resolveBase = useCallback(
+    (name) => resolveTrainerPokemon(entryByName, name) ?? entryByName.get(name.split('-')[0]) ?? null,
+    [entryByName],
+  );
+
   const handleQuery = useCallback((e) => setQuery(e.target.value), []);
   const handleGroup = useCallback((e) => {
     setGroup(e.target.value);
@@ -108,6 +126,7 @@ export default function ItemsSection({ entryByName, onSelectPokemon }) {
   }, []);
   const selectItem = useCallback((name) => setDetail({ kind: 'item', name }), []);
   const selectMove = useCallback((name) => setDetail({ kind: 'move', name }), []);
+  const selectAbility = useCallback((name) => setDetail({ kind: 'ability', name }), []);
   const closeDetail = useCallback(() => setDetail(null), []);
   const toggleMachine = useCallback((code) => setOpenMachine((current) => (current === code ? null : code)), []);
   const handleGame = useCallback((e) => {
@@ -116,7 +135,8 @@ export default function ItemsSection({ entryByName, onSelectPokemon }) {
   }, []);
   const gameLabel = MACHINE_GAMES.find((game) => game.id === gameId)?.label ?? formatSlug(gameId);
 
-  const count = showingItems ? items.length : machines.length;
+  const count = showingItems ? items.length : showingMegas ? megas.length : machines.length;
+  const [searchLabel, searchPlaceholder] = SEARCH_LABELS[view];
 
   return (
     <div className="space-y-6">
@@ -125,8 +145,8 @@ export default function ItemsSection({ entryByName, onSelectPokemon }) {
           <div className="flex items-center gap-1.5 sm:gap-2 lg:contents">
             <HeaderSegmented label="Visão dos itens" options={VIEWS} value={view} onChange={setView} className="shrink-0" />
             <HeaderSearch
-              label={showingItems ? 'Pesquisar item por nome' : 'Pesquisar item por golpe ou número'}
-              placeholder={showingItems ? 'Nome do item...' : 'Golpe ou número (ex.: tm26)...'}
+              label={searchLabel}
+              placeholder={searchPlaceholder}
               value={query}
               onChange={handleQuery}
               className="min-w-0 lg:flex-1"
@@ -152,6 +172,11 @@ export default function ItemsSection({ entryByName, onSelectPokemon }) {
                 {categories.map((name) => <option key={name} value={name} className={OPTION_CLASS}>{formatSlug(name)}</option>)}
               </HeaderSelect>
             </div>
+          ) : showingMegas ? (
+            <HeaderSelect label="Filtrar Megas por tipo" value={moveType} onChange={(e) => setMoveType(e.target.value)} className="lg:w-44 lg:shrink-0">
+              <option value="" className={OPTION_CLASS}>Todos os tipos</option>
+              {TYPE_NAMES.map((type) => <option key={type} value={type} data-type={type} className={OPTION_CLASS}>{formatSlug(type)}</option>)}
+            </HeaderSelect>
           ) : (
             <div className="grid grid-cols-2 gap-1.5 sm:gap-2 lg:contents">
               <HeaderSelect label="Jogo dos itens" value={gameId} onChange={handleGame} className="lg:w-44 lg:shrink-0">
@@ -171,18 +196,28 @@ export default function ItemsSection({ entryByName, onSelectPokemon }) {
         subtitle={(
           <>
             <span className="font-semibold tabular-nums text-[#2A2421]">{count}</span>{' '}
-            {`ite${count !== 1 ? 'ns' : 'm'}`}
+            {showingMegas ? `Mega${count !== 1 ? 's e Primais' : ''}` : `ite${count !== 1 ? 'ns' : 'm'}`}
             {deferredQuery.trim() && <> para <span className="font-serif italic">“{deferredQuery.trim()}”</span></>}
           </>
         )}
         aside={(
           <span className={HEADING_PILL_CLASS}>
-            {showingItems ? 'Toque num item para ver o efeito' : 'Toque num golpe para ver os detalhes'}
+            {showingItems && 'Toque num item para ver o efeito'}
+            {showingMegas && 'Toque na pedra ou na habilidade para ver o efeito'}
+            {!showingItems && !showingMegas && 'Toque num golpe para ver os detalhes'}
           </span>
         )}
       />
 
-      {!showingItems ? (
+      {showingMegas ? (
+        <MegaGrid
+          megas={megas}
+          resolveBase={resolveBase}
+          onSelectPokemon={onSelectPokemon}
+          onSelectItem={selectItem}
+          onSelectAbility={selectAbility}
+        />
+      ) : !showingItems ? (
         <MachineTable
           machines={machines}
           gameId={gameId}

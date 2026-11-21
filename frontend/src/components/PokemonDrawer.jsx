@@ -1,6 +1,6 @@
 import { memo, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
-  BarChart3, BookOpen, Check, Cpu, Egg, NotebookPen, Ruler, Search, Shield, Sparkles, Swords, Weight, X,
+  BarChart3, BookOpen, Check, Cpu, Egg, NotebookPen, Ruler, Scale, Search, Shield, Sparkles, Swords, Weight, X,
 } from 'lucide-react';
 import PokemonTypeBadge, { TYPE_INK } from './PokemonTypeBadge';
 import PokemonEncounters from './PokemonEncounters';
@@ -16,7 +16,16 @@ import {
 import { fetchSmogonNames, fetchSmogonStats } from '../services/smogonMeta';
 import { resolveSmogonName } from '../utils/smogon';
 import SmeargleLoader from './SmeargleLoader';
+import SpeedTierTable from './SpeedTierTable';
+import SpeciesFacts from './SpeciesFacts';
+import BreedingFacts from './BreedingFacts';
+import GmaxMoveCard from './GmaxMoveCard';
+import { gmaxMoveFor } from '../data/gmaxMoves';
+import { zMovesFor } from '../data/zMoves';
+import SpecialMoveCard from './moves/SpecialMoveCard';
+import { DAMAGE_CLASS_LABELS } from './moves/moveTableStyles';
 import { teamSlotFor } from '../utils/teamScore';
+import { COMPARE_LIMIT } from '../utils/compare';
 import { BrushHighlight } from './InkDecor';
 
 /* ---------------------------------------------------------------- dados estáticos */
@@ -74,6 +83,9 @@ const LEARN_METHODS = [
   { value: 'egg', label: 'Ovo' },
 ];
 const LEARN_METHOD_SET = new Set(LEARN_METHODS.map((m) => m.value));
+// Abas extras, logo depois de "Ovo": o golpe Z exclusivo (quando a forma tem) e o golpe G-Max (formas Gigantamax).
+const Z_METHOD = { value: 'z', label: 'Z exclusivo' };
+const GMAX_METHOD = { value: 'gmax', label: 'G-Max' };
 
 const TABS = [
   { value: 'overview', label: 'Ficha de Campo', icon: BookOpen },
@@ -250,6 +262,29 @@ function TeamToggleButton({ entry, team, onToggle }) {
   );
 }
 
+/** Alterna o Pokémon na comparação (até quatro); com a lista cheia e ele fora dela, fica desativado. */
+function CompareToggleButton({ name, compared, onToggle }) {
+  const selected = compared.includes(name);
+  const full = !selected && compared.length >= COMPARE_LIMIT;
+  const label = formatFormName(name);
+  return (
+    <button
+      type="button"
+      onClick={() => onToggle(name)}
+      disabled={full}
+      aria-pressed={selected}
+      aria-label={selected ? `Tirar ${label} da comparação` : `Comparar ${label}`}
+      title={full ? `A comparação já tem ${COMPARE_LIMIT} Pokémon: tire um para incluir este` : undefined}
+      className={`${ROUND_BUTTON} px-3 text-xs font-bold disabled:cursor-default ${
+        selected ? 'border-[#4F6D8A] bg-[#4F6D8A]/15 text-[#2F4458] hover:bg-[#4F6D8A]/25' : `${ROUND_IDLE} disabled:opacity-50`
+      }`}
+    >
+      <Scale className="h-4 w-4" aria-hidden="true" />
+      <span className="hidden sm:inline">{selected ? 'Comparando' : 'Comparar'}</span>
+    </button>
+  );
+}
+
 function TabStroke({ active }) {
   return (
     <svg
@@ -366,7 +401,7 @@ const SpreadCard = memo(function SpreadCard({ index, nature, evs, pct }) {
 /* ---------------------------------------------------------------- drawer */
 
 export default function PokemonDrawer({
-  pokemonName, onClose, onSmogonDataFound, favorites, gridEntries, onToggleFavorite, team, onToggleTeam, onSelectPokemon,
+  pokemonName, onClose, onSmogonDataFound, favorites, gridEntries, onToggleFavorite, team, onToggleTeam, compared, onToggleCompare, onSelectPokemon,
 }) {
   const [detail, setDetail] = useState(null);
   const [species, setSpecies] = useState(null);
@@ -486,24 +521,32 @@ export default function PokemonDrawer({
     if (!detail || !movesVisited) return;
     let active = true;
     setMovesetLoading(true);
-    const versionGroup = resolveVersionGroup(detail.moves, selectedGen);
-    const learnset = versionGroup ? collectLearnset(detail.moves, versionGroup) : [];
+    // Megas e Gigantamax vêm da PokéAPI sem golpes: valem os da forma de origem
+    // ("toxtricity-low-key-gmax" → "toxtricity-low-key") ou, sem ela, os da forma padrão.
+    const sourceName = detail.moves.length ? null : detail.name.replace(/-gmax$/, '');
+    const learnSource = sourceName && sourceName !== detail.name ? sourceName : baseFormName;
+    const movesOf = detail.moves.length || !learnSource
+      ? Promise.resolve(detail.moves)
+      : fetchPokemonDetail(learnSource).then((source) => source.moves).catch(() => []);
 
-    Promise.all(learnset.map((entry) => fetchMove(entry.url).then((data) => ({
+    movesOf.then((pokemonMoves) => {
+      const versionGroup = resolveVersionGroup(pokemonMoves, selectedGen);
+      return versionGroup ? collectLearnset(pokemonMoves, versionGroup) : [];
+    }).then((learnset) => Promise.all(learnset.map((entry) => fetchMove(entry.url).then((data) => ({
       ...entry,
       damage_class: data?.damage_class?.name ?? 'status',
       type: data?.type?.name ?? 'normal',
       power: data?.power ?? null,
       accuracy: data?.accuracy ?? null,
       pp: data?.pp ?? null,
-    })))).then((rows) => {
+    }))))).then((rows) => {
       if (!active) return;
       setMoveset(rows);
       setMovesetLoading(false);
     });
 
     return () => { active = false; };
-  }, [detail, selectedGen, movesVisited]);
+  }, [detail, selectedGen, movesVisited, baseFormName]);
 
   const handleFormChange = useCallback(async (formName) => {
     const requestId = ++formRequestRef.current;
@@ -531,12 +574,22 @@ export default function PokemonDrawer({
   const openItem = useCallback((name) => setInfoEntry({ kind: 'item', name }), []);
   const closeInfo = useCallback(() => setInfoEntry(null), []);
 
+  // As abas Z e G-Max só existem nas formas que têm o golpe; trocando para outra forma, volta para "Por Nível".
+  const gmaxMove = gmaxMoveFor(currentFormName);
+  const zMoves = useMemo(() => zMovesFor(currentFormName), [currentFormName]);
+  const learnMethods = [
+    ...LEARN_METHODS,
+    ...(zMoves.length ? [Z_METHOD] : []),
+    ...(gmaxMove ? [GMAX_METHOD] : []),
+  ];
+  const activeLearnMethod = learnMethods.some((method) => method.value === learnMethod) ? learnMethod : 'level-up';
+
   const visibleMoves = useMemo(() => {
     const term = movesetSearch.trim().toLowerCase();
     return moveset
-      .filter((m) => m.learn_method === learnMethod && (!term || m.name.includes(term)))
+      .filter((m) => m.learn_method === activeLearnMethod && (!term || m.name.includes(term)))
       .sort((a, b) => (a.level ?? Infinity) - (b.level ?? Infinity) || a.name.localeCompare(b.name));
-  }, [moveset, learnMethod, movesetSearch]);
+  }, [moveset, activeLearnMethod, movesetSearch]);
 
   const heroSources = useMemo(() => (detail ? spriteSources(detail, shiny) : []), [detail, shiny]);
 
@@ -564,6 +617,7 @@ export default function PokemonDrawer({
   /* ------------------------------------------------------------ derivados de render */
 
   const currentTypes = detail.types.map((t) => t.type.name);
+  const baseSpeed = detail.stats.find((entry) => entry.stat.name === 'speed')?.base_stat ?? null;
   const primaryInk = TYPE_INK[currentTypes[0]] ?? TYPE_INK.normal;
   const baseStats = detail.stats.map((s) => ({ name: s.stat.name, value: s.base_stat }));
   const totalStat = baseStats.reduce((sum, s) => sum + s.value, 0);
@@ -627,6 +681,9 @@ export default function PokemonDrawer({
             )}
             {onToggleTeam && gridEntries?.has(favoriteName) && (
               <TeamToggleButton entry={gridEntries.get(favoriteName)} team={team} onToggle={onToggleTeam} />
+            )}
+            {onToggleCompare && gridEntries?.has(favoriteName) && (
+              <CompareToggleButton name={favoriteName} compared={compared} onToggle={onToggleCompare} />
             )}
             <button
               type="button"
@@ -743,20 +800,23 @@ export default function PokemonDrawer({
                     </div>
                   </div>
                 </div>
-                {species?.egg_groups?.length > 0 && (
-                  <div>
-                    <span className={`mb-1 block ${LABEL}`}>Grupos de ovo</span>
-                    <div className="flex flex-wrap gap-1">
-                      {species.egg_groups.map((g) => (
-                        <span key={g.name} className="rounded-md border border-[#2A2421]/20 bg-paper px-2 py-0.5 text-[10px] font-medium capitalize text-[#2A2421]">
-                          {g.name}
-                        </span>
-                      ))}
-                    </div>
-                  </div>
-                )}
               </SectionCard>
             </div>
+
+            {species && (
+              <SectionCard icon={NotebookPen} title="Dados da Espécie">
+                <SpeciesFacts
+                  species={species}
+                  formName={currentFormName}
+                  formLabel={displayName}
+                  gridGeneration={gridEntries?.get(currentFormName)?.generation}
+                  isAlternateForm={isAlternateForm}
+                />
+                <div className="border-t border-[#2A2421]/12 pt-4">
+                  <BreedingFacts species={species} entries={gridEntries} onSelectPokemon={onSelectPokemon} />
+                </div>
+              </SectionCard>
+            )}
 
             {typeEffectiveness && (
               <SectionCard icon={Shield} title="Fraquezas & Resistências">
@@ -888,6 +948,19 @@ export default function PokemonDrawer({
                     : 'Sem dados da Smogon para este tier.'}
               </p>
             )}
+
+            {/* Vale mesmo sem dados do Pokémon no tier: mostra onde ele se encaixaria. */}
+            {gridEntries && baseSpeed != null && !smogonLoading && (
+              <SpeedTierTable
+                tier={selectedSmogonTier}
+                pokemonName={detail.name}
+                pokemonId={detail.id}
+                baseSpeed={baseSpeed}
+                ownSpreads={smogon?.spreads}
+                entries={gridEntries}
+                onSelectPokemon={onSelectPokemon}
+              />
+            )}
           </SectionCard>
         )}
 
@@ -915,64 +988,86 @@ export default function PokemonDrawer({
               </div>
             }
           >
-            <div className="flex gap-2">
-              {LEARN_METHODS.map((method) => (
+            <div className="flex flex-wrap gap-2">
+              {learnMethods.map((method) => (
                 <button
                   key={method.value}
                   type="button"
                   onClick={() => setLearnMethod(method.value)}
-                  aria-pressed={learnMethod === method.value}
-                  className={`${PILL} px-3.5 ${learnMethod === method.value ? PILL_ON : PILL_OFF}`}
+                  aria-pressed={activeLearnMethod === method.value}
+                  className={`${PILL} px-3.5 ${activeLearnMethod === method.value ? PILL_ON : PILL_OFF}`}
                 >
                   {method.label}
                 </button>
               ))}
             </div>
 
-            <div className="overflow-x-auto rounded-[4px] border border-[#2A2421]/12 bg-paper">
-              <table className="w-full text-left border-collapse">
-                <thead>
-                  <tr className="border-b border-[#2A2421]/15 bg-[#F7F3EE] font-reading text-xs font-bold text-[#5C4033]">
-                    <th className="py-2.5 px-3">Aprender</th>
-                    <th className="py-2.5 px-3">Nome</th>
-                    <th className="py-2.5 px-3">Tipo</th>
-                    <th className="py-2.5 px-3">Categoria</th>
-                    <th className="py-2.5 px-3 text-right">Power</th>
-                    <th className="py-2.5 px-3 text-right">Acc</th>
-                    <th className="py-2.5 px-3 text-right">PP</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-[#2A2421]/10">
-                  {movesetLoading ? (
-                    <tr><td colSpan={7}><SmeargleLoader label="Compilando o learnset..." className="py-8" /></td></tr>
-                  ) : visibleMoves.length === 0 ? (
-                    <tr><td colSpan={7} className="py-8 text-center text-xs text-[#78614E]">Nenhum golpe para este filtro.</td></tr>
-                  ) : (
-                    visibleMoves.map((move) => (
-                      <tr key={move.id} className="hover:bg-[#F7F3EE]/60 transition-colors">
-                        <td className="py-2.5 px-3 text-xs font-semibold text-[#78614E]">
-                          {move.learn_method === 'level-up' ? (move.level > 0 ? `Nv. ${move.level}` : 'Inicial') : move.learn_method === 'machine' ? 'TM/TR' : 'Ovo'}
-                        </td>
-                        <td className="py-2.5 px-3">
-                          <button
-                            type="button"
-                            onClick={() => openMove(move.name)}
-                            className="rounded text-left text-xs font-bold capitalize text-[#2A2421] underline decoration-dotted decoration-[#78614E]/50 underline-offset-4 cursor-pointer hover:text-[#5B7856] hover:decoration-[#5B7856] focus:outline-none focus-visible:ring-2 focus-visible:ring-paint-cobalt"
-                          >
-                            {move.name.replace(/-/g, ' ')}
-                          </button>
-                        </td>
-                        <td className="py-2.5 px-3"><PokemonTypeBadge type={move.type} /></td>
-                        <td className="py-2.5 px-3 text-xs font-medium capitalize text-[#78614E]">{move.damage_class}</td>
-                        <td className="py-2.5 px-3 text-right text-xs font-bold text-[#2A2421]">{move.power ?? '—'}</td>
-                        <td className="py-2.5 px-3 text-right text-xs font-bold text-[#2A2421]">{move.accuracy ? `${move.accuracy}%` : '—'}</td>
-                        <td className="py-2.5 px-3 text-right text-xs font-bold text-[#2A2421]">{move.pp ?? '—'}</td>
-                      </tr>
-                    ))
-                  )}
-                </tbody>
-              </table>
-            </div>
+            {activeLearnMethod === GMAX_METHOD.value && <GmaxMoveCard move={gmaxMove} formLabel={displayName} />}
+            {activeLearnMethod === Z_METHOD.value && (
+              <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
+                {zMoves.map((move) => (
+                  <SpecialMoveCard
+                    key={move.name}
+                    name={move.name}
+                    type={move.type}
+                    badge="Golpe Z"
+                    effect={move.effect}
+                    facts={[
+                      ['Categoria', DAMAGE_CLASS_LABELS[move.category]],
+                      ['Poder', move.power ?? '—'],
+                      ['Golpe base', move.baseMove],
+                      ['Cristal Z', move.crystal],
+                    ]}
+                  />
+                ))}
+              </div>
+            )}
+            {activeLearnMethod !== GMAX_METHOD.value && activeLearnMethod !== Z_METHOD.value && (
+              <div className="overflow-x-auto rounded-[4px] border border-[#2A2421]/12 bg-paper">
+                <table className="w-full text-left border-collapse">
+                  <thead>
+                    <tr className="border-b border-[#2A2421]/15 bg-[#F7F3EE] font-reading text-xs font-bold text-[#5C4033]">
+                      <th className="py-2.5 px-3">Aprender</th>
+                      <th className="py-2.5 px-3">Nome</th>
+                      <th className="py-2.5 px-3">Tipo</th>
+                      <th className="py-2.5 px-3">Categoria</th>
+                      <th className="py-2.5 px-3 text-right">Power</th>
+                      <th className="py-2.5 px-3 text-right">Acc</th>
+                      <th className="py-2.5 px-3 text-right">PP</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-[#2A2421]/10">
+                    {movesetLoading ? (
+                      <tr><td colSpan={7}><SmeargleLoader label="Compilando o learnset..." className="py-8" /></td></tr>
+                    ) : visibleMoves.length === 0 ? (
+                      <tr><td colSpan={7} className="py-8 text-center text-xs text-[#78614E]">Nenhum golpe para este filtro.</td></tr>
+                    ) : (
+                      visibleMoves.map((move) => (
+                        <tr key={move.id} className="hover:bg-[#F7F3EE]/60 transition-colors">
+                          <td className="py-2.5 px-3 text-xs font-semibold text-[#78614E]">
+                            {move.learn_method === 'level-up' ? (move.level > 0 ? `Nv. ${move.level}` : 'Inicial') : move.learn_method === 'machine' ? 'TM/TR' : 'Ovo'}
+                          </td>
+                          <td className="py-2.5 px-3">
+                            <button
+                              type="button"
+                              onClick={() => openMove(move.name)}
+                              className="rounded text-left text-xs font-bold capitalize text-[#2A2421] underline decoration-dotted decoration-[#78614E]/50 underline-offset-4 cursor-pointer hover:text-[#5B7856] hover:decoration-[#5B7856] focus:outline-none focus-visible:ring-2 focus-visible:ring-paint-cobalt"
+                            >
+                              {move.name.replace(/-/g, ' ')}
+                            </button>
+                          </td>
+                          <td className="py-2.5 px-3"><PokemonTypeBadge type={move.type} /></td>
+                          <td className="py-2.5 px-3 text-xs font-medium capitalize text-[#78614E]">{move.damage_class}</td>
+                          <td className="py-2.5 px-3 text-right text-xs font-bold text-[#2A2421]">{move.power ?? '—'}</td>
+                          <td className="py-2.5 px-3 text-right text-xs font-bold text-[#2A2421]">{move.accuracy ? `${move.accuracy}%` : '—'}</td>
+                          <td className="py-2.5 px-3 text-right text-xs font-bold text-[#2A2421]">{move.pp ?? '—'}</td>
+                        </tr>
+                      ))
+                    )}
+                  </tbody>
+                </table>
+              </div>
+            )}
           </SectionCard>
         )}
 

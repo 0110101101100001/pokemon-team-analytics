@@ -82,6 +82,11 @@ export async function fetchEggGroupIndex() {
   return { names: eggGroups.names, index };
 }
 
+/** Nomes das espécies sem gênero (Magnemite, Bronzor…): só cruzam com Ditto. */
+export const fetchGenderlessSpecies = () =>
+  cachedJson(`${POKEAPI_BASE}/gender/genderless`)
+    .then((data) => new Set(data.pokemon_species_details.map((detail) => detail.pokemon_species.name)));
+
 /** Ids de todos os Pokémon com a habilidade (normal ou oculta). */
 export const fetchPokemonIdsWithAbility = (ability) =>
   cachedJson(`${POKEAPI_BASE}/ability/${encodeURIComponent(ability)}`)

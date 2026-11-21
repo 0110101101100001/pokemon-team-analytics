@@ -20,7 +20,7 @@ const generationsLabel = (generations) => {
 
 /** Card de um treinador na grade: sprite, papéis, especialidade e quantas batalhas ele tem. */
 function TrainerCard({ trainer, entryByName, onOpen }) {
-  const battleCount = trainer.battles.length;
+  const { battleCount } = trainer;
   return (
     <li className="print-card flex select-none flex-col p-4">
       <button

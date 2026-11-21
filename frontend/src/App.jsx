@@ -3,6 +3,7 @@ import AuthModal from "./components/AuthModal";
 import AuthButton from "./components/AuthButton";
 import AboutButton from "./components/AboutButton";
 import BackToTopButton from "./components/BackToTopButton";
+import CompareTray from "./components/compare/CompareTray";
 import AppHeader from "./components/layout/AppHeader";
 import SmeargleLoader from "./components/SmeargleLoader";
 import PokemonSheet, { loadPokemonDrawer } from "./components/PokemonSheet";
@@ -20,6 +21,7 @@ import {
 import { fetchSmogonNames } from "./services/smogonMeta";
 import { buildPokedexEntries } from "./utils/pokedex";
 import { buildSmogonBadgeMap } from "./utils/smogon";
+import { toggleCompared } from "./utils/compare";
 import { createBattleSet } from "./utils/stats";
 import { speciesOf, teamSlotFor } from "./utils/teamScore";
 
@@ -32,6 +34,7 @@ const TeamBuilderSection = lazy(() => import("./sections/TeamBuilderSection"));
 const DamageCalculatorSection = lazy(() => import("./sections/DamageCalculatorSection"));
 // O "Sobre" e a ficha (em PokemonSheet) só abrem por ação do usuário: ficam fora do pacote inicial.
 const AboutModal = lazy(() => import("./components/AboutModal"));
+const CompareModal = lazy(() => import("./components/compare/CompareModal"));
 
 const APP_NAME = "Smearglepedia";
 
@@ -49,6 +52,8 @@ export default function App() {
   const [authOpen, setAuthOpen] = useState(false);
   const [aboutOpen, setAboutOpen] = useState(false);
   const [team, setTeam] = useState([]);
+  const [compared, setCompared] = useState([]);
+  const [compareOpen, setCompareOpen] = useState(false);
   // Nó do header onde a seção ativa desenha os próprios filtros (ver HeaderToolbar).
   const [toolbarSlot, setToolbarSlot] = useState(null);
 
@@ -124,6 +129,20 @@ export default function App() {
     });
   }, []);
 
+  // Comparação: a ficha alterna o Pokémon na lista; dentro da comparação, o seletor só acrescenta.
+  const toggleCompare = useCallback((name) => setCompared((current) => toggleCompared(current, name)), []);
+  const addCompared = useCallback(
+    (name) => setCompared((current) => (current.includes(name) ? current : toggleCompared(current, name))),
+    [],
+  );
+  const removeCompared = useCallback((name) => setCompared((current) => current.filter((candidate) => candidate !== name)), []);
+  const clearCompared = useCallback(() => {
+    setCompared([]);
+    setCompareOpen(false);
+  }, []);
+  const openCompare = useCallback(() => setCompareOpen(true), []);
+  const closeCompare = useCallback(() => setCompareOpen(false), []);
+
   const handleCloseModal = useCallback(() => setSelectedPokemon(null), []);
   const openAuth = useCallback(() => setAuthOpen(true), []);
   const closeAuth = useCallback(() => setAuthOpen(false), []);
@@ -160,7 +179,7 @@ export default function App() {
           />
         );
       case "damageCalculator":
-        return <DamageCalculatorSection pool={pokemonList} team={team} session={session} />;
+        return <DamageCalculatorSection pool={pokemonList} team={team} session={session} onLogin={openAuth} />;
       default:
         return (
           <PokedexSection
@@ -207,6 +226,23 @@ export default function App() {
         </main>
 
         <BackToTopButton />
+        {!compareOpen && (
+          <CompareTray names={compared} entryByName={entryByName} onRemove={removeCompared} onOpen={openCompare} />
+        )}
+        {compareOpen && (
+          <Suspense fallback={null}>
+            <CompareModal
+              names={compared}
+              entryByName={entryByName}
+              pool={pokemonList}
+              onAdd={addCompared}
+              onRemove={removeCompared}
+              onClear={clearCompared}
+              onSelectPokemon={handleSelect}
+              onClose={closeCompare}
+            />
+          </Suspense>
+        )}
 
         {selectedPokemon && (
           <PokemonSheet
@@ -218,6 +254,8 @@ export default function App() {
             onToggleFavorite={handleToggleFavorite}
             team={team}
             onToggleTeam={handleToggleTeam}
+            compared={compared}
+            onToggleCompare={toggleCompare}
             onSelectPokemon={handleSelect}
           />
         )}

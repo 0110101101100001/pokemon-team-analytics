@@ -1,4 +1,4 @@
-import { useCallback, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import CombatantPanel from '../components/calc/CombatantPanel';
 import DamageResult from '../components/calc/DamageResult';
 import FieldPanel from '../components/calc/FieldPanel';
@@ -11,6 +11,7 @@ import { useSavedTeams } from '../hooks/useSavedTeams';
 import { PRIMAL_WEATHERS, TERRAIN_ABILITIES, WEATHER_ABILITIES, WEATHER_SUPPRESSORS } from '../data/battleModifiers';
 import { airborneBy, calcSpeed, calculateDamage, describeKnockout, isCalculable } from '../utils/damage';
 import { calcStats } from '../utils/stats';
+import { CALCULATOR_HREF, trainerBattleFromHash } from '../navigation/sections';
 
 // `trainers`: o lado pode puxar o time de um líder, Elite 4 ou campeão.
 const SIDES = [
@@ -75,10 +76,16 @@ function resultHint(sides) {
   return 'Nenhum dos golpes escolhidos causa dano com poder fixo (são de status ou de poder variável).';
 }
 
-export default function DamageCalculatorSection({ pool, team, session }) {
+export default function DamageCalculatorSection({ pool, team, session, onLogin }) {
   const [sides, setSides] = useState(() => [createSide(), createSide()]);
   const [field, setField] = useState(createField);
   const [selected, setSelected] = useState({ side: 0, slot: 0 });
+  // Vindo do card da Liga, o endereço traz a batalha; ela é lida uma vez e sai do endereço,
+  // para um recarregamento não desfazer o que o usuário mudou depois.
+  const [trainerBattleId] = useState(trainerBattleFromHash);
+  useEffect(() => {
+    if (trainerBattleId) window.history.replaceState(null, '', CALCULATOR_HREF);
+  }, [trainerBattleId]);
 
   // Atalhos de Pokémon de cada lado: o time em montagem no Team Builder e, com login, os times salvos.
   const savedTeams = useSavedTeams(session);
@@ -233,8 +240,11 @@ export default function DamageCalculatorSection({ pool, team, session }) {
             faster={actsFirst(speeds, index, field.trickRoom)}
             pool={pool}
             teams={teamSources}
+            loggedIn={Boolean(session)}
+            teamsOpen={index === 0}
+            onLogin={onLogin}
             extraSource={meta.trainers && (
-              <TrainerTeamPicker pool={pool} currentId={sides[index].pokemon?.id} onPick={handlers[index].pick} />
+              <TrainerTeamPicker pool={pool} currentId={sides[index].pokemon?.id} initialBattleId={trainerBattleId} onPick={handlers[index].pick} />
             )}
             onChange={handlers[index].change}
             onMoveChange={handlers[index].move}

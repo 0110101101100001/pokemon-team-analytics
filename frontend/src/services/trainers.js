@@ -6,7 +6,7 @@ const TABLE = 'PokemonTrainers';
 const COLUMNS = [
   'Card_ID', 'Generation', 'Region', 'Games_Label', 'Games_JSON', 'Battle_Stage', 'Role', 'Order', 'Location', 'Badge_Name',
   'Trainer_Name', 'Trainer_Slug', 'Team_Variant', 'Specialty_Type', 'Battle_Gimmick', 'Ace_Pokemon_Slug',
-  'Avg_Level', 'Team_JSON',
+  'Avg_Level', 'Team_JSON', 'Multi_Battle',
 ].join(', ');
 
 let request = null;

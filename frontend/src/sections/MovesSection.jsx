@@ -1,6 +1,8 @@
 import { useCallback, useDeferredValue, useMemo, useState } from 'react';
 import MoveAbilityModal from '../components/MoveAbilityModal';
 import MoveTable from '../components/moves/MoveTable';
+import SpecialMoves, { specialMovesOf } from '../components/moves/SpecialMoves';
+import { BrushUnderline } from '../components/InkDecor';
 import { DAMAGE_CLASS_LABELS } from '../components/moves/moveTableStyles';
 import { HeaderSearch, HeaderSelect, OPTION_CLASS } from '../components/layout/HeaderControls';
 import HeaderToolbar, { ToolbarRow } from '../components/layout/HeaderToolbar';
@@ -16,12 +18,46 @@ const MOVES = MOVE_LIST.map(([slug, type, damageClass, power, accuracy, pp, gene
 
 const toSearchTerm = (text) => text.trim().toLowerCase().replace(/-/g, ' ');
 
+// Golpes comuns (os que algum Pokémon aprende) e os especiais, que entram só por Dynamax ou cristal Z.
+const KINDS = [
+  { value: 'learnable', label: 'Golpes' },
+  { value: 'max', label: 'Dynamax / G-Max' },
+  { value: 'z', label: 'Golpes Z' },
+];
+
+function KindTabs({ value, onChange }) {
+  return (
+    <div role="tablist" aria-label="Tipo de golpe" className="inline-flex flex-wrap gap-1 border-b-[1.5px] border-[#1C1A17]/70">
+      {KINDS.map((kind) => {
+        const selected = kind.value === value;
+        return (
+          <button
+            key={kind.value}
+            type="button"
+            role="tab"
+            aria-selected={selected}
+            onClick={() => onChange(kind.value)}
+            className={`relative h-9 cursor-pointer rounded-[2px] px-3 font-reading text-[15px] transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-paint-cobalt ${
+              selected ? 'font-semibold text-[#1C1A17]' : 'text-[#4A463E] hover:text-[#1C1A17]'
+            }`}
+          >
+            {kind.label}
+            <BrushUnderline color="#B8402A" active={selected} className="inset-x-2 -bottom-1 h-[5px] w-[calc(100%-1rem)]" />
+          </button>
+        );
+      })}
+    </div>
+  );
+}
+
 export default function MovesSection({ entryByName, onSelectPokemon }) {
   const [query, setQuery] = useState('');
   const [moveType, setMoveType] = useState('');
   const [damageClass, setDamageClass] = useState('');
   const [openMove, setOpenMove] = useState(null);
   const [detail, setDetail] = useState(null);
+  const [kind, setKind] = useState('learnable');
+  const special = kind !== 'learnable';
 
   const deferredQuery = useDeferredValue(query);
 
@@ -33,11 +69,18 @@ export default function MovesSection({ entryByName, onSelectPokemon }) {
       (!term || move.label.includes(term)));
   }, [moveType, damageClass, deferredQuery]);
 
+  const specialFilters = useMemo(() => ({ term: toSearchTerm(deferredQuery), type: moveType }), [deferredQuery, moveType]);
+  const specialCount = useMemo(() => {
+    if (!special) return 0;
+    const { first, second } = specialMovesOf(kind, specialFilters);
+    return first.length + second.length;
+  }, [special, kind, specialFilters]);
+
   const handleQuery = useCallback((e) => setQuery(e.target.value), []);
   const toggleMove = useCallback((slug) => setOpenMove((current) => (current === slug ? null : slug)), []);
   const closeDetail = useCallback(() => setDetail(null), []);
 
-  const count = moves.length;
+  const count = special ? specialCount : moves.length;
 
   return (
     <div className="space-y-6">
@@ -49,7 +92,8 @@ export default function MovesSection({ entryByName, onSelectPokemon }) {
               <option value="" className={OPTION_CLASS}>Todos os tipos</option>
               {TYPE_NAMES.map((type) => <option key={type} value={type} data-type={type} className={OPTION_CLASS}>{formatSlug(type)}</option>)}
             </HeaderSelect>
-            <HeaderSelect label="Filtrar por categoria do golpe" value={damageClass} onChange={(e) => setDamageClass(e.target.value)} className="lg:w-44 lg:shrink-0">
+            {/* Golpes Z e Max tomam a categoria do golpe base: o filtro só vale para os comuns. */}
+            <HeaderSelect label="Filtrar por categoria do golpe" value={damageClass} onChange={(e) => setDamageClass(e.target.value)} disabled={special} className="lg:w-44 lg:shrink-0">
               <option value="" className={OPTION_CLASS}>Todas as categorias</option>
               {Object.entries(DAMAGE_CLASS_LABELS).map(([value, label]) => (
                 <option key={value} value={value} className={OPTION_CLASS}>{label}</option>
@@ -71,14 +115,20 @@ export default function MovesSection({ entryByName, onSelectPokemon }) {
         aside={<span className={HEADING_PILL_CLASS}>Toque em “Pokémon” para ver quem aprende</span>}
       />
 
-      <MoveTable
-        moves={moves}
-        openMove={openMove}
-        onToggleMove={toggleMove}
-        onSelectMove={setDetail}
-        entryByName={entryByName}
-        onSelectPokemon={onSelectPokemon}
-      />
+      <KindTabs value={kind} onChange={setKind} />
+
+      {special ? (
+        <SpecialMoves kind={kind} filters={specialFilters} entryByName={entryByName} onSelectPokemon={onSelectPokemon} />
+      ) : (
+        <MoveTable
+          moves={moves}
+          openMove={openMove}
+          onToggleMove={toggleMove}
+          onSelectMove={setDetail}
+          entryByName={entryByName}
+          onSelectPokemon={onSelectPokemon}
+        />
+      )}
 
       {detail && <MoveAbilityModal kind="move" name={detail} onClose={closeDetail} />}
     </div>

@@ -61,6 +61,24 @@ async function rowsAtLatest(tier, columns) {
 export const fetchSmogonMeta = memoize((tier) =>
   rowsAtLatest(tier, 'name, usage_percent, teammates, checks_and_counters, moves, items, abilities, spreads'));
 
+// Uma folga sobre os 50 da tabela de velocidades: alguns nomes da Smogon não estão na Pokédex.
+const TOP_USAGE_LIMIT = 60;
+
+/** Os mais usados de um tier no mês mais recente, do mais ao menos usado, com spreads e itens. */
+export const fetchTopUsage = memoize(async (tier) => {
+  const date = await latestDate(tier);
+  if (!date) return [];
+  const { data, error } = await supabase
+    .from(TABLE)
+    .select('name, usage_percent, spreads, items')
+    .eq('tier', tier)
+    .eq('date', date)
+    .order('usage_percent', { ascending: false })
+    .limit(TOP_USAGE_LIMIT);
+  if (error) throw error;
+  return data;
+});
+
 const smogonNames = memoize(async () => {
   const perTier = await Promise.all(BADGE_TIERS.map((tier) => rowsAtLatest(tier, 'name')));
   return [...new Set(perTier.flat().map((row) => row.name))].sort();

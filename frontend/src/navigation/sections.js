@@ -16,3 +16,17 @@ export const DEFAULT_SECTION = SECTIONS[0];
 export const sectionFromPath = (path) => SECTIONS.find((section) => section.path === path) ?? DEFAULT_SECTION;
 
 export const sectionHref = (section) => `#/${section.path}`;
+
+const CALCULATOR = SECTIONS.find((section) => section.id === 'damageCalculator');
+const TRAINER_SEGMENT = 'treinador';
+export const CALCULATOR_HREF = sectionHref(CALCULATOR);
+
+/** Calculadora com o time de uma batalha da Liga no lado do oponente (`#/calculadora/treinador/<Card_ID>`). */
+export const calculatorTrainerHref = (battleId) => `${CALCULATOR_HREF}/${TRAINER_SEGMENT}/${encodeURIComponent(battleId)}`;
+
+/** Card_ID pedido no endereço da calculadora, ou null. */
+export function trainerBattleFromHash(hash = window.location.hash) {
+  const [section, segment, id] = hash.replace(/^#\/?/, '').split('/');
+  if (section !== CALCULATOR.path || segment !== TRAINER_SEGMENT || !id) return null;
+  return decodeURIComponent(id);
+}

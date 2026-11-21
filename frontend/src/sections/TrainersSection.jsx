@@ -1,6 +1,7 @@
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { TriangleAlert } from 'lucide-react';
 import { ActiveFilters } from '../components/FiltersBar';
+import JumpIndex, { scrollToElement } from '../components/JumpIndex';
 import SmeargleLoader from '../components/SmeargleLoader';
 import TrainerCard from '../components/trainers/TrainerCard';
 import TrainerModal from '../components/trainers/TrainerModal';
@@ -12,25 +13,25 @@ import { fetchTrainers } from '../services/trainers';
 import { useDebouncedValue } from '../hooks/useDebouncedValue';
 import { formatSlug } from '../utils/filters';
 import {
-  FILTER_GROUPS, MIXED_TYPE, REGIONS, ROLES, createNameMatcher, gamesOf, matchingBattles, roleLabel,
+  FILTER_GROUPS, MIXED_TYPE, REGIONS, createNameMatcher, gamesOf, matchingBattles, roleLabel, rolesOf,
 } from '../utils/trainers';
 
 const SEARCH_DEBOUNCE_MS = 200;
 const NO_STATUS = {};
 const EMPTY_FILTERS = Object.fromEntries(FILTER_GROUPS.map((group) => [group, []]));
 
-const option = (value, label) => ({ value, label });
+const option = (value, label, type) => ({ value, label, type });
 
-// Os jogos vêm dos próprios treinadores; os outros filtros têm opções fixas.
-const filterSelects = (games) => [
+// Jogos e papéis vêm dos próprios treinadores; região e tipo têm opções fixas.
+const filterSelects = (games, roles) => [
   { group: 'region', placeholder: 'Região', options: REGIONS.map((region) => option(region, region)) },
   { group: 'game', placeholder: 'Jogo', options: games.map((game) => option(game, game)) },
   {
     group: 'type',
     placeholder: 'Tipo',
-    options: [...TYPE_NAMES.map((type) => option(type, formatSlug(type))), option(MIXED_TYPE, 'Vários tipos')],
+    options: [...TYPE_NAMES.map((type) => option(type, formatSlug(type), type)), option(MIXED_TYPE, 'Vários tipos')],
   },
-  { group: 'role', placeholder: 'Papel', options: Object.keys(ROLES).map((role) => option(role, roleLabel(role))) },
+  { group: 'role', placeholder: 'Papel', options: roles.map((role) => option(role, roleLabel(role))) },
 ];
 
 const HEADING_TITLE = 'Rumo à Liga';
@@ -54,7 +55,7 @@ export default function TrainersSection({ entryByName, onSelectPokemon }) {
   const [filters, setFilters] = useState(EMPTY_FILTERS);
   const [opened, setOpened] = useState(null);
 
-  const selects = useMemo(() => filterSelects(gamesOf(trainers)), [trainers]);
+  const selects = useMemo(() => filterSelects(gamesOf(trainers), rolesOf(trainers)), [trainers]);
   const labels = useMemo(() => Object.fromEntries(selects.map(({ group, options }) => [
     group,
     new Map(options.map(({ value, label }) => [value, label])),
@@ -72,6 +73,13 @@ export default function TrainersSection({ entryByName, onSelectPokemon }) {
   const byRegion = useMemo(() => REGIONS
     .map((region) => ({ region, entries: visible.filter(({ battles }) => battles[0].region === region) }))
     .filter(({ entries }) => entries.length > 0), [visible]);
+  // As regiões seguem a ordem das gerações: Kanto é a 1ª, Paldea a 9ª.
+  const jumpItems = useMemo(
+    () => byRegion.map(({ region }) => ({ key: region, generation: REGIONS.indexOf(region) + 1, region })),
+    [byRegion],
+  );
+  const regionRefs = useRef(new Map());
+  const jumpToRegion = useCallback((region) => scrollToElement(regionRefs.current.get(region)), []);
 
   const activeFilters = useMemo(() => FILTER_GROUPS.flatMap((group) =>
     filters[group].map((value) => ({ type: group, value, label: labels[group].get(value) ?? value }))), [filters, labels]);
@@ -117,8 +125,8 @@ export default function TrainersSection({ entryByName, onSelectPokemon }) {
                 onChange={addFilter(group)}
                 className="lg:w-36 lg:shrink-0"
               >
-                {options.map(({ value, label }) => (
-                  <option key={value} value={value} disabled={filters[group].includes(value)} className={OPTION_CLASS}>{label}</option>
+                {options.map(({ value, label, type }) => (
+                  <option key={value} value={value} data-type={type} disabled={filters[group].includes(value)} className={OPTION_CLASS}>{label}</option>
                 ))}
               </HeaderSelect>
             ))}
@@ -170,8 +178,15 @@ export default function TrainersSection({ entryByName, onSelectPokemon }) {
         <p className="py-16 text-center font-hand text-2xl text-[#78614E]">nenhum treinador com esses filtros</p>
       )}
 
+      {jumpItems.length > 1 && <JumpIndex label="Ir para a região" items={jumpItems} onJump={jumpToRegion} />}
+
       {byRegion.map(({ region, entries }) => (
-        <section key={region} aria-label={region}>
+        <section
+          key={region}
+          aria-label={region}
+          ref={(node) => { if (node) regionRefs.current.set(region, node); else regionRefs.current.delete(region); }}
+          className="scroll-mt-40"
+        >
           <h3 className="section-title">{region}</h3>
           <ul className="grid grid-cols-2 gap-3 sm:gap-4 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
             {entries.map(({ trainer }) => (

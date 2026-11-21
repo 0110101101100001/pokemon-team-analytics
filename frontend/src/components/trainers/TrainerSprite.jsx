@@ -9,7 +9,8 @@ import { trainerSpriteUrl } from '../../utils/trainers';
 export default function TrainerSprite({ trainer, entryByName }) {
   const aceEntry = entryByName.get(trainer.battles[0].aceSlug);
   const sources = [trainerSpriteUrl(trainer.slug), aceEntry && thumbnailSpriteUrl(aceEntry.id)].filter(Boolean);
-  const [attempt, setAttempt] = useState(0);
+  const [failure, setFailure] = useState({ slug: trainer.slug, attempt: 0 });
+  const attempt = failure.slug === trainer.slug ? failure.attempt : 0;
   const src = sources[attempt];
 
   if (!src) return <span aria-hidden="true" className="font-serif text-5xl font-bold text-[#1C1A17]/45">?</span>;
@@ -21,7 +22,7 @@ export default function TrainerSprite({ trainer, entryByName }) {
       height={80}
       loading="lazy"
       decoding="async"
-      onError={() => setAttempt((current) => current + 1)}
+      onError={() => setFailure({ slug: trainer.slug, attempt: attempt + 1 })}
       className="h-20 w-20 object-contain [image-rendering:pixelated]"
     />
   );
