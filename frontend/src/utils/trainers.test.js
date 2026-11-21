@@ -317,3 +317,43 @@ describe('regionsOf', () => {
     expect(regionGeneration('Atlantis')).toBeNull();
   });
 });
+
+describe('ordem dos cards', () => {
+  const kanto = groupTrainers([
+    row({ Trainer_Slug: 'giovanni', Trainer_Name: 'Giovanni', Role: 'Team Rocket', Order: 1, Location: 'Rocket Hideout' }),
+    row({ Trainer_Slug: 'giovanni', Trainer_Name: 'Giovanni', Role: 'Gym Leader', Order: 3, Location: 'Viridian City' }),
+    row({ Trainer_Slug: 'brock', Trainer_Name: 'Brock', Order: 1 }),
+    row({ Trainer_Slug: 'blaine', Trainer_Name: 'Blaine', Order: 7 }),
+    row({ Trainer_Slug: 'lorelei', Trainer_Name: 'Lorelei', Role: 'Elite Four', Order: 1 }),
+  ]).map((trainer) => trainer.slug);
+
+  it('põe o líder de ginásio que também é vilão logo depois dos líderes comuns', () => {
+    expect(kanto).toEqual(['brock', 'blaine', 'giovanni', 'lorelei']);
+  });
+
+  it('separa as equipes vilãs, com o chefe antes dos subordinados', () => {
+    const hoenn = groupTrainers([
+      row({ Trainer_Slug: 'shelly', Trainer_Name: 'Shelly', Generation: 3, Role: 'Team Aqua' }),
+      row({ Trainer_Slug: 'archie-gen6', Trainer_Name: 'Archie', Generation: 3, Role: 'Team Aqua' }),
+      row({ Trainer_Slug: 'courtney', Trainer_Name: 'Courtney', Generation: 3, Role: 'Team Magma' }),
+      row({ Trainer_Slug: 'maxie-gen6', Trainer_Name: 'Maxie', Generation: 3, Role: 'Team Magma' }),
+      row({ Trainer_Slug: 'novo', Trainer_Name: 'Aaa', Generation: 3, Role: 'Papel Novo' }),
+    ]).map((trainer) => trainer.slug);
+    expect(hoenn).toEqual(['maxie-gen6', 'courtney', 'archie-gen6', 'shelly', 'novo']);
+  });
+
+  it('ordena as facções de Hisui', () => {
+    const hisui = ['Miss Fortunes', 'Ginkgo Guild', 'Galaxy Team', 'Pearl Clan', 'Diamond Clan']
+      .map((role, index) => row({ Trainer_Slug: `t${index}`, Trainer_Name: role, Generation: 8, Role: role }));
+    expect(groupTrainers(hisui).map((trainer) => trainer.name))
+      .toEqual(['Diamond Clan', 'Pearl Clan', 'Galaxy Team', 'Ginkgo Guild', 'Miss Fortunes']);
+  });
+
+  it('ordena as variantes de time por fase, não pelo alfabeto', () => {
+    const variants = (names) => groupTrainers(names.map((name) => row({ Trainer_Slug: 'x', Trainer_Name: 'X', Team_Variant: name, Card_ID: name })))[0]
+      .battles.map((battle) => battle.teamVariant);
+    expect(variants(['Subsequent clears', 'Fourth clear', 'Second clear', 'First clear', 'Third clear']))
+      .toEqual(['First clear', 'Second clear', 'Third clear', 'Fourth clear', 'Subsequent clears']);
+    expect(variants(['After The Way Home', 'Before The Way Home'])).toEqual(['Before The Way Home', 'After The Way Home']);
+  });
+});

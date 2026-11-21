@@ -16,26 +16,69 @@ export function regionsOf(battles) {
   return [...REGIONS.filter((region) => present.has(region)), ...[...present].filter((region) => !REGIONS.includes(region)).sort()];
 }
 
-// Ordem de lançamento dos jogos principais; um jogo fora da lista vai para o fim.
-const GAME_ORDER = [
-  'Red', 'Blue', 'Yellow', 'Gold', 'Silver', 'Crystal', 'Ruby', 'Sapphire', 'Emerald', 'FireRed', 'LeafGreen',
-  'Diamond', 'Pearl', 'Platinum', 'HeartGold', 'SoulSilver', 'Black', 'White', 'Black 2', 'White 2', 'X', 'Y',
-  'Omega Ruby', 'Alpha Sapphire', 'Sun', 'Moon', 'Ultra Sun', 'Ultra Moon', "Let's Go, Pikachu!", "Let's Go, Eevee!",
-  'Sword', 'Shield', 'Brilliant Diamond', 'Shining Pearl', 'Legends: Arceus', 'Scarlet', 'Violet',
+// Lançamentos dos jogos principais, em ordem; as versões de um par saem juntas. Um jogo fora da lista vai para o fim.
+const RELEASES = [
+  ['Red', 'Blue'], ['Yellow'], ['Gold', 'Silver'], ['Crystal'], ['Ruby', 'Sapphire'], ['Emerald'], ['FireRed', 'LeafGreen'],
+  ['Diamond', 'Pearl'], ['Platinum'], ['HeartGold', 'SoulSilver'], ['Black', 'White'], ['Black 2', 'White 2'], ['X', 'Y'],
+  ['Omega Ruby', 'Alpha Sapphire'], ['Sun', 'Moon'], ['Ultra Sun', 'Ultra Moon'], ["Let's Go, Pikachu!", "Let's Go, Eevee!"],
+  ['Sword', 'Shield'], ['Brilliant Diamond', 'Shining Pearl'], ['Legends: Arceus'], ['Scarlet', 'Violet'],
 ];
+const GAME_ORDER = RELEASES.flat();
 const gameRank = (game) => (GAME_ORDER.includes(game) ? GAME_ORDER.indexOf(game) : GAME_ORDER.length);
-
-// Ordem do caminho até a Liga; `rank` também ordena os papéis no card.
-export const ROLES = {
-  'Gym Leader': { label: 'Líder de Ginásio', rank: 1 },
-  'Trial Captain': { label: 'Capitão de Provação', rank: 2 },
-  'Island Kahuna': { label: 'Kahuna', rank: 4 },
-  'Champion Cup': { label: 'Copa dos Campeões', rank: 5 },
-  'Elite Four': { label: 'Elite 4', rank: 6 },
-  Champion: { label: 'Campeão', rank: 7 },
-  'Former Champion': { label: 'Ex-campeão', rank: 8 },
-  Rival: { label: 'Rival', rank: 9 },
+// Sun e Moon contam como o mesmo lançamento: a Mallow (Moon) fica na sua vez entre os capitães, não depois deles.
+const releaseRank = (game) => {
+  const index = RELEASES.findIndex((games) => games.includes(game));
+  return index === -1 ? RELEASES.length : index;
 };
+
+// Posição de cada papel (Role) entre os cards da região e entre os papéis do card: o caminho até a Liga, os rivais,
+// as equipes vilãs (em ordem de lançamento) e as facções de Hisui. Sem `label`, o nome da tabela aparece como está.
+// Um papel novo na tabela vai para o fim (UNKNOWN_ROLE_RANK).
+export const ROLES = {
+  'Gym Leader': { label: 'Líder de Ginásio', rank: 10 },
+  'Trial Captain': { label: 'Capitão de Provação', rank: 20 },
+  'Island Kahuna': { label: 'Kahuna', rank: 30 },
+  'Champion Cup': { label: 'Copa dos Campeões', rank: 40 },
+  'Elite Four': { label: 'Elite 4', rank: 50 },
+  Champion: { label: 'Campeão', rank: 60 },
+  'Former Champion': { label: 'Ex-campeão', rank: 70 },
+  Rival: { label: 'Rival', rank: 80 },
+  'Team Rocket': { rank: 100, villain: true },
+  'Team Magma': { rank: 101, villain: true },
+  'Team Aqua': { rank: 102, villain: true },
+  'Team Galactic': { rank: 103, villain: true },
+  'Team Plasma': { rank: 104, villain: true },
+  'Team Flare': { rank: 105, villain: true },
+  'Team Skull': { rank: 106, villain: true },
+  'Aether Foundation': { rank: 107, villain: true },
+  'Team Rainbow Rocket': { rank: 108, villain: true },
+  'Macro Cosmos': { rank: 109, villain: true },
+  'Team Star': { rank: 110, villain: true },
+  'Diamond Clan': { rank: 200 },
+  'Pearl Clan': { rank: 201 },
+  'Galaxy Team': { rank: 202 },
+  'Ginkgo Guild': { rank: 203 },
+  'Miss Fortunes': { rank: 204 },
+};
+const UNKNOWN_ROLE_RANK = 999;
+
+// Líder de Ginásio que no mesmo jogo também é vilão (Giovanni): logo depois dos líderes comuns, antes do resto.
+const VILLAIN_GYM_LEADER_RANK = 15;
+
+// Chefes de equipe e de facção vêm antes dos subordinados do mesmo papel. A Equipe Star fica de fora: os seus
+// chefes já seguem a ordem da história (Order 1 a 6, a Penny por último).
+const FACTION_LEADERS = new Set([
+  'maxie-gen6', 'archie-gen6', 'cyrus', 'ghetsis', 'lysandre', 'guzma', 'lusamine', 'rose', 'adaman', 'irida', 'kamado',
+]);
+
+// Variantes de time com ordem própria; as demais (inicial do jogador) seguem a ordem alfabética.
+const TEAM_VARIANT_RANK = {
+  'First clear': 1, 'Second clear': 2, 'Third clear': 3, 'Fourth clear': 4, 'Subsequent clears': 5,
+  'Before The Way Home': 1, 'After The Way Home': 2,
+  Spring: 1, Summer: 2, Autumn: 3, Winter: 4,
+};
+const byTeamVariant = (a, b) =>
+  (TEAM_VARIANT_RANK[a ?? ''] ?? 0) - (TEAM_VARIANT_RANK[b ?? ''] ?? 0) || (a ?? '').localeCompare(b ?? '');
 
 // Etapa da batalha na história; a principal não aparece no rótulo. Uma etapa nova na tabela vai para o fim.
 const STAGES = {
@@ -56,7 +99,7 @@ const GIMMICKS = {
 export const MIXED_TYPE = 'mixed';
 
 export const roleLabel = (role) => ROLES[role]?.label ?? role;
-const roleRank = (role) => ROLES[role]?.rank ?? 99;
+const roleRank = (role) => ROLES[role]?.rank ?? UNKNOWN_ROLE_RANK;
 
 // Trainer_Slug já é o nome do arquivo no Showdown (ex.: arven-s).
 export const trainerSpriteUrl = (slug) => `https://play.pokemonshowdown.com/sprites/trainers/${slug}.png`;
@@ -97,7 +140,7 @@ const byBattleOrder = (a, b) =>
   || gameRank(a.gameList[0]) - gameRank(b.gameList[0])
   || a.stage.rank - b.stage.rank
   || a.order - b.order
-  || (a.teamVariant ?? '').localeCompare(b.teamVariant ?? '')
+  || byTeamVariant(a.teamVariant, b.teamVariant)
   || a.id.localeCompare(b.id);
 
 const unique = (values) => [...new Set(values)];
@@ -126,6 +169,34 @@ const isRepeatedBattle = (battle, battles) => battle.stage === STAGES['Main Stor
   && other.order !== battle.order
   && other.gameList.some((game) => battle.gameList.includes(game)));
 
+/**
+ * Onde o card entra na lista: papel e ordem da primeira batalha. Quem é Líder de Ginásio na história do jogo em que
+ * estreia conta como líder, mesmo que a primeira batalha seja outra (Raihan na Copa dos Campeões); se nesse jogo
+ * também é vilão, fica logo depois dos líderes comuns (Giovanni: Rocket Hideout e Silph Co. antes do ginásio).
+ */
+function placementOf(trainer) {
+  const [first] = trainer.battles;
+  const debut = trainer.battles.filter((battle) => battle.games === first.games && battle.stage === STAGES['Main Story']);
+  const gym = debut.find((battle) => battle.role === 'Gym Leader');
+  const placed = gym ?? first;
+  return {
+    generation: placed.generation,
+    rank: gym && debut.some((battle) => ROLES[battle.role]?.villain) ? VILLAIN_GYM_LEADER_RANK : roleRank(placed.role),
+    follower: FACTION_LEADERS.has(trainer.slug) ? 0 : 1,
+    release: releaseRank(placed.gameList[0]),
+    order: placed.order,
+  };
+}
+
+// Entre treinadores: geração, papel, chefe antes de subordinado, lançamento, ordem na história e nome.
+const byPlacement = ([a, first], [b, other]) =>
+  first.generation - other.generation
+  || first.rank - other.rank
+  || first.follower - other.follower
+  || first.release - other.release
+  || first.order - other.order
+  || a.name.localeCompare(b.name);
+
 /** Agrupa as linhas por treinador, na ordem em que aparecem nos jogos (geração, papel, posição). */
 export function groupTrainers(rows) {
   const bySlug = new Map();
@@ -151,13 +222,9 @@ export function groupTrainers(rows) {
         type: (typed[0] ?? battles[0]).type,
       };
     })
-    .sort((a, b) => {
-      const [first, other] = [a.battles[0], b.battles[0]];
-      return first.generation - other.generation
-        || roleRank(first.role) - roleRank(other.role)
-        || first.order - other.order
-        || a.name.localeCompare(b.name);
-    });
+    .map((trainer) => [trainer, placementOf(trainer)])
+    .sort(byPlacement)
+    .map(([trainer]) => trainer);
 }
 
 /** Jogos individuais das batalhas (Games_JSON: "Black", "White"…), sem repetir, em ordem de lançamento. */
