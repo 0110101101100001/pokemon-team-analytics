@@ -24,7 +24,7 @@ function Toast({ toast, onDismiss }) {
   };
 
   return createPortal(
-    <div role="status" aria-live="polite" className="pointer-events-none fixed inset-x-0 bottom-20 z-[70] flex justify-center px-4 sm:bottom-6">
+    <div role="status" aria-live="polite" className="pointer-events-none fixed inset-x-0 bottom-20 z-[70] flex justify-center px-4 sm:bottom-24">
       {toast && (
         <div
           key={toast.id}

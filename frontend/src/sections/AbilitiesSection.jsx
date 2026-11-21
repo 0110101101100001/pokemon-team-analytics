@@ -82,6 +82,8 @@ export default function AbilitiesSection({ entryByName, onSelectPokemon }) {
         aside={<span className={HEADING_PILL_CLASS}>Toque em “Pokémon” para ver quem tem</span>}
       />
 
+      <p className="font-reading text-sm italic text-[#785132]">* Clique no nome da habilidade para ver mais informações.</p>
+
       <AbilityTable
         abilities={abilities}
         openAbility={openAbility}

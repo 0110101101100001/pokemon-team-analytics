@@ -1,9 +1,10 @@
 import { memo, useEffect, useId, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
-import { Languages, Loader2, Package, Sparkles, Swords, TriangleAlert, X } from 'lucide-react';
+import { ArrowRight, Languages, Loader2, Package, Sparkles, Swords, TriangleAlert, X } from 'lucide-react';
 import PokemonTypeBadge from './PokemonTypeBadge';
 import { fetchAbilityInfo, fetchItemInfo, fetchMoveInfo, thumbnailSpriteUrl, toPokeApiSlug } from '../services/api';
 import { formatSlug } from '../utils/filters';
+import { evolutionConditionLabel } from '../utils/itemData';
 import { useModalBehavior } from '../hooks/useModalBehavior';
 
 const KINDS = {
@@ -104,6 +105,40 @@ function HeldBySection({ groups }) {
                 </li>
               ))}
             </ul>
+          </li>
+        ))}
+      </ul>
+    </section>
+  );
+}
+
+function EvolutionSide({ name, id }) {
+  return (
+    <span className="flex min-w-0 items-center gap-1">
+      <img src={thumbnailSpriteUrl(id)} alt="" width={32} height={32} loading="lazy" decoding="async" className="h-8 w-8 shrink-0 object-contain [image-rendering:pixelated]" />
+      <span className="truncate font-reading text-sm font-semibold text-ink">{formatSlug(name)}</span>
+    </span>
+  );
+}
+
+/** Evoluções que o item causa: quem evolui, em quem, e como (usar, trocar segurando, subir de nível segurando). */
+function EvolutionSection({ evolutions }) {
+  if (!evolutions?.length) return null;
+  return (
+    <section className="space-y-2">
+      <h3 className="border-b border-ink/30 pb-1 font-reading text-xs font-semibold uppercase tracking-wider text-ink-soft">Evolução</h3>
+      <ul className="space-y-1.5">
+        {evolutions.map((evolution) => (
+          <li
+            key={`${evolution.from}-${evolution.to}-${evolution.trigger}-${evolution.gender}-${evolution.timeOfDay}`}
+            className="rounded-[3px] border-[1.5px] border-ink/70 bg-paper-2 px-2.5 py-1.5"
+          >
+            <div className="flex flex-wrap items-center gap-1.5">
+              <EvolutionSide name={evolution.from} id={evolution.fromId} />
+              <ArrowRight className="h-4 w-4 shrink-0 text-ink-soft" aria-label="evolui em" />
+              <EvolutionSide name={evolution.to} id={evolution.toId} />
+            </div>
+            <p className="mt-0.5 font-reading text-xs italic text-ink-soft">{evolutionConditionLabel(evolution)}</p>
           </li>
         ))}
       </ul>
@@ -235,6 +270,7 @@ function MoveAbilityModal({ kind, name, onClose }) {
 
               <TextBlock title="Descrição" entries={[info.description]} />
               <TextBlock title="Efeito em batalha" entries={[info.shortEffect, detailedEffect]} />
+              <EvolutionSection evolutions={info.evolutions} />
               {info.heldBy && <HeldBySection groups={info.heldBy} />}
 
               {!info.description && !info.shortEffect && !info.effect && (

@@ -1,6 +1,7 @@
 import { supabase } from './supabase';
 import { HIDDEN_ITEM_CATEGORIES } from '../data/itemCategories';
 import { readCached, writeCached } from './persistentCache';
+import { evolutionsByItem } from '../utils/itemData';
 
 const POKEAPI_BASE = 'https://pokeapi.co/api/v2';
 
@@ -356,6 +357,7 @@ export async function fetchItemInfo(slug) {
     sprite: data.sprites?.default ?? null,
     category: data.category?.name ?? null,
     heldBy: groupHeldBy(data.held_by_pokemon ?? []),
+    evolutions: await evolutionsByItem(data.name),
   };
 }
 

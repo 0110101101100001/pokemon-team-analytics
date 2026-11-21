@@ -2,6 +2,8 @@ import { useCallback, useDeferredValue, useMemo, useState } from 'react';
 import MoveAbilityModal from '../components/MoveAbilityModal';
 import MoveTable from '../components/moves/MoveTable';
 import SpecialMoves, { specialMovesOf } from '../components/moves/SpecialMoves';
+import ContestTable from '../components/moves/ContestTable';
+import { CONTEST_CATEGORIES, CONTEST_MOVES, filterContestMoves } from '../utils/contests';
 import { BrushUnderline } from '../components/InkDecor';
 import { DAMAGE_CLASS_LABELS } from '../components/moves/moveTableStyles';
 import { HeaderSearch, HeaderSelect, OPTION_CLASS } from '../components/layout/HeaderControls';
@@ -23,6 +25,7 @@ const KINDS = [
   { value: 'learnable', label: 'Golpes' },
   { value: 'max', label: 'Dynamax / G-Max' },
   { value: 'z', label: 'Golpes Z' },
+  { value: 'contest', label: 'Contests' },
 ];
 
 function KindTabs({ value, onChange }) {
@@ -57,7 +60,9 @@ export default function MovesSection({ entryByName, onSelectPokemon }) {
   const [openMove, setOpenMove] = useState(null);
   const [detail, setDetail] = useState(null);
   const [kind, setKind] = useState('learnable');
-  const special = kind !== 'learnable';
+  const special = kind === 'max' || kind === 'z';
+  const contest = kind === 'contest';
+  const [contestCategory, setContestCategory] = useState('');
 
   const deferredQuery = useDeferredValue(query);
 
@@ -70,6 +75,10 @@ export default function MovesSection({ entryByName, onSelectPokemon }) {
   }, [moveType, damageClass, deferredQuery]);
 
   const specialFilters = useMemo(() => ({ term: toSearchTerm(deferredQuery), type: moveType }), [deferredQuery, moveType]);
+  const contestMoves = useMemo(
+    () => (contest ? filterContestMoves(CONTEST_MOVES, { ...specialFilters, category: contestCategory }) : []),
+    [contest, specialFilters, contestCategory],
+  );
   const specialCount = useMemo(() => {
     if (!special) return 0;
     const { first, second } = specialMovesOf(kind, specialFilters);
@@ -80,7 +89,7 @@ export default function MovesSection({ entryByName, onSelectPokemon }) {
   const toggleMove = useCallback((slug) => setOpenMove((current) => (current === slug ? null : slug)), []);
   const closeDetail = useCallback(() => setDetail(null), []);
 
-  const count = special ? specialCount : moves.length;
+  const count = contest ? contestMoves.length : special ? specialCount : moves.length;
 
   return (
     <div className="space-y-6">
@@ -92,13 +101,22 @@ export default function MovesSection({ entryByName, onSelectPokemon }) {
               <option value="" className={OPTION_CLASS}>Todos os tipos</option>
               {TYPE_NAMES.map((type) => <option key={type} value={type} data-type={type} className={OPTION_CLASS}>{formatSlug(type)}</option>)}
             </HeaderSelect>
-            {/* Golpes Z e Max tomam a categoria do golpe base: o filtro só vale para os comuns. */}
-            <HeaderSelect label="Filtrar por categoria do golpe" value={damageClass} onChange={(e) => setDamageClass(e.target.value)} disabled={special} className="lg:w-44 lg:shrink-0">
-              <option value="" className={OPTION_CLASS}>Todas as categorias</option>
-              {Object.entries(DAMAGE_CLASS_LABELS).map(([value, label]) => (
-                <option key={value} value={value} className={OPTION_CLASS}>{label}</option>
-              ))}
-            </HeaderSelect>
+            {/* Golpes Z e Max tomam a categoria do golpe base: o filtro só vale para os comuns. Nos Contests, vira a categoria do Contest. */}
+            {contest ? (
+              <HeaderSelect label="Filtrar pela categoria do Contest" value={contestCategory} onChange={(e) => setContestCategory(e.target.value)} className="lg:w-44 lg:shrink-0">
+                <option value="" className={OPTION_CLASS}>Todas as categorias</option>
+                {Object.entries(CONTEST_CATEGORIES).map(([value, { label, game }]) => (
+                  <option key={value} value={value} className={OPTION_CLASS}>{label} ({game})</option>
+                ))}
+              </HeaderSelect>
+            ) : (
+              <HeaderSelect label="Filtrar por categoria do golpe" value={damageClass} onChange={(e) => setDamageClass(e.target.value)} disabled={special} className="lg:w-44 lg:shrink-0">
+                <option value="" className={OPTION_CLASS}>Todas as categorias</option>
+                {Object.entries(DAMAGE_CLASS_LABELS).map(([value, label]) => (
+                  <option key={value} value={value} className={OPTION_CLASS}>{label}</option>
+                ))}
+              </HeaderSelect>
+            )}
           </div>
         </ToolbarRow>
       </HeaderToolbar>
@@ -112,14 +130,24 @@ export default function MovesSection({ entryByName, onSelectPokemon }) {
             {deferredQuery.trim() && <> para <span className="font-serif italic">“{deferredQuery.trim()}”</span></>}
           </>
         )}
-        aside={<span className={HEADING_PILL_CLASS}>Toque em “Pokémon” para ver quem aprende</span>}
+        aside={(
+          <span className={HEADING_PILL_CLASS}>
+            {contest ? 'Toque em “Combos” para ver os encadeamentos' : 'Toque em “Pokémon” para ver quem aprende'}
+          </span>
+        )}
       />
 
       <KindTabs value={kind} onChange={setKind} />
 
-      {special ? (
+      {(kind === 'learnable' || contest) && (
+        <p className="font-reading text-sm italic text-[#785132]">* Clique no nome do golpe para ver mais informações.</p>
+      )}
+
+      {contest && <ContestTable moves={contestMoves} openMove={openMove} onToggleMove={toggleMove} onSelectMove={setDetail} />}
+      {special && (
         <SpecialMoves kind={kind} filters={specialFilters} entryByName={entryByName} onSelectPokemon={onSelectPokemon} />
-      ) : (
+      )}
+      {kind === 'learnable' && (
         <MoveTable
           moves={moves}
           openMove={openMove}
