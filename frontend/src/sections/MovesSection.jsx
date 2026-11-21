@@ -10,12 +10,12 @@ import { HeaderSearch, HeaderSelect, OPTION_CLASS } from '../components/layout/H
 import HeaderToolbar, { ToolbarRow } from '../components/layout/HeaderToolbar';
 import SectionHeading, { HEADING_PILL_CLASS } from '../components/layout/SectionHeading';
 import MOVE_LIST from '../data/moves.json';
-import { TYPE_NAMES } from '../services/api';
+import { TYPE_NAMES, movePowerOf } from '../services/api';
 import { formatSlug } from '../utils/filters';
 
 // moves.json (scripts/build-moves.mjs): [slug, tipo, categoria, poder, precisão, PP, geração].
 const MOVES = MOVE_LIST.map(([slug, type, damageClass, power, accuracy, pp, generation]) => ({
-  slug, type, damageClass, power, accuracy, pp, generation, label: formatSlug(slug).toLowerCase(),
+  slug, type, damageClass, power: movePowerOf({ name: slug, power }), accuracy, pp, generation, label: formatSlug(slug).toLowerCase(),
 }));
 
 const toSearchTerm = (text) => text.trim().toLowerCase().replace(/-/g, ' ');

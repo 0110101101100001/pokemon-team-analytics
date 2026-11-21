@@ -4,7 +4,7 @@ import { NATURAL_GIFT } from '../data/battleModifiers';
   Golpes sem poder fixo na PokéAPI, porque ele depende da batalha.
   - Poder variável: cada regra devolve { power, note } (a nota explica de onde veio o número) ou { reason }.
   - Dano fixo (Seismic Toss, Super Fang, Counter, OHKO…): o dano sai direto, sem a fórmula; { rolls, note } ou { reason }.
-  Lado: { level, types, stats, boosts, weight (kg), currentHp, happiness, ivs, baseStats, lastHit, bide }.
+  Lado: { level, types, stats, boosts, weight (kg), currentHp, ivs, baseStats, lastHit, bide }.
   `lastHit` é o último golpe que o lado recebeu ({ damage, category }) e `bide` o Bide em curso ({ turns, stored }),
   ambos anotados ao passar o turno.
 */
@@ -70,13 +70,10 @@ const RULES = {
   reversal: userHpBands,
   'crush-grip': targetHpScaled,
   'wring-out': targetHpScaled,
-  return: ({ attacker }) => {
-    const happiness = attacker.happiness ?? 255;
-    return { power: Math.max(1, Math.floor((happiness * 10) / 25)), note: `felicidade ${happiness}` };
-  },
-  frustration: ({ attacker }) => {
-    const happiness = attacker.happiness ?? 255;
-    return { power: Math.max(1, Math.floor(((255 - happiness) * 10) / 25)), note: `felicidade ${happiness}` };
+  // Hard Press: até 100, proporcional aos PS atuais do alvo.
+  'hard-press': ({ defender }) => {
+    const power = Math.max(1, Math.floor((100 * currentHp(defender)) / defender.stats.hp));
+    return { power, note: hpNote('alvo', defender) };
   },
   'hidden-power': () => ({ power: 60, note: 'tipo pelos IVs' }),
   'stored-power': ({ attacker }) => {
@@ -134,9 +131,6 @@ function targetHpScaled({ defender }) {
 
 /** Golpes cujo poder a calculadora sabe resolver. */
 export const VARIABLE_POWER_MOVES = new Set(Object.keys(RULES));
-
-/** Golpes que leem a felicidade do usuário: a interface só mostra o campo quando precisa. */
-export const USES_HAPPINESS = new Set(['return', 'frustration']);
 
 /**
  * Poder do golpe na batalha: { power, note } ou { reason } se falta um dado ou o golpe não tem regra.

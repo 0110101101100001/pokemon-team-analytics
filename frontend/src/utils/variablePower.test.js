@@ -7,7 +7,7 @@ const NO_BOOSTS = { atk: 0, def: 0, spa: 0, spd: 0, spe: 0 };
 const side = (overrides = {}) => ({
   level: 100, types: ['normal'], originalTypes: ['normal'], tera: '', item: '', ability: '', status: '',
   stats: { hp: 300, atk: 200, def: 200, spa: 200, spd: 200, spe: 200 },
-  boosts: NO_BOOSTS, weight: 50, currentHp: null, happiness: 255,
+  boosts: NO_BOOSTS, weight: 50, currentHp: null,
   ...overrides,
 });
 const power = (slug, context) => variablePower({ slug }, { attacker: side(), defender: side(), attackerSpeed: 200, defenderSpeed: 200, ...context }).power;
@@ -42,10 +42,8 @@ describe('golpes de poder variável', () => {
     expect(power('wring-out', { defender: side({ currentHp: 75 }) })).toBe(30);
   });
 
-  it('felicidade, estágios e os demais', () => {
-    expect(power('return', { attacker: side({ happiness: 255 }) })).toBe(102);
-    expect(power('frustration', { attacker: side({ happiness: 0 }) })).toBe(102);
-    expect(power('frustration', { attacker: side({ happiness: 255 }) })).toBe(1);
+  it('estágios, Hard Press e os demais', () => {
+    expect(power('hard-press', { defender: side({ currentHp: 150 }) })).toBe(50);
     expect(power('stored-power', { attacker: side({ boosts: { ...NO_BOOSTS, spa: 2, spd: 2, def: -1 } }) })).toBe(100);
     expect(power('punishment', { defender: side({ boosts: { ...NO_BOOSTS, atk: 6, spe: 6 } }) })).toBe(200);
     expect(power('hidden-power')).toBe(60);

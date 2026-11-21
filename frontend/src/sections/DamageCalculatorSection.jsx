@@ -14,7 +14,6 @@ import BattleScoreboard from '../components/calc/BattleScoreboard';
 import MobileTurnBar from '../components/calc/MobileTurnBar';
 import { simulateTurn } from '../utils/turn';
 import { fetchMoveSummary } from '../services/api';
-import { USES_HAPPINESS } from '../utils/variablePower';
 import { PRIMAL_WEATHERS, TERRAIN_ABILITIES, WEATHER_ABILITIES, WEATHER_SUPPRESSORS } from '../data/battleModifiers';
 import { airborneBy, calcSpeed, calculateDamage, describeKnockout, isCalculable } from '../utils/damage';
 import { calcStats } from '../utils/stats';
@@ -52,7 +51,6 @@ function toCombatant(side, battle, ability) {
     bide: side.bide,
     lastHit: side.lastHit,
     turnsOut: side.turnsOut,
-    happiness: side.happiness,
     ivs: side.set.ivs,
     baseStats: battle.baseStats,
   };
@@ -87,11 +85,6 @@ const neutralize = (abilities) => abilities.map((ability, index) => (
 const shownPokemon = (side, battle) => (side.pokemon && side.form
   ? { id: battle.id ?? side.pokemon.id, name: side.form }
   : side.pokemon);
-
-const usesAny = (side, slugs) => side.moves.some((slot) => slot.move && slugs.has(slot.move.slug));
-
-/** Felicidade: só quando o lado usa Return ou Frustration. */
-const variableFieldsOf = (side) => ({ happiness: usesAny(side, USES_HAPPINESS) });
 
 // O que a simulação muda em cada lado; "recomeçar" volta ao que era antes do primeiro turno.
 const BATTLE_KEYS = ['currentHp', 'boosts', 'status', 'toxicTurns', 'sleepTurns', 'bide', 'lastHit', 'turnsOut'];
@@ -140,8 +133,6 @@ export default function DamageCalculatorSection({ pool, team, session, onLogin }
   const forms = [useBattleForms(sides[0].pokemon?.name ?? null), useBattleForms(sides[1].pokemon?.name ?? null)];
   // G-Max de cada lado: só a forma base que Gigantamaxiza (Charizard sim, Charizard Mega X não).
   const gmaxMoves = sides.map((side) => gmaxMoveOf(side.form || side.pokemon?.name));
-  // Campos extras de cada lado, só quando algum golpe escolhido precisa deles.
-  const extraFields = sides.map(variableFieldsOf);
   // Só valem habilidades da espécie (ou da forma); sem escolha válida, a primeira delas.
   const chosenAbilities = sides.map((side, index) => {
     const own = battles[index].abilities;
@@ -355,7 +346,6 @@ export default function DamageCalculatorSection({ pool, team, session, onLogin }
             battle={battles[index]}
             forms={forms[index]}
             gmaxMove={gmaxMoves[index]}
-            extraFields={extraFields[index]}
             hpPreview={previews[index]}
             ability={chosenAbilities[index]}
             speed={speeds[index]}

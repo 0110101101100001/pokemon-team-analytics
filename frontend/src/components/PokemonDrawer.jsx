@@ -11,7 +11,7 @@ import PokemonBuilds from './PokemonBuilds';
 import FavoriteButton from './FavoriteButton';
 import { capitalize } from '../utils/typeColors';
 import {
-  fetchEvolutionChain, fetchMove, fetchPokemonDetail, fetchPokemonSpecies, fetchTypeData, officialSpriteUrl,
+  fetchEvolutionChain, fetchMove, fetchPokemonDetail, fetchPokemonSpecies, fetchTypeData, movePowerOf, officialSpriteUrl,
 } from '../services/api';
 import { fetchSmogonNames, fetchSmogonStats } from '../services/smogonMeta';
 import { resolveSmogonName } from '../utils/smogon';
@@ -553,7 +553,7 @@ export default function PokemonDrawer({
       ...entry,
       damage_class: data?.damage_class?.name ?? 'status',
       type: data?.type?.name ?? 'normal',
-      power: data?.power ?? null,
+      power: movePowerOf(data),
       accuracy: data?.accuracy ?? null,
       pp: data?.pp ?? null,
     }))))).then((rows) => {

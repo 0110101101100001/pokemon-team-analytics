@@ -8,7 +8,7 @@ const NO_BOOSTS = { atk: 0, def: 0, spa: 0, spd: 0, spe: 0 };
 const side = (overrides = {}) => ({
   level: 100, types: ['normal'], originalTypes: ['normal'], tera: '', item: '', ability: '', status: '',
   stats: { hp: 300, atk: 200, def: 200, spa: 200, spd: 200, spe: 200 },
-  boosts: NO_BOOSTS, weight: 50, currentHp: null, toxicTurns: 0, lastHit: null, happiness: 255,
+  boosts: NO_BOOSTS, weight: 50, currentHp: null, toxicTurns: 0, lastHit: null,
   ...overrides,
 });
 const move = (slug, type, category, power = null, extra = {}) => ({ slug, name: slug, type, category, damageClass: category, power, hits: 1, crit: false, ...extra });
@@ -53,6 +53,28 @@ describe('dano fixo', () => {
     expect(hit(side(), side({ ability: 'sturdy' }), move('fissure', 'ground', 'physical')).reason).toMatch(/Sturdy/);
     expect(hit(side({ level: 50 }), side(), move('horn-drill', 'normal', 'physical')).reason).toMatch(/nível maior/);
     expect(hit(side(), side({ types: ['ice'] }), move('sheer-cold', 'ice', 'special')).reason).toMatch(/Ice/);
+  });
+});
+
+describe('golpes com regras próprias', () => {
+  it('Body Press usa a Def do usuário; Foul Play, o Atk do alvo', () => {
+    const bodyPress = move('body-press', 'fighting', 'physical', 80);
+    const sturdy = side({ stats: { ...side().stats, def: 400 } });
+    expect(hit(sturdy, side(), bodyPress).max).toBeGreaterThan(hit(side(), side(), bodyPress).max);
+    const foulPlay = move('foul-play', 'dark', 'physical', 95);
+    const strongTarget = side({ stats: { ...side().stats, atk: 400 } });
+    expect(hit(side(), strongTarget, foulPlay).max).toBeGreaterThan(hit(side(), side(), foulPlay).max);
+  });
+
+  it('Psyshock acerta a Def; Assault Vest não protege dele', () => {
+    const psyshock = move('psyshock', 'psychic', 'special', 80);
+    const walled = side({ stats: { ...side().stats, spd: 400 } });
+    expect(hit(side(), walled, psyshock).max).toBe(hit(side(), side(), psyshock).max);
+    expect(hit(side(), side({ item: 'assault-vest' }), psyshock).max).toBe(hit(side(), side(), psyshock).max);
+  });
+
+  it('Wicked Blow é sempre crítico', () => {
+    expect(hit(side(), side(), move('wicked-blow', 'dark', 'physical', 75)).crit).toBe(true);
   });
 });
 
@@ -134,11 +156,41 @@ describe('passar o turno', () => {
     const growl = status('growl', 'normal', { target: 'all-opponents', category: 'net-good-stats', statChanges: [{ stat: 'atk', change: -1 }] });
     expect(run([side(), side()], [swordsDance, growl]).sides[0].boosts.atk).toBe(1);
     const closeCombat = move('close-combat', 'fighting', 'physical', 120, {
-      effects: fx({ category: 'damage+raise', statChanges: [{ stat: 'def', change: -1 }, { stat: 'spd', change: -1 }], statChance: 100 }),
+      effects: fx({ category: 'damage-raise', statChanges: [{ stat: 'def', change: -1 }, { stat: 'spd', change: -1 }], statChance: 100 }),
     });
     const after = run([side(), side()], [closeCombat, null]);
     expect(after.sides[0].boosts).toMatchObject({ def: -1, spd: -1 });
     expect(after.sides[1].boosts.def).toBe(0);
+  });
+
+  it('Draco Meteor e Make It Rain baixam a SpA do usuário; Tera Blast só com Tera Stellar', () => {
+    const dracoMeteor = move('draco-meteor', 'dragon', 'special', 130, {
+      effects: fx({ category: 'damage-raise', statChanges: [{ stat: 'spa', change: -2 }], statChance: 100 }),
+    });
+    const after = run([side(), side()], [dracoMeteor, null]);
+    expect(after.sides[0].boosts.spa).toBe(-2);
+    expect(after.sides[1].boosts.spa).toBe(0);
+    const makeItRain = move('make-it-rain', 'steel', 'special', 120, {
+      effects: fx({ target: 'all-opponents', category: null, statChanges: [{ stat: 'spa', change: -1 }] }),
+    });
+    expect(run([side(), side()], [makeItRain, null]).sides[0].boosts.spa).toBe(-1);
+    const teraBlast = move('tera-blast', 'normal', 'special', 80, {
+      effects: fx({ category: null, statChanges: [{ stat: 'atk', change: -1 }, { stat: 'spa', change: -1 }] }),
+    });
+    const plain = run([side(), side()], [teraBlast, null]);
+    expect([plain.sides[0].boosts.spa, plain.sides[1].boosts.spa]).toEqual([0, 0]);
+    const stellar = run([side({ tera: 'stellar' }), side()], [teraBlast, null]);
+    expect(stellar.sides[0].boosts.spa).toBe(-1);
+  });
+
+  it('Belly Drum paga metade dos PS e leva o Atk a +6; Heal Pulse cura o alvo', () => {
+    const bellyDrum = status('belly-drum', 'normal', { target: 'user', category: 'unique' });
+    const drummed = run([side(), side()], [bellyDrum, null]);
+    expect(drummed.sides[0]).toMatchObject({ currentHp: 150, boosts: { atk: 6 } });
+    expect(run([side({ currentHp: 150 }), side()], [bellyDrum, null]).sides[0].boosts.atk).toBe(0);
+    const healPulse = status('heal-pulse', 'psychic', { category: 'heal', healing: 50 });
+    const healed = run([side({ currentHp: 100 }), side({ currentHp: 100 })], [healPulse, null]);
+    expect(healed.sides.map((s) => s.currentHp)).toEqual([100, 250]);
   });
 
   it('o estágio novo já vale no turno seguinte', () => {

@@ -204,7 +204,14 @@ export const fetchTypeData = (typeName) =>
   cachedJson(`${POKEAPI_BASE}/type/${encodeURIComponent(typeName)}`).catch(() => null);
 
 // Golpes de vários acertos que a PokéAPI publica sem `meta.min_hits`/`max_hits`.
-const MULTI_HIT_FALLBACK = { 'population-bomb': [1, 10] };
+const MULTI_HIT_FALLBACK = { 'population-bomb': [1, 10], 'triple-dive': [3, 3], 'twin-beam': [2, 2], 'tachyon-cutter': [2, 2] };
+// Dreno e recuo dos golpes da Geração 9, que a PokéAPI publica sem `meta`.
+const DRAIN_FALLBACK = { 'bitter-blade': 50, 'matcha-gotcha': 50, 'wave-crash': -33 };
+// Return e Frustration dependem da felicidade; a calculadora considera o poder máximo (felicidade 255 e 0).
+const MAX_HAPPINESS_POWER = { return: 102, frustration: 102 };
+
+/** Poder do golpe, com o de felicidade máxima no Return e no Frustration. */
+export const movePowerOf = (data) => data?.power ?? MAX_HAPPINESS_POWER[data?.name] ?? null;
 
 /**
  * O essencial de um golpe para cobertura e cálculo de dano; null se o golpe não existir.
@@ -219,7 +226,8 @@ const STAT_KEYS_BY_NAME = { attack: 'atk', defense: 'def', 'special-attack': 'sp
  */
 export const moveEffectsOf = (data) => ({
   target: data.target?.name ?? null,
-  category: data.meta?.category?.name ?? null,
+  // A PokéAPI já escreveu "damage+raise" e hoje escreve "damage-raise": vale a forma com hífen.
+  category: data.meta?.category?.name.replace(/\+/g, '-') ?? null,
   statChanges: (data.stat_changes ?? [])
     .map(({ change, stat }) => ({ stat: STAT_KEYS_BY_NAME[stat.name], change }))
     .filter((entry) => entry.stat),
@@ -227,7 +235,7 @@ export const moveEffectsOf = (data) => ({
   ailment: data.meta?.ailment?.name && data.meta.ailment.name !== 'none' ? data.meta.ailment.name : null,
   ailmentChance: data.meta?.ailment_chance ?? 0,
   healing: data.meta?.healing ?? 0,
-  drain: data.meta?.drain ?? 0,
+  drain: data.meta?.drain ?? DRAIN_FALLBACK[data.name] ?? 0,
   flinchChance: data.meta?.flinch_chance ?? 0,
 });
 
@@ -239,7 +247,7 @@ export const fetchMoveSummary = (slug) =>
       slug: data.name,
       type: data.type.name,
       damageClass: data.damage_class.name,
-      power: data.power,
+      power: movePowerOf(data),
       priority: data.priority ?? 0,
       effectChance: data.effect_chance ?? null,
       ...(maxHits > 1 && { minHits, maxHits }),
@@ -345,7 +353,7 @@ export async function fetchMoveInfo(slug) {
     effect: withChance(pickLocalized(data.effect_entries, 'effect')),
     type: data.type?.name ?? null,
     damageClass: data.damage_class?.name ?? null,
-    power: data.power,
+    power: movePowerOf(data),
     accuracy: data.accuracy,
     pp: data.pp,
     priority: data.priority,

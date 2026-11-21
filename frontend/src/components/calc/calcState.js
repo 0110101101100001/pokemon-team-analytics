@@ -37,7 +37,6 @@ export const createSide = () => ({
   lastHit: null,
   // Turnos em campo: Fake Out e First Impression só funcionam com 0.
   turnsOut: 0,
-  happiness: 255,
   boosts: { atk: 0, def: 0, spa: 0, spd: 0, spe: 0 },
   moves: Array.from({ length: MOVE_SLOTS }, () => createMoveSlot()),
 });

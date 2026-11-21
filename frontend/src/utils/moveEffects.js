@@ -24,6 +24,26 @@ const USER_SIDE_MOVES = { reflect: 'reflect', 'light-screen': 'lightScreen', 'au
 // Trick Room, Gravity e as salas: usar de novo desfaz.
 const ROOM_MOVES = { 'trick-room': 'trickRoom', gravity: 'gravity', 'magic-room': 'magicRoom', 'wonder-room': 'wonderRoom' };
 const WEATHER_HEAL = new Set(['moonlight', 'synthesis', 'morning-sun']);
+// Curam o alvo, não o usuário.
+const HEALS_TARGET = new Set(['heal-pulse', 'floral-healing']);
+
+/*
+  Correções dos dados da PokéAPI. Os golpes da Geração 9 vêm sem `meta` (categoria nula): sem ela não dá para saber
+  se os estágios de um golpe de dano vão para o usuário ou para o alvo, e alguns nem trazem os estágios.
+*/
+const SELF_STAT_MOVES = new Set(['make-it-rain', 'spin-out', 'armor-cannon', 'headlong-rush', 'aqua-step', 'electro-shot', 'torch-song', 'trailblaze', 'tera-blast']);
+const MISSING_STAT_CHANGES = {
+  'headlong-rush': [{ stat: 'def', change: -1 }, { stat: 'spd', change: -1 }],
+  'victory-dance': [{ stat: 'atk', change: 1 }, { stat: 'def', change: 1 }, { stat: 'spe', change: 1 }],
+  shelter: [{ stat: 'def', change: 2 }],
+  'take-heart': [{ stat: 'spa', change: 1 }, { stat: 'spd', change: 1 }],
+  // Belly Drum leva o Atk ao máximo: +12 garante o +6 de qualquer estágio de partida.
+  'belly-drum': [{ stat: 'atk', change: 12 }],
+};
+// Efeitos que dependem do que a simulação não acompanha (Burning Jealousy só queima quem subiu estágios no turno).
+const CONDITIONAL_AILMENTS = new Set(['burning-jealousy']);
+// Custo em PS do usuário, em fração dos PS máximos. Os de status falham sem PS para pagar; os de dano cobram sempre.
+const HP_COST = { 'belly-drum': 1 / 2, 'fillet-away': 1 / 2, 'clangorous-soul': 1 / 3, 'mind-blown': 1 / 2, 'steel-beam': 1 / 2, chloroblast: 1 / 2 };
 
 /** Golpes que mudam o campo (clima, terreno, telas, salas, hazards): o registro os mostra com o ícone de campo. */
 export const isFieldMove = (slug) => Boolean(WEATHER_MOVES[slug] || TERRAIN_MOVES[slug] || USER_SIDE_MOVES[slug] || ROOM_MOVES[slug])
@@ -80,6 +100,22 @@ function changeStages(battle, index, changes, fromOpponent) {
 
 const isCertain = (chance) => chance === 0 || chance >= 100;
 
+/** Se os estágios do golpe vão para o usuário (Draco Meteor, Close Combat, Swords Dance) ou para o alvo. */
+function statsGoToUser(move, effects) {
+  if (SELF_STAT_MOVES.has(move.slug) || effects.category === 'damage-raise') return true;
+  if (effects.category === 'damage-lower') return false;
+  return SELF_TARGETS.has(effects.target);
+}
+
+/** Cobra o custo em PS do golpe e devolve a frase do registro. */
+function payHpCost(battle, index, slug, isStatusMove) {
+  const max = battle.combatants[index].stats.hp;
+  const cost = isStatusMove ? Math.floor(max * HP_COST[slug]) : Math.round(max * HP_COST[slug]);
+  const paid = Math.min(battle.hp[index], cost);
+  battle.hp[index] -= paid;
+  return `perde ${paid} PS`;
+}
+
 /**
  * Aplica os efeitos do golpe que `from` acabou de usar em `to`. `damage` é o dano causado (0 nos de status).
  * Devolve as frases do registro (sem o nome de quem usou).
@@ -100,11 +136,19 @@ export function applyMoveEffects(battle, { from, to, move, damage, names }) {
     battle.toxicTurns[from] = 0;
     return [`+${healed} PS e dorme por ${SLEEP_TURNS} turnos`];
   }
+  if (HP_COST[move.slug] && isStatusMove) {
+    if (battle.hp[from] <= Math.floor(user.stats.hp * HP_COST[move.slug])) return ['falhou: PS insuficientes para pagar o custo'];
+    notes.push(payHpCost(battle, from, move.slug, true));
+  }
   if (effects.healing > 0 && isStatusMove) {
+    const healedIndex = HEALS_TARGET.has(move.slug) ? to : from;
     let fraction = effects.healing / 100;
     if (WEATHER_HEAL.has(move.slug) && battle.field.weather) fraction = ['sun', 'harsh-sun'].includes(battle.field.weather) ? 2 / 3 : 1 / 4;
-    const healed = heal(battle, from, Math.floor(user.stats.hp * fraction));
-    notes.push(healed ? `+${healed} PS` : 'os PS já estão cheios');
+    if (move.slug === 'shore-up' && battle.field.weather === 'sand') fraction = 2 / 3;
+    if (move.slug === 'floral-healing' && battle.field.terrain === 'grassy') fraction = 2 / 3;
+    const healed = heal(battle, healedIndex, Math.floor(battle.combatants[healedIndex].stats.hp * fraction));
+    const who = healedIndex === to ? `${names[to]}: ` : '';
+    notes.push(healed ? `${who}+${healed} PS` : `${who}os PS já estão cheios`);
   }
 
   // Dreno (Giga Drain, Drain Punch) e recuo (Double-Edge, Brave Bird).
@@ -117,17 +161,25 @@ export function applyMoveEffects(battle, { from, to, move, damage, names }) {
     notes.push(`perde ${recoil} PS de recuo`);
   }
 
+  // Custo em PS dos golpes de dano (Mind Blown, Steel Beam, Chloroblast): cobrado mesmo que o alvo caia.
+  if (HP_COST[move.slug] && !isStatusMove && damage > 0 && user.ability !== 'magic-guard') {
+    notes.push(payHpCost(battle, from, move.slug, false));
+  }
+
   // Estágios: golpes de dano que sobem os do usuário (ou baixam, como Close Combat) e os que baixam os do alvo.
-  if (effects.statChanges.length && (isStatusMove || damage > 0) && isCertain(effects.statChance)) {
-    const toUser = effects.category === 'damage+raise' || (effects.category !== 'damage+lower' && SELF_TARGETS.has(effects.target));
+  // Tera Blast só baixa Atk e SpA do usuário com Tera Stellar.
+  const statChanges = MISSING_STAT_CHANGES[move.slug] ?? effects.statChanges;
+  const statsApply = move.slug !== 'tera-blast' || user.tera === 'stellar';
+  if (statChanges.length && statsApply && (isStatusMove || damage > 0) && isCertain(effects.statChance)) {
+    const toUser = statsGoToUser(move, effects);
     const index = toUser ? from : to;
-    const applied = changeStages(battle, index, effects.statChanges, !toUser);
+    const applied = changeStages(battle, index, statChanges, !toUser);
     if (applied.length) notes.push(`${toUser ? '' : `${names[to]}: `}${applied.join(', ')}`);
     else if (isStatusMove) notes.push('os estágios já estão no limite');
   }
 
   // Status e Leech Seed.
-  if (effects.ailment && (isStatusMove || damage > 0) && isCertain(effects.ailmentChance)) {
+  if (effects.ailment && !CONDITIONAL_AILMENTS.has(move.slug) && (isStatusMove || damage > 0) && isCertain(effects.ailmentChance)) {
     const ailment = move.slug === 'toxic' ? 'toxic' : effects.ailment;
     if (ailment === 'leech-seed') {
       if (battle.combatants[to].types.includes('grass')) notes.push('falhou: o tipo Grass é imune a Leech Seed');

@@ -17,6 +17,8 @@ const Z_EXCEPTIONS = {
   'v-create': 220,
   'flying-press': 170,
   'core-enforcer': 140,
+  return: 160,
+  frustration: 160,
 };
 
 const MAX_POWER = [[150, 150], [110, 140], [75, 130], [65, 120], [55, 110], [45, 100], [0, 90]];

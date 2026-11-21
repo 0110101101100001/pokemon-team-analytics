@@ -11,7 +11,7 @@ import { currentHp, fixedDamage, hiddenPowerType, variablePower } from './variab
   4096 = ×1; 6144 = ×1,5; 2048 = ×0,5. Cada etapa arredonda como os jogos (metade para baixo).
 
   Lado (attacker/defender): { level, types, originalTypes, tera, stats, boosts, item, ability, status }, e para os golpes de
-  poder variável e dano fixo (utils/variablePower): { weight, currentHp, happiness, ivs, baseStats, lastHit, toxicTurns };
+  poder variável e dano fixo (utils/variablePower): { weight, currentHp, ivs, baseStats, lastHit, toxicTurns };
   `turnsOut` conta os turnos do lado em campo (Fake Out e First Impression só valem no primeiro).
   `types` são os tipos em batalha (o Tera já aplicado); `originalTypes`, os da espécie ou forma, que valem para o STAB.
   `ability` já vem resolvida pela seção (Neutralizing Gas zera a do oponente).
@@ -62,6 +62,12 @@ const MOVE_GROUP_IMMUNITIES = {
 const TERRAIN_BOOSTS = { electric: 'electric', grassy: 'grass', psychic: 'psychic' };
 const WEATHER_BALL_TYPES = { sun: 'fire', 'harsh-sun': 'fire', rain: 'water', 'heavy-rain': 'water', sand: 'rock', snow: 'ice' };
 const SOLAR_MOVES = new Set(['solar-beam', 'solar-blade']);
+// Golpes especiais que acertam a Def do alvo.
+const HITS_DEFENSE = new Set(['psyshock', 'psystrike', 'secret-sword']);
+const ALWAYS_CRIT = new Set(['wicked-blow', 'surging-strikes', 'flower-trick', 'frost-breath', 'storm-throw', 'zippy-zap']);
+// Super efetivos ganham ×1,33 (5461/4096).
+const SUPER_EFFECTIVE_BOOST = new Set(['collision-course', 'electro-drift']);
+const TERRAIN_PULSE_TYPES = { electric: 'electric', grassy: 'grass', misty: 'fairy', psychic: 'psychic' };
 // Só funcionam no primeiro turno do usuário em campo (`turnsOut` 0).
 export const FIRST_TURN_MOVES = new Set(['fake-out', 'first-impression']);
 const FACADE_STATUSES = new Set(['burn', 'poison', 'toxic', 'paralysis']);
@@ -146,6 +152,7 @@ function resolveMoveType(move, attacker, field, teraBlast) {
   let moveType = move.slug === 'weather-ball' ? WEATHER_BALL_TYPES[field.weather] ?? move.type : move.type;
   if (move.slug === 'hidden-power' && attacker.ivs) moveType = hiddenPowerType(attacker.ivs);
   if (move.slug === 'natural-gift' && NATURAL_GIFT[attacker.item]) moveType = NATURAL_GIFT[attacker.item].type;
+  if (move.slug === 'terrain-pulse' && isGrounded(attacker, field)) moveType = TERRAIN_PULSE_TYPES[field.terrain] ?? moveType;
   if (attacker.ability === 'normalize') return { moveType: 'normal', typeChanged: true };
   const ateType = ATE_ABILITIES[attacker.ability];
   if (ateType && moveType === 'normal') return { moveType: ateType, typeChanged: true };
@@ -224,7 +231,7 @@ export function calculateDamage({ attacker, defender, move, field, defenderSide,
   }
 
   const crit = !['battle-armor', 'shell-armor'].includes(defenderAbility)
-    && (move.crit || (attacker.ability === 'merciless' && isPoisoned(defender)));
+    && (move.crit || ALWAYS_CRIT.has(move.slug) || (attacker.ability === 'merciless' && isPoisoned(defender)));
 
   /* ---- poder */
   const variable = move.power ? null : variablePower(move, {
@@ -241,6 +248,13 @@ export function calculateDamage({ attacker, defender, move, field, defenderSide,
   if (move.slug === 'acrobatics' && !attackerItem) basePower *= 2;
   if (move.slug === 'hex' && (defender.status || defender.ability === 'comatose')) basePower *= 2;
   if (move.slug === 'venoshock' && isPoisoned(defender)) basePower *= 2;
+  if (move.slug === 'barb-barrage' && isPoisoned(defender)) basePower *= 2;
+  if (move.slug === 'infernal-parade' && (defender.status || defender.ability === 'comatose')) basePower *= 2;
+  if (move.slug === 'smelling-salts' && defender.status === 'paralysis') basePower *= 2;
+  if (move.slug === 'wake-up-slap' && defender.status === 'sleep') basePower *= 2;
+  if (move.slug === 'brine' && currentHp(defender) * 2 <= hp) basePower *= 2;
+  if (move.slug === 'rising-voltage' && field.terrain === 'electric' && defenderGrounded) basePower *= 2;
+  if (move.slug === 'terrain-pulse' && field.terrain && attackerGrounded) basePower *= 2;
   // Com Tera, golpes do tipo Tera com menos de 60 de poder sobem para 60 (exceto os de vários acertos e os de prioridade).
   if (teraActive && moveType === attacker.tera && basePower < 60 && !(move.maxHits > 1) && !(move.priority > 0)) basePower = 60;
 
@@ -262,6 +276,10 @@ export function calculateDamage({ attacker, defender, move, field, defenderSide,
   const aura = (moveType === 'fairy' && fieldAbilities.includes('fairy-aura')) || (moveType === 'dark' && fieldAbilities.includes('dark-aura'));
   if (aura) powerMods.push(fieldAbilities.includes('aura-break') ? 3072 : 5448);
   if (move.slug === 'knock-off' && defenderItem) powerMods.push(6144);
+  if (move.slug === 'expanding-force' && field.terrain === 'psychic' && attackerGrounded) powerMods.push(6144);
+  if (move.slug === 'misty-explosion' && field.terrain === 'misty' && attackerGrounded) powerMods.push(6144);
+  if (move.slug === 'psyblade' && field.terrain === 'electric') powerMods.push(6144);
+  if (move.slug === 'grav-apple' && field.gravity) powerMods.push(6144);
   if (SOLAR_MOVES.has(move.slug) && field.weather && !SUN.has(field.weather) && field.weather !== 'strong-winds') powerMods.push(2048);
   if (TYPE_BOOST_ITEMS[attackerItem] === moveType) powerMods.push(4915);
   if (attackerItem === 'muscle-band' && physical) powerMods.push(4505);
@@ -273,8 +291,10 @@ export function calculateDamage({ attacker, defender, move, field, defenderSide,
   const power = Math.max(1, applyMod(basePower, chainMods(powerMods)));
 
   /* ---- ataque */
-  const attackKey = physical ? 'atk' : 'spa';
-  let attackStage = defenderAbility === 'unaware' ? 0 : attacker.boosts[attackKey];
+  // Body Press usa a Def do usuário; Foul Play, o Atk e os estágios do alvo.
+  const attackKey = move.slug === 'body-press' ? 'def' : physical ? 'atk' : 'spa';
+  const attackSource = move.slug === 'foul-play' ? defender : attacker;
+  let attackStage = defenderAbility === 'unaware' ? 0 : attackSource.boosts[attackKey];
   if (crit) attackStage = Math.max(attackStage, 0);
   const attackMods = [];
   if (physical && ['huge-power', 'pure-power'].includes(attacker.ability)) attackMods.push(8192);
@@ -285,7 +305,7 @@ export function calculateDamage({ attacker, defender, move, field, defenderSide,
   if (physical && attacker.ability === 'orichalcum-pulse' && SUN.has(field.weather)) attackMods.push(5461);
   if (!physical && attacker.ability === 'hadron-engine' && field.terrain === 'electric') attackMods.push(5461);
   if (!physical && attacker.ability === 'solar-power' && SUN.has(field.weather)) attackMods.push(6144);
-  if (paradoxStat(attacker, field) === attackKey) attackMods.push(5325);
+  if (paradoxStat(attacker, field) === attackKey && move.slug !== 'foul-play') attackMods.push(5325);
   if (attacker.ability === 'water-bubble' && moveType === 'water') attackMods.push(8192);
   const typeAbilityBoost = TYPE_ABILITY_BOOSTS[attacker.ability];
   if (typeAbilityBoost?.[0] === moveType) attackMods.push(typeAbilityBoost[1]);
@@ -298,24 +318,25 @@ export function calculateDamage({ attacker, defender, move, field, defenderSide,
   if (defenderAbility === 'heatproof' && moveType === 'fire') attackMods.push(2048);
   if (defenderAbility === 'purifying-salt' && moveType === 'ghost') attackMods.push(2048);
   if (defenderAbility === 'water-bubble' && moveType === 'fire') attackMods.push(2048);
-  const attack = Math.max(1, applyMod(applyBoost(attacker.stats[attackKey], attackStage), chainMods(attackMods)));
+  const attack = Math.max(1, applyMod(applyBoost(attackSource.stats[attackKey], attackStage), chainMods(attackMods)));
 
-  /* ---- defesa (Wonder Room troca Def e SpD) */
-  const defenseKey = physical !== field.wonderRoom ? 'def' : 'spd';
-  const boostKey = physical ? 'def' : 'spd';
+  /* ---- defesa (Wonder Room troca Def e SpD; Psyshock, Psystrike e Secret Sword são especiais que acertam a Def) */
+  const hitsDef = physical || HITS_DEFENSE.has(move.slug);
+  const defenseKey = hitsDef !== field.wonderRoom ? 'def' : 'spd';
+  const boostKey = hitsDef ? 'def' : 'spd';
   let defenseStage = attacker.ability === 'unaware' ? 0 : defender.boosts[boostKey];
   if (crit) defenseStage = Math.min(defenseStage, 0);
   const defenseMods = [];
-  if (!physical && field.weather === 'sand' && defender.types.includes('rock')) defenseMods.push(6144);
-  if (physical && field.weather === 'snow' && defender.types.includes('ice')) defenseMods.push(6144);
+  if (!hitsDef && field.weather === 'sand' && defender.types.includes('rock')) defenseMods.push(6144);
+  if (hitsDef && field.weather === 'snow' && defender.types.includes('ice')) defenseMods.push(6144);
   if (physical && attacker.ability === 'sword-of-ruin' && defender.ability !== 'sword-of-ruin') defenseMods.push(3072);
   if (!physical && attacker.ability === 'beads-of-ruin' && defender.ability !== 'beads-of-ruin') defenseMods.push(3072);
   if (defenderItem === 'eviolite') defenseMods.push(6144);
-  if (!physical && defenderItem === 'assault-vest') defenseMods.push(6144);
-  if (physical && defenderAbility === 'fur-coat') defenseMods.push(8192);
-  if (physical && defenderAbility === 'marvel-scale' && defender.status) defenseMods.push(6144);
-  if (physical && defenderAbility === 'grass-pelt' && field.terrain === 'grassy') defenseMods.push(6144);
-  if (!physical && defenderAbility === 'flower-gift' && SUN.has(field.weather)) defenseMods.push(6144);
+  if (!hitsDef && defenderItem === 'assault-vest') defenseMods.push(6144);
+  if (hitsDef && defenderAbility === 'fur-coat') defenseMods.push(8192);
+  if (hitsDef && defenderAbility === 'marvel-scale' && defender.status) defenseMods.push(6144);
+  if (hitsDef && defenderAbility === 'grass-pelt' && field.terrain === 'grassy') defenseMods.push(6144);
+  if (!hitsDef && defenderAbility === 'flower-gift' && SUN.has(field.weather)) defenseMods.push(6144);
   if (paradoxStat({ ...defender, ability: defenderAbility }, field) === boostKey) defenseMods.push(5325);
   const defense = Math.max(1, applyMod(applyBoost(defender.stats[defenseKey], defenseStage), chainMods(defenseMods)));
 
@@ -332,6 +353,7 @@ export function calculateDamage({ attacker, defender, move, field, defenderSide,
   if (attacker.ability === 'sniper' && crit) finalMods.push(6144);
   if (attacker.ability === 'tinted-lens' && typeMultiplier < 1) finalMods.push(8192);
   if (attacker.ability === 'neuroforce' && typeMultiplier > 1) finalMods.push(5120);
+  if (SUPER_EFFECTIVE_BOOST.has(move.slug) && typeMultiplier > 1) finalMods.push(5461);
   if (attackerItem === 'expert-belt' && typeMultiplier > 1) finalMods.push(4915);
   if (attackerItem === 'life-orb') finalMods.push(5324);
   const berryType = RESIST_BERRIES[defenderItem];
@@ -347,7 +369,7 @@ export function calculateDamage({ attacker, defender, move, field, defenderSide,
     if (secondHitMod) base = applyMod(base, secondHitMod);
     if (SUN.has(field.weather)) {
       if (moveType === 'fire') base = applyMod(base, 6144);
-      if (moveType === 'water') base = applyMod(base, 2048);
+      if (moveType === 'water') base = applyMod(base, move.slug === 'hydro-steam' ? 6144 : 2048);
     } else if (RAIN.has(field.weather)) {
       if (moveType === 'water') base = applyMod(base, 6144);
       if (moveType === 'fire') base = applyMod(base, 2048);

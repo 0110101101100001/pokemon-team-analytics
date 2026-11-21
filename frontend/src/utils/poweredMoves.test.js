@@ -10,6 +10,7 @@ describe('golpes Z e Max na calculadora', () => {
     expect(zPower(move('quick-attack', 'normal', 40))).toBe(100);
     expect(zPower(move('close-combat', 'fighting', 120))).toBe(190);
     expect(zPower(move('v-create', 'fire', 180))).toBe(220);
+    expect(zPower(move('return', 'normal', 102))).toBe(160);
   });
 
   it('converte o poder pela tabela do golpe Max, mais fraca para Lutador e Venenoso', () => {

@@ -77,21 +77,6 @@ function BoostStepper({ stat, value, onChange }) {
 }
 const abilityLabel = (slug) => (ABILITY_EFFECTS[slug] ? `${formatSlug(slug)} · ${ABILITY_EFFECTS[slug]}` : formatSlug(slug));
 
-/** Número inteiro dentro da faixa; um campo vazio ou inválido volta ao limite mais próximo. */
-function NumberInput({ value, min, max, onChange }) {
-  return (
-    <input
-      type="number"
-      inputMode="numeric"
-      min={min}
-      max={max}
-      value={value}
-      onChange={(e) => onChange(Math.min(max, Math.max(min, Math.round(Number(e.target.value) || min))))}
-      className="paper-field h-9 px-2 font-mono text-[13px] tabular-nums"
-    />
-  );
-}
-
 function Field({ label, children, className = '' }) {
   return (
     <label className={`block min-w-0 ${className}`}>
@@ -105,7 +90,7 @@ function Field({ label, children, className = '' }) {
  * Um lado da calculadora: o Pokémon (pela busca ou do time), Mega/Primal, Tera, nível, habilidade, item, status,
  * os estágios de cada atributo, os quatro golpes e, recolhidos, natureza, EVs e IVs.
  */
-function CombatantPanel({ caption, title, pickerPlaceholder, side, battle, forms, gmaxMove, extraFields, hpPreview, ability, speed, faster, airborne, pool, teams, loggedIn, teamsOpen, extraSource, onChange, onMoveChange, onPick, onLogin, className = '' }) {
+function CombatantPanel({ caption, title, pickerPlaceholder, side, battle, forms, gmaxMove, hpPreview, ability, speed, faster, airborne, pool, teams, loggedIn, teamsOpen, extraSource, onChange, onMoveChange, onPick, onLogin, className = '' }) {
   const { pokemon, set, boosts } = side;
 
   const patchSet = useCallback((changes) => onChange({ set: { ...set, ...changes } }), [set, onChange]);
@@ -256,14 +241,6 @@ function CombatantPanel({ caption, title, pickerPlaceholder, side, battle, forms
               </select>
             </Field>
           </div>
-
-          {extraFields?.happiness && (
-            <div className="grid grid-cols-2 gap-2">
-              <Field label="felicidade">
-                <NumberInput value={side.happiness} min={0} max={255} onChange={(happiness) => onChange({ happiness })} />
-              </Field>
-            </div>
-          )}
 
           <div>
             <span className="mb-1 block font-hand text-base leading-none text-umber">golpes</span>
