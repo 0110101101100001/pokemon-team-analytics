@@ -2,7 +2,7 @@
 
 Pokédex com dados competitivos da Smogon, fichas de campo e um team builder.
 
-**Produção:** [smearglepedia.netlify.app](https://smearglepedia.netlify.app) · API: [pokemon-team-analytics.onrender.com](https://pokemon-team-analytics.onrender.com/docs)
+**Produção:** [smearglepedia.netlify.app](https://smearglepediaa.netlify.app) · API: [pokemon-team-analytics.onrender.com](https://pokemon-team-analytics.onrender.com/docs)
 
 ![Tela inicial da Smearglepedia](img.png)
 
