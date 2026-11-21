@@ -96,7 +96,6 @@ export default {
         'fade-in': 'fadeIn 0.25s ease-out',
         'bubble-pop': 'bubblePop 0.3s cubic-bezier(0.22, 1, 0.36, 1)',
         'loader-sweep': 'loaderSweep 1.4s cubic-bezier(0.65, 0, 0.35, 1) infinite',
-        'mascot-bob': 'mascotBob 3.2s ease-in-out infinite',
         'cry-wave': 'cryWave 0.8s ease-in-out infinite',
         'cry-ring': 'cryRing 1.2s ease-out infinite',
         // Sem fill-mode: terminada a entrada, a seção não fica com transform nem contexto de empilhamento
@@ -120,11 +119,6 @@ export default {
         },
         sectionIn: {
           '0%': { opacity: '0', transform: 'translateY(10px)' },
-        },
-        // O mascote balança de leve no lugar, como quem espera com o pincel na mão.
-        mascotBob: {
-          '0%, 100%': { transform: 'translateY(0) rotate(0deg)' },
-          '50%': { transform: 'translateY(-3px) rotate(-2deg)' },
         },
         // Barra do carregamento: um trecho curto percorre o trilho da esquerda para a direita.
         loaderSweep: {
