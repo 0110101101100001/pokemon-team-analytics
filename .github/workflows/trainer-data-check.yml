@@ -1,0 +1,37 @@
+name: Dados da Liga
+
+# A tabela PokemonTrainers muda direto no Supabase, sem push: uma vez por semana o teste confere se o front
+# conhece todas as regiões, papéis, etapas, mecânicas e jogos dela.
+on:
+  schedule:
+    - cron: '0 12 * * 1'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    defaults:
+      run:
+        working-directory: frontend
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+      - run: npm ci --no-audit --no-fund
+      - name: Conferir a tabela PokemonTrainers
+        run: |
+          if [ -z "$SUPABASE_URL" ] || [ -z "$SUPABASE_KEY" ]; then
+            echo "::error::Os secrets SUPABASE_URL e SUPABASE_KEY precisam estar definidos no repositório."
+            exit 1
+          fi
+          npx vitest run src/utils/trainers-data.test.js
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_KEY: ${{ secrets.SUPABASE_KEY }}

@@ -376,3 +376,29 @@ export function trainerMemberSet(member, summaryOf) {
     moves: set.moves.map((_, index) => (member.moves[index] ? summaryOf(moveSlug(member.moves[index])) : null)),
   };
 }
+
+// Colunas com valores fixos que o front precisa conhecer para posicionar o card; nulo vale como o padrão.
+const KNOWN_VALUES = {
+  Region: (value) => Object.hasOwn(REGION_GENERATION, value),
+  Role: (value) => Object.hasOwn(ROLES, value),
+  Battle_Stage: (value) => value == null || Object.hasOwn(STAGES, value),
+  Battle_Gimmick: (value) => value == null || value === 'None' || Object.hasOwn(GIMMICKS, value),
+};
+
+/**
+ * Valores da tabela PokemonTrainers que o front não conhece, por coluna ({} quando está tudo mapeado).
+ * Uma região, papel ou jogo novo não quebra a tela, mas vai para o fim da lista ou some do filtro.
+ */
+export function unknownTrainerValues(rows) {
+  const unknown = {};
+  const note = (column, value) => (unknown[column] ??= new Set()).add(value);
+  for (const row of rows) {
+    for (const [column, isKnown] of Object.entries(KNOWN_VALUES)) {
+      if (!isKnown(row[column])) note(column, row[column]);
+    }
+    for (const game of toBattle(row).gameList) {
+      if (!GAME_ORDER.includes(game)) note('Games_JSON', game);
+    }
+  }
+  return Object.fromEntries(Object.entries(unknown).map(([column, values]) => [column, [...values].sort()]));
+}

@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import {
   MIXED_TYPE, battleGroupsOf, battleLabel, hasTeamVariants, battleTabsOf, teamVariantsOf, createNameMatcher, gamesOf, groupTrainers, matchingBattles, moveSlug, resolveTrainerPokemon,
-  trainerMemberSet, trainerSpriteUrl, gameLabelsOf, gameListOf, regionGeneration, regionsOf,
+  trainerMemberSet, trainerSpriteUrl, gameLabelsOf, gameListOf, regionGeneration, regionsOf, unknownTrainerValues,
 } from './trainers';
 
 const row = (fields) => ({
@@ -355,5 +355,21 @@ describe('ordem dos cards', () => {
     expect(variants(['Subsequent clears', 'Fourth clear', 'Second clear', 'First clear', 'Third clear']))
       .toEqual(['First clear', 'Second clear', 'Third clear', 'Fourth clear', 'Subsequent clears']);
     expect(variants(['After The Way Home', 'Before The Way Home'])).toEqual(['Before The Way Home', 'After The Way Home']);
+  });
+});
+
+describe('unknownTrainerValues', () => {
+  it('não acusa nada quando tudo está mapeado', () => {
+    expect(unknownTrainerValues(ROWS)).toEqual({});
+  });
+
+  it('lista por coluna o que o front não conhece', () => {
+    const rows = [
+      row({ Trainer_Slug: 'a', Region: 'Orre', Role: 'Cipher', Games_Label: 'Colosseum', Battle_Gimmick: 'Shadow' }),
+      row({ Trainer_Slug: 'b', Region: 'Orre', Battle_Stage: 'Epilogue' }),
+    ];
+    expect(unknownTrainerValues(rows)).toEqual({
+      Region: ['Orre'], Role: ['Cipher'], Battle_Gimmick: ['Shadow'], Battle_Stage: ['Epilogue'], Games_JSON: ['Colosseum'],
+    });
   });
 });
