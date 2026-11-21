@@ -73,6 +73,15 @@ describe('golpes com regras próprias', () => {
     expect(hit(side(), side({ item: 'assault-vest' }), psyshock).max).toBe(hit(side(), side(), psyshock).max);
   });
 
+  it('Bolt Beak dobra quando o usuário age antes do alvo', () => {
+    const boltBeak = move('bolt-beak', 'electric', 'physical', 85);
+    const fast = side({ stats: { ...side().stats, spe: 300 } });
+    const first = hit(fast, side(), boltBeak).max;
+    const second = hit(side(), fast, boltBeak).max;
+    expect(first).toBeGreaterThan(second * 1.8);
+    expect(calculateDamage({ attacker: side(), defender: fast, move: boltBeak, field, defenderSide: conditions[1], targetMoved: false }).max).toBe(first);
+  });
+
   it('Wicked Blow é sempre crítico', () => {
     expect(hit(side(), side(), move('wicked-blow', 'dark', 'physical', 75)).crit).toBe(true);
   });

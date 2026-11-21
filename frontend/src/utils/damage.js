@@ -67,6 +67,8 @@ const HITS_DEFENSE = new Set(['psyshock', 'psystrike', 'secret-sword']);
 const ALWAYS_CRIT = new Set(['wicked-blow', 'surging-strikes', 'flower-trick', 'frost-breath', 'storm-throw', 'zippy-zap']);
 // Super efetivos ganham ×1,33 (5461/4096).
 const SUPER_EFFECTIVE_BOOST = new Set(['collision-course', 'electro-drift']);
+// Dobram de poder quando o usuário age antes do alvo.
+const FIRST_STRIKE_MOVES = new Set(['bolt-beak', 'fishious-rend']);
 const TERRAIN_PULSE_TYPES = { electric: 'electric', grassy: 'grass', misty: 'fairy', psychic: 'psychic' };
 // Só funcionam no primeiro turno do usuário em campo (`turnsOut` 0).
 export const FIRST_TURN_MOVES = new Set(['fake-out', 'first-impression']);
@@ -185,11 +187,21 @@ function immunityReason({ attacker, move, moveType, defenderAbility, defenderAir
 const failed = (reason, hp) => ({ rolls: [0], extraRolls: null, hits: 1, min: 0, max: 0, typeMultiplier: 0, stab: false, crit: false, hp, reason });
 
 /**
+ * Se o usuário age antes do alvo: no turno simulado vem de `targetMoved`; fora dele, pela velocidade
+ * (Trick Room inverte; empate não conta, porque é sorteado).
+ */
+function strikesFirst(attackerSpeed, defenderSpeed, field, targetMoved) {
+  if (targetMoved !== undefined) return !targetMoved;
+  if (attackerSpeed === defenderSpeed) return false;
+  return (attackerSpeed > defenderSpeed) !== Boolean(field.trickRoom);
+}
+
+/**
  * Calcula os 16 resultados de um golpe (do menor para o maior) por acerto.
  * Golpes de vários acertos devolvem `hits` > 1: o total de um uso soma um resultado por acerto.
  * Com Parental Bond, `extraRolls` traz os resultados do segundo acerto (×0,25).
  */
-export function calculateDamage({ attacker, defender, move, field, defenderSide, attackerSide = NO_SIDE_CONDITIONS }) {
+export function calculateDamage({ attacker, defender, move, field, defenderSide, attackerSide = NO_SIDE_CONDITIONS, targetMoved }) {
   const hp = defender.stats.hp;
   const attackerItem = activeItem(attacker, field);
   const defenderItem = activeItem(defender, field);
@@ -234,13 +246,9 @@ export function calculateDamage({ attacker, defender, move, field, defenderSide,
     && (move.crit || ALWAYS_CRIT.has(move.slug) || (attacker.ability === 'merciless' && isPoisoned(defender)));
 
   /* ---- poder */
-  const variable = move.power ? null : variablePower(move, {
-    attacker,
-    defender,
-    attackerItem,
-    attackerSpeed: calcSpeed(attacker, attackerSide, field),
-    defenderSpeed: calcSpeed(defender, defenderSide, field),
-  });
+  const attackerSpeed = calcSpeed(attacker, attackerSide, field);
+  const defenderSpeed = calcSpeed(defender, defenderSide, field);
+  const variable = move.power ? null : variablePower(move, { attacker, defender, attackerItem, attackerSpeed, defenderSpeed });
   if (variable?.reason) return failed(variable.reason, hp);
   let basePower = variable ? variable.power : move.power;
   if (move.slug === 'weather-ball' && WEATHER_BALL_TYPES[field.weather]) basePower *= 2;
@@ -252,6 +260,7 @@ export function calculateDamage({ attacker, defender, move, field, defenderSide,
   if (move.slug === 'infernal-parade' && (defender.status || defender.ability === 'comatose')) basePower *= 2;
   if (move.slug === 'smelling-salts' && defender.status === 'paralysis') basePower *= 2;
   if (move.slug === 'wake-up-slap' && defender.status === 'sleep') basePower *= 2;
+  if (FIRST_STRIKE_MOVES.has(move.slug) && strikesFirst(attackerSpeed, defenderSpeed, field, targetMoved)) basePower *= 2;
   if (move.slug === 'brine' && currentHp(defender) * 2 <= hp) basePower *= 2;
   if (move.slug === 'rising-voltage' && field.terrain === 'electric' && defenderGrounded) basePower *= 2;
   if (move.slug === 'terrain-pulse' && field.terrain && attackerGrounded) basePower *= 2;

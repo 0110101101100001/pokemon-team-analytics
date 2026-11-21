@@ -145,6 +145,7 @@ export function simulateTurn({ combatants, moves, sideConditions, field, names }
     const defender = state(to);
     const result = calculateDamage({
       attacker, defender, move, field: battle.field, attackerSide: battle.conditions[from], defenderSide: battle.conditions[to],
+      targetMoved: acted[to],
     });
     if (move.slug === 'bide') battle.bide[from] = null;
     if (result.reason) {
