@@ -70,6 +70,8 @@ function PokedexSection({
   hasSmogonDataMap,
   onSelect,
   onToggleFavorite,
+  comparedSet,
+  onToggleCompare,
   onLogin,
 }) {
   const collapsed = useHeaderCollapsed();
@@ -169,6 +171,8 @@ function PokedexSection({
           hasSmogonDataMap={hasSmogonDataMap}
           favorites={collections.favoriteSet}
           onToggleFavorite={onToggleFavorite}
+          comparedSet={comparedSet}
+          onToggleCompare={onToggleCompare}
         />
       )}
     </div>

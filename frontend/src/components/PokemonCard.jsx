@@ -1,6 +1,7 @@
 import { memo, useState } from 'react';
 import { TypeStamp, TYPE_INK } from './PokemonTypeBadge';
 import FavoriteButton from './FavoriteButton';
+import CompareCardButton from './CompareCardButton';
 import { thumbnailSpriteUrl } from '../services/api';
 
 /** Selo dos Pokémon com estatísticas de uso na Smogon; a legenda fica no cabeçalho da Pokédex. */
@@ -47,15 +48,18 @@ function PokemonCard({
   isSelected,
   hasSmogonData = false,
   isFavorite = false,
+  isCompared = false,
+  compareFull = false,
   onSelect,
   onToggleFavorite,
+  onToggleCompare,
 }) {
   const name = displayName(pokemon);
 
   return (
     <article data-selected={isSelected} className="print-card select-none p-4">
       {/*
-        O card inteiro abre a ficha por este botão, esticado sobre ele. O favorito fica acima (z-20) como irmão,
+        O card inteiro abre a ficha por este botão, esticado sobre ele. Favorito e comparar ficam acima (z-20) como irmãos,
         e não dentro: controle interativo aninhado em outro é HTML inválido e confunde leitores de tela.
       */}
       <button
@@ -72,6 +76,9 @@ function PokemonCard({
         </span>
         <div className="flex items-center gap-1">
           {hasSmogonData && <SmogonSeal />}
+          {onToggleCompare && (
+            <CompareCardButton className="relative z-20" name={pokemon} label={name} active={isCompared} full={compareFull} onToggle={onToggleCompare} />
+          )}
           {onToggleFavorite && (
             <FavoriteButton className="relative z-20 -mr-1.5" name={pokemon} label={name} active={isFavorite} onToggle={onToggleFavorite} />
           )}

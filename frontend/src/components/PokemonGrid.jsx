@@ -2,6 +2,7 @@ import { memo, useEffect, useMemo, useRef, useState } from 'react';
 import { Paintbrush } from 'lucide-react';
 import PokemonCard from './PokemonCard';
 import JumpIndex, { scrollToElement } from './JumpIndex';
+import { COMPARE_LIMIT } from '../utils/compare';
 import { GENERATIONS } from '../utils/filters';
 
 const BATCH_SIZE = 24;
@@ -35,7 +36,10 @@ function PokemonGrid({
   hasSmogonDataMap = {},
   favorites,
   onToggleFavorite,
+  comparedSet,
+  onToggleCompare,
 }) {
+  const compareFull = (comparedSet?.size ?? 0) >= COMPARE_LIMIT;
   const [visibleCount, setVisibleCount] = useState(BATCH_SIZE);
   const [renderedList, setRenderedList] = useState(pokemonList);
   const [jumpTarget, setJumpTarget] = useState(null);
@@ -100,6 +104,9 @@ function PokemonGrid({
             isFavorite={favorites?.has(name) ?? false}
             onSelect={onSelect}
             onToggleFavorite={onToggleFavorite}
+            isCompared={comparedSet?.has(name) ?? false}
+            compareFull={compareFull}
+            onToggleCompare={onToggleCompare}
           />
         ))}
 

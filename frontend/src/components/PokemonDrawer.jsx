@@ -240,14 +240,27 @@ const TEAM_BUTTON = {
  * Botão da ficha que alterna o Pokémon no Team Builder: adiciona, e um novo clique tira do time.
  * Com o time cheio (e o Pokémon fora dele) fica desativado.
  */
+/** Ícone que dá um pulo a cada toque no botão (a chave nova reinicia a animação). */
+function BumpIcon({ bumps, icon: Icon }) {
+  return (
+    <span key={bumps} className={`inline-flex ${bumps ? 'animate-bubble-pop motion-reduce:animate-none' : ''}`}>
+      <Icon className="h-4 w-4" aria-hidden="true" />
+    </span>
+  );
+}
+
 function TeamToggleButton({ entry, team, onToggle }) {
+  const [bumps, setBumps] = useState(0);
   const status = teamSlotFor(team, entry);
   const { action, short, title } = TEAM_BUTTON[status];
   const Icon = status === 'taken' ? Check : Swords;
   return (
     <button
       type="button"
-      onClick={() => onToggle(entry)}
+      onClick={() => {
+        setBumps((count) => count + 1);
+        onToggle(entry);
+      }}
       disabled={status === 'full'}
       aria-pressed={status === 'taken'}
       aria-label={action.replace('{name}', formatFormName(entry.name))}
@@ -256,7 +269,7 @@ function TeamToggleButton({ entry, team, onToggle }) {
         status === 'taken' ? 'border-[#829b72] bg-[#829b72]/15 text-[#3d5438] hover:bg-[#829b72]/25' : `${ROUND_IDLE} disabled:opacity-50 disabled:hover:shadow-none`
       }`}
     >
-      <Icon className="h-4 w-4" aria-hidden="true" />
+      <BumpIcon bumps={bumps} icon={Icon} />
       <span className="hidden sm:inline">{short}</span>
     </button>
   );
@@ -264,13 +277,17 @@ function TeamToggleButton({ entry, team, onToggle }) {
 
 /** Alterna o Pokémon na comparação (até quatro); com a lista cheia e ele fora dela, fica desativado. */
 function CompareToggleButton({ name, compared, onToggle }) {
+  const [bumps, setBumps] = useState(0);
   const selected = compared.includes(name);
   const full = !selected && compared.length >= COMPARE_LIMIT;
   const label = formatFormName(name);
   return (
     <button
       type="button"
-      onClick={() => onToggle(name)}
+      onClick={() => {
+        setBumps((count) => count + 1);
+        onToggle(name);
+      }}
       disabled={full}
       aria-pressed={selected}
       aria-label={selected ? `Tirar ${label} da comparação` : `Comparar ${label}`}
@@ -279,7 +296,7 @@ function CompareToggleButton({ name, compared, onToggle }) {
         selected ? 'border-[#4F6D8A] bg-[#4F6D8A]/15 text-[#2F4458] hover:bg-[#4F6D8A]/25' : `${ROUND_IDLE} disabled:opacity-50`
       }`}
     >
-      <Scale className="h-4 w-4" aria-hidden="true" />
+      <BumpIcon bumps={bumps} icon={Scale} />
       <span className="hidden sm:inline">{selected ? 'Comparando' : 'Comparar'}</span>
     </button>
   );

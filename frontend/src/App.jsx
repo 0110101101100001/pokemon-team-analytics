@@ -1,9 +1,10 @@
-import { Suspense, lazy, useCallback, useEffect, useMemo, useState } from "react";
+import { Suspense, lazy, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import AuthModal from "./components/AuthModal";
 import AuthButton from "./components/AuthButton";
 import AboutButton from "./components/AboutButton";
 import BackToTopButton from "./components/BackToTopButton";
 import CompareTray from "./components/compare/CompareTray";
+import Toast from "./components/Toast";
 import AppHeader from "./components/layout/AppHeader";
 import SmeargleLoader from "./components/SmeargleLoader";
 import PokemonSheet, { loadPokemonDrawer } from "./components/PokemonSheet";
@@ -21,9 +22,10 @@ import {
 import { fetchSmogonNames } from "./services/smogonMeta";
 import { buildPokedexEntries } from "./utils/pokedex";
 import { buildSmogonBadgeMap } from "./utils/smogon";
-import { toggleCompared } from "./utils/compare";
+import { COMPARE_LIMIT, toggleCompared } from "./utils/compare";
+import { formatSlug } from "./utils/filters";
 import { createBattleSet } from "./utils/stats";
-import { speciesOf, teamSlotFor } from "./utils/teamScore";
+import { TEAM_SIZE, speciesOf, teamSlotFor } from "./utils/teamScore";
 
 // A Pokédex é a tela de entrada; as outras seções só são baixadas quando a aba é aberta.
 const MovesSection = lazy(() => import("./sections/MovesSection"));
@@ -54,6 +56,11 @@ export default function App() {
   const [team, setTeam] = useState([]);
   const [compared, setCompared] = useState([]);
   const [compareOpen, setCompareOpen] = useState(false);
+  const [toast, setToast] = useState(null);
+  // A lista atual para o callback de comparação, que fica estável: os cards da grade não re-renderizam a cada toque.
+  const comparedRef = useRef(compared);
+  comparedRef.current = compared;
+  const comparedSet = useMemo(() => new Set(compared), [compared]);
   // Nó do header onde a seção ativa desenha os próprios filtros (ver HeaderToolbar).
   const [toolbarSlot, setToolbarSlot] = useState(null);
 
@@ -119,18 +126,49 @@ export default function App() {
     [session, toggleFavorite],
   );
 
+  const notify = useCallback((message, { tone = "success", action = null } = {}) => {
+    setToast({ id: Date.now(), message, tone, action });
+  }, []);
+  const dismissToast = useCallback(() => setToast(null), []);
+
   // O botão da ficha alterna: a entrada da grade entra no time com um set vazio (como pelo Team Builder) ou,
-  // se a espécie já está no time, sai dele.
+  // se a espécie já está no time, sai dele. Um aviso confirma o que aconteceu.
   const handleToggleTeam = useCallback((entry) => {
+    const name = formatSlug(entry.name);
+    const slot = teamSlotFor(team, entry);
+    if (slot === "taken") notify(`${name} saiu do time.`, { tone: "info" });
+    else if (slot === "ok") notify(`${name} entrou no time (${team.length + 1}/${TEAM_SIZE}).`, { action: { label: "Ver time", href: "#/times" } });
+    else notify(`O time já tem ${TEAM_SIZE} Pokémon.`, { tone: "info" });
     setTeam((current) => {
       const slot = teamSlotFor(current, entry);
       if (slot === 'taken') return current.filter((member) => speciesOf(member) !== speciesOf(entry));
       return slot === 'ok' ? [...current, { ...entry, set: createBattleSet() }] : current;
     });
+  }, [team, notify]);
+
+  const openCompare = useCallback(() => setCompareOpen(true), []);
+  // Pelo aviso, a comparação abre no lugar da ficha, que ficaria por cima dela.
+  const openCompareFromToast = useCallback(() => {
+    setSelectedPokemon(null);
+    setCompareOpen(true);
   }, []);
 
-  // Comparação: a ficha alterna o Pokémon na lista; dentro da comparação, o seletor só acrescenta.
-  const toggleCompare = useCallback((name) => setCompared((current) => toggleCompared(current, name)), []);
+  // Comparação: a ficha e o card alternam o Pokémon na lista; dentro da comparação, o seletor só acrescenta.
+  const toggleCompare = useCallback((pokemonName) => {
+    const compared = comparedRef.current;
+    const name = formatSlug(pokemonName);
+    if (compared.includes(pokemonName)) {
+      notify(`${name} saiu da comparação.`, { tone: "info" });
+    } else if (compared.length >= COMPARE_LIMIT) {
+      notify(`A comparação já tem ${COMPARE_LIMIT} Pokémon.`, { tone: "info" });
+    } else {
+      const count = compared.length + 1;
+      notify(`${name} na comparação (${count}/${COMPARE_LIMIT}).`, {
+        action: count >= 2 ? { label: "Comparar", onClick: openCompareFromToast } : null,
+      });
+    }
+    setCompared((current) => toggleCompared(current, pokemonName));
+  }, [notify, openCompareFromToast]);
   const addCompared = useCallback(
     (name) => setCompared((current) => (current.includes(name) ? current : toggleCompared(current, name))),
     [],
@@ -140,7 +178,6 @@ export default function App() {
     setCompared([]);
     setCompareOpen(false);
   }, []);
-  const openCompare = useCallback(() => setCompareOpen(true), []);
   const closeCompare = useCallback(() => setCompareOpen(false), []);
 
   const handleCloseModal = useCallback(() => setSelectedPokemon(null), []);
@@ -191,6 +228,8 @@ export default function App() {
             hasSmogonDataMap={hasSmogonDataMap}
             onSelect={handleSelect}
             onToggleFavorite={handleToggleFavorite}
+            comparedSet={comparedSet}
+            onToggleCompare={toggleCompare}
             onLogin={openAuth}
           />
         );
@@ -226,6 +265,7 @@ export default function App() {
         </main>
 
         <BackToTopButton />
+        <Toast toast={toast} onDismiss={dismissToast} />
         {!compareOpen && (
           <CompareTray names={compared} entryByName={entryByName} onRemove={removeCompared} onOpen={openCompare} />
         )}
