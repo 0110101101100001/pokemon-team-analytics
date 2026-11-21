@@ -11,6 +11,7 @@ import { useSavedTeams } from '../hooks/useSavedTeams';
 import { PRIMAL_WEATHERS, TERRAIN_ABILITIES, WEATHER_ABILITIES, WEATHER_SUPPRESSORS } from '../data/battleModifiers';
 import { airborneBy, calcSpeed, calculateDamage, describeKnockout, isCalculable } from '../utils/damage';
 import { calcStats } from '../utils/stats';
+import { navigateHash } from '../navigation/hashRoute';
 import { CALCULATOR_HREF, trainerBattleFromHash } from '../navigation/sections';
 
 // `trainers`: o lado pode puxar o time de um líder, Elite 4 ou campeão.
@@ -84,7 +85,7 @@ export default function DamageCalculatorSection({ pool, team, session, onLogin }
   // para um recarregamento não desfazer o que o usuário mudou depois.
   const [trainerBattleId] = useState(trainerBattleFromHash);
   useEffect(() => {
-    if (trainerBattleId) window.history.replaceState(null, '', CALCULATOR_HREF);
+    if (trainerBattleId) navigateHash(CALCULATOR_HREF, { replace: true });
   }, [trainerBattleId]);
 
   // Atalhos de Pokémon de cada lado: o time em montagem no Team Builder e, com login, os times salvos.

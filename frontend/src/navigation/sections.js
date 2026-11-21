@@ -1,4 +1,5 @@
 import { Backpack, BookOpen, Calculator, Disc3, Medal, Sparkles, Swords } from 'lucide-react';
+import { formatHash, parseHash } from './hashRoute';
 
 // `pigment` é a tinta da seção: pinta a pincelada da aba ativa e a mancha do header.
 export const SECTIONS = [
@@ -26,7 +27,12 @@ export const calculatorTrainerHref = (battleId) => `${CALCULATOR_HREF}/${TRAINER
 
 /** Card_ID pedido no endereço da calculadora, ou null. */
 export function trainerBattleFromHash(hash = window.location.hash) {
-  const [section, segment, id] = hash.replace(/^#\/?/, '').split('/');
+  const [section, segment, id] = parseHash(hash).segments;
   if (section !== CALCULATOR.path || segment !== TRAINER_SEGMENT || !id) return null;
-  return decodeURIComponent(id);
+  return id;
 }
+
+const TRAINERS = SECTIONS.find((section) => section.id === 'trainers');
+
+/** Ficha de um treinador na Liga (`#/treinadores/<Trainer_Slug>`). */
+export const trainerHref = (slug) => formatHash([TRAINERS.path, slug]);

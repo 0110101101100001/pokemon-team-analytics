@@ -11,6 +11,9 @@ import SectionHeading, { HEADING_PILL_CLASS } from '../components/layout/Section
 import { TYPE_NAMES } from '../services/api';
 import { fetchTrainers } from '../services/trainers';
 import { useDebouncedValue } from '../hooks/useDebouncedValue';
+import { useHashOverlay, useHashRoute } from '../hooks/useHashPath';
+import { formatHash } from '../navigation/hashRoute';
+import { trainerHref } from '../navigation/sections';
 import { formatSlug } from '../utils/filters';
 import {
   FILTER_GROUPS, MIXED_TYPE, REGIONS, createNameMatcher, gamesOf, matchingBattles, regionGeneration, regionsOf, roleLabel, rolesOf,
@@ -53,7 +56,6 @@ export default function TrainersSection({ entryByName, onSelectPokemon }) {
   const [query, setQuery] = useState('');
   const debouncedQuery = useDebouncedValue(query, query ? SEARCH_DEBOUNCE_MS : 0);
   const [filters, setFilters] = useState(EMPTY_FILTERS);
-  const [opened, setOpened] = useState(null);
 
   const selects = useMemo(() => filterSelects(gamesOf(trainers), rolesOf(trainers)), [trainers]);
   const labels = useMemo(() => Object.fromEntries(selects.map(({ group, options }) => [
@@ -98,12 +100,22 @@ export default function TrainersSection({ entryByName, onSelectPokemon }) {
     setFilters((current) => ({ ...current, [group]: current[group].filter((item) => item !== value) }));
   }, []);
 
-  // A ficha abre na primeira batalha que passou nos filtros, não sempre na primeira do treinador.
-  const openTrainer = useCallback((slug) => {
-    const entry = visible.find(({ trainer }) => trainer.slug === slug);
-    if (entry) setOpened({ trainer: entry.trainer, battleId: entry.battles[0].id });
-  }, [visible]);
-  const closeTrainer = useCallback(() => setOpened(null), []);
+  // O treinador aberto mora no endereço (`#/treinadores/giovanni`), então o link abre a ficha dele.
+  // Ela começa na primeira batalha que passou nos filtros; por link, na primeira do treinador.
+  const route = useHashRoute();
+  const openedSlug = route.segments[1] ?? null;
+  const opened = useMemo(() => {
+    const trainer = openedSlug && trainers.find((candidate) => candidate.slug === openedSlug);
+    if (!trainer) return null;
+    const entry = visible.find((candidate) => candidate.trainer === trainer);
+    return { trainer, battleId: (entry ?? trainer).battles[0].id };
+  }, [openedSlug, trainers, visible]);
+  const trainerOverlay = useHashOverlay(Boolean(opened));
+  const openTrainer = useCallback((slug) => trainerOverlay.open(trainerHref(slug)), [trainerOverlay]);
+  const closeTrainer = useCallback(
+    () => trainerOverlay.close(formatHash(route.segments.slice(0, 1))),
+    [trainerOverlay, route],
+  );
 
   const count = visible.length;
 

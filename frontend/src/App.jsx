@@ -12,7 +12,8 @@ import { HeaderContext } from "./components/layout/headerContext";
 import { InkSplatter } from "./components/InkDecor";
 import PokedexSection from "./sections/PokedexSection";
 import { sectionFromPath } from "./navigation/sections";
-import { useHashPath } from "./hooks/useHashPath";
+import { useHashOverlay, useHashRoute } from "./hooks/useHashPath";
+import { formatHash } from "./navigation/hashRoute";
 import { usePokedexFilters } from "./hooks/usePokedexFilters";
 import { useScrollCollapsed } from "./hooks/useScrollCollapsed";
 import { useUserCollections } from "./hooks/useUserCollections";
@@ -39,6 +40,7 @@ const AboutModal = lazy(() => import("./components/AboutModal"));
 const CompareModal = lazy(() => import("./components/compare/CompareModal"));
 
 const APP_NAME = "Smearglepedia";
+const POKEMON_PARAM = "pokemon";
 
 function SectionFallback() {
   return <SmeargleLoader label="Molhando o pincel..." className="py-24" />;
@@ -47,7 +49,6 @@ function SectionFallback() {
 export default function App() {
   const [pokemonList, setPokemonList] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [selectedPokemon, setSelectedPokemon] = useState(null);
   const [eggGroupNames, setEggGroupNames] = useState([]);
   const [hasSmogonDataMap, setHasSmogonDataMap] = useState({});
   const [session, setSession] = useState(null);
@@ -64,7 +65,11 @@ export default function App() {
   // Nó do header onde a seção ativa desenha os próprios filtros (ver HeaderToolbar).
   const [toolbarSlot, setToolbarSlot] = useState(null);
 
-  const section = sectionFromPath(useHashPath());
+  const route = useHashRoute();
+  const section = sectionFromPath(route.segments[0]);
+  // A ficha aberta mora no endereço (`?pokemon=garchomp`): o link abre a ficha e o botão voltar a fecha.
+  const selectedPokemon = route.params.get(POKEMON_PARAM);
+  const sheet = useHashOverlay(Boolean(selectedPokemon));
   const collections = useUserCollections(session);
   const { toggleFavorite, recordView } = collections;
   const pokedex = usePokedexFilters(pokemonList);
@@ -105,20 +110,35 @@ export default function App() {
     return () => { active = false; };
   }, []);
 
-  // Cada aba abre do topo e dá nome à guia do navegador.
+  // Cada aba abre do topo e pinta o fundo com a sua tinta.
   useEffect(() => {
     window.scrollTo(0, 0);
-    document.title = `${section.label} · ${APP_NAME}`;
     document.documentElement.style.setProperty("--section-wash", section.pigment);
   }, [section]);
+
+  // A guia do navegador leva o nome da ficha aberta ou da aba.
+  useEffect(() => {
+    const page = selectedPokemon ? formatSlug(selectedPokemon) : section.label;
+    document.title = `${page} · ${APP_NAME}`;
+  }, [section, selectedPokemon]);
 
   const entryByName = useMemo(() => new Map(pokemonList.map((p) => [p.name, p])), [pokemonList]);
   const headerContext = useMemo(() => ({ slot: toolbarSlot, collapsed }), [toolbarSlot, collapsed]);
 
+  // O hash sem o parâmetro da ficha; os outros segmentos (o treinador aberto, por exemplo) continuam.
+  const hashWithPokemon = useCallback((name) => {
+    const params = new URLSearchParams(route.params);
+    if (name) params.set(POKEMON_PARAM, name);
+    else params.delete(POKEMON_PARAM);
+    return formatHash(route.segments.length ? route.segments : [section.path], params);
+  }, [route, section]);
+
+  // Trocar de Pokémon com a ficha já aberta (evolução, forma) não empilha histórico: voltar fecha a ficha.
   const handleSelect = useCallback((name) => {
-    setSelectedPokemon(name);
+    sheet.open(hashWithPokemon(name), { replace: Boolean(selectedPokemon) });
     recordView(name);
-  }, [recordView]);
+  }, [sheet, hashWithPokemon, selectedPokemon, recordView]);
+  const handleCloseModal = useCallback(() => sheet.close(hashWithPokemon(null)), [sheet, hashWithPokemon]);
 
   // Sem login, o coração leva ao cadastro em vez de falhar em silêncio.
   const handleToggleFavorite = useCallback(
@@ -149,9 +169,9 @@ export default function App() {
   const openCompare = useCallback(() => setCompareOpen(true), []);
   // Pelo aviso, a comparação abre no lugar da ficha, que ficaria por cima dela.
   const openCompareFromToast = useCallback(() => {
-    setSelectedPokemon(null);
+    handleCloseModal();
     setCompareOpen(true);
-  }, []);
+  }, [handleCloseModal]);
 
   // Comparação: a ficha e o card alternam o Pokémon na lista; dentro da comparação, o seletor só acrescenta.
   const toggleCompare = useCallback((pokemonName) => {
@@ -180,7 +200,6 @@ export default function App() {
   }, []);
   const closeCompare = useCallback(() => setCompareOpen(false), []);
 
-  const handleCloseModal = useCallback(() => setSelectedPokemon(null), []);
   const openAuth = useCallback(() => setAuthOpen(true), []);
   const closeAuth = useCallback(() => setAuthOpen(false), []);
   const openAbout = useCallback(() => setAboutOpen(true), []);
