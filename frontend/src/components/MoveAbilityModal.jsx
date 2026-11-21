@@ -204,7 +204,7 @@ function MoveAbilityModal({ kind, name, onClose }) {
   // Portal: fica fora do drawer, que tem rolagem própria e cantos recortados.
   return createPortal(
     <div
-      className="fixed inset-0 z-[70] flex items-center justify-center bg-[#2A2421]/60 p-4 animate-fade-in motion-reduce:animate-none md:bg-[#2A2421]/45"
+      className="fixed inset-0 z-[70] flex items-center justify-center bg-ink/60 p-4 animate-fade-in motion-reduce:animate-none md:bg-ink/45"
       onMouseDown={(e) => e.target === e.currentTarget && onClose()}
     >
       <div

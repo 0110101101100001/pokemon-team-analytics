@@ -11,7 +11,7 @@ export default function HeaderToolbar({ children }) {
   const { slot } = useContext(HeaderContext);
   if (!slot) return null;
   return createPortal(
-    <div className="border-t border-[#F7F3EE]/25 pt-1">{children}</div>,
+    <div className="border-t border-page/25 pt-1">{children}</div>,
     slot,
   );
 }

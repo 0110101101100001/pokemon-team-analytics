@@ -36,25 +36,25 @@ function SwapPanel({ members, slotIndex, ctx, before, onSwap, onClose }) {
 
   return (
     <>
-      <div className="fixed inset-0 z-40 bg-[#2A2421]/30 sm:hidden" aria-hidden="true" />
+      <div className="fixed inset-0 z-40 bg-ink/30 sm:hidden" aria-hidden="true" />
       <div
         ref={panelRef}
         role="dialog"
         aria-modal="false"
         aria-label={`Trocar ${name}`}
-        className="fixed inset-x-0 bottom-0 z-50 flex max-h-[85vh] flex-col rounded-t-sketch border border-[#2A2421]/25 bg-paper shadow-[0_-12px_32px_-12px_rgba(42,36,33,0.45)] sm:absolute sm:inset-x-0 sm:bottom-auto sm:top-full sm:z-30 sm:mt-2 sm:max-h-[28rem] sm:rounded-sketch sm:shadow-[3px_3px_0_#4A463E]"
+        className="fixed inset-x-0 bottom-0 z-50 flex max-h-[85vh] flex-col rounded-t-sketch border border-ink/25 bg-paper shadow-[0_-12px_32px_-12px_rgba(28,26,23,0.45)] sm:absolute sm:inset-x-0 sm:bottom-auto sm:top-full sm:z-30 sm:mt-2 sm:max-h-[28rem] sm:rounded-sketch sm:shadow-[3px_3px_0_#4A463E]"
       >
         {/* Seta do popover apontando para o sprite (só no desktop). */}
         <span
           aria-hidden="true"
-          className="absolute -top-1.5 hidden h-3 w-3 rotate-45 border-l border-t border-[#2A2421]/25 bg-paper sm:block"
+          className="absolute -top-1.5 hidden h-3 w-3 rotate-45 border-l border-t border-ink/25 bg-paper sm:block"
           style={{ left: `calc(${((slotIndex + 0.5) / members.length) * 100}% - 6px)` }}
         />
         {/* A rolagem fica aqui dentro, para não cortar a seta do popover. */}
         <div className="min-h-0 overflow-y-auto overflow-x-hidden p-3">
           <div className="mb-2 flex items-center justify-between gap-2">
             <h4 className="font-serif text-base font-bold text-smeargle-text">Trocar {name}</h4>
-            <button type="button" data-autofocus onClick={onClose} aria-label="Fechar" className="cursor-pointer rounded-full p-1.5 text-[#78614E] hover:bg-[#78614E]/10 focus:outline-none focus-visible:ring-2 focus-visible:ring-paint-cobalt">
+            <button type="button" data-autofocus onClick={onClose} aria-label="Fechar" className="cursor-pointer rounded-full p-1.5 text-umber hover:bg-umber/10 focus:outline-none focus-visible:ring-2 focus-visible:ring-paint-cobalt">
               <X className="h-4 w-4" aria-hidden="true" />
             </button>
           </div>
@@ -67,12 +67,12 @@ function SwapPanel({ members, slotIndex, ctx, before, onSwap, onClose }) {
             <p className="font-reading text-xs italic text-smeargle-textDim">Nenhum Pokémon do tier cabe neste slot com as regras do plano.</p>
           )}
 
-          <div className="mt-3 border-t border-[#78614E]/15 pt-2.5">
+          <div className="mt-3 border-t border-umber/15 pt-2.5">
             <p className="paper-label">Escolher outro Pokémon…</p>
             <PokemonPicker pool={ctx.tierPool} onPick={pickManual} excludedSpecies={taken} label={`Escolher quem entra no lugar de ${name}`} placeholder="Buscar no tier..." />
             {manual && (
               'error' in manual.result ? (
-                <p role="alert" className="mt-2 text-xs font-semibold text-[#A0442F]">
+                <p role="alert" className="mt-2 text-xs font-semibold text-vermilion-deep">
                   {formatSlug(manual.entry.name)} não pode entrar: {manual.result.error}.
                 </p>
               ) : (

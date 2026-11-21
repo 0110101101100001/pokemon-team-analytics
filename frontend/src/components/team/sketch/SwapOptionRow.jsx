@@ -8,7 +8,7 @@ const MAX_NAMES = 3;
 
 /** "+9" / "−3" / "0", com a cor do sinal: verde-oliva para ganho, terracota para perda. */
 export function Delta({ label, value, suffix = '' }) {
-  const tone = value > 0 ? 'text-[#4C6440]' : value < 0 ? 'text-[#A0442F]' : 'text-smeargle-textDim';
+  const tone = value > 0 ? 'text-olive-ink' : value < 0 ? 'text-vermilion-deep' : 'text-smeargle-textDim';
   const sign = value > 0 ? '+' : value < 0 ? '−' : '±';
   return (
     <span className={`whitespace-nowrap font-semibold tabular-nums ${tone}`}>
@@ -26,7 +26,7 @@ const names = (threats) => {
 function SwapOptionRow({ option, onSwap, actionLabel = 'Trocar' }) {
   const { pokemon, delta, fixed, worsened, rolesGained, rolesLost } = option;
   return (
-    <li className="flex items-start gap-2.5 rounded-[4px] border border-[#78614E]/15 bg-paper p-2">
+    <li className="flex items-start gap-2.5 rounded-[4px] border border-umber/15 bg-paper p-2">
       <img src={thumbnailSpriteUrl(pokemon.id)} alt="" width={40} height={40} loading="lazy" decoding="async" className="h-10 w-10 shrink-0 object-contain" />
       <div className="min-w-0 flex-1 space-y-0.5 text-[11px] leading-snug">
         <p className="flex flex-wrap items-center gap-1">
@@ -37,8 +37,8 @@ function SwapOptionRow({ option, onSwap, actionLabel = 'Trocar' }) {
           <Delta label="Teste do meta" value={delta.gauntlet} />
           <Delta label="Estilo" value={delta.fit} suffix="%" />
         </p>
-        {fixed.length > 0 && <p className="text-[#4C6440]">Resolve: {names(fixed)}</p>}
-        {worsened.length > 0 && <p className="text-[#A0442F]">Piora: {names(worsened)}</p>}
+        {fixed.length > 0 && <p className="text-olive-ink">Resolve: {names(fixed)}</p>}
+        {worsened.length > 0 && <p className="text-vermilion-deep">Piora: {names(worsened)}</p>}
         {(rolesGained.length > 0 || rolesLost.length > 0) && (
           <p className="text-smeargle-textDim">
             {[...rolesGained.map((role) => `+ ${ROLE_LABELS[role]}`), ...rolesLost.map((role) => `− ${ROLE_LABELS[role]}`)].join(' · ')}

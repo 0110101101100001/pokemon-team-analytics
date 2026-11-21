@@ -17,7 +17,7 @@ const MoveRow = memo(function MoveRow({ move, open, onToggle, onSelectMove, entr
   const panelId = learnersPanelId(slug);
   return (
     <>
-      <tr className={`${ROW} ${open ? 'bg-[#829b72]/10' : ''}`}>
+      <tr className={`${ROW} ${open ? 'bg-olive/10' : ''}`}>
         <td className={CELL}>
           <button type="button" onClick={() => onSelectMove(slug)} className={MOVE_NAME_BUTTON}>
             {formatSlug(slug)}
@@ -65,7 +65,7 @@ function MoveTable({ moves, openMove, onToggleMove, onSelectMove, entryByName, o
       <div className="paper-card overflow-x-auto">
         <table className="w-full border-collapse font-reading text-sm text-smeargle-text">
           <thead>
-            <tr className="border-b border-[#78614E]/20 text-left">
+            <tr className="border-b border-umber/20 text-left">
               <th scope="col" className={HEAD}>Golpe</th>
               <th scope="col" className={HEAD}>Tipo</th>
               <th scope="col" className={`${HEAD} max-sm:hidden`}>Categoria</th>

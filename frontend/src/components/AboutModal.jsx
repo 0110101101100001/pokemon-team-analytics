@@ -31,20 +31,20 @@ function AboutModal({ onClose }) {
 
   return createPortal(
     <div
-      className="fixed inset-0 z-[70] flex items-center justify-center bg-black/65 p-4 md:bg-black/50 md:backdrop-blur-md animate-fade-in"
+      className="fixed inset-0 z-[70] flex items-center justify-center bg-ink/60 p-4 animate-fade-in motion-reduce:animate-none md:bg-ink/45"
       onMouseDown={(e) => e.target === e.currentTarget && onClose()}
     >
       <div
         role="dialog"
         aria-modal="true"
         aria-labelledby={titleId}
-        className="relative flex max-h-[85vh] w-full max-w-md flex-col rounded-panel border border-[#78614E]/30 bg-paper shadow-lg md:shadow-panel animate-bubble-pop"
+        className="relative flex max-h-[85vh] w-full max-w-md flex-col paper-card shadow-panel animate-bubble-pop motion-reduce:animate-none"
       >
-        <header className="flex items-start gap-3 border-b border-[#5C4033]/25 px-6 pb-4 pt-5">
+        <header className="flex items-start gap-3 border-b border-sepia/25 px-6 pb-4 pt-5">
           <div className="min-w-0 flex-1">
-            <p className="font-hand text-lg leading-none text-[#78614E]">sobre a Smearglepedia</p>
-            <h2 id={titleId} className="mt-0.5 font-serif text-2xl font-black tracking-tight text-[#2A2421]">
-              Smeargle<span className="text-[#5B7856]">pedia</span>
+            <p className="font-hand text-lg leading-none text-umber">sobre a Smearglepedia</p>
+            <h2 id={titleId} className="mt-0.5 font-serif text-2xl font-black tracking-tight text-ink">
+              Smeargle<span className="text-olive-deep">pedia</span>
             </h2>
           </div>
           <button
@@ -52,47 +52,47 @@ function AboutModal({ onClose }) {
             type="button"
             onClick={onClose}
             aria-label="Fechar"
-            className="inline-flex h-9 w-9 shrink-0 cursor-pointer items-center justify-center rounded-full border border-[#4A3B32]/20 bg-paper text-[#78614E] transition-colors hover:border-[#4A3B32]/40 hover:text-[#2A2421] focus:outline-none focus-visible:ring-2 focus-visible:ring-paint-cobalt"
+            className="inline-flex h-9 w-9 shrink-0 cursor-pointer items-center justify-center rounded-full border border-ink-soft/20 bg-paper text-umber transition-colors hover:border-ink-soft/40 hover:text-ink focus:outline-none focus-visible:ring-2 focus-visible:ring-paint-cobalt"
           >
             <X className="h-5 w-5" aria-hidden="true" />
           </button>
         </header>
 
-        <div className="space-y-5 overflow-y-auto overscroll-contain px-6 pb-6 pt-4 text-sm text-[#3E3A35]">
+        <div className="space-y-5 overflow-y-auto overscroll-contain px-6 pb-6 pt-4 text-sm text-ink">
           <p className="leading-relaxed">
             Pokédex com estatísticas competitivas da Smogon, fichas de campo e um team builder.
           </p>
 
           <dl className="space-y-4">
             <div>
-              <dt className="text-[10px] font-bold uppercase tracking-wider text-[#78614E]">Desenvolvedor</dt>
-              <dd className="mt-0.5 font-serif text-base font-bold text-[#2A2421]">Kaíque Nunes</dd>
+              <dt className="text-[10px] font-bold uppercase tracking-wider text-umber">Desenvolvedor</dt>
+              <dd className="mt-0.5 font-serif text-base font-bold text-ink">Kaíque Nunes</dd>
             </div>
 
             <div>
-              <dt className="text-[10px] font-bold uppercase tracking-wider text-[#78614E]">Código-fonte</dt>
+              <dt className="text-[10px] font-bold uppercase tracking-wider text-umber">Código-fonte</dt>
               <dd className="mt-1">
                 <ExternalAnchor
                   href={REPOSITORY_URL}
-                  className="inline-flex max-w-full items-center gap-2 border border-[#4A3B32]/15 bg-[#F7F3EE]/70 px-3 py-2 font-medium text-[#2A2421] transition-colors hover:border-[#829b72]/70 hover:bg-[#F7F3EE]"
+                  className="inline-flex max-w-full items-center gap-2 border border-ink-soft/15 bg-page/70 px-3 py-2 font-medium text-ink transition-colors hover:border-olive/70 hover:bg-page"
                 >
                   <Github className="h-4 w-4 shrink-0" aria-hidden="true" />
                   <span className="truncate">{REPOSITORY_LABEL}</span>
-                  <ExternalLink className="h-3.5 w-3.5 shrink-0 text-[#78614E]" aria-hidden="true" />
+                  <ExternalLink className="h-3.5 w-3.5 shrink-0 text-umber" aria-hidden="true" />
                 </ExternalAnchor>
               </dd>
             </div>
 
             <div>
-              <dt className="text-[10px] font-bold uppercase tracking-wider text-[#78614E]">Tecnologias</dt>
+              <dt className="text-[10px] font-bold uppercase tracking-wider text-umber">Tecnologias</dt>
               <dd className="mt-1">
-                <ul className="divide-y divide-[#4A3B32]/10 rounded-xl border border-[#4A3B32]/10 bg-[#F7F3EE]/50">
+                <ul className="divide-y divide-ink-soft/10 rounded-sketch border border-ink-soft/10 bg-page/50">
                   {STACK.map(({ name, role, url }) => (
                     <li key={name} className="flex flex-wrap items-baseline justify-between gap-x-3 px-3 py-2">
-                      <ExternalAnchor href={url} className="font-semibold text-[#2A2421] underline decoration-dotted decoration-[#78614E]/50 underline-offset-4 hover:text-[#5B7856]">
+                      <ExternalAnchor href={url} className="font-semibold text-ink underline decoration-dotted decoration-umber/50 underline-offset-4 hover:text-olive-deep">
                         {name}
                       </ExternalAnchor>
-                      <span className="text-xs text-[#78614E]">{role}</span>
+                      <span className="text-xs text-umber">{role}</span>
                     </li>
                   ))}
                 </ul>
@@ -100,7 +100,7 @@ function AboutModal({ onClose }) {
             </div>
           </dl>
 
-          <p className="border-t border-[#5C4033]/20 pt-3 text-[11px] italic leading-snug text-[#78614E]/85">
+          <p className="border-t border-sepia/20 pt-3 text-[11px] italic leading-snug text-umber/85">
             Dados competitivos da Smogon. Projeto de fã, sem afiliação com Nintendo, Game Freak ou The Pokémon Company.
           </p>
         </div>

@@ -67,7 +67,7 @@ function SuggestField({ label, placeholder, value, options, loadOptions, onPick,
         className="paper-field text-ellipsis pr-8 [&::-webkit-calendar-picker-indicator]:!hidden"
       />
       {loading && (
-        <Loader2 className="pointer-events-none absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 animate-spin text-[#78614E]/70" aria-label="carregando sugestões" />
+        <Loader2 className="pointer-events-none absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 animate-spin text-umber/70" aria-label="carregando sugestões" />
       )}
       <datalist id={listId}>
         {available?.map((slug) => <option key={slug} value={formatSlug(slug)} />)}

@@ -3,21 +3,31 @@ import PokemonTypeBadge from '../PokemonTypeBadge';
 import SuggestField from '../SuggestField';
 import { fetchMoveSummary } from '../../services/api';
 import { defaultHits } from './calcState';
+import { formatSlug } from '../../utils/filters';
 import { POWERED_MODES, canPowerUp, poweredMove } from '../../utils/poweredMoves';
 
 const CATEGORY_LABELS = { physical: 'Físico', special: 'Especial', status: 'Status' };
+
+const modeTitle = (mode, label, gmaxMove) => {
+  if (!mode) return 'Usar o golpe normal';
+  if (mode === 'gmax') return `Golpes do tipo ${formatSlug(gmaxMove.type)} viram ${gmaxMove.name}; os outros viram o Max do tipo`;
+  return `Usar como golpe ${label}`;
+};
 
 const hitRange = ({ minHits, maxHits }) => Array.from({ length: maxHits - minHits + 1 }, (_, i) => minHits + i);
 
 /**
  * Um dos quatro golpes de um lado: escolha do golpe, tipo, categoria e poder, crítico e,
  * nos golpes de vários acertos com número variável, quantos acertos entram na conta.
+ * `gmaxMove`: o G-Max do Pokémon, que acrescenta o modo G-Max; sem ele, um G-Max já escolhido vale como Max.
  */
-function MoveSlot({ index, slot, learnset, onChange }) {
+function MoveSlot({ index, slot, learnset, gmaxMove, onChange }) {
   const { move } = slot;
+  const mode = slot.mode === 'gmax' && !gmaxMove ? 'max' : slot.mode ?? '';
+  const modes = [['', 'Normal'], ...Object.entries(POWERED_MODES), ...(gmaxMove ? [['gmax', 'G-Max']] : [])];
   const isStatus = move?.damageClass === 'status';
-  const variableHits = move?.maxHits > move?.minHits && !slot.mode;
-  const powered = slot.mode && canPowerUp(move) ? poweredMove(move, slot.mode) : null;
+  const variableHits = move?.maxHits > move?.minHits && !mode;
+  const powered = mode && canPowerUp(move) ? poweredMove(move, mode, gmaxMove) : null;
 
   const patch = useCallback((changes) => onChange(index, changes), [index, onChange]);
   const pickMove = useCallback((slug) => {
@@ -29,7 +39,7 @@ function MoveSlot({ index, slot, learnset, onChange }) {
   }, [index, onChange]);
 
   return (
-    <li className="rounded-[4px] border border-[#5C4033]/25 bg-paper/60 p-2">
+    <li className="rounded-[4px] border border-sepia/25 bg-paper/60 p-2">
       <div className="flex items-center gap-2">
         <div className="min-w-0 flex-1">
           <SuggestField
@@ -40,13 +50,13 @@ function MoveSlot({ index, slot, learnset, onChange }) {
             onPick={pickMove}
           />
         </div>
-        <label className="flex shrink-0 cursor-pointer items-center gap-1 font-hand text-base leading-none text-[#78614E]" title="Golpe crítico">
+        <label className="flex shrink-0 cursor-pointer items-center gap-1 font-hand text-base leading-none text-umber" title="Golpe crítico">
           <input
             type="checkbox"
             checked={slot.crit}
             disabled={!move || isStatus}
             onChange={(e) => patch({ crit: e.target.checked })}
-            className="h-4 w-4 cursor-pointer accent-[#829b72] disabled:cursor-not-allowed"
+            className="h-4 w-4 cursor-pointer accent-olive disabled:cursor-not-allowed"
           />
           crít.
         </label>
@@ -60,22 +70,22 @@ function MoveSlot({ index, slot, learnset, onChange }) {
             <span className="font-serif italic">· não causa dano</span>
           ) : powered ? (
             <span className="font-mono tabular-nums">
-              · {powered.name}, poder {move.power} → <strong className="text-[#2A2421]">{powered.power}</strong>
+              · {powered.name}, poder {move.power} → <strong className="text-ink">{powered.power}</strong>
             </span>
           ) : (
             <span className="font-mono tabular-nums">· poder {move.power ?? 'variável'}</span>
           )}
           {canPowerUp(move) && (
-            <span role="group" aria-label={`Golpe ${index + 1} como Z ou Max`} className="inline-flex overflow-hidden rounded-[3px] border-[1.5px] border-ink/60">
-              {[['', 'Normal'], ...Object.entries(POWERED_MODES)].map(([mode, label]) => (
+            <span role="group" aria-label={`Golpe ${index + 1} como Z, Max${gmaxMove ? ' ou G-Max' : ''}`} className="inline-flex overflow-hidden rounded-[3px] border-[1.5px] border-ink/60">
+              {modes.map(([option, label]) => (
                 <button
-                  key={mode || 'normal'}
+                  key={option || 'normal'}
                   type="button"
-                  aria-pressed={(slot.mode ?? '') === mode}
-                  onClick={() => patch({ mode })}
-                  title={mode ? `Usar como golpe ${label}` : 'Usar o golpe normal'}
+                  aria-pressed={mode === option}
+                  onClick={() => patch({ mode: option })}
+                  title={modeTitle(option, label, gmaxMove)}
                   className={`h-6 cursor-pointer px-1.5 font-reading text-[11px] font-semibold transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-paint-cobalt ${
-                    (slot.mode ?? '') === mode ? 'bg-[#B8402A] text-paper' : 'bg-paper text-ink hover:bg-[#E6D9BE]'
+                    mode === option ? 'bg-vermilion text-paper' : 'bg-paper text-ink hover:bg-paper-2'
                   }`}
                 >
                   {label}
@@ -84,7 +94,7 @@ function MoveSlot({ index, slot, learnset, onChange }) {
             </span>
           )}
           {variableHits && (
-            <label className="ml-auto flex items-center gap-1 font-hand text-base leading-none text-[#78614E]">
+            <label className="ml-auto flex items-center gap-1 font-hand text-base leading-none text-umber">
               acertos
               <select
                 value={slot.hits}
@@ -97,6 +107,7 @@ function MoveSlot({ index, slot, learnset, onChange }) {
             </label>
           )}
           {move.maxHits > 1 && !variableHits && !powered && <span>· {move.maxHits} acertos</span>}
+          {powered?.effect && <span className="basis-full font-serif italic">{powered.effect}</span>}
         </div>
       )}
     </li>

@@ -20,7 +20,7 @@ function CompareCardButton({ name, label, active, full, onToggle, className = ''
       aria-label={active ? `Tirar ${label} da comparação` : `Comparar ${label}`}
       title={disabled ? 'A comparação já tem 4 Pokémon' : active ? 'Na comparação: toque para tirar' : 'Comparar'}
       className={`inline-flex h-8 w-8 shrink-0 cursor-pointer items-center justify-center rounded-[3px] transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-paint-cobalt disabled:cursor-not-allowed disabled:opacity-40 ${
-        active ? 'bg-[#4F6D8A]/15 text-[#4F6D8A]' : 'text-[#1C1A17] hover:text-[#4F6D8A]'
+        active ? 'bg-paint-cobalt/15 text-paint-cobalt' : 'text-ink hover:text-paint-cobalt'
       } ${className}`}
     >
       <span key={bumps} className={bumps ? 'animate-bubble-pop motion-reduce:animate-none' : ''}>

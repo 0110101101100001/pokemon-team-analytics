@@ -1,5 +1,6 @@
 import { memo, useCallback, useId, useMemo, useState } from 'react';
 import { ChevronDown, Feather, Gem, Loader2, Minus, Plus, RotateCcw, TriangleAlert, Wind } from 'lucide-react';
+import HpBar from './HpBar';
 import MoveSlot from './MoveSlot';
 import SavedTeamPicker from './SavedTeamPicker';
 import PokemonTypeBadge from '../PokemonTypeBadge';
@@ -22,13 +23,15 @@ const AIRBORNE_LABELS = { levitate: 'Levitate', 'air-balloon': 'Air Balloon' };
 const formLabel = (form, baseName) => formatSlug(form.slice(baseName.length + 1));
 
 const stageLabel = (stage) => (stage > 0 ? `+${stage}` : `${stage}`.replace('-', '−'));
-const STEP_BUTTON = 'flex h-full w-6 shrink-0 cursor-pointer items-center justify-center text-[#78614E] transition-colors hover:bg-[#78614E]/10 focus:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-paint-cobalt disabled:cursor-not-allowed disabled:opacity-30';
+const boostSummary = (boosts) =>
+  BOOST_KEYS.filter((key) => boosts[key]).map((key) => `${stageLabel(boosts[key])} ${STAT_LABELS[key]}`).join(' · ') || 'nenhum';
+const STEP_BUTTON = 'flex h-full w-6 shrink-0 cursor-pointer items-center justify-center text-umber transition-colors hover:bg-umber/10 focus:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-paint-cobalt disabled:cursor-not-allowed disabled:opacity-30';
 
 /**
  * Sprite 2D animado do combatente: o GIF em pixel art de Black/White. Ele só existe até o nº 649 e sem as formas
  * novas; nesses casos fica o sprite 2D estático. Sempre sem suavizar.
  */
-function BattleSprite({ id }) {
+function BattleSprite({ id, fainted = false }) {
   const sources = useMemo(() => [animatedSpriteUrl(id), thumbnailSpriteUrl(id)], [id]);
   const [index, setIndex] = useState(0);
   const [shownId, setShownId] = useState(id);
@@ -43,7 +46,9 @@ function BattleSprite({ id }) {
         alt=""
         decoding="async"
         onError={() => setIndex((i) => Math.min(i + 1, sources.length - 1))}
-        className="max-h-full max-w-full object-contain [image-rendering:pixelated]"
+        className={`max-h-full max-w-full object-contain transition-[filter,opacity] duration-500 [image-rendering:pixelated] ${
+          fainted ? 'opacity-50 [filter:grayscale(1)_sepia(0.7)]' : ''
+        }`}
       />
     </span>
   );
@@ -52,11 +57,11 @@ function BattleSprite({ id }) {
 /** Estágio de um atributo, de −6 a +6: o nome em cima e o contador com menos e mais embaixo. */
 function BoostStepper({ stat, value, onChange }) {
   const label = STAT_LABELS[stat];
-  const tone = value > 0 ? 'border-smeargle-olive bg-smeargle-olive/10 text-smeargle-ink-darkGreen' : value < 0 ? 'border-[#B5543C]/50 bg-[#B5543C]/5 text-[#8A3B27]' : 'border-[#78614E]/25 bg-paper/80 text-smeargle-text';
+  const tone = value > 0 ? 'border-smeargle-olive bg-smeargle-olive/10 text-smeargle-ink-darkGreen' : value < 0 ? 'border-vermilion/50 bg-vermilion/5 text-vermilion-deep' : 'border-umber/25 bg-paper/80 text-smeargle-text';
   return (
     <div className="min-w-0" role="group" aria-label={`Estágio de ${label}`}>
-      <span className="mb-0.5 block text-center text-[10px] font-bold uppercase tracking-wider text-[#78614E]">{label}</span>
-      <div className={`flex h-8 items-stretch overflow-hidden rounded-lg border shadow-inner ${tone}`}>
+      <span className="mb-0.5 block text-center text-[10px] font-bold uppercase tracking-wider text-umber">{label}</span>
+      <div className={`flex h-8 items-stretch overflow-hidden rounded-sketch border ${tone}`}>
         <button type="button" onClick={() => onChange(value - 1)} disabled={value <= -MAX_STAGE} aria-label={`Diminuir ${label}`} className={STEP_BUTTON}>
           <Minus className="h-3 w-3" aria-hidden="true" />
         </button>
@@ -72,10 +77,25 @@ function BoostStepper({ stat, value, onChange }) {
 }
 const abilityLabel = (slug) => (ABILITY_EFFECTS[slug] ? `${formatSlug(slug)} · ${ABILITY_EFFECTS[slug]}` : formatSlug(slug));
 
+/** Número inteiro dentro da faixa; um campo vazio ou inválido volta ao limite mais próximo. */
+function NumberInput({ value, min, max, onChange }) {
+  return (
+    <input
+      type="number"
+      inputMode="numeric"
+      min={min}
+      max={max}
+      value={value}
+      onChange={(e) => onChange(Math.min(max, Math.max(min, Math.round(Number(e.target.value) || min))))}
+      className="paper-field h-9 px-2 font-mono text-[13px] tabular-nums"
+    />
+  );
+}
+
 function Field({ label, children, className = '' }) {
   return (
     <label className={`block min-w-0 ${className}`}>
-      <span className="mb-0.5 block font-hand text-base leading-none text-[#78614E]">{label}</span>
+      <span className="mb-0.5 block font-hand text-base leading-none text-umber">{label}</span>
       {children}
     </label>
   );
@@ -85,7 +105,7 @@ function Field({ label, children, className = '' }) {
  * Um lado da calculadora: o Pokémon (pela busca ou do time), Mega/Primal, Tera, nível, habilidade, item, status,
  * os estágios de cada atributo, os quatro golpes e, recolhidos, natureza, EVs e IVs.
  */
-function CombatantPanel({ caption, title, pickerPlaceholder, side, battle, forms, ability, speed, faster, airborne, pool, teams, loggedIn, teamsOpen, extraSource, onChange, onMoveChange, onPick, onLogin, className = '' }) {
+function CombatantPanel({ caption, title, pickerPlaceholder, side, battle, forms, gmaxMove, extraFields, hpPreview, ability, speed, faster, airborne, pool, teams, loggedIn, teamsOpen, extraSource, onChange, onMoveChange, onPick, onLogin, className = '' }) {
   const { pokemon, set, boosts } = side;
 
   const patchSet = useCallback((changes) => onChange({ set: { ...set, ...changes } }), [set, onChange]);
@@ -97,8 +117,8 @@ function CombatantPanel({ caption, title, pickerPlaceholder, side, battle, forms
   return (
     <section className={`paper-card p-4 sm:p-5 ${className}`} aria-label={title}>
       <header className="mb-3 flex items-baseline gap-2">
-        <h3 className="font-serif text-xl font-black tracking-tight text-[#2A2421]">{title}</h3>
-        <p className="font-hand text-lg leading-none text-[#78614E]">{caption}</p>
+        <h3 className="font-serif text-xl font-black tracking-tight text-ink">{title}</h3>
+        <p className="font-hand text-lg leading-none text-umber">{caption}</p>
       </header>
 
       <PokemonPicker pool={pool} onPick={onPick} label={pickerPlaceholder} placeholder={pickerPlaceholder} />
@@ -116,13 +136,13 @@ function CombatantPanel({ caption, title, pickerPlaceholder, side, battle, forms
       {extraSource}
 
       {pokemon && (
-        <div className="mt-4 space-y-3.5 border-t border-[#5C4033]/25 pt-4">
+        <div className="mt-4 space-y-3.5 border-t border-sepia/25 pt-4">
           <div className="flex items-center gap-3">
-            <BattleSprite id={side.form && battle.id ? battle.id : pokemon.id} />
+            <BattleSprite id={side.form && battle.id ? battle.id : pokemon.id} fainted={side.currentHp === 0} />
             <div className="min-w-0 flex-1">
-              <p className="flex items-center gap-2 truncate font-serif text-xl font-black tracking-tight text-[#2A2421]">
+              <p className="flex items-center gap-2 truncate font-serif text-xl font-black tracking-tight text-ink">
                 {formatSlug(side.form || pokemon.name)}
-                {battle.status === 'loading' && <Loader2 className="h-3.5 w-3.5 shrink-0 animate-spin text-[#78614E]" aria-label="carregando atributos" />}
+                {battle.status === 'loading' && <Loader2 className="h-3.5 w-3.5 shrink-0 animate-spin text-umber" aria-label="carregando atributos" />}
               </p>
               <div className="mt-1 flex flex-wrap items-center gap-1">
                 {(battle.types.length ? battle.types : pokemon.types).map((type) => (
@@ -145,7 +165,7 @@ function CombatantPanel({ caption, title, pickerPlaceholder, side, battle, forms
                 )}
               </div>
               {speed != null && (
-                <p className={`mt-1 flex items-center gap-1 font-mono text-xs font-bold tabular-nums ${faster ? 'text-smeargle-ink-darkGreen' : 'text-[#78614E]'}`}>
+                <p className={`mt-1 flex items-center gap-1 font-mono text-xs font-bold tabular-nums ${faster ? 'text-smeargle-ink-darkGreen' : 'text-umber'}`}>
                   <Wind className="h-3.5 w-3.5" aria-hidden="true" />
                   Spe {speed}
                   {faster && <span className="font-hand text-base font-normal">· age primeiro</span>}
@@ -153,7 +173,7 @@ function CombatantPanel({ caption, title, pickerPlaceholder, side, battle, forms
               )}
             </div>
             <label className="flex shrink-0 items-center gap-1.5">
-              <span className="font-hand text-base leading-none text-[#78614E]">Nível</span>
+              <span className="font-hand text-base leading-none text-umber">Nível</span>
               <input
                 type="number"
                 inputMode="numeric"
@@ -167,7 +187,7 @@ function CombatantPanel({ caption, title, pickerPlaceholder, side, battle, forms
           </div>
 
           {battle.status === 'error' && (
-            <p role="alert" className="flex items-center gap-2 text-xs font-medium text-[#8A3B27]">
+            <p role="alert" className="flex items-center gap-2 text-xs font-medium text-vermilion-deep">
               <TriangleAlert className="h-3.5 w-3.5 shrink-0" aria-hidden="true" />
               Não foi possível carregar os atributos deste Pokémon.
             </p>
@@ -193,6 +213,15 @@ function CombatantPanel({ caption, title, pickerPlaceholder, side, battle, forms
               </select>
             </Field>
           </div>
+
+          {stats && (
+            <HpBar
+              current={Math.min(side.currentHp ?? stats.hp, stats.hp)}
+              max={stats.hp}
+              preview={hpPreview}
+              onChange={(hp) => onChange({ currentHp: hp === stats.hp ? null : hp })}
+            />
+          )}
 
           <Field label="habilidade">
             <select
@@ -222,53 +251,66 @@ function CombatantPanel({ caption, title, pickerPlaceholder, side, battle, forms
               </select>
             </Field>
             <Field label="status">
-              <select value={side.status} onChange={(e) => onChange({ status: e.target.value })} className={SELECT}>
+              <select value={side.status} onChange={(e) => onChange({ status: e.target.value, sleepTurns: null, toxicTurns: 0 })} className={SELECT}>
                 {STATUSES.map((status) => <option key={status.value} value={status.value}>{status.label}</option>)}
               </select>
             </Field>
           </div>
 
-          <div className="rounded-[4px] border border-[#5C4033]/25 bg-[#F7F3EE]/40 px-2.5 pb-2.5 pt-2" role="group" aria-labelledby={stagesId}>
-            <div className="mb-1.5 flex h-6 items-center justify-between gap-2">
-              <span id={stagesId} className="font-hand text-base leading-none text-[#78614E]">estágios</span>
+          {extraFields?.happiness && (
+            <div className="grid grid-cols-2 gap-2">
+              <Field label="felicidade">
+                <NumberInput value={side.happiness} min={0} max={255} onChange={(happiness) => onChange({ happiness })} />
+              </Field>
+            </div>
+          )}
+
+          <div>
+            <span className="mb-1 block font-hand text-base leading-none text-umber">golpes</span>
+            <ul className="space-y-1.5">
+              {side.moves.map((slot, index) => (
+                // Os quatro espaços são fixos: a posição é a identidade de cada um.
+                <MoveSlot key={index} index={index} slot={slot} learnset={battle.learnset} gmaxMove={gmaxMove} onChange={onMoveChange} />
+              ))}
+            </ul>
+          </div>
+
+          {/* Estágios começam fechados; o resumo mostra os que estão ativos. */}
+          <details className="group rounded-[4px] border border-sepia/30 bg-page/50">
+            <summary className="flex cursor-pointer list-none items-center gap-2 px-3 py-2 focus:outline-none focus-visible:ring-2 focus-visible:ring-paint-cobalt [&::-webkit-details-marker]:hidden">
+              <span id={stagesId} className="font-hand text-lg leading-none text-sepia">estágios</span>
+              <span className="ml-auto truncate font-mono text-xs tabular-nums text-umber">{boostSummary(boosts)}</span>
+              <ChevronDown className="h-4 w-4 shrink-0 text-umber transition-transform group-open:rotate-180 motion-reduce:transition-none" aria-hidden="true" />
+            </summary>
+            <div className="border-t border-sepia/25 px-2.5 pb-2.5 pt-2" role="group" aria-labelledby={stagesId}>
+              <div className="grid grid-cols-5 gap-1.5">
+                {BOOST_KEYS.map((key) => (
+                  <BoostStepper key={key} stat={key} value={boosts[key]} onChange={(stage) => onChange({ boosts: { ...boosts, [key]: stage } })} />
+                ))}
+              </div>
               {boosted && (
                 <button
                   type="button"
                   onClick={() => onChange({ boosts: NO_BOOSTS })}
-                  className="inline-flex cursor-pointer items-center gap-1 rounded-[3px] px-2 py-0.5 font-hand text-base leading-none text-[#78614E] transition-colors hover:bg-[#78614E]/10 focus:outline-none focus-visible:ring-2 focus-visible:ring-paint-cobalt"
+                  className="mt-1.5 inline-flex cursor-pointer items-center gap-1 rounded-[3px] px-2 py-0.5 font-hand text-base leading-none text-umber transition-colors hover:bg-umber/10 focus:outline-none focus-visible:ring-2 focus-visible:ring-paint-cobalt"
                 >
                   <RotateCcw className="h-3 w-3" aria-hidden="true" />
                   zerar
                 </button>
               )}
             </div>
-            <div className="grid grid-cols-5 gap-1.5">
-              {BOOST_KEYS.map((key) => (
-                <BoostStepper key={key} stat={key} value={boosts[key]} onChange={(stage) => onChange({ boosts: { ...boosts, [key]: stage } })} />
-              ))}
-            </div>
-          </div>
+          </details>
 
-          <div>
-            <span className="mb-1 block font-hand text-base leading-none text-[#78614E]">golpes</span>
-            <ul className="space-y-1.5">
-              {side.moves.map((slot, index) => (
-                // Os quatro espaços são fixos: a posição é a identidade de cada um.
-                <MoveSlot key={index} index={index} slot={slot} learnset={battle.learnset} onChange={onMoveChange} />
-              ))}
-            </ul>
-          </div>
-
-          <details className="group rounded-[4px] border border-[#5C4033]/30 bg-[#F7F3EE]/50">
+          <details className="group rounded-[4px] border border-sepia/30 bg-page/50">
             <summary className="flex cursor-pointer list-none items-center gap-2 px-3 py-2 focus:outline-none focus-visible:ring-2 focus-visible:ring-paint-cobalt [&::-webkit-details-marker]:hidden">
-              <span className="font-hand text-lg leading-none text-[#5C4033]">natureza, EVs e IVs</span>
-              <span className="ml-auto truncate font-mono text-xs tabular-nums text-[#78614E]">
+              <span className="font-hand text-lg leading-none text-sepia">natureza, EVs e IVs</span>
+              <span className="ml-auto truncate font-mono text-xs tabular-nums text-umber">
                 {formatSlug(set.nature)} · {evTotal(set.evs)}/{MAX_EV_TOTAL} EVs
                 {stats && ` · HP ${stats.hp}`}
               </span>
-              <ChevronDown className="h-4 w-4 shrink-0 text-[#78614E] transition-transform group-open:rotate-180 motion-reduce:transition-none" aria-hidden="true" />
+              <ChevronDown className="h-4 w-4 shrink-0 text-umber transition-transform group-open:rotate-180 motion-reduce:transition-none" aria-hidden="true" />
             </summary>
-            <div className="border-t border-[#5C4033]/25 px-3 pb-3 pt-2">
+            <div className="border-t border-sepia/25 px-3 pb-3 pt-2">
               <StatSpreadEditor baseStats={battle.baseStats} set={set} onChange={patchSet} />
             </div>
           </details>

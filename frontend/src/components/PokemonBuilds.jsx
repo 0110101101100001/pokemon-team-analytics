@@ -5,18 +5,18 @@ import { itemSpriteUrl } from '../services/api';
 import { fetchSmogonSets, formatStatSpread, toShowdownText } from '../utils/smogonSets';
 
 const FIELD = 'h-9 cursor-pointer rounded-[3px] border-[1.5px] border-ink bg-paper px-3 font-reading text-sm font-medium text-ink';
-const LINK = 'rounded text-left font-semibold text-[#2A2421] underline decoration-dotted decoration-[#78614E]/50 underline-offset-4 cursor-pointer hover:text-[#5B7856] hover:decoration-[#5B7856] focus:outline-none focus-visible:ring-2 focus-visible:ring-paint-cobalt';
+const LINK = 'rounded text-left font-semibold text-ink underline decoration-dotted decoration-umber/50 underline-offset-4 cursor-pointer hover:text-olive-deep hover:decoration-olive-deep focus:outline-none focus-visible:ring-2 focus-visible:ring-paint-cobalt';
 const COPY_FEEDBACK_MS = 1800;
 
 /** Alternativas de um campo separadas por "/"; cada uma abre o modal de detalhes se `onSelect` existir. */
 function Options({ values, onSelect, render = (value) => value }) {
   return values.map((value, index) => (
     <span key={typeof value === 'string' ? value : index} className="inline-flex items-center gap-1">
-      {index > 0 && <span className="text-[#78614E]/70" aria-hidden="true">/</span>}
+      {index > 0 && <span className="text-umber/70" aria-hidden="true">/</span>}
       {onSelect ? (
         <button type="button" onClick={() => onSelect(value)} className={LINK}>{render(value)}</button>
       ) : (
-        <span className="font-semibold text-[#2A2421]">{render(value)}</span>
+        <span className="font-semibold text-ink">{render(value)}</span>
       )}
     </span>
   ));
@@ -24,7 +24,7 @@ function Options({ values, onSelect, render = (value) => value }) {
 
 function ItemIcon({ name }) {
   const [failed, setFailed] = useState(false);
-  if (failed) return <Package className="h-4 w-4 shrink-0 text-[#78614E]" aria-hidden="true" />;
+  if (failed) return <Package className="h-4 w-4 shrink-0 text-umber" aria-hidden="true" />;
   return (
     <img
       src={itemSpriteUrl(name)}
@@ -42,7 +42,7 @@ function ItemIcon({ name }) {
 function Field({ label, children }) {
   return (
     <div className="flex items-baseline gap-2 text-xs">
-      <dt className="w-20 shrink-0 text-[10px] font-semibold uppercase tracking-wider text-[#78614E]">{label}</dt>
+      <dt className="w-20 shrink-0 text-[10px] font-semibold uppercase tracking-wider text-umber">{label}</dt>
       <dd className="flex min-w-0 flex-wrap items-center gap-x-1.5 gap-y-1">{children}</dd>
     </div>
   );
@@ -64,14 +64,14 @@ const BuildCard = memo(function BuildCard({ pokemonName, set, onOpenItem, onOpen
   const CopyIcon = copyState === 'copied' ? Check : copyState === 'failed' ? TriangleAlert : ClipboardCopy;
 
   return (
-    <article className="flex flex-col gap-3 rounded-[4px] border border-[#2A2421]/10 bg-paper/80 p-3.5">
+    <article className="flex flex-col gap-3 rounded-[4px] border border-ink/10 bg-paper/80 p-3.5">
       <header className="flex items-start justify-between gap-2">
-        <h4 className="min-w-0 break-words font-serif text-base font-black leading-tight text-[#2A2421]">{set.name}</h4>
+        <h4 className="min-w-0 break-words font-serif text-base font-black leading-tight text-ink">{set.name}</h4>
         <button
           type="button"
           onClick={handleCopy}
           title="Copiar no formato do Pokémon Showdown"
-          className="inline-flex h-8 shrink-0 cursor-pointer items-center gap-1.5 rounded-[3px] border border-[#2A2421]/20 bg-paper px-2.5 text-[11px] font-bold text-[#78614E] transition-colors hover:border-[#829b72]/70 hover:text-[#2A2421] focus:outline-none focus-visible:ring-2 focus-visible:ring-paint-cobalt"
+          className="inline-flex h-8 shrink-0 cursor-pointer items-center gap-1.5 rounded-[3px] border border-ink/20 bg-paper px-2.5 text-[11px] font-bold text-umber transition-colors hover:border-olive/70 hover:text-ink focus:outline-none focus-visible:ring-2 focus-visible:ring-paint-cobalt"
         >
           <CopyIcon className="h-3.5 w-3.5" aria-hidden="true" />
           <span aria-live="polite">
@@ -104,10 +104,10 @@ const BuildCard = memo(function BuildCard({ pokemonName, set, onOpenItem, onOpen
         )}
       </dl>
 
-      <ol className="space-y-1 rounded-[4px] bg-[#F7F3EE]/70 p-2.5 text-xs">
+      <ol className="space-y-1 rounded-[4px] bg-page/70 p-2.5 text-xs">
         {set.moves.map((slot, index) => (
           <li key={slot.join('|')} className="flex items-baseline gap-2">
-            <span className="w-3 shrink-0 text-right font-mono text-[10px] text-[#78614E]">{index + 1}</span>
+            <span className="w-3 shrink-0 text-right font-mono text-[10px] text-umber">{index + 1}</span>
             <span className="flex min-w-0 flex-wrap items-center gap-x-1.5 gap-y-0.5">
               <Options values={slot} onSelect={onOpenMove} />
             </span>
@@ -139,20 +139,20 @@ function PokemonBuilds({ variety, pokemonLabel, onOpenItem, onOpenAbility, onOpe
 
   if (state.status === 'loading') {
     return (
-      <p className="flex items-center justify-center gap-2 py-8 text-xs font-medium text-[#78614E]">
+      <p className="flex items-center justify-center gap-2 py-8 text-xs font-medium text-umber">
         <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" />
         Carregando as builds...
       </p>
     );
   }
   if (state.status === 'error') {
-    return <p className="py-8 text-center text-xs text-[#8A3B27]">Não foi possível carregar as builds.</p>;
+    return <p className="py-8 text-center text-xs text-vermilion-deep">Não foi possível carregar as builds.</p>;
   }
 
   const { smogonName, tiers } = state.data;
   if (tiers.length === 0) {
     return (
-      <p className="rounded-[4px] border border-[#2A2421]/10 bg-paper/80 p-4 text-center text-xs text-[#78614E]">
+      <p className="rounded-[4px] border border-ink/10 bg-paper/80 p-4 text-center text-xs text-umber">
         {isForm
           ? `A Smogon não tem builds para ${pokemonLabel}. As da forma base não valem para esta forma.`
           : `A Smogon não tem builds de Geração 9 para ${pokemonLabel}.`}
@@ -165,7 +165,7 @@ function PokemonBuilds({ variety, pokemonLabel, onOpenItem, onOpenAbility, onOpe
   return (
     <div className="space-y-3">
       <div className="flex flex-wrap items-center justify-between gap-2">
-        <label className="flex items-center gap-2 text-[10px] font-bold uppercase tracking-wider text-[#78614E]">
+        <label className="flex items-center gap-2 text-[10px] font-bold uppercase tracking-wider text-umber">
           Formato
           <select value={current.tier} onChange={(e) => setTier(e.target.value)} className={FIELD}>
             {tiers.map((entry) => (
@@ -173,8 +173,8 @@ function PokemonBuilds({ variety, pokemonLabel, onOpenItem, onOpenAbility, onOpe
             ))}
           </select>
         </label>
-        <span className="text-[11px] text-[#78614E]">
-          Builds de <strong className="text-[#2A2421]">{smogonName}</strong>
+        <span className="text-[11px] text-umber">
+          Builds de <strong className="text-ink">{smogonName}</strong>
         </span>
       </div>
 
@@ -191,7 +191,7 @@ function PokemonBuilds({ variety, pokemonLabel, onOpenItem, onOpenAbility, onOpe
         ))}
       </div>
 
-      <p className="text-[11px] italic text-[#78614E]/85">
+      <p className="text-[11px] italic text-umber/85">
         Opções separadas por “/” são alternativas para o mesmo campo. O botão Showdown copia a primeira de cada.
       </p>
     </div>

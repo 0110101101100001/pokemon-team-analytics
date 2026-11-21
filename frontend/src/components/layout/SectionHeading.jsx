@@ -13,11 +13,11 @@ export default function SectionHeading({ title, subtitle, aside }) {
     <div>
       <div className="flex flex-col justify-between gap-4 px-1 sm:flex-row sm:items-end">
         <div>
-          <h2 className="relative isolate inline-block font-serif text-[1.75rem] font-black leading-tight tracking-tight text-[#2A2421] sm:text-4xl">
+          <h2 className="relative isolate inline-block font-serif text-[1.75rem] font-black leading-tight tracking-tight text-ink sm:text-4xl">
             <BrushHighlight color={pigment} />
             {title}
           </h2>
-          {subtitle && <p className="mt-1.5 max-w-prose text-sm text-[#785132]">{subtitle}</p>}
+          {subtitle && <p className="mt-1.5 max-w-prose text-sm text-brown">{subtitle}</p>}
         </div>
         {aside && <div className="self-start sm:self-auto">{aside}</div>}
       </div>
@@ -28,4 +28,4 @@ export default function SectionHeading({ title, subtitle, aside }) {
 
 // Carimbo do cabeçalho: contorno ocre escuro, reto, na serifa de leitura em itálico.
 export const HEADING_PILL_CLASS =
-  'inline-flex items-center rounded-[2px] border-[1.5px] border-[#6B4A10] px-2.5 py-1 font-reading text-sm italic leading-none text-[#6B4A10]';
+  'inline-flex items-center rounded-[2px] border-[1.5px] border-ochre-deep px-2.5 py-1 font-reading text-sm italic leading-none text-ochre-deep';

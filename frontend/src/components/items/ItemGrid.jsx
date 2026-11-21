@@ -19,7 +19,7 @@ const ItemCard = memo(function ItemCard({ item, onSelect }) {
       >
         <span className="ink-stamp h-11 w-11 shrink-0">
           {spriteFailed ? (
-            <Package className="h-4 w-4 text-[#78614E]/60" aria-hidden="true" />
+            <Package className="h-4 w-4 text-umber/60" aria-hidden="true" />
           ) : (
             <img
               src={itemSpriteUrl(item.name)}

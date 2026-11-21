@@ -24,15 +24,19 @@ const SIDE_TOGGLES = [
 
 const SELECT = 'paper-field h-9 min-w-0 cursor-pointer px-2 text-[13px]';
 
-function Chip({ pressed, onToggle, title, children }) {
+// O que o último turno mudou pisca uma vez em aguada ocre (`flash.keys`; `flash.token` reinicia a animação).
+const flashClass = (flash, key) => (flash?.keys.includes(key) ? 'animate-ink-flash motion-reduce:animate-none' : '');
+const flashKey = (flash, key) => (flash?.keys.includes(key) ? `${key}-${flash.token}` : key);
+
+function Chip({ pressed, onToggle, title, flashing = '', children }) {
   return (
     <button
       type="button"
       aria-pressed={pressed}
       onClick={onToggle}
       title={title}
-      className={`h-7 cursor-pointer rounded-[3px] border px-2.5 font-serif text-[11px] font-semibold transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-paint-cobalt ${
-        pressed ? 'border-smeargle-olive bg-smeargle-olive text-paper shadow-sm' : 'border-[#78614E]/25 bg-paper/70 text-[#78614E] hover:border-[#78614E]/50'
+      className={`h-7 cursor-pointer rounded-[3px] border px-2.5 font-serif text-[11px] font-semibold transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-paint-cobalt ${flashing} ${
+        pressed ? 'border-vermilion bg-vermilion text-paper' : 'border-umber/25 bg-paper/70 text-umber hover:border-umber/50'
       }`}
     >
       {children}
@@ -40,15 +44,25 @@ function Chip({ pressed, onToggle, title, children }) {
   );
 }
 
-function SideConditions({ title, conditions, onChange }) {
+function SideConditions({ index, title, conditions, flash, onChange }) {
   return (
-    <fieldset className="min-w-0 rounded-[4px] border border-[#5C4033]/25 p-2">
-      <legend className="px-1 font-hand text-base leading-none text-[#5C4033]">{title}</legend>
+    <fieldset className="min-w-0 rounded-[4px] border border-sepia/25 p-2">
+      <legend className="px-1 font-hand text-base leading-none text-sepia">{title}</legend>
       <div className="flex flex-wrap gap-1">
         {SIDE_TOGGLES.map(({ key, label }) => (
-          <Chip key={key} pressed={conditions[key]} onToggle={() => onChange({ [key]: !conditions[key] })}>{label}</Chip>
+          <Chip
+            key={flashKey(flash, `${index}:${key}`)}
+            pressed={conditions[key]}
+            flashing={flashClass(flash, `${index}:${key}`)}
+            onToggle={() => onChange({ [key]: !conditions[key] })}
+          >
+            {label}
+          </Chip>
         ))}
-        <label className="flex h-7 items-center gap-1 rounded-[3px] border border-[#78614E]/25 bg-paper/70 pl-2.5 pr-1 font-serif text-[11px] font-semibold text-[#78614E]">
+        <label
+          key={flashKey(flash, `${index}:spikes`)}
+          className={`flex h-7 items-center gap-1 rounded-[3px] border border-umber/25 bg-paper/70 pl-2.5 pr-1 font-serif text-[11px] font-semibold text-umber ${flashClass(flash, `${index}:spikes`)}`}
+        >
           Spikes
           <select
             value={conditions.spikes}
@@ -68,20 +82,20 @@ function SideConditions({ title, conditions, onChange }) {
  * `autoWeather` e `autoTerrain` vêm das habilidades (Drought, Electric Surge…); `weatherSuppressor` é a
  * Cloud Nine ou Air Lock em campo. Todos são avisados embaixo do campo.
  */
-function FieldPanel({ field, autoWeather, autoTerrain, weatherSuppressor, sideTitles, onChange, onSideChange }) {
+function FieldPanel({ field, autoWeather, autoTerrain, weatherSuppressor, sideTitles, flash, onChange, onSideChange }) {
   return (
     <section className="paper-card space-y-2.5 p-3.5 sm:p-4" aria-label="Campo de batalha">
-      <h3 className="font-hand text-xl leading-none text-[#5C4033]">campo de batalha</h3>
+      <h3 className="font-hand text-xl leading-none text-sepia">campo de batalha</h3>
 
       <div className="grid grid-cols-2 gap-2">
-        <label className="min-w-0">
-          <span className="mb-0.5 block font-hand text-base leading-none text-[#78614E]">clima</span>
+        <label key={flashKey(flash, 'weather')} className={`min-w-0 rounded-[3px] ${flashClass(flash, 'weather')}`}>
+          <span className="mb-0.5 block font-hand text-base leading-none text-umber">clima</span>
           <select value={field.weather} onChange={(e) => onChange({ weather: e.target.value })} className={SELECT}>
             {WEATHERS.map((weather) => <option key={weather.value} value={weather.value}>{weather.label}</option>)}
           </select>
         </label>
-        <label className="min-w-0">
-          <span className="mb-0.5 block font-hand text-base leading-none text-[#78614E]">terreno</span>
+        <label key={flashKey(flash, 'terrain')} className={`min-w-0 rounded-[3px] ${flashClass(flash, 'terrain')}`}>
+          <span className="mb-0.5 block font-hand text-base leading-none text-umber">terreno</span>
           <select value={field.terrain} onChange={(e) => onChange({ terrain: e.target.value })} className={SELECT}>
             {TERRAINS.map((terrain) => <option key={terrain.value} value={terrain.value}>{terrain.label}</option>)}
           </select>
@@ -89,30 +103,45 @@ function FieldPanel({ field, autoWeather, autoTerrain, weatherSuppressor, sideTi
       </div>
 
       {weatherSuppressor ? (
-        <p className="font-hand text-base leading-tight text-[#5B7856]">
+        <p className="font-hand text-base leading-tight text-olive-deep">
           sem clima: {formatSlug(weatherSuppressor)} anula qualquer clima em campo
         </p>
       ) : autoWeather && (!field.weather || PRIMAL_WEATHERS.has(autoWeather.value)) && (
-        <p className="font-hand text-base leading-tight text-[#5B7856]">
+        <p className="font-hand text-base leading-tight text-olive-deep">
           clima em campo: {weatherLabel(autoWeather.value)}, trazido por {formatSlug(autoWeather.ability)}
           {field.weather && field.weather !== autoWeather.value ? ' (clima primal: não pode ser trocado)' : ''}
         </p>
       )}
       {autoTerrain && !field.terrain && (
-        <p className="font-hand text-base leading-tight text-[#5B7856]">
+        <p className="font-hand text-base leading-tight text-olive-deep">
           terreno em campo: {terrainLabel(autoTerrain.value)}, trazido por {formatSlug(autoTerrain.ability)}
         </p>
       )}
 
       <div className="flex flex-wrap gap-1">
         {ROOMS.map(({ key, label, hint }) => (
-          <Chip key={key} pressed={field[key]} onToggle={() => onChange({ [key]: !field[key] })} title={hint}>{label}</Chip>
+          <Chip
+            key={flashKey(flash, key)}
+            pressed={field[key]}
+            flashing={flashClass(flash, key)}
+            onToggle={() => onChange({ [key]: !field[key] })}
+            title={hint}
+          >
+            {label}
+          </Chip>
         ))}
       </div>
 
       <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-1 2xl:grid-cols-2">
         {sideTitles.map((title, index) => (
-          <SideConditions key={title} title={title} conditions={field.sides[index]} onChange={(changes) => onSideChange(index, changes)} />
+          <SideConditions
+            key={title}
+            index={index}
+            title={title}
+            conditions={field.sides[index]}
+            flash={flash}
+            onChange={(changes) => onSideChange(index, changes)}
+          />
         ))}
       </div>
     </section>

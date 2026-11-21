@@ -1,5 +1,5 @@
 import { createField, createSideConditions, defaultHits } from '../components/calc/calcState';
-import { baseStatsOf } from './battleData';
+import { baseStatsOf, weightOf } from './battleData';
 import { calcSpeed, calculateDamage, isCalculable } from './damage';
 import { formatSlug } from './filters';
 import { probableSet } from './sketchSets';
@@ -50,7 +50,7 @@ export const SETUP_BOOSTS = {
 const BOOST_LABELS = { atk: 'Atk', def: 'Def', spa: 'SpA', spd: 'SpD', spe: 'Spe' };
 
 /** Lado no formato de calculateDamage a partir de uma entrada da Pokédex, do set e dos atributos base. */
-export function combatantOf(entry, set, baseStats, { boosts = NO_BOOSTS, tera = '' } = {}) {
+export function combatantOf(entry, set, baseStats, { boosts = NO_BOOSTS, tera = '', weight = null } = {}) {
   return {
     level: set.level,
     types: tera && tera !== 'stellar' ? [tera] : entry.types,
@@ -61,6 +61,9 @@ export function combatantOf(entry, set, baseStats, { boosts = NO_BOOSTS, tera = 
     item: set.item ?? '',
     ability: set.ability ?? '',
     status: '',
+    ivs: set.ivs,
+    baseStats,
+    weight,
   };
 }
 
@@ -184,15 +187,15 @@ function mostUsedSetup(stat) {
 const boostLabel = (boosts) => Object.entries(boosts).map(([stat, stage]) => `+${stage} ${BOOST_LABELS[stat]}`).join(' ');
 
 // Versões da ameaça: a base, a boostada (se ela tem a função setup) e a com o Tera da build.
-function threatVersions(entry, set, baseStats, stat, roles) {
-  const versions = [{ key: 'base', label: 'base', combatant: combatantOf(entry, set, baseStats) }];
+function threatVersions(entry, set, baseStats, stat, roles, weight) {
+  const versions = [{ key: 'base', label: 'base', combatant: combatantOf(entry, set, baseStats, { weight }) }];
   const setup = roles?.has('setup') ? mostUsedSetup(stat) : null;
   if (setup) {
     const boosts = SETUP_BOOSTS[setup];
-    versions.push({ key: 'boosted', label: `${boostLabel(boosts)} (${setup})`, combatant: combatantOf(entry, set, baseStats, { boosts }) });
+    versions.push({ key: 'boosted', label: `${boostLabel(boosts)} (${setup})`, combatant: combatantOf(entry, set, baseStats, { boosts, weight }) });
   }
   if (set.teraType) {
-    versions.push({ key: 'tera', label: `Tera ${formatSlug(set.teraType)}`, combatant: combatantOf(entry, set, baseStats, { tera: set.teraType }) });
+    versions.push({ key: 'tera', label: `Tera ${formatSlug(set.teraType)}`, combatant: combatantOf(entry, set, baseStats, { tera: set.teraType, weight }) });
   }
   return versions;
 }
@@ -220,7 +223,7 @@ export function prepareGauntlet({ meta, pool, allSets, battleData, tierKey, weat
       usage: stat.usage,
       entry,
       set,
-      versions: threatVersions(entry, set, baseStats, stat, meta.roles?.get(entry.name)),
+      versions: threatVersions(entry, set, baseStats, stat, meta.roles?.get(entry.name), weightOf(battleData, entry.id)),
     });
   }
   return { threats, meta, field: { ...createField(), weather }, matchups: new Map() };
@@ -231,7 +234,9 @@ const setKey = (set) => JSON.stringify([set.level, set.nature, set.item, set.abi
 /** Membro do time pronto para o teste do meta: { entry, set, combatant, key }. null sem atributos base. */
 export function gauntletMember(entry, set, battleData) {
   const baseStats = baseStatsOf(battleData, entry.id);
-  return baseStats ? { entry, set, combatant: combatantOf(entry, set, baseStats), key: `${entry.name}|${setKey(set)}` } : null;
+  if (!baseStats) return null;
+  const combatant = combatantOf(entry, set, baseStats, { weight: weightOf(battleData, entry.id) });
+  return { entry, set, combatant, key: `${entry.name}|${setKey(set)}` };
 }
 
 /* --------------------------------------------------------------- respostas e nota */

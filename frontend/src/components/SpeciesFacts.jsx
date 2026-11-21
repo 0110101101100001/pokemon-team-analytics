@@ -1,9 +1,9 @@
 import { memo, useMemo } from 'react';
 import { SPECIES_STAT_MAX, captureDifficulty, formGenerationLabel, speciesFacts } from '../utils/speciesInfo';
 
-const LABEL = 'block text-[10px] font-semibold uppercase text-[#78614E]';
-const TILE = 'rounded-[4px] border border-[#2A2421]/10 bg-paper/80 p-2.5';
-const VALUE = 'text-xs font-bold text-[#2A2421]';
+const LABEL = 'block text-[10px] font-semibold uppercase text-umber';
+const TILE = 'rounded-[4px] border border-ink/10 bg-paper/80 p-2.5';
+const VALUE = 'text-xs font-bold text-ink';
 
 const formatXp = (xp) => xp.toLocaleString('pt-BR');
 
@@ -13,15 +13,15 @@ function ScaleTile({ label, value, note }) {
     <div className={TILE}>
       <div className="flex items-baseline justify-between gap-2">
         <span className={LABEL}>{label}</span>
-        <span className="font-mono text-sm font-bold tabular-nums text-[#2A2421]">
+        <span className="font-mono text-sm font-bold tabular-nums text-ink">
           {value}
-          <span className="text-[10px] font-medium text-[#78614E]">/{SPECIES_STAT_MAX}</span>
+          <span className="text-[10px] font-medium text-umber">/{SPECIES_STAT_MAX}</span>
         </span>
       </div>
       <div className="brush-bar-track mt-1.5 !h-1.5">
-        <div className="brush-bar bg-[#829b72]" style={{ width: `max(${(value / SPECIES_STAT_MAX) * 100}%, 4px)` }} />
+        <div className="brush-bar bg-olive" style={{ width: `max(${(value / SPECIES_STAT_MAX) * 100}%, 4px)` }} />
       </div>
-      {note && <span className="mt-1 block text-[11px] italic text-[#4A463E]">{note}</span>}
+      {note && <span className="mt-1 block text-[11px] italic text-ink-soft">{note}</span>}
     </div>
   );
 }
@@ -47,13 +47,13 @@ function SpeciesFacts({ species, formName, formLabel, gridGeneration, isAlternat
   return (
     <div className="space-y-3">
       {isAlternateForm && (
-        <p className="text-[11px] italic text-[#4A463E]">
+        <p className="text-[11px] italic text-ink-soft">
           A estreia é a de {formLabel}; os outros dados são da espécie, que a PokéAPI não separa por forma.
         </p>
       )}
       <div className="grid grid-cols-1 gap-5 md:grid-cols-2">
         <div className="space-y-2">
-          <h4 className="font-reading text-sm font-bold text-[#2A2421]">Captura & Criação</h4>
+          <h4 className="font-reading text-sm font-bold text-ink">Captura & Criação</h4>
           <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
             {facts.captureRate != null && (
               <ScaleTile label="Taxa de captura" value={facts.captureRate} note={captureDifficulty(facts.captureRate)} />
@@ -64,30 +64,30 @@ function SpeciesFacts({ species, formName, formLabel, gridGeneration, isAlternat
             <FactTile label="Curva de XP">
               {facts.growthRate.label}
               {facts.growthRate.xp && (
-                <span className="ml-1 font-normal text-[#4A463E]">· {formatXp(facts.growthRate.xp)} XP até o nível 100</span>
+                <span className="ml-1 font-normal text-ink-soft">· {formatXp(facts.growthRate.xp)} XP até o nível 100</span>
               )}
             </FactTile>
           )}
         </div>
 
         <div className="space-y-2">
-          <h4 className="font-reading text-sm font-bold text-[#2A2421]">Classificação</h4>
+          <h4 className="font-reading text-sm font-bold text-ink">Classificação</h4>
           {facts.badges.length > 0 && (
             <div className="flex flex-wrap gap-1.5">
               {facts.badges.map((badge) => (
-                <span key={badge} className="type-stamp font-bold text-[#B8402A]">{badge}</span>
+                <span key={badge} className="type-stamp font-bold text-vermilion">{badge}</span>
               ))}
             </div>
           )}
           <div className="grid grid-cols-2 gap-2">
             {generation && <FactTile label="Estreia">{generation}</FactTile>}
-            <FactTile label="Habitat">{facts.habitat ?? <span className="font-normal italic text-[#4A463E]">sem registro</span>}</FactTile>
+            <FactTile label="Habitat">{facts.habitat ?? <span className="font-normal italic text-ink-soft">sem registro</span>}</FactTile>
             {facts.shape && <FactTile label="Forma">{facts.shape}</FactTile>}
             {facts.color && (
               <FactTile label="Cor">
                 <span className="inline-flex items-center gap-1.5">
                   {facts.color.hex && (
-                    <span aria-hidden="true" className="h-3 w-3 rounded-[2px] border border-[#2A2421]/40" style={{ backgroundColor: facts.color.hex }} />
+                    <span aria-hidden="true" className="h-3 w-3 rounded-[2px] border border-ink/40" style={{ backgroundColor: facts.color.hex }} />
                   )}
                   {facts.color.label}
                 </span>

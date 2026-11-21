@@ -26,6 +26,23 @@ describe('golpes Z e Max na calculadora', () => {
     expect(poweredMove(move('play-rough', 'fairy', 90), 'z').slug).toBe('twinkle-tackle');
   });
 
+  it('troca pelo G-Max só o golpe do tipo do G-Max; os outros viram o Max', async () => {
+    const { gmaxMoveOf } = await import('../data/gmaxMoves');
+    const wildfire = gmaxMoveOf('charizard');
+    expect(poweredMove(move('flamethrower', 'fire', 90), 'gmax', wildfire))
+      .toMatchObject({ name: 'G-Max Wildfire', slug: 'g-max-wildfire', type: 'fire', power: 130, powered: 'gmax' });
+    expect(poweredMove(move('air-slash', 'flying', 75), 'gmax', wildfire)).toMatchObject({ name: 'Max Airstream', powered: 'max' });
+    expect(poweredMove(move('close-combat', 'fighting', 120), 'gmax', gmaxMoveOf('machamp')).power).toBe(95);
+    expect(poweredMove(move('quick-attack', 'normal', 40), 'gmax', null)).toMatchObject({ name: 'Max Strike' });
+  });
+
+  it('G-Max Drum Solo, Fireball e Hydrosnipe têm poder fixo de 160', async () => {
+    const { gmaxMoveOf } = await import('../data/gmaxMoves');
+    expect(poweredMove(move('drum-beating', 'grass', 80), 'gmax', gmaxMoveOf('rillaboom')).power).toBe(160);
+    expect(poweredMove(move('ember', 'fire', 40), 'gmax', gmaxMoveOf('cinderace')).power).toBe(160);
+    expect(poweredMove(move('water-gun', 'water', 40), 'gmax', gmaxMoveOf('inteleon')).power).toBe(160);
+  });
+
   it('não mexe em golpes de status nem de poder variável', () => {
     const status = { slug: 'swords-dance', type: 'normal', damageClass: 'status', power: null };
     expect(canPowerUp(status)).toBe(false);

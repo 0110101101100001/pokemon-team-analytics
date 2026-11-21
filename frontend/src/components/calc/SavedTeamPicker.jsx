@@ -2,8 +2,8 @@ import { memo, useState } from 'react';
 import { MemberShortcut, SelectField, SourcePanel } from './SourcePanel';
 import { formatSlug } from '../../utils/filters';
 
-const NOTE = 'font-reading text-sm italic text-[#78614E]';
-const LINK = 'cursor-pointer font-semibold not-italic text-[#5C4033] underline underline-offset-2 hover:text-[#2A2421] focus:outline-none focus-visible:ring-2 focus-visible:ring-paint-cobalt';
+const NOTE = 'font-reading text-sm italic text-umber';
+const LINK = 'cursor-pointer font-semibold not-italic text-sepia underline underline-offset-2 hover:text-ink focus:outline-none focus-visible:ring-2 focus-visible:ring-paint-cobalt';
 
 /**
  * Puxa um dos seus times (o em montagem no Team Builder e, com login, os salvos) para um dos lados:

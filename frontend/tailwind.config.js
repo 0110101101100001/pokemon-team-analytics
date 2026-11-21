@@ -8,16 +8,22 @@ export default {
     extend: {
       colors: {
         // Os mesmos valores dos tokens de index.css (:root), para as classes utilitárias.
+        page: '#F7F3EE',
         paper: { DEFAULT: '#F2EAD9', 2: '#E6D9BE' },
         ink: { DEFAULT: '#1C1A17', soft: '#4A463E' },
-        vermilion: '#B8402A',
+        umber: '#78614E',
+        sepia: '#5C4033',
+        brown: '#785132',
+        olive: { DEFAULT: '#829B72', deep: '#5B7856', ink: '#3D5438' },
+        vermilion: { DEFAULT: '#B8402A', deep: '#8A3B27' },
+        ochre: { DEFAULT: '#B98428', deep: '#6B4A10' },
         smeargle: {
           bg: '#F2EAD9',            // creme quente / papel pergaminho
           surface: '#F5F0E6',       // creme ligeiramente mais escuro
           card: '#F2EAD9',          // creme nos cards (não branco puro)
           border: '#5C4033',        // marrom sépia / terra
           borderDim: '#D9CEC2',     // borda mais suave
-          text: '#2A2421',          // castanho escuro / carvão
+          text: '#1C1A17',          // castanho escuro / carvão
           textDim: '#785132',       // marrom clássico do Smeargle
           accent: '#5C4033',        // marrom escuro siena
           accentBright: '#829b72',  // verde oliva/sage suave (ação, tags)
@@ -79,12 +85,12 @@ export default {
         'sketch': '4px',
       },
       boxShadow: {
-        'card': '3px 3px 0 rgba(42, 36, 33, 0.14)',
-        'card-hover': '4px 5px 0 rgba(42, 36, 33, 0.2)',
+        'card': '3px 3px 0 rgba(28, 26, 23, 0.14)',
+        'card-hover': '4px 5px 0 rgba(28, 26, 23, 0.2)',
         'panel': '5px 5px 0 #4A463E',
-        'hard': '3px 3px 0 #2A2421',
-        'hard-hover': '2px 2px 0 #2A2421',
-        'ink': '0 0 0 1px #2A2421, 3px 3px 0 #2A2421',
+        'hard': '3px 3px 0 #1C1A17',
+        'hard-hover': '2px 2px 0 #1C1A17',
+        'ink': '0 0 0 1px #1C1A17, 3px 3px 0 #1C1A17',
       },
       animation: {
         'fade-in': 'fadeIn 0.25s ease-out',
@@ -96,8 +102,14 @@ export default {
         // Sem fill-mode: terminada a entrada, a seção não fica com transform nem contexto de empilhamento
         // (os modais `fixed` dentro dela dependem disso).
         'section-in': 'sectionIn 0.35s cubic-bezier(0.22, 1, 0.36, 1)',
+        // O campo que o turno mudou: uma aguada ocre que aparece e seca.
+        'ink-flash': 'inkFlash 1.1s ease-out',
       },
       keyframes: {
+        inkFlash: {
+          '0%, 35%': { boxShadow: '0 0 0 3px rgba(185, 132, 40, 0.55)', backgroundColor: 'rgba(185, 132, 40, 0.22)' },
+          '100%': { boxShadow: '0 0 0 3px rgba(185, 132, 40, 0)' },
+        },
         fadeIn: {
           '0%': { opacity: '0' },
           '100%': { opacity: '1' },

@@ -5,11 +5,11 @@ import { TYPE_NAMES, effectiveness } from '../utils/typeChart';
 import { formatSlug } from '../utils/filters';
 
 const MULTIPLIER_STYLE = {
-  0: { label: '0', className: 'bg-[#2A2421]/80 text-paper font-bold' },
+  0: { label: '0', className: 'bg-ink/80 text-paper font-bold' },
   0.25: { label: '¼', className: 'bg-smeargle-olive/35 text-smeargle-ink-darkGreen font-bold' },
   0.5: { label: '½', className: 'bg-smeargle-olive/15 text-smeargle-ink-darkGreen font-semibold' },
-  2: { label: '2', className: 'bg-[#B5543C]/15 text-[#8A3B27] font-semibold' },
-  4: { label: '4', className: 'bg-[#B5543C]/35 text-[#8A3B27] font-bold' },
+  2: { label: '2', className: 'bg-vermilion/15 text-vermilion-deep font-semibold' },
+  4: { label: '4', className: 'bg-vermilion/35 text-vermilion-deep font-bold' },
 };
 
 const CELL = 'h-8 px-1 text-center tabular-nums';
@@ -30,7 +30,7 @@ function buildRows(team) {
 }
 
 const summaryClass = (danger, good) => {
-  if (danger) return 'bg-[#B5543C]/15 text-[#8A3B27] font-bold';
+  if (danger) return 'bg-vermilion/15 text-vermilion-deep font-bold';
   if (good) return 'text-smeargle-ink-darkGreen font-semibold';
   return 'text-smeargle-textDim/80';
 };
@@ -40,24 +40,24 @@ function TeamTypeTable({ team }) {
 
   return (
     <div>
-      <div className="overflow-x-auto rounded-[4px] border border-[#78614E]/20 bg-paper/70">
+      <div className="overflow-x-auto rounded-[4px] border border-umber/20 bg-paper/70">
         <table className="w-full border-collapse font-reading text-xs text-smeargle-text">
           <thead>
-            <tr className="border-b border-[#78614E]/20">
+            <tr className="border-b border-umber/20">
               <th scope="col" className={`${HEAD} sticky left-0 bg-paper pl-3 pt-2 text-left`}>Ataque</th>
               {team.map((member) => (
                 <th key={member.id} scope="col" className={`${HEAD} pt-1`} title={formatSlug(member.name)}>
                   <img src={thumbnailSpriteUrl(member.id)} alt={formatSlug(member.name)} width={36} height={36} loading="lazy" decoding="async" className="mx-auto h-9 w-9 object-contain" />
                 </th>
               ))}
-              <th scope="col" className={`${HEAD} border-l border-[#5C4033]/25 pt-2`}>Fracos</th>
+              <th scope="col" className={`${HEAD} border-l border-sepia/25 pt-2`}>Fracos</th>
               <th scope="col" className={`${HEAD} pt-2`}>Resist.</th>
               <th scope="col" className={`${HEAD} pt-2 pr-3`} title="Membros que acertam este tipo com dano super efetivo usando STAB">Cobertura</th>
             </tr>
           </thead>
           <tbody>
             {rows.map(({ type, multipliers, weak, resist, coverage }) => (
-              <tr key={type} className="border-b border-[#5C4033]/10 last:border-0">
+              <tr key={type} className="border-b border-sepia/10 last:border-0">
                 <th scope="row" className="sticky left-0 bg-paper py-1 pl-3 pr-2 text-left font-normal">
                   <PokemonTypeBadge type={type} className="!px-1.5 !text-[9px]" />
                 </th>
@@ -65,18 +65,18 @@ function TeamTypeTable({ team }) {
                   const style = MULTIPLIER_STYLE[value];
                   return (
                     <td key={team[index].id} className={CELL}>
-                      {style && <span className={`inline-flex h-6 w-7 items-center justify-center rounded-md ${style.className}`}>{style.label}</span>}
+                      {style && <span className={`inline-flex h-6 w-7 items-center justify-center rounded-sketch ${style.className}`}>{style.label}</span>}
                     </td>
                   );
                 })}
-                <td className={`${CELL} border-l border-[#5C4033]/25`}>
-                  <span className={`inline-flex h-6 min-w-7 items-center justify-center rounded-md px-1 ${summaryClass(weak >= 3 || weak > resist + 1, false)}`}>{weak}</span>
+                <td className={`${CELL} border-l border-sepia/25`}>
+                  <span className={`inline-flex h-6 min-w-7 items-center justify-center rounded-sketch px-1 ${summaryClass(weak >= 3 || weak > resist + 1, false)}`}>{weak}</span>
                 </td>
                 <td className={CELL}>
-                  <span className={`inline-flex h-6 min-w-7 items-center justify-center rounded-md px-1 ${summaryClass(false, resist > 0)}`}>{resist}</span>
+                  <span className={`inline-flex h-6 min-w-7 items-center justify-center rounded-sketch px-1 ${summaryClass(false, resist > 0)}`}>{resist}</span>
                 </td>
                 <td className={`${CELL} pr-3`}>
-                  <span className={`inline-flex h-6 min-w-7 items-center justify-center rounded-md px-1 ${summaryClass(coverage === 0, coverage > 0)}`}>
+                  <span className={`inline-flex h-6 min-w-7 items-center justify-center rounded-sketch px-1 ${summaryClass(coverage === 0, coverage > 0)}`}>
                     {coverage || '—'}
                   </span>
                 </td>

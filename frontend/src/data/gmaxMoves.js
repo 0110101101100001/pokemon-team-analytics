@@ -50,6 +50,18 @@ export const GMAX_MOVE_LIST = Object.entries(GMAX_MOVES).map(([species, gmaxMove
   users: GMAX_FORMS[species] ?? [`${species}-gmax`],
 }));
 
+const GMAX_USERS = new Set(GMAX_MOVE_LIST.flatMap((gmaxMove) => gmaxMove.users));
+
+/**
+ * Golpe G-Max de um Pokémon que pode Gigantamaxizar ("charizard", "toxtricity-low-key") ou da própria forma
+ * Gigantamax; null para as outras formas da espécie (Charizard Mega X, Meowth de Galar).
+ */
+export function gmaxMoveOf(name) {
+  if (!name) return null;
+  const formName = name.endsWith('-gmax') ? name : `${name}-gmax`;
+  return GMAX_USERS.has(formName) ? gmaxMoveFor(formName) : null;
+}
+
 /**
  * Golpe G-Max de uma forma Gigantamax ("charizard-gmax", "toxtricity-low-key-gmax"), ou null para qualquer outra.
  * Procura do nome mais longo ao mais curto: Urshifu tem um golpe por estilo; Toxtricity, um só para as duas formas.

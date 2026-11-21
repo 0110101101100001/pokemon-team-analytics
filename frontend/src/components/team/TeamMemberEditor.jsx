@@ -57,11 +57,11 @@ function TeamMemberEditor({ member, onChange }) {
 
   return (
     <section className="paper-card p-4 pt-5 sm:p-5 sm:pt-6" aria-label={`Set de ${formatSlug(name)}`}>
-      <header className="flex items-center gap-3 border-b border-[#5C4033]/25 pb-3">
+      <header className="flex items-center gap-3 border-b border-sepia/25 pb-3">
         <img src={officialSpriteUrl(id)} alt="" width={72} height={72} decoding="async" className="h-[72px] w-[72px] shrink-0 object-contain" />
         <div className="min-w-0 flex-1">
-          <p className="font-hand text-lg leading-none text-[#78614E]">ficha de batalha</p>
-          <h3 className="truncate font-serif text-xl font-black tracking-tight text-[#2A2421]">{formatSlug(name)}</h3>
+          <p className="font-hand text-lg leading-none text-umber">ficha de batalha</p>
+          <h3 className="truncate font-serif text-xl font-black tracking-tight text-ink">{formatSlug(name)}</h3>
           <div className="mt-1 flex gap-1">{types.map((type) => <PokemonTypeBadge key={type} type={type} />)}</div>
         </div>
         <label className="w-16 shrink-0">
@@ -79,7 +79,7 @@ function TeamMemberEditor({ member, onChange }) {
       </header>
 
       {battle.status === 'error' && (
-        <p role="alert" className="mt-3 flex items-center gap-2 text-xs font-medium text-[#8A3B27]">
+        <p role="alert" className="mt-3 flex items-center gap-2 text-xs font-medium text-vermilion-deep">
           <TriangleAlert className="h-3.5 w-3.5 shrink-0" aria-hidden="true" />
           Não foi possível carregar os atributos e golpes deste Pokémon.
         </p>

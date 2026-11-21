@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { fetchBattleForms, fetchPokemonDetail } from '../services/api';
 import { toBaseStats } from '../utils/stats';
 
-const EMPTY = { status: 'idle', id: null, types: [], baseStats: null, learnset: [], abilities: [], hiddenAbility: null };
+const EMPTY = { status: 'idle', id: null, types: [], baseStats: null, weight: null, learnset: [], abilities: [], hiddenAbility: null };
 const LOADING = { ...EMPTY, status: 'loading' };
 
 /**
@@ -22,6 +22,8 @@ export function usePokemonBattleData(name) {
         id: data.id,
         types: data.types.map(({ type }) => type.name),
         baseStats: toBaseStats(data.stats),
+        // A PokéAPI dá o peso em hectogramas.
+        weight: data.weight ? data.weight / 10 : null,
         learnset: data.moves.map(({ move }) => move.name).sort(),
         // Habilidades da espécie na ordem do jogo; a oculta vem por último.
         abilities: data.abilities.map(({ ability }) => ability.name),

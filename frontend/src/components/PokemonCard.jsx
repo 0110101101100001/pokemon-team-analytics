@@ -6,7 +6,7 @@ import { thumbnailSpriteUrl } from '../services/api';
 
 /** Selo dos Pokémon com estatísticas de uso na Smogon; a legenda fica no cabeçalho da Pokédex. */
 export function SmogonSeal() {
-  return <span className="type-stamp shrink-0 font-bold text-[#6B4A10]">Smogon</span>;
+  return <span className="type-stamp shrink-0 font-bold text-ochre-deep">Smogon</span>;
 }
 
 // Mancha atrás do sprite: a tinta do tipo diluída no papel, numa cor sólida (sem gradiente). Uma por tipo.
@@ -23,7 +23,7 @@ function blotStyleFor(type) {
 /** Sprite da PokéAPI em 128px; se faltar (algumas formas não têm), um sinal de interrogação a tinta sobre a mancha. */
 function CardSprite({ src }) {
   const [failed, setFailed] = useState(false);
-  if (failed) return <span aria-hidden="true" className="font-serif text-5xl font-bold text-[#1C1A17]/45">?</span>;
+  if (failed) return <span aria-hidden="true" className="font-serif text-5xl font-bold text-ink/45">?</span>;
   return (
     <img
       src={src}
@@ -67,11 +67,11 @@ function PokemonCard({
         onClick={() => onSelect(pokemon)}
         aria-pressed={isSelected}
         aria-label={`Abrir a ficha de ${name}`}
-        className="absolute inset-0 z-10 cursor-pointer rounded-[4px] focus:outline-none focus-visible:ring-2 focus-visible:ring-paint-cobalt focus-visible:ring-offset-2 focus-visible:ring-offset-[#F7F3EE]"
+        className="absolute inset-0 z-10 cursor-pointer rounded-[4px] focus:outline-none focus-visible:ring-2 focus-visible:ring-paint-cobalt focus-visible:ring-offset-2 focus-visible:ring-offset-page"
       />
 
       <div className="flex h-8 items-center justify-between gap-2">
-        <span className="font-mono text-xs font-bold tracking-wider text-[#1C1A17] tabular-nums">
+        <span className="font-mono text-xs font-bold tracking-wider text-ink tabular-nums">
           Nº {String(number).padStart(4, '0')}
         </span>
         <div className="flex items-center gap-1">
@@ -91,7 +91,7 @@ function PokemonCard({
       </div>
 
       {/* Nomes longos de formas ("tauros paldea blaze breed") quebram entre palavras, nunca são cortados. */}
-      <h3 className="break-words text-center font-serif text-lg font-bold capitalize leading-snug text-[#1C1A17] sm:text-xl">
+      <h3 className="break-words text-center font-serif text-lg font-bold capitalize leading-snug text-ink sm:text-xl">
         {name}
       </h3>
       <div className="mt-2.5 flex flex-wrap items-center justify-center gap-1.5">

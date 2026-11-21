@@ -13,7 +13,7 @@ export function defaultHits(move) {
   return Math.min(Math.max(3, move.minHits), move.maxHits);
 }
 
-/** Golpe num dos quatro espaços, com o crítico, os acertos e o modo ('' normal, 'z' ou 'max') escolhidos. */
+/** Golpe num dos quatro espaços, com o crítico, os acertos e o modo ('' normal, 'z', 'max' ou 'gmax') escolhidos. */
 export const createMoveSlot = (move = null) => ({ move, hits: defaultHits(move), crit: false, mode: '' });
 
 export const createSide = () => ({
@@ -27,6 +27,17 @@ export const createSide = () => ({
   ability: '',
   item: '',
   status: '',
+  // PS atuais (null = cheio), turnos de veneno forte e o último golpe recebido ({ damage, category }), que a
+  // barra de PS e o botão de passar o turno atualizam. Felicidade só vale para Return e Frustration.
+  currentHp: null,
+  toxicTurns: 0,
+  // Turnos de sono que faltam (null = 2, a média) e o Bide em curso ({ turns, stored }).
+  sleepTurns: null,
+  bide: null,
+  lastHit: null,
+  // Turnos em campo: Fake Out e First Impression só funcionam com 0.
+  turnsOut: 0,
+  happiness: 255,
   boosts: { atk: 0, def: 0, spa: 0, spd: 0, spe: 0 },
   moves: Array.from({ length: MOVE_SLOTS }, () => createMoveSlot()),
 });
@@ -70,9 +81,12 @@ export const createField = () => ({
   sides: [createSideConditions(), createSideConditions()],
 });
 
-/** O golpe como a fórmula espera, com o crítico e os acertos escolhidos no espaço; como Z ou Max, se escolhido. */
-export function resolveSlot(slot) {
+/**
+ * O golpe como a fórmula espera, com o crítico e os acertos escolhidos no espaço; como Z, Max ou G-Max, se escolhido.
+ * `gmaxMove` é o G-Max do Pokémon (gmaxMoveOf), ou null se ele não tem forma Gigantamax.
+ */
+export function resolveSlot(slot, gmaxMove = null) {
   if (!slot.move) return null;
-  const move = poweredMove(slot.move, slot.mode);
+  const move = poweredMove(slot.move, slot.mode, gmaxMove);
   return { ...move, category: move.damageClass, hits: move.powered ? 1 : slot.hits, crit: slot.crit };
 }

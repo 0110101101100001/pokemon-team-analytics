@@ -5,6 +5,7 @@ import { GMAX_MOVE_LIST } from '../../data/gmaxMoves';
 import { MAX_MOVES } from '../../data/maxMoves';
 import { EXCLUSIVE_Z_MOVES, GENERIC_Z_MOVES } from '../../data/zMoves';
 import { resolveTrainerPokemon } from '../../utils/trainers';
+import EmptyState from '../EmptyState';
 
 const GRID = 'grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-3';
 const BY_BASE_POWER = 'Pelo golpe base';
@@ -34,7 +35,7 @@ function Group({ title, note, children }) {
     <section className="space-y-3">
       <header>
         <h3 className="section-title !mb-0">{title}</h3>
-        {note && <p className="font-reading text-sm italic text-[#785132]">{note}</p>}
+        {note && <p className="font-reading text-sm italic text-brown">{note}</p>}
       </header>
       <div className={GRID}>{children}</div>
     </section>
@@ -46,7 +47,7 @@ function SpecialMoves({ kind, filters, entryByName, onSelectPokemon }) {
   const { first, second } = useMemo(() => specialMovesOf(kind, filters), [kind, filters]);
 
   if (first.length + second.length === 0) {
-    return <p className="py-16 text-center font-hand text-2xl text-[#78614E]">nenhum golpe com esses filtros</p>;
+    return <EmptyState title="nenhum golpe com esses filtros" />;
   }
 
   if (kind === 'max') {

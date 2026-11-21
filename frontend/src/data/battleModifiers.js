@@ -1,3 +1,4 @@
+import berries from './berries.json';
 // Itens, habilidades e grupos de golpes que a calculadora de dano sabe aplicar.
 // Slugs da PokéAPI. O que não estiver aqui pode ser escolhido, mas não altera a conta.
 
@@ -26,6 +27,17 @@ export const TYPE_BOOST_ITEMS = {
 };
 
 // Berry que corta pela metade um golpe super efetivo do tipo (Chilan vale para Normal em qualquer caso).
+// Natural Gift: tipo e poder de cada Berry. A PokéAPI traz o poder da Geração 4; da 6 em diante são 20 a mais.
+// Ela deixa a Roseli sem tipo (é Fairy, 60 + 20); a Hopo é de Legends: Arceus e não serve ao Natural Gift.
+const NATURAL_GIFT_FIXES = { 'roseli-berry': { type: 'fairy', power: 60 } };
+const naturalGiftBerries = berries
+  .map((berry) => ({ name: berry.name, ...(NATURAL_GIFT_FIXES[berry.name] ?? berry.naturalGift) }))
+  .filter((berry) => berry.type && berry.power);
+
+export const NATURAL_GIFT = Object.fromEntries(
+  naturalGiftBerries.map((berry) => [berry.name, { type: berry.type, power: berry.power + 20 }]),
+);
+
 export const RESIST_BERRIES = {
   'chilan-berry': 'normal',
   'occa-berry': 'fire',
@@ -74,6 +86,12 @@ export const ITEM_GROUPS = [
       ['safety-goggles', 'Safety Goggles · ignora a areia'],
       ...Object.entries(RESIST_BERRIES).map(([slug, type]) => [slug, `${slugLabel(slug)} · resiste a ${typeLabel(type)}`]),
     ],
+  },
+  {
+    label: 'Berries (Natural Gift)',
+    items: naturalGiftBerries
+      .filter((berry) => !RESIST_BERRIES[berry.name])
+      .map((berry) => [berry.name, `${slugLabel(berry.name)} · ${typeLabel(berry.type)} ${berry.power + 20}`]),
   },
   {
     label: 'Recuperação e velocidade',
@@ -316,6 +334,7 @@ export const STATUSES = [
   { value: '', label: 'Saudável' },
   { value: 'burn', label: 'Queimado' },
   { value: 'poison', label: 'Envenenado' },
+  { value: 'toxic', label: 'Muito envenenado' },
   { value: 'paralysis', label: 'Paralisado' },
   { value: 'sleep', label: 'Dormindo' },
   { value: 'freeze', label: 'Congelado' },

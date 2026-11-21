@@ -10,11 +10,11 @@ import {
   INVESTMENTS, SPEED_TIER_SIZE, boostedSpeed, buildSpeedTiers, placeSpeed, speedStat, tierLevel, topSpread,
 } from '../utils/speedTiers';
 
-const LABEL = 'font-reading text-xs font-semibold uppercase tracking-wider text-[#4A463E]';
+const LABEL = 'font-reading text-xs font-semibold uppercase tracking-wider text-ink-soft';
 const FIELD = 'paper-field h-9 cursor-pointer pl-2.5 pr-7 font-reading text-sm';
 const TOGGLE = 'inline-flex h-9 cursor-pointer items-center gap-1.5 rounded-[3px] border-[1.5px] px-3 font-reading text-sm transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-paint-cobalt';
-const TOGGLE_ON = 'border-[#B8402A] font-semibold text-[#B8402A]';
-const TOGGLE_OFF = 'border-[#1C1A17]/40 font-medium text-[#1C1A17] hover:border-[#1C1A17]';
+const TOGGLE_ON = 'border-vermilion font-semibold text-vermilion';
+const TOGGLE_OFF = 'border-ink/40 font-medium text-ink hover:border-ink';
 
 /** Os mais usados do tier com a velocidade do spread mais popular de cada um; carrega a cada troca de tier. */
 function useSpeedTiers(tier, entries) {
@@ -70,18 +70,18 @@ function MetaRow({ tier, position, onSelect }) {
   const name = formatSlug(tier.entryName);
   return (
     <li className="grid grid-cols-[2rem_minmax(0,1fr)_3.5rem_4.5rem] items-center gap-2 px-2 py-1 sm:grid-cols-[2rem_minmax(0,1fr)_4rem_3.5rem_5.5rem]">
-      <span className="font-mono text-[11px] tabular-nums text-[#4A463E]">{position}</span>
+      <span className="font-mono text-[11px] tabular-nums text-ink-soft">{position}</span>
       <button
         type="button"
         onClick={() => onSelect(tier.entryName)}
-        className="flex min-w-0 cursor-pointer items-center gap-1.5 rounded-[2px] text-left transition-colors hover:bg-[#829b72]/15 focus:outline-none focus-visible:ring-2 focus-visible:ring-paint-cobalt"
+        className="flex min-w-0 cursor-pointer items-center gap-1.5 rounded-[2px] text-left transition-colors hover:bg-olive/15 focus:outline-none focus-visible:ring-2 focus-visible:ring-paint-cobalt"
       >
         <img src={thumbnailSpriteUrl(tier.id)} alt="" width={32} height={32} loading="lazy" decoding="async" className="h-8 w-8 shrink-0 object-contain [image-rendering:pixelated]" />
         <span className="truncate font-reading text-sm text-ink" title={name}>{name}</span>
       </button>
-      <span className="hidden text-right font-mono text-[11px] tabular-nums text-[#4A463E] sm:block">{tier.usage.toFixed(1)}%</span>
+      <span className="hidden text-right font-mono text-[11px] tabular-nums text-ink-soft sm:block">{tier.usage.toFixed(1)}%</span>
       <span className="text-right font-mono text-sm font-bold tabular-nums text-ink">{tier.speed}</span>
-      <span className="text-right font-mono text-[11px] tabular-nums text-[#4A463E]" title={tier.scarfSpeed ? `Choice Scarf em ${tier.scarfUsage.toFixed(0)}% dos sets` : undefined}>
+      <span className="text-right font-mono text-[11px] tabular-nums text-ink-soft" title={tier.scarfSpeed ? `Choice Scarf em ${tier.scarfUsage.toFixed(0)}% dos sets` : undefined}>
         {tier.scarfSpeed ? <>{tier.scarfSpeed} <span className="opacity-75">({tier.scarfUsage.toFixed(0)}%)</span></> : '–'}
       </span>
     </li>
@@ -89,13 +89,13 @@ function MetaRow({ tier, position, onSelect }) {
 }
 
 const OwnRow = ({ rowRef, name, id, speed }) => (
-  <li ref={rowRef} className="grid grid-cols-[2rem_minmax(0,1fr)_auto] items-center gap-2 rounded-[3px] border-[1.5px] border-[#B8402A] bg-[#B8402A]/10 px-2 py-1">
-    <span aria-hidden="true" className="font-serif text-sm font-black text-[#B8402A]">▶</span>
+  <li ref={rowRef} className="grid grid-cols-[2rem_minmax(0,1fr)_auto] items-center gap-2 rounded-[3px] border-[1.5px] border-vermilion bg-vermilion/10 px-2 py-1">
+    <span aria-hidden="true" className="font-serif text-sm font-black text-vermilion">▶</span>
     <span className="flex min-w-0 items-center gap-1.5">
       <img src={thumbnailSpriteUrl(id)} alt="" width={32} height={32} className="h-8 w-8 shrink-0 object-contain [image-rendering:pixelated]" />
       <span className="truncate font-reading text-sm font-semibold text-ink">{name}</span>
     </span>
-    <span className="font-mono text-sm font-black tabular-nums text-[#B8402A]">{speed}</span>
+    <span className="font-mono text-sm font-black tabular-nums text-vermilion">{speed}</span>
   </li>
 );
 
@@ -138,12 +138,12 @@ function SpeedTierTable({ tier, pokemonName, pokemonId, baseSpeed, ownSpreads, e
   const ownRow = <OwnRow key="own" rowRef={ownRef} name={ownName} id={pokemonId} speed={speed} />;
 
   return (
-    <section className="space-y-3 rounded-[4px] border border-[#2A2421]/12 bg-paper p-4">
+    <section className="space-y-3 rounded-[4px] border border-ink/12 bg-paper p-4">
       <header className="space-y-1">
-        <h4 className="flex items-center gap-2 font-reading text-sm font-bold text-[#2A2421]">
-          <Gauge className="h-4 w-4 text-[#829b72]" aria-hidden="true" /> Velocidade no meta
+        <h4 className="flex items-center gap-2 font-reading text-sm font-bold text-ink">
+          <Gauge className="h-4 w-4 text-olive" aria-hidden="true" /> Velocidade no meta
         </h4>
-        <p className="font-reading text-[13px] italic text-[#4A463E]">
+        <p className="font-reading text-[13px] italic text-ink-soft">
           Os {SPEED_TIER_SIZE} mais usados do tier, cada um com o spread mais popular e sem Tailwind
           {tierLevel(tier) !== 100 && `, no nível ${tierLevel(tier)}`}.
         </p>
@@ -166,15 +166,15 @@ function SpeedTierTable({ tier, pokemonName, pokemonId, baseSpeed, ownSpreads, e
 
       {status === 'loading' && <SmeargleLoader label="Cronometrando o meta..." className="py-6" />}
       {status === 'error' && (
-        <p className="text-center font-reading text-sm italic text-[#8A3B27]">Não foi possível carregar o meta deste tier agora.</p>
+        <p className="text-center font-reading text-sm italic text-vermilion-deep">Não foi possível carregar o meta deste tier agora.</p>
       )}
       {status === 'ready' && others.length === 0 && (
-        <p className="text-center font-reading text-sm italic text-[#4A463E]">Sem dados de uso neste tier.</p>
+        <p className="text-center font-reading text-sm italic text-ink-soft">Sem dados de uso neste tier.</p>
       )}
       {status === 'ready' && others.length > 0 && (
         <>
           <Summary speed={speed} place={place} total={others.length} />
-          <div className="grid grid-cols-[2rem_minmax(0,1fr)_3.5rem_4.5rem] gap-2 border-b border-[#1C1A17]/25 px-2 pb-1 sm:grid-cols-[2rem_minmax(0,1fr)_4rem_3.5rem_5.5rem]">
+          <div className="grid grid-cols-[2rem_minmax(0,1fr)_3.5rem_4.5rem] gap-2 border-b border-ink/25 px-2 pb-1 sm:grid-cols-[2rem_minmax(0,1fr)_4rem_3.5rem_5.5rem]">
             <span className={LABEL}>#</span>
             <span className={LABEL}>Pokémon</span>
             <span className={`hidden text-right sm:block ${LABEL}`}>Uso</span>

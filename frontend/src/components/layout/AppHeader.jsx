@@ -13,7 +13,7 @@ const EASE = 'transition-[padding,margin,width,max-height,opacity,font-size] dur
  */
 function AppHeader({ activeId, collapsed, toolbarRef, children }) {
   return (
-    <header className="sticky top-0 z-40 bg-[#78614E] text-[#F7F3EE]">
+    <header className="sticky top-0 z-40 bg-umber text-page">
       {/* Respingos claros de ateliê, atrás de tudo: perto das abas e da área de perfil. Somem no celular, onde o header é estreito. */}
       <div aria-hidden="true" className="pointer-events-none absolute inset-0 -z-10 hidden overflow-hidden md:block">
         <PaintSpeckle variant={0} color="#F7F3EE" className="absolute left-[31%] top-0 h-12 w-12 -translate-y-1/3 opacity-50" />
@@ -35,14 +35,14 @@ function AppHeader({ activeId, collapsed, toolbarRef, children }) {
             <a
               href={sectionHref(DEFAULT_SECTION)}
               aria-label="Smearglepedia: ir para a Pokédex"
-              className="block min-w-0 rounded-xl px-1 py-1 focus:outline-none focus-visible:ring-2 focus-visible:ring-[#A4C294]/70"
+              className="block min-w-0 rounded-sketch px-1 py-1 focus:outline-none focus-visible:ring-2 focus-visible:ring-paint-pistachio/70"
             >
               <h1 className={`font-serif font-black leading-none tracking-tight text-paper ${EASE} ${collapsed ? 'text-xl sm:text-2xl' : 'text-2xl sm:text-[2.4rem]'}`}>
                 Smeargle
                 <span className="relative isolate text-[#B7D99F]">
                   pedia
                   {/* A ponta da cauda do Smeargle: uma pincelada de tinta sob "pedia". */}
-                  <svg aria-hidden="true" viewBox="0 0 100 12" preserveAspectRatio="none" className="absolute -bottom-2 left-0 -z-10 h-2.5 w-full text-[#829b72]">
+                  <svg aria-hidden="true" viewBox="0 0 100 12" preserveAspectRatio="none" className="absolute -bottom-2 left-0 -z-10 h-2.5 w-full text-olive">
                     <path fill="currentColor" opacity="0.75" d="M1 7c18-4 40-5 62-4 13 .5 24 1.5 34 .5 2 0 3 3 1 4-14 3-34 2-52 3-15 1-29 2-42 1C0 11 0 8 1 7z" />
                   </svg>
                 </span>

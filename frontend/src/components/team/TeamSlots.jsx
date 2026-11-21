@@ -10,7 +10,7 @@ const SLOTS = Array.from({ length: TEAM_SIZE }, (_, index) => index);
 const TeamSlot = memo(function TeamSlot({ pokemon, selected, onSelect, onRemove }) {
   if (!pokemon) {
     return (
-      <li className="flex h-28 items-center justify-center rounded-sketch border-2 border-dashed border-[#78614E]/25 font-hand text-lg text-[#78614E]/45">
+      <li className="flex h-28 items-center justify-center rounded-sketch border-2 border-dashed border-umber/25 font-hand text-lg text-umber/45">
         vazio
       </li>
     );
@@ -25,7 +25,7 @@ const TeamSlot = memo(function TeamSlot({ pokemon, selected, onSelect, onRemove 
         aria-pressed={selected}
         aria-label={`Editar ${name}`}
         className={`relative flex h-28 w-full cursor-pointer flex-col items-center justify-center gap-1 rounded-sketch border bg-paper/80 px-1 transition-[box-shadow,border-color] focus:outline-none focus-visible:ring-2 focus-visible:ring-paint-cobalt ${
-          selected ? 'border-[#2A2421] shadow-card' : 'border-[#2A2421]/25 shadow-card hover:border-[#2A2421]/60 hover:shadow-[3px_3px_0_rgba(42,36,33,0.15),0_8px_18px_-8px_rgba(130,155,114,0.55)]'
+          selected ? 'border-ink shadow-card' : 'border-ink/25 shadow-card hover:border-ink/60 hover:shadow-[3px_3px_0_rgba(28,26,23,0.15),0_8px_18px_-8px_rgba(130,155,114,0.55)]'
         }`}
       >
         <img src={thumbnailSpriteUrl(pokemon.id)} alt="" width={48} height={48} loading="lazy" decoding="async" className="h-12 w-12 object-contain" />
@@ -38,7 +38,7 @@ const TeamSlot = memo(function TeamSlot({ pokemon, selected, onSelect, onRemove 
         type="button"
         onClick={() => onRemove(pokemon.id)}
         aria-label={`Remover ${name}`}
-        className="absolute right-1 top-1 cursor-pointer rounded-full p-1 text-[#78614E]/60 transition-colors hover:bg-[#B5543C]/15 hover:text-[#8A3B27] focus:outline-none focus-visible:ring-2 focus-visible:ring-paint-cobalt"
+        className="absolute right-1 top-1 cursor-pointer rounded-full p-1 text-umber/60 transition-colors hover:bg-vermilion/15 hover:text-vermilion-deep focus:outline-none focus-visible:ring-2 focus-visible:ring-paint-cobalt"
       >
         <X className="h-3.5 w-3.5" aria-hidden="true" />
       </button>

@@ -46,7 +46,7 @@ const SHAPES = {
 
 // `hex` só pinta a amostra ao lado do nome; tons de tinta, como o resto da ficha.
 const COLORS = {
-  black: { label: 'Preto', hex: '#2A2421' },
+  black: { label: 'Preto', hex: '#1C1A17' },
   blue: { label: 'Azul', hex: '#4F6D8A' },
   brown: { label: 'Marrom', hex: '#8A6440' },
   gray: { label: 'Cinza', hex: '#8A8A80' },

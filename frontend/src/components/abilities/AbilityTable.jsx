@@ -22,7 +22,7 @@ const AbilityRow = memo(function AbilityRow({ ability, open, onToggle, onSelectA
   const panelId = holdersPanelId(slug);
   return (
     <>
-      <tr className={`${ROW} ${open ? 'bg-[#829b72]/10' : ''}`}>
+      <tr className={`${ROW} ${open ? 'bg-olive/10' : ''}`}>
         <td className={`${CELL} whitespace-nowrap`}>
           <button type="button" onClick={() => onSelectAbility(slug)} className={MOVE_NAME_BUTTON}>
             {formatSlug(slug)}
@@ -77,7 +77,7 @@ function AbilityTable({ abilities, openAbility, onToggleAbility, onSelectAbility
       <div className="paper-card overflow-x-auto">
         <table className="w-full border-collapse font-reading text-sm text-smeargle-text">
           <thead>
-            <tr className="border-b border-[#78614E]/20 text-left">
+            <tr className="border-b border-umber/20 text-left">
               <th scope="col" className={HEAD}>Habilidade</th>
               <th scope="col" className={`${HEAD} max-md:hidden`}>Efeito</th>
               <th scope="col" className={`${HEAD} text-right max-sm:hidden`}>Geração</th>

@@ -30,9 +30,9 @@ function TrainerSearch({ trainers, onPick }) {
   return (
     <div>
       <label className="block">
-        <span className="mb-0.5 block font-hand text-base leading-none text-[#78614E]">treinador</span>
+        <span className="mb-0.5 block font-hand text-base leading-none text-umber">treinador</span>
         <span className="relative block">
-          <Search className="pointer-events-none absolute left-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-[#78614E]/70" aria-hidden="true" />
+          <Search className="pointer-events-none absolute left-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-umber/70" aria-hidden="true" />
           <input
             type="search"
             value={query}
@@ -57,7 +57,7 @@ function TrainerSearch({ trainers, onPick }) {
                 <button
                   type="button"
                   onClick={() => pick(trainer)}
-                  className="block w-full cursor-pointer truncate rounded-[4px] border border-[#78614E]/15 bg-paper/70 px-2.5 py-1.5 text-left transition-colors hover:border-smeargle-olive hover:bg-smeargle-olive/10 focus:outline-none focus-visible:ring-2 focus-visible:ring-paint-cobalt"
+                  className="block w-full cursor-pointer truncate rounded-[4px] border border-umber/15 bg-paper/70 px-2.5 py-1.5 text-left transition-colors hover:border-smeargle-olive hover:bg-smeargle-olive/10 focus:outline-none focus-visible:ring-2 focus-visible:ring-paint-cobalt"
                 >
                   <span className="font-reading text-sm font-semibold text-smeargle-text">{trainer.name}</span>
                 </button>
@@ -146,14 +146,14 @@ function TrainerTeamPicker({ pool, currentId, initialBattleId = null, onPick }) 
   return (
     <SourcePanel title="time de um treinador" selected={trainer?.name} defaultOpen={Boolean(initialBattleId)} onOpen={load}>
       {state.status === 'loading' && (
-        <p className="flex items-center gap-2 py-2 font-reading text-sm italic text-[#78614E]">
+        <p className="flex items-center gap-2 py-2 font-reading text-sm italic text-umber">
           <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" />
           Chamando os treinadores...
         </p>
       )}
 
       {state.status === 'error' && (
-        <p role="alert" className="flex items-center gap-2 py-1 text-xs font-medium text-[#8A3B27]">
+        <p role="alert" className="flex items-center gap-2 py-1 text-xs font-medium text-vermilion-deep">
           <TriangleAlert className="h-3.5 w-3.5 shrink-0" aria-hidden="true" />
           Não foi possível carregar os treinadores.
           <button type="button" onClick={load} className="cursor-pointer underline underline-offset-2">Tentar de novo</button>

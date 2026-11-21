@@ -119,7 +119,7 @@ export default function TeamBuilderSection({ team, onTeamChange, pool, session, 
           {selected ? (
             <TeamMemberEditor key={selected.id} member={selected} onChange={updateSet} />
           ) : (
-            <p className="paper-card px-6 py-10 font-hand text-xl leading-snug text-[#5C4033]">
+            <p className="paper-card px-6 py-10 font-hand text-xl leading-snug text-sepia">
               Adicione o primeiro Pokémon para montar o set: item, natureza, EVs, IVs e golpes.
             </p>
           )}

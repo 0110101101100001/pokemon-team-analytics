@@ -33,7 +33,7 @@ export const InkEdge = memo(function InkEdge({ className = '' }) {
 // A gota fica fora do SVG: com preserveAspectRatio="none" um círculo viraria uma elipse esticada.
 export const InkRule = memo(function InkRule({ className = '', wash }) {
   return (
-    <div aria-hidden="true" className={`pointer-events-none flex items-center gap-1.5 text-[#2A2421] ${className}`}>
+    <div aria-hidden="true" className={`pointer-events-none flex items-center gap-1.5 text-ink ${className}`}>
       <svg viewBox="0 0 1000 12" preserveAspectRatio="none" className="block h-2.5 min-w-0 flex-1 overflow-visible">
         {wash && (
           <path

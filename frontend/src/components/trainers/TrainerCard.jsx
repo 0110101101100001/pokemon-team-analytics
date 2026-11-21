@@ -10,7 +10,7 @@ export const blotColor = (type) =>
 
 export function SpecialtyStamp({ type }) {
   if (type !== MIXED_TYPE) return <PokemonTypeBadge type={type} />;
-  return <span className="type-stamp text-[#4A463E]">Vários tipos</span>;
+  return <span className="type-stamp text-ink-soft">Vários tipos</span>;
 }
 
 const generationsLabel = (generations) => {
@@ -27,14 +27,14 @@ function TrainerCard({ trainer, entryByName, onOpen }) {
         type="button"
         onClick={() => onOpen(trainer.slug)}
         aria-label={`Abrir a ficha de ${trainer.name}`}
-        className="absolute inset-0 z-10 cursor-pointer rounded-[4px] focus:outline-none focus-visible:ring-2 focus-visible:ring-paint-cobalt focus-visible:ring-offset-2 focus-visible:ring-offset-[#F7F3EE]"
+        className="absolute inset-0 z-10 cursor-pointer rounded-[4px] focus:outline-none focus-visible:ring-2 focus-visible:ring-paint-cobalt focus-visible:ring-offset-2 focus-visible:ring-offset-page"
       />
 
       <div className="flex items-center justify-between gap-2">
-        <span className="font-mono text-xs font-bold tracking-wider text-[#1C1A17] tabular-nums">
+        <span className="font-mono text-xs font-bold tracking-wider text-ink tabular-nums">
           {generationsLabel(trainer.generations)}
         </span>
-        <span className="truncate font-reading text-xs italic text-[#4A463E]">{trainer.regions.join(' · ')}</span>
+        <span className="truncate font-reading text-xs italic text-ink-soft">{trainer.regions.join(' · ')}</span>
       </div>
 
       <div className="relative isolate my-2 flex h-[104px] items-center justify-center">
@@ -42,12 +42,12 @@ function TrainerCard({ trainer, entryByName, onOpen }) {
         <TrainerSprite trainer={trainer} entryByName={entryByName} />
       </div>
 
-      <h3 className="break-words text-center font-serif text-lg font-bold leading-snug text-[#1C1A17] sm:text-xl">{trainer.name}</h3>
-      <p className="mt-0.5 text-center font-reading text-sm text-[#4A463E]">{trainer.roles.map(roleLabel).join(' · ')}</p>
+      <h3 className="break-words text-center font-serif text-lg font-bold leading-snug text-ink sm:text-xl">{trainer.name}</h3>
+      <p className="mt-0.5 text-center font-reading text-sm text-ink-soft">{trainer.roles.map(roleLabel).join(' · ')}</p>
 
       <div className="mt-auto flex items-center justify-between gap-2 pt-3">
         <SpecialtyStamp type={trainer.type} />
-        <span className="font-mono text-[11px] font-bold tabular-nums text-[#4A463E]">
+        <span className="font-mono text-[11px] font-bold tabular-nums text-ink-soft">
           {battleCount} batalha{battleCount !== 1 ? 's' : ''}
         </span>
       </div>

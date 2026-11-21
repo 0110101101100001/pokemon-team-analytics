@@ -211,6 +211,26 @@ const MULTI_HIT_FALLBACK = { 'population-bomb': [1, 10] };
  * `effectChance` marca golpes com efeito secundário (Sheer Force); `minHits`/`maxHits` só
  * aparecem nos golpes de vários acertos.
  */
+const STAT_KEYS_BY_NAME = { attack: 'atk', defense: 'def', 'special-attack': 'spa', 'special-defense': 'spd', speed: 'spe' };
+
+/**
+ * O que o golpe faz além do dano, como a PokéAPI publica (meta, stat_changes, target). Chances 0 valem como certas:
+ * a PokéAPI usa 0 nos golpes de status, em que o efeito sempre acontece.
+ */
+export const moveEffectsOf = (data) => ({
+  target: data.target?.name ?? null,
+  category: data.meta?.category?.name ?? null,
+  statChanges: (data.stat_changes ?? [])
+    .map(({ change, stat }) => ({ stat: STAT_KEYS_BY_NAME[stat.name], change }))
+    .filter((entry) => entry.stat),
+  statChance: data.meta?.stat_chance ?? 0,
+  ailment: data.meta?.ailment?.name && data.meta.ailment.name !== 'none' ? data.meta.ailment.name : null,
+  ailmentChance: data.meta?.ailment_chance ?? 0,
+  healing: data.meta?.healing ?? 0,
+  drain: data.meta?.drain ?? 0,
+  flinchChance: data.meta?.flinch_chance ?? 0,
+});
+
 export const fetchMoveSummary = (slug) =>
   fetchMove(slug).then((data) => {
     if (!data) return null;
@@ -223,6 +243,7 @@ export const fetchMoveSummary = (slug) =>
       priority: data.priority ?? 0,
       effectChance: data.effect_chance ?? null,
       ...(maxHits > 1 && { minHits, maxHits }),
+      effects: moveEffectsOf(data),
     };
   });
 

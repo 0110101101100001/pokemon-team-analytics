@@ -11,13 +11,14 @@ import {
   battleKey, battleTabsOf, gameListOf, hasTeamVariants, resolveTrainerPokemon, roleLabel,
 } from '../../utils/trainers';
 
-const LABEL = 'font-reading text-xs font-semibold uppercase tracking-wider text-[#4A463E]';
+const LABEL = 'font-reading text-xs font-semibold uppercase tracking-wider text-ink-soft';
 const PILL = 'cursor-pointer rounded-[3px] border-[1.5px] px-3 py-1.5 font-reading text-sm transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-paint-cobalt';
-const PILL_ON = 'border-[#B8402A] font-semibold text-[#B8402A]';
-const PILL_OFF = 'border-[#1C1A17]/40 font-medium text-[#1C1A17] hover:border-[#1C1A17]';
+const PILL_ON = 'border-vermilion font-semibold text-vermilion';
+const PILL_OFF = 'border-ink/40 font-medium text-ink hover:border-ink';
 
 const positionLabel = (battle) => {
-  if (battle.role === 'Gym Leader') return `${battle.order}º ginásio`;
+  // Só batalha de ginásio da história tem insígnia; no PWT a ordem é só para ordenar.
+  if (battle.role === 'Gym Leader') return battle.badge ? `${battle.order}º ginásio` : null;
   if (battle.role === 'Elite Four') return `${battle.order}º da Elite 4`;
   return null;
 };
@@ -45,33 +46,33 @@ function ChoiceGroup({ title, label, children }) {
 
 function TeamMember({ member, entry, onSelectPokemon, onSelectMove }) {
   return (
-    <li className="flex flex-col rounded-[3px] border-[1.5px] border-[#1C1A17]/70 bg-paper-2 p-2.5">
+    <li className="flex flex-col rounded-[3px] border-[1.5px] border-ink/70 bg-paper-2 p-2.5">
       <button
         type="button"
         onClick={() => onSelectPokemon(entry.name)}
         disabled={!entry}
-        className="flex w-full cursor-pointer items-center gap-2 rounded-[2px] text-left transition-colors hover:bg-[#829b72]/15 focus:outline-none focus-visible:ring-2 focus-visible:ring-paint-cobalt disabled:cursor-default disabled:hover:bg-transparent"
+        className="flex w-full cursor-pointer items-center gap-2 rounded-[2px] text-left transition-colors hover:bg-olive/15 focus:outline-none focus-visible:ring-2 focus-visible:ring-paint-cobalt disabled:cursor-default disabled:hover:bg-transparent"
       >
         {entry ? (
           <img src={thumbnailSpriteUrl(entry.id)} alt="" width={56} height={56} loading="lazy" decoding="async" className="h-14 w-14 shrink-0 object-contain [image-rendering:pixelated]" />
         ) : (
-          <span aria-hidden="true" className="flex h-14 w-14 shrink-0 items-center justify-center font-serif text-2xl font-bold text-[#1C1A17]/45">?</span>
+          <span aria-hidden="true" className="flex h-14 w-14 shrink-0 items-center justify-center font-serif text-2xl font-bold text-ink/45">?</span>
         )}
         <span className="min-w-0 flex-1">
-          <span className="block truncate font-serif text-base font-bold text-[#1C1A17]">{member.name}</span>
-          <span className="font-mono text-[11px] font-bold tabular-nums text-[#4A463E]">Nv. {member.level}</span>
+          <span className="block truncate font-serif text-base font-bold text-ink">{member.name}</span>
+          <span className="font-mono text-[11px] font-bold tabular-nums text-ink-soft">Nv. {member.level}</span>
         </span>
-        {member.isAce && <span className="type-stamp shrink-0 font-bold text-[#B8402A]">Ás</span>}
+        {member.isAce && <span className="type-stamp shrink-0 font-bold text-vermilion">Ás</span>}
       </button>
 
       {member.moves.length > 0 && (
-        <ul className="mt-2 grid grid-cols-2 gap-1 border-t border-[#1C1A17]/20 pt-2">
+        <ul className="mt-2 grid grid-cols-2 gap-1 border-t border-ink/20 pt-2">
           {member.moves.map((move) => (
             <li key={move} className="min-w-0">
               <button
                 type="button"
                 onClick={() => onSelectMove(move)}
-                className="w-full cursor-pointer truncate rounded-[2px] px-1 py-0.5 text-left font-reading text-[13px] text-[#1C1A17] underline decoration-[#1C1A17]/25 underline-offset-2 transition-colors hover:decoration-[#B8402A] focus:outline-none focus-visible:ring-2 focus-visible:ring-paint-cobalt"
+                className="w-full cursor-pointer truncate rounded-[2px] px-1 py-0.5 text-left font-reading text-[13px] text-ink underline decoration-ink/25 underline-offset-2 transition-colors hover:decoration-vermilion focus:outline-none focus-visible:ring-2 focus-visible:ring-paint-cobalt"
               >
                 {move}
               </button>
@@ -110,7 +111,7 @@ export default function TrainerModal({ trainer, initialBattleId, entryByName, on
 
   return createPortal(
     <div
-      className="fixed inset-0 z-[45] flex items-center justify-center bg-[#2A2421]/60 p-4 animate-fade-in motion-reduce:animate-none md:bg-[#2A2421]/45 sm:p-6"
+      className="fixed inset-0 z-[45] flex items-center justify-center bg-ink/60 p-4 animate-fade-in motion-reduce:animate-none md:bg-ink/45 sm:p-6"
       onMouseDown={(e) => e.target === e.currentTarget && onClose()}
     >
       <div
@@ -131,7 +132,7 @@ export default function TrainerModal({ trainer, initialBattleId, entryByName, on
             </h2>
             <div className="mt-2 flex flex-wrap items-center gap-2">
               <SpecialtyStamp type={battle.type} />
-              <span className="font-reading text-sm italic text-[#4A463E]">{trainer.regions.join(' · ')}</span>
+              <span className="font-reading text-sm italic text-ink-soft">{trainer.regions.join(' · ')}</span>
             </div>
           </div>
           <button
@@ -197,7 +198,7 @@ export default function TrainerModal({ trainer, initialBattleId, entryByName, on
                   </button>
                 ))}
               </ChoiceGroup>
-              <p className="font-reading text-sm italic text-[#4A463E]">O time muda conforme a escolha do jogador no começo da aventura.</p>
+              <p className="font-reading text-sm italic text-ink-soft">O time muda conforme a escolha do jogador no começo da aventura.</p>
             </div>
           )}
 

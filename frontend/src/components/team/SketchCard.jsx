@@ -15,9 +15,9 @@ import { ROLE_LABELS } from '../../utils/teamRoles';
 // Anéis da grade do teste do meta: cores da paleta (oliva, ocre, terracota) e um vinho escuro para "sem resposta".
 const STATUS = {
   none: { label: 'sem resposta', ring: 'ring-[#7A1F2B]', dot: 'bg-[#7A1F2B]' },
-  weak: { label: 'fraca', ring: 'ring-[#B5543C]', dot: 'bg-[#B5543C]' },
-  ok: { label: 'ok', ring: 'ring-[#B98428]', dot: 'bg-[#B98428]' },
-  solid: { label: 'sólida', ring: 'ring-[#5F7A52]', dot: 'bg-[#5F7A52]' },
+  weak: { label: 'fraca', ring: 'ring-vermilion', dot: 'bg-vermilion' },
+  ok: { label: 'ok', ring: 'ring-ochre', dot: 'bg-ochre' },
+  solid: { label: 'sólida', ring: 'ring-olive-deep', dot: 'bg-olive-deep' },
 };
 const STATUS_ORDER = ['none', 'weak', 'ok', 'solid'];
 /** Por quanto tempo o retorno da última edição (deltas e pulso na grade) fica visível. */
@@ -29,7 +29,7 @@ const nextTask = () => new Promise((resolve) => { setTimeout(resolve, 0); });
 function Expandable({ summary, children, className = '' }) {
   return (
     <details className={`group ${className}`}>
-      <summary className="flex cursor-pointer list-none items-center gap-1 text-[11px] font-semibold text-[#785132] marker:hidden focus:outline-none focus-visible:ring-2 focus-visible:ring-paint-cobalt [&::-webkit-details-marker]:hidden">
+      <summary className="flex cursor-pointer list-none items-center gap-1 text-[11px] font-semibold text-brown marker:hidden focus:outline-none focus-visible:ring-2 focus-visible:ring-paint-cobalt [&::-webkit-details-marker]:hidden">
         <ChevronDown className="h-3.5 w-3.5 transition-transform group-open:rotate-180" aria-hidden="true" />
         {summary}
       </summary>
@@ -66,7 +66,7 @@ function fitLines(fit) {
 
 function ScoreBadge({ value, caption, title }) {
   return (
-    <span className="flex flex-col items-center rounded-sketch bg-[#78614E] px-2.5 py-1 text-paper" title={title}>
+    <span className="flex flex-col items-center rounded-sketch bg-umber px-2.5 py-1 text-paper" title={title}>
       <span className="font-mono text-xl font-bold leading-none tabular-nums">{value}</span>
       <span className="text-[9px] uppercase tracking-wider">{caption}</span>
     </span>
@@ -137,9 +137,9 @@ function RoleChecklist({ checklist, coveredBy }) {
       {checklist.map((role) => {
         const members = coveredBy[role] ?? [];
         return members.length ? (
-          <li key={role} className={`${rolePill} border-[#5F7A52]/40 bg-[#829b72]/10 text-[#3F5535]`}>
+          <li key={role} className={`${rolePill} border-olive-deep/40 bg-olive/10 text-olive-ink`}>
             <span className={roleName}>{ROLE_LABELS[role]}</span>
-            <span className="h-3 w-px bg-[#5F7A52]/35" aria-hidden="true" />
+            <span className="h-3 w-px bg-olive-deep/35" aria-hidden="true" />
             <span className="text-smeargle-textDim">{members.slice(0, 2).map(formatSlug).join(', ')}</span>
           </li>
         ) : (
@@ -178,7 +178,7 @@ function PickReasons({ members }) {
   );
 }
 
-const toolButton = 'inline-flex min-h-9 cursor-pointer items-center gap-1.5 rounded-[3px] border border-[#2A2421]/25 bg-paper px-3 text-xs font-semibold text-smeargle-text transition-colors hover:border-[#2A2421]/55 hover:bg-[#829b72]/10 focus:outline-none focus-visible:ring-2 focus-visible:ring-paint-cobalt disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:bg-paper';
+const toolButton = 'inline-flex min-h-9 cursor-pointer items-center gap-1.5 rounded-[3px] border border-ink/25 bg-paper px-3 text-xs font-semibold text-smeargle-text transition-colors hover:border-ink/55 hover:bg-olive/10 focus:outline-none focus-visible:ring-2 focus-visible:ring-paint-cobalt disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:bg-paper';
 
 /**
  * Um esboço editável: fixar e trocar membros, corrigir a pior ameaça, regenerar e desfazer, com as notas
@@ -241,12 +241,12 @@ function SketchCard({ index, card, ctx, checklist, busy, applying, disabled, onE
   }, [index, onRegenerate]);
 
   return (
-    <li className="min-w-0 rounded-sketch border border-[#2A2421]/20 bg-paper/70 p-3 shadow-card sm:p-4">
+    <li className="min-w-0 rounded-sketch border border-ink/20 bg-paper/70 p-3 shadow-card sm:p-4">
       <div className="mb-3 flex flex-wrap items-start justify-between gap-2">
         <div className="min-w-0">
           <h3 className="flex flex-wrap items-center gap-x-1.5 font-serif text-base font-bold leading-tight text-smeargle-text">
             {evaluation.title} <span className="font-sans text-xs font-semibold text-smeargle-textDim/70">#{index + 1}</span>
-            {edited && <span className="rounded-[3px] bg-paint-ochre/20 px-2 py-0.5 font-hand text-sm font-normal leading-4 text-[#7A5512]">editado</span>}
+            {edited && <span className="rounded-[3px] bg-paint-ochre/20 px-2 py-0.5 font-hand text-sm font-normal leading-4 text-ochre-deep">editado</span>}
           </h3>
           {evaluation.fit.averageSpeed != null && (
             <p className="text-[11px] text-smeargle-textDim">velocidade base média {Math.round(evaluation.fit.averageSpeed)}</p>
@@ -315,7 +315,7 @@ function SketchCard({ index, card, ctx, checklist, busy, applying, disabled, onE
           />
         </div>
       )}
-      {notice && <p role="status" className="mt-2 rounded-[4px] border border-[#B5543C]/30 bg-[#B5543C]/5 p-2.5 font-reading text-xs text-smeargle-text">{notice}</p>}
+      {notice && <p role="status" className="mt-2 rounded-[4px] border border-vermilion/30 bg-vermilion/5 p-2.5 font-reading text-xs text-smeargle-text">{notice}</p>}
 
       <div className="mt-3 space-y-3">
         <div className="space-y-1">
@@ -346,7 +346,7 @@ function SketchCard({ index, card, ctx, checklist, busy, applying, disabled, onE
         </Expandable>
 
         <div className="flex flex-wrap items-center gap-1.5 text-xs">
-          <span className="font-semibold text-[#785132]">Brechas:</span>
+          <span className="font-semibold text-brown">Brechas:</span>
           {evaluation.holes.length
             ? evaluation.holes.map((type) => <PokemonTypeBadge key={type} type={type} className="!px-1.5 !text-[8px]" />)
             : <span className="font-serif italic text-smeargle-textDim/80">Sem brechas graves</span>}

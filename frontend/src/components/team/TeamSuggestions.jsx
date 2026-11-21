@@ -29,7 +29,7 @@ const SuggestionRow = memo(function SuggestionRow({ pokemon, score, detail, onAd
       <button
         type="button"
         onClick={() => onAdd(pokemon)}
-        className="flex w-full cursor-pointer items-center gap-3 rounded-[4px] border border-[#78614E]/15 bg-paper/70 px-3 py-2 text-left transition-colors hover:border-smeargle-olive hover:bg-smeargle-olive/10 focus:outline-none focus-visible:ring-2 focus-visible:ring-paint-cobalt"
+        className="flex w-full cursor-pointer items-center gap-3 rounded-[4px] border border-umber/15 bg-paper/70 px-3 py-2 text-left transition-colors hover:border-smeargle-olive hover:bg-smeargle-olive/10 focus:outline-none focus-visible:ring-2 focus-visible:ring-paint-cobalt"
       >
         <img src={thumbnailSpriteUrl(pokemon.id)} alt="" width={40} height={40} loading="lazy" decoding="async" className="h-10 w-10 shrink-0 object-contain" />
         <span className="min-w-0 flex-1">
@@ -39,8 +39,8 @@ const SuggestionRow = memo(function SuggestionRow({ pokemon, score, detail, onAd
           </span>
           {detail && <span className="mt-0.5 block truncate font-serif text-[11px] italic text-smeargle-textDim/80">{detail}</span>}
         </span>
-        <span className="shrink-0 rounded-[3px] bg-[#78614E] px-2 py-0.5 font-mono text-sm tabular-nums text-paper">{score}</span>
-        <Plus className="h-4 w-4 shrink-0 text-[#78614E]/60" aria-hidden="true" />
+        <span className="shrink-0 rounded-[3px] bg-umber px-2 py-0.5 font-mono text-sm tabular-nums text-paper">{score}</span>
+        <Plus className="h-4 w-4 shrink-0 text-umber/60" aria-hidden="true" />
       </button>
     </li>
   );

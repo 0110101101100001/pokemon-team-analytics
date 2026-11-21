@@ -74,7 +74,7 @@ export default function AbilitiesSection({ entryByName, onSelectPokemon }) {
         title="Habilidades"
         subtitle={(
           <>
-            <span className="font-semibold tabular-nums text-[#2A2421]">{count}</span>{' '}
+            <span className="font-semibold tabular-nums text-ink">{count}</span>{' '}
             {`habilidade${count !== 1 ? 's' : ''}`}
             {deferredQuery.trim() && <> para <span className="font-serif italic">“{deferredQuery.trim()}”</span></>}
           </>
@@ -82,7 +82,7 @@ export default function AbilitiesSection({ entryByName, onSelectPokemon }) {
         aside={<span className={HEADING_PILL_CLASS}>Toque em “Pokémon” para ver quem tem</span>}
       />
 
-      <p className="font-reading text-sm italic text-[#785132]">* Clique no nome da habilidade para ver mais informações.</p>
+      <p className="font-reading text-sm italic text-brown">* Clique no nome da habilidade para ver mais informações.</p>
 
       <AbilityTable
         abilities={abilities}

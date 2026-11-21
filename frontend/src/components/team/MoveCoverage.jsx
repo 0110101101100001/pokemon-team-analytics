@@ -7,9 +7,9 @@ import { capitalize } from '../../utils/typeColors';
 
 const TIERS = {
   super: { label: '2×', className: 'border-smeargle-olive/50 bg-smeargle-olive/15', badge: 'bg-smeargle-olive text-paper' },
-  neutral: { label: '1×', className: 'border-[#78614E]/15 bg-paper/70', badge: 'bg-[#78614E]/15 text-[#78614E]' },
-  resisted: { label: '½', className: 'border-[#B5543C]/35 bg-[#B5543C]/10', badge: 'bg-[#B5543C]/80 text-paper' },
-  immune: { label: '0', className: 'border-[#2A2421]/35 bg-[#2A2421]/10', badge: 'bg-[#2A2421]/80 text-paper' },
+  neutral: { label: '1×', className: 'border-umber/15 bg-paper/70', badge: 'bg-umber/15 text-umber' },
+  resisted: { label: '½', className: 'border-vermilion/35 bg-vermilion/10', badge: 'bg-vermilion/80 text-paper' },
+  immune: { label: '0', className: 'border-ink/35 bg-ink/10', badge: 'bg-ink/80 text-paper' },
 };
 
 const tierOf = (best) => {
@@ -65,7 +65,7 @@ function MoveCoverage({ team }) {
             <li key={type} className={`flex min-h-[3.25rem] flex-col justify-center gap-1 rounded-[4px] border px-2 py-1.5 ${tier.className}`}>
               <div className="flex items-center justify-between gap-1">
                 <PokemonTypeBadge type={type} className="!px-1.5 !text-[9px]" />
-                <span className={`inline-flex h-5 min-w-6 items-center justify-center rounded-md px-1 font-mono text-xs font-bold ${tier.badge}`}>{tier.label}</span>
+                <span className={`inline-flex h-5 min-w-6 items-center justify-center rounded-sketch px-1 font-mono text-xs font-bold ${tier.badge}`}>{tier.label}</span>
               </div>
               {hitters.length > 0 && (
                 <div className="flex flex-wrap gap-0.5">
@@ -90,7 +90,7 @@ function MoveCoverage({ team }) {
       </ul>
 
       {walls.length > 0 && (
-        <p className="mt-3 font-hand text-lg leading-tight text-[#8A3B27]">
+        <p className="mt-3 font-hand text-lg leading-tight text-vermilion-deep">
           nenhum golpe passa de resistido contra: {walls.map((row) => capitalize(row.type)).join(', ')}
         </p>
       )}

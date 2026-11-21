@@ -21,14 +21,14 @@ const describeError = (error) =>
   ERROR_MESSAGES[error?.code] ?? error?.message ?? 'Algo deu errado. Tente novamente.';
 
 const FIELD_CLASS =
-  'h-11 w-full rounded-xl border border-[#78614E]/25 bg-paper/70 pl-10 pr-3 text-sm text-smeargle-text font-serif placeholder:italic placeholder:text-[#78614E]/55 shadow-inner transition-colors hover:border-[#78614E]/45 focus:outline-none focus:ring-2 focus:ring-smeargle-olive/60 focus:border-smeargle-olive';
+  'paper-field h-11 pl-10 pr-3 placeholder:text-umber/70';
 
 const Field = forwardRef(function Field({ id, label, icon: Icon, ...inputProps }, ref) {
   return (
     <label htmlFor={id} className="block">
-      <span className="mb-1.5 block font-hand text-lg leading-none text-[#78614E]">{label}</span>
+      <span className="mb-1.5 block font-hand text-lg leading-none text-umber">{label}</span>
       <span className="relative block">
-        <Icon className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-[#78614E]/70" aria-hidden="true" />
+        <Icon className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-umber/70" aria-hidden="true" />
         <input ref={ref} id={id} className={FIELD_CLASS} {...inputProps} />
       </span>
     </label>
@@ -110,33 +110,33 @@ export default function AuthModal({ open, onClose, onAuthChange }) {
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center bg-[#2A2421]/55 p-4 md:bg-[#2A2421]/40 md:backdrop-blur-sm animate-fade-in"
+      className="fixed inset-0 z-50 flex items-center justify-center bg-ink/60 p-4 animate-fade-in motion-reduce:animate-none md:bg-ink/45"
       onMouseDown={(e) => e.target === e.currentTarget && onClose?.()}
     >
       <div
         role="dialog"
         aria-modal="true"
         aria-labelledby={`${ids}-title`}
-        className="relative w-full max-w-sm rounded-panel border border-[#78614E]/30 bg-paper p-7 shadow-lg md:bg-paper/85 md:shadow-panel md:backdrop-blur-xl animate-bubble-pop"
+        className="relative w-full max-w-sm paper-card p-7 shadow-panel animate-bubble-pop motion-reduce:animate-none"
       >
         <button
           type="button"
           onClick={onClose}
           aria-label="Fechar diálogo"
-          className="absolute right-4 top-4 rounded-full p-1.5 text-[#78614E]/70 transition-colors hover:bg-[#78614E]/10 hover:text-[#78614E] focus:outline-none focus-visible:ring-2 focus-visible:ring-paint-cobalt"
+          className="absolute right-4 top-4 rounded-full p-1.5 text-umber/70 transition-colors hover:bg-umber/10 hover:text-umber focus:outline-none focus-visible:ring-2 focus-visible:ring-paint-cobalt"
         >
           <X className="h-4 w-4" />
         </button>
 
         <header className="mb-6 pr-6">
-          <h2 id={`${ids}-title`} className="font-display text-2xl font-bold text-[#78614E]">{copy.title}</h2>
+          <h2 id={`${ids}-title`} className="font-display text-2xl font-bold text-umber">{copy.title}</h2>
           <p className="mt-1 font-serif text-sm italic text-smeargle-textDim/80">{copy.subtitle}</p>
         </header>
 
-        <div role="tablist" className="relative mb-6 grid grid-cols-2 rounded-pill border border-[#78614E]/20 bg-[#78614E]/5 p-1">
+        <div role="tablist" className="relative mb-6 grid grid-cols-2 rounded-pill border border-umber/20 bg-umber/5 p-1">
           <span
             aria-hidden="true"
-            className={`absolute inset-y-1 left-1 w-[calc(50%-0.25rem)] rounded-pill bg-[#78614E] shadow-card transition-transform duration-300 ease-out ${mode === 'signup' ? 'translate-x-full' : ''}`}
+            className={`absolute inset-y-1 left-1 w-[calc(50%-0.25rem)] rounded-pill bg-umber shadow-card transition-transform duration-300 ease-out ${mode === 'signup' ? 'translate-x-full' : ''}`}
           />
           {['login', 'signup'].map((key) => (
             <button
@@ -145,7 +145,7 @@ export default function AuthModal({ open, onClose, onAuthChange }) {
               role="tab"
               aria-selected={mode === key}
               onClick={() => switchMode(key)}
-              className={`relative z-10 py-1.5 text-xs font-semibold uppercase tracking-wider transition-colors duration-300 ${mode === key ? 'text-paper' : 'text-[#78614E]/75 hover:text-[#78614E]'}`}
+              className={`relative z-10 py-1.5 text-xs font-semibold uppercase tracking-wider transition-colors duration-300 ${mode === key ? 'text-paper' : 'text-umber/75 hover:text-umber'}`}
             >
               {key === 'login' ? 'Entrar' : 'Cadastro'}
             </button>
@@ -179,13 +179,13 @@ export default function AuthModal({ open, onClose, onAuthChange }) {
           />
 
           {error && (
-            <p role="alert" className="flex items-start gap-2 rounded-xl border border-[#B5543C]/30 bg-[#B5543C]/10 px-3 py-2 text-xs text-[#8A3B27]">
+            <p role="alert" className="flex items-start gap-2 rounded-sketch border border-vermilion/30 bg-vermilion/10 px-3 py-2 text-xs text-vermilion-deep">
               <TriangleAlert className="mt-0.5 h-3.5 w-3.5 shrink-0" aria-hidden="true" />
               {error}
             </p>
           )}
           {notice && (
-            <p role="status" className="rounded-xl border border-smeargle-olive/40 bg-smeargle-olive/10 px-3 py-2 text-xs text-smeargle-ink-darkGreen">
+            <p role="status" className="rounded-sketch border border-smeargle-olive/40 bg-smeargle-olive/10 px-3 py-2 text-xs text-smeargle-ink-darkGreen">
               {notice}
             </p>
           )}
@@ -193,7 +193,7 @@ export default function AuthModal({ open, onClose, onAuthChange }) {
           <button
             type="submit"
             disabled={loading}
-            className="flex h-11 w-full items-center justify-center gap-2 rounded-xl bg-[#78614E] font-semibold tracking-wide text-paper shadow-hard transition-all hover:translate-x-[2px] hover:translate-y-[2px] hover:shadow-hard-hover focus:outline-none focus-visible:ring-2 focus-visible:ring-paint-cobalt disabled:cursor-wait disabled:opacity-70"
+            className="btn-action w-full disabled:cursor-wait"
           >
             {loading && <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" />}
             {copy.submit}

@@ -8,9 +8,17 @@ import { createField, createSide, resolveSlot, sideFromPokemon } from '../compon
 import SectionHeading, { HEADING_PILL_CLASS } from '../components/layout/SectionHeading';
 import { useBattleForms, useFormBattleData } from '../hooks/usePokemonBattleData';
 import { useSavedTeams } from '../hooks/useSavedTeams';
+import { gmaxMoveOf } from '../data/gmaxMoves';
+import TurnPanel from '../components/calc/TurnPanel';
+import BattleScoreboard from '../components/calc/BattleScoreboard';
+import MobileTurnBar from '../components/calc/MobileTurnBar';
+import { simulateTurn } from '../utils/turn';
+import { fetchMoveSummary } from '../services/api';
+import { USES_HAPPINESS } from '../utils/variablePower';
 import { PRIMAL_WEATHERS, TERRAIN_ABILITIES, WEATHER_ABILITIES, WEATHER_SUPPRESSORS } from '../data/battleModifiers';
 import { airborneBy, calcSpeed, calculateDamage, describeKnockout, isCalculable } from '../utils/damage';
 import { calcStats } from '../utils/stats';
+import { formatSlug } from '../utils/filters';
 import { navigateHash } from '../navigation/hashRoute';
 import { CALCULATOR_HREF, trainerBattleFromHash } from '../navigation/sections';
 
@@ -37,6 +45,16 @@ function toCombatant(side, battle, ability) {
     item: side.item,
     ability,
     status: side.status,
+    weight: battle.weight,
+    currentHp: side.currentHp,
+    toxicTurns: side.toxicTurns,
+    sleepTurns: side.sleepTurns,
+    bide: side.bide,
+    lastHit: side.lastHit,
+    turnsOut: side.turnsOut,
+    happiness: side.happiness,
+    ivs: side.set.ivs,
+    baseStats: battle.baseStats,
   };
 }
 
@@ -70,17 +88,35 @@ const shownPokemon = (side, battle) => (side.pokemon && side.form
   ? { id: battle.id ?? side.pokemon.id, name: side.form }
   : side.pokemon);
 
+const usesAny = (side, slugs) => side.moves.some((slot) => slot.move && slugs.has(slot.move.slug));
+
+/** Felicidade: só quando o lado usa Return ou Frustration. */
+const variableFieldsOf = (side) => ({ happiness: usesAny(side, USES_HAPPINESS) });
+
+// O que a simulação muda em cada lado; "recomeçar" volta ao que era antes do primeiro turno.
+const BATTLE_KEYS = ['currentHp', 'boosts', 'status', 'toxicTurns', 'sleepTurns', 'bide', 'lastHit', 'turnsOut'];
+const battleSnapshot = (side) => Object.fromEntries(BATTLE_KEYS.map((key) => [key, side[key]]));
+
+// Resumos antigos (times salvos antes dos efeitos ou do recuo) não têm `effects` completos: busca de novo, do cache.
+const withEffects = (move) => (move && move.effects?.flinchChance === undefined ? fetchMoveSummary(move.slug).then((fresh) => fresh ?? move) : move);
+
 function resultHint(sides) {
   if (!sides[0].pokemon) return 'Escolha o seu Pokémon.';
   if (!sides[1].pokemon) return 'Escolha o oponente.';
   if (sides.every((side) => side.moves.every((slot) => !slot.move))) return 'Escolha ao menos um golpe de um dos lados.';
-  return 'Nenhum dos golpes escolhidos causa dano com poder fixo (são de status ou de poder variável).';
+  return 'Nenhum dos golpes escolhidos causa dano (são todos de status).';
 }
 
 export default function DamageCalculatorSection({ pool, team, session, onLogin }) {
   const [sides, setSides] = useState(() => [createSide(), createSide()]);
   const [field, setField] = useState(createField);
   const [selected, setSelected] = useState({ side: 0, slot: 0 });
+  // Turno a turno: o golpe escolhido de cada lado, quantos turnos passaram e o registro do último.
+  const [turnPicks, setTurnPicks] = useState([null, null]);
+  // Registro: os turnos já passados (o mais recente primeiro) e o estado de antes do primeiro, para "recomeçar".
+  const [turnLog, setTurnLog] = useState({ turn: 0, history: [], start: null });
+  // O que o último turno mudou no campo, para piscar no painel de campo.
+  const [fieldFlash, setFieldFlash] = useState(null);
   // Vindo do card da Liga, o endereço traz a batalha; ela é lida uma vez e sai do endereço,
   // para um recarregamento não desfazer o que o usuário mudou depois.
   const [trainerBattleId] = useState(trainerBattleFromHash);
@@ -102,6 +138,10 @@ export default function DamageCalculatorSection({ pool, team, session, onLogin }
     useFormBattleData(sides[1].pokemon?.name ?? null, sides[1].form),
   ];
   const forms = [useBattleForms(sides[0].pokemon?.name ?? null), useBattleForms(sides[1].pokemon?.name ?? null)];
+  // G-Max de cada lado: só a forma base que Gigantamaxiza (Charizard sim, Charizard Mega X não).
+  const gmaxMoves = sides.map((side) => gmaxMoveOf(side.form || side.pokemon?.name));
+  // Campos extras de cada lado, só quando algum golpe escolhido precisa deles.
+  const extraFields = sides.map(variableFieldsOf);
   // Só valem habilidades da espécie (ou da forma); sem escolha válida, a primeira delas.
   const chosenAbilities = sides.map((side, index) => {
     const own = battles[index].abilities;
@@ -176,15 +216,15 @@ export default function DamageCalculatorSection({ pool, team, session, onLogin }
     const rows = [];
     if (combatants) {
       sides[from].moves.forEach((slot, slotIndex) => {
-        const move = resolveSlot(slot);
+        const move = resolveSlot(slot, gmaxMoves[from]);
         if (!isCalculable(move)) return;
-        const context = { attacker: combatants[from], defender: combatants[to], defenderSide: battleField.sides[to], field: battleField };
+        const context = { attacker: combatants[from], defender: combatants[to], attackerSide: battleField.sides[from], defenderSide: battleField.sides[to], field: battleField };
         const result = calculateDamage({ move, ...context });
         rows.push({ slotIndex, move, result, ko: describeKnockout(result, context) });
       });
     }
     return { key: from, attacker: shownPokemon(sides[from], battles[from]), defender: shownPokemon(sides[to], battles[to]), rows };
-  }), [combatants, sides, battles[0], battles[1], battleField]);
+  }), [combatants, sides, gmaxMoves[0], gmaxMoves[1], battles[0], battles[1], battleField]);
 
   // O detalhe mostra o golpe escolhido; se ele sumiu, o primeiro golpe com conta.
   const allRows = directions.flatMap((direction) => direction.rows.map((row) => ({ ...row, side: direction.key })));
@@ -196,13 +236,81 @@ export default function DamageCalculatorSection({ pool, team, session, onLogin }
   };
   const activeSelection = current ? { side: current.side, slot: current.slotIndex } : selected;
 
+  const names = sides.map((side, index) => (side.pokemon ? formatSlug(shownPokemon(side, battles[index]).name) : ''));
+  const pickTurnMove = useCallback((index, slot) => setTurnPicks((current) => current.map((pick, i) => (i === index ? slot : pick))), []);
+  const passTurn = async () => {
+    if (!combatants) return;
+    const slots = await Promise.all(turnPicks.map(async (slot, index) => {
+      const chosen = sides[index].moves[slot];
+      return chosen?.move ? { ...chosen, move: await withEffects(chosen.move) } : null;
+    }));
+    const moves = slots.map((slot, index) => (slot ? resolveSlot(slot, gmaxMoves[index]) : null));
+    const turn = simulateTurn({ combatants, moves, sideConditions: battleField.sides, field: battleField, names });
+    const start = turnLog.start ?? { sides: sides.map(battleSnapshot), field };
+    setSides((current) => current.map((side, index) => {
+      const next = turn.sides[index];
+      return { ...side, ...next, currentHp: next.currentHp === combatants[index].stats.hp ? null : next.currentHp };
+    }));
+    setField((current) => ({
+      ...current,
+      ...['weather', 'terrain', 'trickRoom', 'gravity', 'magicRoom', 'wonderRoom']
+        .reduce((changes, key) => (turn.field[key] !== battleField[key] ? { ...changes, [key]: turn.field[key] } : changes), {}),
+      sides: turn.conditions,
+    }));
+    const changed = [
+      ...['weather', 'terrain', 'trickRoom', 'gravity', 'magicRoom', 'wonderRoom'].filter((key) => turn.field[key] !== battleField[key]),
+      ...turn.conditions.flatMap((conditions, index) => Object.keys(conditions)
+        .filter((key) => key !== 'protect' && conditions[key] !== battleField.sides[index][key])
+        .map((key) => `${index}:${key}`)),
+    ];
+    setFieldFlash(changed.length ? { keys: changed, token: turnLog.turn + 1 } : null);
+    setTurnLog((current) => ({
+      turn: current.turn + 1,
+      history: [{ turn: current.turn + 1, lines: turn.log }, ...current.history],
+      start,
+    }));
+  };
+  const resetBattle = () => {
+    const { start } = turnLog;
+    if (start) {
+      setSides((current) => current.map((side, index) => ({ ...side, ...start.sides[index] })));
+      setField(start.field);
+    }
+    setTurnLog({ turn: 0, history: [], start: null });
+    setFieldFlash(null);
+  };
+
+  // Prévia do turno: o dano que o golpe escolhido de um lado tira do outro (mínimo e máximo).
+  const previews = [0, 1].map((to) => {
+    const from = 1 - to;
+    if (sides[from].bide) return null;
+    const row = directions[from].rows.find((entry) => entry.slotIndex === turnPicks[from]);
+    return row && !row.result.reason ? { min: row.result.min, max: row.result.max } : null;
+  });
+  const fighters = [0, 1].map((index) => {
+    if (!combatants) return null;
+    const max = combatants[index].stats.hp;
+    return {
+      name: names[index],
+      spriteId: shownPokemon(sides[index], battles[index]).id,
+      current: Math.min(sides[index].currentHp ?? max, max),
+      max,
+      preview: previews[index],
+      side: sides[index],
+      conditions: battleField.sides[index],
+    };
+  });
+
   return (
-    <div className="space-y-4">
+    <div className={`space-y-4 ${fighters.every(Boolean) ? 'pb-32 lg:pb-0' : ''}`}>
       <SectionHeading
         title="Conta de Batalha"
         subtitle="Simulador de Dano e Proj. de Turno"
         aside={<span className={HEADING_PILL_CLASS}>Fórmula da Gen 5+ · batalhas simples</span>}
       />
+
+      <BattleScoreboard fighters={fighters} />
+      <MobileTurnBar fighters={fighters} sides={sides} picks={turnPicks} onPass={passTurn} />
 
       {/*
         Telas largas: seu Pokémon | resultado, golpes e campo | oponente.
@@ -211,6 +319,16 @@ export default function DamageCalculatorSection({ pool, team, session, onLogin }
       <div className="grid grid-cols-[minmax(0,1fr)] items-start gap-4 lg:grid-cols-2 xl:grid-cols-[minmax(0,1fr)_minmax(21rem,0.9fr)_minmax(0,1fr)]">
         <div className="space-y-3 lg:col-span-2 lg:grid lg:grid-cols-2 lg:items-start lg:gap-3 lg:space-y-0 xl:col-span-1 xl:col-start-2 xl:row-start-1 xl:block xl:space-y-3">
           <div className="space-y-3">
+            <TurnPanel
+              sides={sides}
+              picks={turnPicks}
+              turn={turnLog.turn}
+              history={turnLog.history}
+              names={names}
+              onPick={pickTurnMove}
+              onPass={passTurn}
+              onReset={resetBattle}
+            />
             <DamageResult entry={detail} hint={resultHint(sides)} />
             <ResultsList directions={directions} selected={activeSelection} onSelect={setSelected} />
           </div>
@@ -222,6 +340,7 @@ export default function DamageCalculatorSection({ pool, team, session, onLogin }
             sideTitles={SIDES.map((side) => side.field)}
             onChange={patchField}
             onSideChange={patchFieldSide}
+            flash={fieldFlash}
           />
         </div>
 
@@ -235,6 +354,9 @@ export default function DamageCalculatorSection({ pool, team, session, onLogin }
             side={sides[index]}
             battle={battles[index]}
             forms={forms[index]}
+            gmaxMove={gmaxMoves[index]}
+            extraFields={extraFields[index]}
+            hpPreview={previews[index]}
             ability={chosenAbilities[index]}
             speed={speeds[index]}
             airborne={sideStates[index].airborne}

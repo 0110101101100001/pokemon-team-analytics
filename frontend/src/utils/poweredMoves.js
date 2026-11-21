@@ -40,20 +40,35 @@ export const maxPower = (move) => fromTable(WEAK_MAX_TYPES.has(move.type) ? MAX_
 export const canPowerUp = (move) => Boolean(move && move.damageClass !== 'status' && move.power);
 
 /**
- * O golpe como Z (`mode` 'z') ou Max ('max'): nome e slug do golpe novo, poder convertido e um acerto.
+ * O golpe como Z (`mode` 'z'), Max ('max') ou G-Max ('gmax'): nome e slug do golpe novo, poder convertido e um acerto.
+ * O G-Max (`gmaxMove`, de data/gmaxMoves) só substitui o golpe do mesmo tipo; nos outros tipos o golpe vira o Max.
  * `poweredFrom` guarda o slug original para a interface.
  */
-export function poweredMove(move, mode) {
+export function poweredMove(move, mode, gmaxMove = null) {
   if (!mode || !canPowerUp(move)) return move;
-  const name = (mode === 'z' ? Z_BY_TYPE : MAX_BY_TYPE).get(move.type);
+  if (mode === 'gmax' && gmaxMove?.type === move.type) {
+    return {
+      ...move,
+      slug: slugOf(gmaxMove.name),
+      name: gmaxMove.name,
+      power: gmaxMove.power ?? maxPower(move),
+      effect: gmaxMove.effect,
+      minHits: null,
+      maxHits: null,
+      powered: 'gmax',
+      poweredFrom: move.slug,
+    };
+  }
+  const kind = mode === 'z' ? 'z' : 'max';
+  const name = (kind === 'z' ? Z_BY_TYPE : MAX_BY_TYPE).get(move.type);
   return {
     ...move,
     slug: slugOf(name),
     name,
-    power: mode === 'z' ? zPower(move) : maxPower(move),
+    power: kind === 'z' ? zPower(move) : maxPower(move),
     minHits: null,
     maxHits: null,
-    powered: mode,
+    powered: kind,
     poweredFrom: move.slug,
   };
 }

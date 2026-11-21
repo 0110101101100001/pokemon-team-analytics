@@ -168,7 +168,7 @@ function SketchPanel({ team, pool, onLoadTeam }) {
       />
 
       {confirming && (
-        <div role="alertdialog" aria-label="Descartar edições" className="flex flex-wrap items-center gap-2 rounded-[4px] border border-[#B5543C]/35 bg-[#B5543C]/5 p-3 font-reading text-sm text-smeargle-text">
+        <div role="alertdialog" aria-label="Descartar edições" className="flex flex-wrap items-center gap-2 rounded-[4px] border border-vermilion/35 bg-vermilion/5 p-3 font-reading text-sm text-smeargle-text">
           <p className="flex-1">
             Você editou {editedCount === 1 ? '1 esboço' : `${editedCount} esboços`}. Gerar de novo descarta {editedCount === 1 ? 'essa edição' : 'essas edições'}.
           </p>
@@ -198,7 +198,7 @@ function SketchPanel({ team, pool, onLoadTeam }) {
             <p className="flex flex-wrap justify-between gap-2 text-[11px] text-smeargle-textDim">
               <span>
                 {tierLabelOf(result.plan.tier)} · {resultArchetype.label}
-                {stale && <strong className="ml-2 font-semibold text-[#9E3D64]">O rascunho mudou: esboce de novo.</strong>}
+                {stale && <strong className="ml-2 font-semibold text-paint-magenta">O rascunho mudou: esboce de novo.</strong>}
               </span>
               <span>calculado em {result.ms} ms</span>
             </p>

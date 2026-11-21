@@ -14,8 +14,8 @@ const MachineRow = memo(function MachineRow({
   const panelId = learnersPanelId(code);
   return (
     <>
-      <tr className={`${ROW} ${open ? 'bg-[#829b72]/10' : ''}`}>
-        <td className={`${CELL} whitespace-nowrap font-mono text-xs font-bold tracking-wider text-[#4A3B32]`}>{code.toUpperCase()}</td>
+      <tr className={`${ROW} ${open ? 'bg-olive/10' : ''}`}>
+        <td className={`${CELL} whitespace-nowrap font-mono text-xs font-bold tracking-wider text-ink-soft`}>{code.toUpperCase()}</td>
         <td className={CELL}>
           <button type="button" onClick={() => onSelectMove(move)} className={MOVE_NAME_BUTTON}>
             {formatSlug(move)}
@@ -67,7 +67,7 @@ function MachineTable({ machines, gameId, gameLabel, openCode, onToggle, onSelec
     <div className="paper-card overflow-x-auto">
       <table className="w-full border-collapse font-reading text-sm text-smeargle-text">
         <thead>
-          <tr className="border-b border-[#78614E]/20 text-left">
+          <tr className="border-b border-umber/20 text-left">
             <th scope="col" className={HEAD}>Nº</th>
             <th scope="col" className={HEAD}>Golpe</th>
             <th scope="col" className={HEAD}>Tipo</th>

@@ -8,7 +8,7 @@ function CardHeart({ active }) {
     <svg
       viewBox="0 0 24 24"
       aria-hidden="true"
-      className={`h-[22px] w-[22px] transition-colors ${active ? 'text-[#B8402A]' : 'text-[#1C1A17] group-hover/fav:text-[#B8402A]'}`}
+      className={`h-[22px] w-[22px] transition-colors ${active ? 'text-vermilion' : 'text-ink group-hover/fav:text-vermilion'}`}
     >
       <path d={HEART_PATH} fill={active ? 'currentColor' : 'none'} stroke="currentColor" strokeWidth="2.4" strokeLinejoin="round" />
     </svg>
@@ -23,7 +23,7 @@ const VARIANTS = {
   },
   // No cabeçalho da ficha, ao lado de shiny e cry: retângulo de contorno, como as outras ações.
   header: {
-    className: 'group/fav h-9 w-9 rounded-[3px] border-[1.5px] border-[#1C1A17]/60 hover:border-[#1C1A17] hover:bg-[#E6D9BE]',
+    className: 'group/fav h-9 w-9 rounded-[3px] border-[1.5px] border-ink/60 hover:border-ink hover:bg-paper-2',
     Icon: CardHeart,
   },
 };

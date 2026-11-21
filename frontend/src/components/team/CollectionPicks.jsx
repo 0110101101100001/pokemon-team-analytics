@@ -52,17 +52,17 @@ function CollectionPicks({ collections, entryByName, takenSpecies, disabled, onP
   let content;
   if (collections.status === 'signed-out') {
     content = (
-      <p className="text-sm text-[#78614E]">Entre na sua conta para usar seus favoritos e as fichas vistas.</p>
+      <p className="text-sm text-umber">Entre na sua conta para usar seus favoritos e as fichas vistas.</p>
     );
   } else if (collections.status === 'loading') {
     content = (
-      <p className="flex items-center gap-2 text-sm text-[#78614E]">
+      <p className="flex items-center gap-2 text-sm text-umber">
         <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" />
         Molhando o pincel...
       </p>
     );
   } else if (collections.status === 'error') {
-    content = <p className="text-sm text-[#8A3B27]">Não foi possível carregar seus dados agora. Tente de novo em instantes.</p>;
+    content = <p className="text-sm text-vermilion-deep">Não foi possível carregar seus dados agora. Tente de novo em instantes.</p>;
   } else if (pokemon.length === 0) {
     content = <p className="font-reading text-sm italic text-smeargle-textDim/80">{active.empty}</p>;
   } else {
@@ -100,16 +100,16 @@ function CollectionPicks({ collections, entryByName, takenSpecies, disabled, onP
         aria-controls={panelId}
         className="flex w-full cursor-pointer items-center justify-between gap-2 rounded-[4px] text-left focus:outline-none focus-visible:ring-2 focus-visible:ring-paint-cobalt"
       >
-        <span className="font-hand text-xl leading-none text-[#78614E]">dos favoritos e vistos</span>
+        <span className="font-hand text-xl leading-none text-umber">dos favoritos e vistos</span>
         <ChevronDown
-          className={`h-4 w-4 shrink-0 text-[#78614E] transition-transform duration-200 motion-reduce:transition-none ${open ? 'rotate-180' : ''}`}
+          className={`h-4 w-4 shrink-0 text-umber transition-transform duration-200 motion-reduce:transition-none ${open ? 'rotate-180' : ''}`}
           aria-hidden="true"
         />
       </button>
 
       {open && (
       <div id={panelId} className="mt-2.5">
-      <div role="tablist" className="mb-2.5 flex flex-wrap gap-1 border-b-[1.5px] border-[#1C1A17]/70">
+      <div role="tablist" className="mb-2.5 flex flex-wrap gap-1 border-b-[1.5px] border-ink/70">
         {SOURCES.map(({ key, label, icon: Icon }) => {
           const selected = key === source;
           const count = key === 'favorites' ? collections.favorites.length : collections.history.length;
@@ -121,13 +121,13 @@ function CollectionPicks({ collections, entryByName, takenSpecies, disabled, onP
               aria-selected={selected}
               onClick={() => setSource(key)}
               className={`relative inline-flex h-8 cursor-pointer items-center gap-1.5 rounded-[2px] px-3 font-reading text-sm transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-paint-cobalt ${
-                selected ? 'font-semibold text-[#1C1A17]' : 'text-[#4A463E] hover:text-[#1C1A17]'
+                selected ? 'font-semibold text-ink' : 'text-ink-soft hover:text-ink'
               }`}
             >
               <Icon className="h-3.5 w-3.5" aria-hidden="true" />
               {label}
               {count > 0 && (
-                <span className="font-mono text-[11px] tabular-nums text-[#4A463E]">{count}</span>
+                <span className="font-mono text-[11px] tabular-nums text-ink-soft">{count}</span>
               )}
               <BrushUnderline color="#B8402A" active={selected} className="inset-x-2 -bottom-0.5 h-[5px] w-[calc(100%-1rem)]" />
             </button>

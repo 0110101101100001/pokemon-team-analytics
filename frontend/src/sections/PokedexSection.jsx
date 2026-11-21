@@ -12,13 +12,13 @@ import { buildRegionalEntries, useRegionalDex } from '../hooks/useRegionalDex';
 
 const REGIONAL_NOTICES = {
   loading: { icon: Loader2, iconClass: 'animate-spin', text: 'Folheando a Pokédex regional...' },
-  error: { icon: TriangleAlert, iconClass: 'text-[#8A3B27]', text: 'Não foi possível carregar esta Pokédex regional agora. Tente de novo em instantes.' },
+  error: { icon: TriangleAlert, iconClass: 'text-vermilion-deep', text: 'Não foi possível carregar esta Pokédex regional agora. Tente de novo em instantes.' },
 };
 
 function RegionalNotice({ status }) {
   const { icon: Icon, iconClass, text } = REGIONAL_NOTICES[status];
   return (
-    <p className="flex items-center justify-center gap-2 py-16 text-center text-sm font-medium text-[#78614E]">
+    <p className="flex items-center justify-center gap-2 py-16 text-center text-sm font-medium text-umber">
       <Icon className={`h-4 w-4 shrink-0 ${iconClass}`} aria-hidden="true" />
       {text}
     </p>
@@ -28,7 +28,7 @@ function RegionalNotice({ status }) {
 /** Legenda do selo dos cards: sem ela, a falta do selo parece dado faltando. */
 function SmogonLegend() {
   return (
-    <p className="flex max-w-xs items-center gap-2 text-xs leading-snug text-[#4A463E]">
+    <p className="flex max-w-xs items-center gap-2 text-xs leading-snug text-ink-soft">
       <SmogonSeal />
       <span>marca os Pokémon com estatísticas de uso nos tiers da Smogon.</span>
     </p>
@@ -38,7 +38,7 @@ function SmogonLegend() {
 /** Seletor das dexes de um jogo que tem mais de uma (Kalos em três partes, DLCs de Galar e Paldea). */
 function DexAreaTabs({ dexes, value, onChange }) {
   return (
-    <div role="tablist" aria-label="Área da Pokédex regional" className="inline-flex flex-wrap gap-1 border-b-[1.5px] border-[#1C1A17]/70">
+    <div role="tablist" aria-label="Área da Pokédex regional" className="inline-flex flex-wrap gap-1 border-b-[1.5px] border-ink/70">
       {dexes.map((dex) => {
         const selected = dex.slug === value;
         return (
@@ -49,7 +49,7 @@ function DexAreaTabs({ dexes, value, onChange }) {
             aria-selected={selected}
             onClick={() => onChange(dex.slug)}
             className={`relative h-9 cursor-pointer rounded-[2px] px-3 font-reading text-[15px] transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-paint-cobalt ${
-              selected ? 'font-semibold text-[#1C1A17]' : 'text-[#4A463E] hover:text-[#1C1A17]'
+              selected ? 'font-semibold text-ink' : 'text-ink-soft hover:text-ink'
             }`}
           >
             {dex.label}
@@ -146,9 +146,9 @@ function PokedexSection({
         title={isRegional ? 'Registro Regional' : 'Registro Nacional'}
         subtitle={(
           <>
-            <span className="font-mono font-semibold tabular-nums text-[#2A2421]">{count}</span> Pokémon encontrado{count !== 1 ? 's' : ''}
+            <span className="font-mono font-semibold tabular-nums text-ink">{count}</span> Pokémon encontrado{count !== 1 ? 's' : ''}
             {searchTerm && <> para <span className="font-serif italic">“{searchTerm}”</span></>}
-            <span className="text-[#785132]/80">
+            <span className="text-brown/80">
               {' · '}
               {isRegional
                 ? `numeração regional, ${scopedList.length} entradas`

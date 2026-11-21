@@ -1,9 +1,9 @@
 import { memo, useEffect, useMemo, useRef, useState } from 'react';
-import { Paintbrush } from 'lucide-react';
 import PokemonCard from './PokemonCard';
 import JumpIndex, { scrollToElement } from './JumpIndex';
 import { COMPARE_LIMIT } from '../utils/compare';
 import { GENERATIONS } from '../utils/filters';
+import EmptyState from './EmptyState';
 
 const BATCH_SIZE = 24;
 // O próximo lote começa a ser montado antes de o fim da grade chegar à tela.
@@ -110,15 +110,8 @@ function PokemonGrid({
           />
         ))}
 
-        {/* Mensagem de Vazio caso os filtros não retornem nada */}
         {total === 0 && (
-          <div className="col-span-full flex flex-col items-center justify-center py-24 text-center">
-            <div className="ink-stamp mb-4 h-14 w-14">
-              <Paintbrush className="w-6 h-6 text-[#78614E]" strokeWidth={1.75} aria-hidden="true" />
-            </div>
-            <h3 className="text-xl font-bold font-serif text-[#2A2421]">Nenhum Pokémon encontrado</h3>
-            <p className="text-[#78614E] font-medium mt-1">Tente ajustar os filtros de busca ou limpe a pesquisa.</p>
-          </div>
+          <EmptyState className="py-24" title="nenhum Pokémon encontrado" hint="Tente ajustar os filtros de busca ou limpe a pesquisa." />
         )}
       </div>
 
@@ -133,9 +126,9 @@ function PokemonGrid({
             ref={sentinelRef}
             type="button"
             onClick={() => setVisibleCount((count) => count + BATCH_SIZE)}
-            className="inline-flex h-10 cursor-pointer items-center gap-2 rounded-[3px] border-[1.5px] border-[#1C1A17]/80 px-4 font-reading text-[15px] font-medium text-[#1C1A17] transition-colors hover:bg-[#E6D9BE] focus:outline-none focus-visible:ring-2 focus-visible:ring-paint-cobalt"
+            className="inline-flex h-10 cursor-pointer items-center gap-2 rounded-[3px] border-[1.5px] border-ink/80 px-4 font-reading text-[15px] font-medium text-ink transition-colors hover:bg-paper-2 focus:outline-none focus-visible:ring-2 focus-visible:ring-paint-cobalt"
           >
-            Mostrar mais <span className="font-mono text-xs tabular-nums text-[#4A463E]">{shown} de {total}</span>
+            Mostrar mais <span className="font-mono text-xs tabular-nums text-ink-soft">{shown} de {total}</span>
           </button>
         </div>
       )}

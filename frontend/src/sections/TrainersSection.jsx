@@ -15,6 +15,7 @@ import { useHashOverlay, useHashRoute } from '../hooks/useHashPath';
 import { formatHash } from '../navigation/hashRoute';
 import { trainerHref } from '../navigation/sections';
 import { formatSlug } from '../utils/filters';
+import EmptyState from '../components/EmptyState';
 import {
   FILTER_GROUPS, MIXED_TYPE, REGIONS, createNameMatcher, gamesOf, matchingBattles, regionGeneration, regionsOf, roleLabel, rolesOf,
 } from '../utils/trainers';
@@ -151,7 +152,7 @@ export default function TrainersSection({ entryByName, onSelectPokemon }) {
         title={HEADING_TITLE}
         subtitle={status === 'ready' ? (
           <>
-            Líderes, Elite 4 e campeões · <span className="font-mono font-semibold tabular-nums text-[#2A2421]">{count}</span> treinador{count !== 1 ? 'es' : ''}
+            Líderes, Elite 4 e campeões · <span className="font-mono font-semibold tabular-nums text-ink">{count}</span> treinador{count !== 1 ? 'es' : ''}
           </>
         ) : 'Líderes, Elite 4 e campeões de cada região'}
         aside={<span className={HEADING_PILL_CLASS}>Toque em um card para ver os times</span>}
@@ -164,12 +165,12 @@ export default function TrainersSection({ entryByName, onSelectPokemon }) {
             <button
               type="button"
               onClick={() => setFilters(EMPTY_FILTERS)}
-              className="cursor-pointer font-reading text-sm italic text-[#4A3B32] underline decoration-[#4A3B32]/40 underline-offset-2 hover:decoration-[#B8402A] focus:outline-none focus-visible:ring-2 focus-visible:ring-paint-cobalt"
+              className="cursor-pointer font-reading text-sm italic text-ink-soft underline decoration-ink-soft/40 underline-offset-2 hover:decoration-vermilion focus:outline-none focus-visible:ring-2 focus-visible:ring-paint-cobalt"
             >
               limpar filtros
             </button>
           </div>
-          <p className="font-reading text-sm italic text-[#785132]">
+          <p className="font-reading text-sm italic text-brown">
             Opções do mesmo filtro se somam (ou); filtros diferentes valem juntos na mesma batalha.
           </p>
         </div>
@@ -188,7 +189,7 @@ export default function TrainersSection({ entryByName, onSelectPokemon }) {
       )}
 
       {status === 'ready' && count === 0 && (
-        <p className="py-16 text-center font-hand text-2xl text-[#78614E]">nenhum treinador com esses filtros</p>
+        <EmptyState title="nenhum treinador com esses filtros" />
       )}
 
       {jumpItems.length > 1 && <JumpIndex label="Ir para a região" items={jumpItems} onJump={jumpToRegion} />}

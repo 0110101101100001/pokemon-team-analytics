@@ -66,7 +66,7 @@ const SuggestInput = memo(function SuggestInput({ id, label, placeholder, loadOp
 
   return (
     <label className="relative block w-full min-w-0">
-      <Search className="pointer-events-none absolute left-1 top-1/2 -translate-y-1/2 w-4 h-4 text-[#F7F3EE]/85" aria-hidden="true" />
+      <Search className="pointer-events-none absolute left-1 top-1/2 -translate-y-1/2 w-4 h-4 text-page/85" aria-hidden="true" />
       <input
         type="text"
         list={id}
@@ -82,7 +82,7 @@ const SuggestInput = memo(function SuggestInput({ id, label, placeholder, loadOp
       />
       {loading && (
         <Loader2
-          className="pointer-events-none absolute right-1 top-1/2 -translate-y-1/2 w-4 h-4 animate-spin text-[#F7F3EE]/85"
+          className="pointer-events-none absolute right-1 top-1/2 -translate-y-1/2 w-4 h-4 animate-spin text-page/85"
           aria-label="carregando sugestões"
         />
       )}
@@ -133,7 +133,7 @@ function FiltersBar({
       <div className="flex items-center gap-1.5 sm:gap-2 lg:contents">
         <HeaderSegmented label="Recorte da Pokédex" options={SCOPES} value={scope} onChange={onScopeChange} className="shrink-0" />
         <label className="relative w-full min-w-0 lg:flex-1">
-          <Search className="absolute left-1 top-1/2 -translate-y-1/2 w-4 h-4 text-[#F7F3EE]/85" aria-hidden="true" />
+          <Search className="absolute left-1 top-1/2 -translate-y-1/2 w-4 h-4 text-page/85" aria-hidden="true" />
           <input
             type="search"
             className={TEXT_INPUT_CLASS}
@@ -173,12 +173,12 @@ function FiltersBar({
         onClick={onToggleAdvanced}
         aria-expanded={advancedOpen}
         aria-controls="advanced-filters"
-        className={`${HEADER_BUTTON_CLASS} px-2 sm:px-3 lg:shrink-0 ${advancedOpen ? 'border-[#A4C294]' : ''}`}
+        className={`${HEADER_BUTTON_CLASS} px-2 sm:px-3 lg:shrink-0 ${advancedOpen ? 'border-paint-pistachio' : ''}`}
       >
         <SlidersHorizontal className="w-4 h-4" aria-hidden="true" />
         Avançados
         {advancedCount > 0 && (
-          <span className="font-mono text-[11px] font-bold tabular-nums text-[#A4C294]">
+          <span className="font-mono text-[11px] font-bold tabular-nums text-paint-pistachio">
             {advancedCount}
           </span>
         )}
@@ -209,7 +209,7 @@ function AdvancedFiltersComponent({ eggGroups, onAddFilter }) {
   const addMove = useCallback((slug) => onAddFilter(createFilter('move', slug)), [onAddFilter]);
 
   return (
-    <div id="advanced-filters" className="mt-1.5 border-t border-[#F7F3EE]/15 pt-1.5">
+    <div id="advanced-filters" className="mt-1.5 border-t border-page/15 pt-1.5">
       <div className="grid grid-cols-1 gap-1.5 sm:grid-cols-3 sm:gap-2">
         <SuggestInput
           id="ability-options"
@@ -250,7 +250,7 @@ function AdvancedFiltersComponent({ eggGroups, onAddFilter }) {
         </button>
       </div>
 
-      <p className="mt-2 px-1 pb-0.5 font-hand text-base leading-tight text-[#F7F3EE]/70">
+      <p className="mt-2 px-1 pb-0.5 font-hand text-base leading-tight text-page/70">
         gerações, regiões e raridades se somam dentro do grupo (ou); os demais filtros precisam ser todos atendidos (e).
       </p>
     </div>
@@ -258,7 +258,7 @@ function AdvancedFiltersComponent({ eggGroups, onAddFilter }) {
 }
 
 const FILTER_STATUS_ICON = {
-  loading: <Loader2 className="w-3 h-3 animate-spin text-[#78614E]" aria-label="carregando" />,
+  loading: <Loader2 className="w-3 h-3 animate-spin text-umber" aria-label="carregando" />,
   error: <TriangleAlert className="w-3 h-3 text-[#C15454]" aria-label="falha ao carregar; filtro ignorado" />,
 };
 
@@ -267,7 +267,7 @@ function ActiveFiltersComponent({ activeFilters, filterStatus, onRemoveFilter })
 
   return (
     <div className="flex flex-wrap items-center gap-2">
-      <span className="mr-1 font-reading text-sm italic text-[#4A3B32]">Filtros ativos:</span>
+      <span className="mr-1 font-reading text-sm italic text-ink-soft">Filtros ativos:</span>
       {activeFilters.map((filter) => {
         const key = filterKey(filter);
         const status = filterStatus[key];
@@ -277,7 +277,7 @@ function ActiveFiltersComponent({ activeFilters, filterStatus, onRemoveFilter })
             key={key}
             title={failed ? 'Não foi possível carregar este filtro; está sendo ignorado.' : undefined}
             className={`flex items-center gap-1.5 rounded-[2px] border-[1.5px] py-0.5 pl-2.5 pr-0.5 font-reading text-sm ${
-              failed ? 'border-[#C15454]/60 text-[#9A3F3F]' : 'border-[#1C1A17]/70 text-[#1C1A17]'
+              failed ? 'border-[#C15454]/60 text-[#9A3F3F]' : 'border-ink/70 text-ink'
             }`}
           >
             {FILTER_STATUS_ICON[status]}
@@ -286,7 +286,7 @@ function ActiveFiltersComponent({ activeFilters, filterStatus, onRemoveFilter })
               type="button"
               onClick={() => onRemoveFilter(key)}
               aria-label={`Remover ${filter.label}`}
-              className="inline-flex items-center justify-center w-5 h-5 rounded-[2px] text-[#78614E] transition-colors cursor-pointer hover:bg-[#4A3B32]/15 hover:text-[#2A2421] focus:outline-none focus-visible:ring-2 focus-visible:ring-paint-cobalt"
+              className="inline-flex items-center justify-center w-5 h-5 rounded-[2px] text-umber transition-colors cursor-pointer hover:bg-ink-soft/15 hover:text-ink focus:outline-none focus-visible:ring-2 focus-visible:ring-paint-cobalt"
             >
               <X className="w-3 h-3" strokeWidth={2.5} aria-hidden="true" />
             </button>

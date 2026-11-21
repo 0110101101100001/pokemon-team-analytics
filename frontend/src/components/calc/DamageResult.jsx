@@ -15,47 +15,49 @@ function DamageResult({ entry, hint }) {
   if (!entry) {
     return (
       <section className="paper-card px-5 py-6" aria-label="Resultado" aria-live="polite">
-        <p className="font-hand text-2xl leading-tight text-[#785132]">a conta ainda está em branco…</p>
-        <p className="mt-1 font-serif text-lg font-semibold leading-snug text-[#2A2421]">{hint}</p>
+        <p className="font-hand text-2xl leading-tight text-brown">a conta ainda está em branco…</p>
+        <p className="mt-1 font-serif text-lg font-semibold leading-snug text-ink">{hint}</p>
       </section>
     );
   }
 
   const { attackerName, defenderName, move, result, ko } = entry;
-  const { rolls, extraRolls, hits, min, max, hp, typeMultiplier, stab, crit, reason } = result;
+  const { rolls, extraRolls, hits, min, max, hp, typeMultiplier, stab, crit, reason, variablePower } = result;
 
   return (
     <section className="paper-card px-4 pb-3.5 pt-5" aria-label="Resultado" aria-live="polite">
-      <p className="font-hand text-lg leading-none text-[#78614E]">
+      <p className="font-hand text-lg leading-none text-umber">
         {formatSlug(attackerName)} usa {formatSlug(move.slug)}{move.poweredFrom ? ` (${formatSlug(move.poweredFrom)})` : ''}{crit ? ' (crítico)' : ''} em {formatSlug(defenderName)}
       </p>
 
       {reason ? (
-        <p className="mt-2 font-serif text-base font-bold text-[#8A3B27]">{reason}</p>
+        <p className="mt-2 font-serif text-base font-bold text-vermilion-deep">{reason}</p>
       ) : (
         <>
+          {/* O percentual é o que decide a jogada: ele vem grande; o dano em pontos fica como nota. */}
           <div className="mt-1 flex flex-wrap items-baseline gap-x-3">
-            <p className="font-serif text-3xl font-black tabular-nums tracking-tight text-[#2A2421]">
-              <span className="ink-splotch">{min}</span> – {max}
+            <p className="font-serif text-4xl font-black tabular-nums tracking-tight text-ink sm:text-5xl">
+              <span className="ink-splotch">{damagePercent(min, hp)}</span>–{damagePercent(max, hp)}<span className="text-2xl sm:text-3xl">%</span>
             </p>
-            <p className="font-mono text-base font-bold tabular-nums text-[#78614E]">
-              {damagePercent(min, hp)}% – {damagePercent(max, hp)}%
+            <p className="font-mono text-sm font-bold tabular-nums text-umber">
+              {min}–{max}
               <span className="ml-1 font-sans text-[11px] font-semibold">de {hp} HP</span>
             </p>
           </div>
-          <p className="mt-1 font-serif text-base font-bold text-[#2A2421]">{ko.text}</p>
+          <p className="mt-1 font-serif text-base font-bold text-ink">{ko.text}</p>
           <p className="font-reading text-xs italic text-smeargle-textDim">
+            {variablePower && `poder ${variablePower.power} (${variablePower.note}) · `}
             {effectLabel(typeMultiplier)}{stab ? ' · com STAB' : ''}{hits > 1 ? ` · ${hits} acertos` : ''}{extraRolls ? ' · Parental Bond (2º acerto ×0,25)' : ''}
           </p>
 
           {/* Barra de HP do alvo: o trecho escuro cai sempre; o listrado depende do fator aleatório. */}
-          <div className="relative mt-2.5 h-3 overflow-hidden rounded-[3px] border border-[#78614E]/25 bg-smeargle-olive/45" role="img" aria-label={`O alvo perde de ${damagePercent(min, hp)}% a ${damagePercent(max, hp)}% do HP`}>
-            <span className="absolute inset-y-0 right-0 bg-[#B5543C]/35 [background-image:repeating-linear-gradient(135deg,transparent_0_4px,rgba(138,59,39,0.45)_4px_7px)]" style={{ width: share(max, hp) }} />
-            <span className="absolute inset-y-0 right-0 bg-[#8A3B27]" style={{ width: share(min, hp) }} />
+          <div className="hp-brush relative mt-3 h-4 overflow-hidden bg-smeargle-olive/60" role="img" aria-label={`O alvo perde de ${damagePercent(min, hp)}% a ${damagePercent(max, hp)}% do HP`}>
+            <span className="absolute inset-y-0 right-0 bg-vermilion/35 [background-image:repeating-linear-gradient(135deg,transparent_0_4px,rgba(138,59,39,0.45)_4px_7px)]" style={{ width: share(max, hp) }} />
+            <span className="absolute inset-y-0 right-0 bg-vermilion-deep" style={{ width: share(min, hp) }} />
           </div>
 
           <details className="mt-2">
-            <summary className="cursor-pointer font-hand text-base leading-none text-[#78614E] focus:outline-none focus-visible:ring-2 focus-visible:ring-paint-cobalt">
+            <summary className="cursor-pointer font-hand text-base leading-none text-umber focus:outline-none focus-visible:ring-2 focus-visible:ring-paint-cobalt">
               ver os 16 resultados possíveis{hits > 1 ? ' (por acerto)' : ''}
             </summary>
             <p className="mt-1.5 font-mono text-xs tabular-nums leading-relaxed text-smeargle-text">{rolls.join(' · ')}</p>

@@ -1,4 +1,4 @@
-// Atributos base e golpes de src/data/battle-data.json (gerado por scripts/build-battle-data.mjs).
+// Atributos base, peso e golpes de src/data/battle-data.json (gerado por scripts/build-battle-data.mjs).
 // As funções recebem o objeto já carregado, para rodarem também no Worker e nos testes.
 
 const STAT_KEYS = ['hp', 'atk', 'def', 'spa', 'spd', 'spe'];
@@ -19,6 +19,9 @@ export function baseStatsOf(data, id) {
   const values = data.stats[id];
   return values ? Object.fromEntries(STAT_KEYS.map((key, index) => [key, values[index]])) : null;
 }
+
+/** Peso em kg do Pokémon (id da PokéAPI), ou null. */
+export const weightOf = (data, id) => data.weights?.[id] ?? null;
 
 /** O mesmo formato de fetchMoveSummary, ou null se o golpe não existir. */
 export function moveSummaryOf(data, slug) {

@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { gmaxMoveFor } from './gmaxMoves';
+import { gmaxMoveFor, gmaxMoveOf } from './gmaxMoves';
 
 describe('golpes G-Max', () => {
   it('liga cada forma Gigantamax ao seu golpe', () => {
@@ -17,5 +17,21 @@ describe('golpes G-Max', () => {
     expect(gmaxMoveFor('charizard')).toBeNull();
     expect(gmaxMoveFor('charizard-mega-x')).toBeNull();
     expect(gmaxMoveFor(null)).toBeNull();
+  });
+});
+
+describe('gmaxMoveOf', () => {
+  it('acha o G-Max pela forma base que Gigantamaxiza', () => {
+    expect(gmaxMoveOf('charizard')?.name).toBe('G-Max Wildfire');
+    expect(gmaxMoveOf('toxtricity-low-key')?.name).toBe('G-Max Stun Shock');
+    expect(gmaxMoveOf('urshifu-rapid-strike')?.name).toBe('G-Max Rapid Flow');
+    expect(gmaxMoveOf('charizard-gmax')?.name).toBe('G-Max Wildfire');
+  });
+
+  it('ignora espécies e formas sem Gigantamax', () => {
+    expect(gmaxMoveOf('charizard-mega-x')).toBeNull();
+    expect(gmaxMoveOf('meowth-galar')).toBeNull();
+    expect(gmaxMoveOf('dragonite')).toBeNull();
+    expect(gmaxMoveOf(null)).toBeNull();
   });
 });

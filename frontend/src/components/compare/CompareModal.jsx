@@ -11,7 +11,7 @@ import { formatSlug } from '../../utils/filters';
 import { STAT_KEYS } from '../../utils/stats';
 import { DEFAULT_TIER, SINGLES_TIERS } from '../../utils/tiers';
 
-const LABEL = 'font-reading text-xs font-semibold uppercase tracking-wider text-[#4A463E]';
+const LABEL = 'font-reading text-xs font-semibold uppercase tracking-wider text-ink-soft';
 
 // Uma tinta por coluna, na ordem em que os Pokémon entraram: liga o card às barras dos atributos.
 const SERIES = ['#4F6D8A', '#9E3D64', '#B98428', '#5F7A52'];
@@ -31,16 +31,16 @@ function UsageLine({ label, entry }) {
   const [name, pct] = entry;
   return (
     <p className="truncate font-reading text-[13px] text-ink" title={`${label}: ${name}`}>
-      <span className="text-[#4A463E]">{label}:</span> {name}{' '}
-      <span className="font-mono text-[11px] font-bold tabular-nums text-[#4A463E]">{pct.toFixed(1)}%</span>
+      <span className="text-ink-soft">{label}:</span> {name}{' '}
+      <span className="font-mono text-[11px] font-bold tabular-nums text-ink-soft">{pct.toFixed(1)}%</span>
     </p>
   );
 }
 
 function SmogonUsage({ usage }) {
-  if (usage === undefined) return <p className="font-reading text-sm italic text-[#4A463E]">Carregando...</p>;
-  if (usage === 'error') return <p className="font-reading text-sm italic text-[#8A3B27]">Não foi possível carregar.</p>;
-  if (!usage) return <p className="font-reading text-sm italic text-[#4A463E]">Sem dados neste tier.</p>;
+  if (usage === undefined) return <p className="font-reading text-sm italic text-ink-soft">Carregando...</p>;
+  if (usage === 'error') return <p className="font-reading text-sm italic text-vermilion-deep">Não foi possível carregar.</p>;
+  if (!usage) return <p className="font-reading text-sm italic text-ink-soft">Sem dados neste tier.</p>;
   return (
     <div className="space-y-0.5">
       <p className="font-serif text-xl font-black tabular-nums text-ink">{usage.usage?.toFixed(2)}%</p>
@@ -51,13 +51,13 @@ function SmogonUsage({ usage }) {
 }
 
 function Abilities({ detail }) {
-  if (!detail) return <p className="font-reading text-sm italic text-[#4A463E]">Carregando...</p>;
-  if (detail === 'error') return <p className="font-reading text-sm italic text-[#8A3B27]">Não foi possível carregar.</p>;
+  if (!detail) return <p className="font-reading text-sm italic text-ink-soft">Carregando...</p>;
+  if (detail === 'error') return <p className="font-reading text-sm italic text-vermilion-deep">Não foi possível carregar.</p>;
   return (
     <ul className="space-y-0.5 font-reading text-sm text-ink">
       {detail.abilities.map((ability) => <li key={ability}>{formatSlug(ability)}</li>)}
       {detail.hiddenAbility && (
-        <li>{formatSlug(detail.hiddenAbility)} <span className="italic text-[#4A463E]">(oculta)</span></li>
+        <li>{formatSlug(detail.hiddenAbility)} <span className="italic text-ink-soft">(oculta)</span></li>
       )}
     </ul>
   );
@@ -66,24 +66,24 @@ function Abilities({ detail }) {
 function PokemonColumn({ entry, index, detail, usage, onSelect, onRemove }) {
   const name = formatSlug(entry.name);
   return (
-    <li className="flex min-w-0 flex-col gap-3 rounded-[3px] border-[1.5px] border-[#1C1A17]/70 border-t-[5px] bg-paper-2 p-3" style={{ borderTopColor: SERIES[index] }}>
+    <li className="flex min-w-0 flex-col gap-3 rounded-[3px] border-[1.5px] border-ink/70 border-t-[5px] bg-paper-2 p-3" style={{ borderTopColor: SERIES[index] }}>
       <div className="flex items-start gap-2">
         <button
           type="button"
           onClick={() => onSelect(entry.name)}
-          className="flex min-w-0 flex-1 cursor-pointer items-center gap-2 rounded-[2px] text-left transition-colors hover:bg-[#829b72]/15 focus:outline-none focus-visible:ring-2 focus-visible:ring-paint-cobalt"
+          className="flex min-w-0 flex-1 cursor-pointer items-center gap-2 rounded-[2px] text-left transition-colors hover:bg-olive/15 focus:outline-none focus-visible:ring-2 focus-visible:ring-paint-cobalt"
         >
           <img src={thumbnailSpriteUrl(entry.id)} alt="" width={56} height={56} loading="lazy" decoding="async" className="h-14 w-14 shrink-0 object-contain [image-rendering:pixelated]" />
           <span className="min-w-0">
             <span className="block truncate font-serif text-base font-bold text-ink" title={name}>{name}</span>
-            <span className="font-mono text-[11px] font-bold tabular-nums text-[#4A463E]">{dexNumber(entry.number)}</span>
+            <span className="font-mono text-[11px] font-bold tabular-nums text-ink-soft">{dexNumber(entry.number)}</span>
           </span>
         </button>
         <button
           type="button"
           onClick={() => onRemove(entry.name)}
           aria-label={`Tirar ${name} da comparação`}
-          className="inline-flex h-7 w-7 shrink-0 cursor-pointer items-center justify-center rounded-[3px] border border-[#1C1A17]/40 text-ink transition-colors hover:border-ink hover:bg-[#E6D9BE] focus:outline-none focus-visible:ring-2 focus-visible:ring-paint-cobalt"
+          className="inline-flex h-7 w-7 shrink-0 cursor-pointer items-center justify-center rounded-[3px] border border-ink/40 text-ink transition-colors hover:border-ink hover:bg-paper-2 focus:outline-none focus-visible:ring-2 focus-visible:ring-paint-cobalt"
         >
           <X className="h-4 w-4" aria-hidden="true" />
         </button>
@@ -119,7 +119,7 @@ function StatBars({ label, values, leader, max }) {
                 <div className="brush-bar" style={{ width: `${Math.min(value / max, 1) * 100}%`, backgroundColor: SERIES[index] }} />
               )}
             </div>
-            <span className={`w-9 text-right font-mono text-xs tabular-nums ${value === leader ? 'font-black text-ink' : 'font-medium text-[#4A463E]'}`}>
+            <span className={`w-9 text-right font-mono text-xs tabular-nums ${value === leader ? 'font-black text-ink' : 'font-medium text-ink-soft'}`}>
               {value ?? '–'}
             </span>
           </div>
@@ -148,7 +148,7 @@ export default function CompareModal({ names, entryByName, pool, onAdd, onRemove
 
   return createPortal(
     <div
-      className="fixed inset-0 z-[45] flex items-center justify-center bg-[#2A2421]/60 p-4 animate-fade-in motion-reduce:animate-none md:bg-[#2A2421]/45 sm:p-6"
+      className="fixed inset-0 z-[45] flex items-center justify-center bg-ink/60 p-4 animate-fade-in motion-reduce:animate-none md:bg-ink/45 sm:p-6"
       onMouseDown={(e) => e.target === e.currentTarget && onClose()}
     >
       <div
@@ -184,7 +184,7 @@ export default function CompareModal({ names, entryByName, pool, onAdd, onRemove
                 <select value={tier} onChange={(e) => setTier(e.target.value)} className="paper-field h-9 w-full cursor-pointer appearance-none pl-2.5 pr-7 font-reading text-sm">
                   {SINGLES_TIERS.map((option) => <option key={option.value} value={option.value}>{option.label}</option>)}
                 </select>
-                <ChevronDown className="pointer-events-none absolute right-2 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-[#78614E]" aria-hidden="true" />
+                <ChevronDown className="pointer-events-none absolute right-2 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-umber" aria-hidden="true" />
               </span>
             </label>
             {entries.length < COMPARE_LIMIT && (
@@ -231,7 +231,7 @@ export default function CompareModal({ names, entryByName, pool, onAdd, onRemove
                 {STAT_KEYS.map((key) => (
                   <StatBars key={key} label={STAT_NAMES[key]} values={statsList.map((stats) => stats?.[key] ?? null)} leader={leaders[key]} max={STAT_MAX} />
                 ))}
-                <div className="border-t border-[#1C1A17]/20 pt-3">
+                <div className="border-t border-ink/20 pt-3">
                   <StatBars label="Total" values={statsList.map((stats) => (stats ? statTotal(stats) : null))} leader={leaders.total} max={TOTAL_MAX} />
                 </div>
               </div>

@@ -1,5 +1,5 @@
 // Gera frontend/src/data/battle-data.json a partir dos CSVs oficiais da PokéAPI:
-// atributos base de cada Pokémon e o resumo de cada golpe (o mesmo formato de fetchMoveSummary).
+// atributos base e peso (kg) de cada Pokémon e o resumo de cada golpe (o mesmo formato de fetchMoveSummary).
 // O esboço e o Meta Gauntlet usam esses dados para dezenas de Pokémon de uma vez, sem requisições.
 // Uso: node scripts/build-battle-data.mjs
 
@@ -26,9 +26,12 @@ async function readCsv(name) {
   });
 }
 
-const [pokemonStats, stats, moves, moveMeta, types] = await Promise.all(
-  ['pokemon_stats', 'stats', 'moves', 'move_meta', 'types'].map(readCsv),
+const [pokemonStats, stats, moves, moveMeta, types, pokemon] = await Promise.all(
+  ['pokemon_stats', 'stats', 'moves', 'move_meta', 'types', 'pokemon'].map(readCsv),
 );
+
+// Peso para Grass Knot, Low Kick, Heavy Slam e Heat Crash: a PokéAPI guarda em hectogramas.
+const weights = Object.fromEntries(pokemon.filter((p) => Number(p.weight)).map((p) => [p.id, Number(p.weight) / 10]));
 
 const statSlot = new Map(stats.map((s) => [s.id, STAT_ORDER.indexOf(s.identifier)]));
 const baseStats = {};
@@ -57,5 +60,5 @@ for (const move of moves) {
   ];
 }
 
-await writeFile(OUTPUT, `${JSON.stringify({ stats: baseStats, moves: moveIndex })}\n`);
+await writeFile(OUTPUT, `${JSON.stringify({ stats: baseStats, weights, moves: moveIndex })}\n`);
 console.log(`battle-data.json: ${Object.keys(baseStats).length} Pokémon, ${Object.keys(moveIndex).length} golpes`);

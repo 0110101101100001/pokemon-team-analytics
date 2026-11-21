@@ -3,7 +3,7 @@
 @tailwind utilities;
 
 /*
-  Tinta sobre papel: fundo de papel com fibra, contornos a nanquim (#2A2421), aguadas de sépia e oliva
+  Tinta sobre papel: fundo de papel com fibra, contornos a nanquim (--ink), aguadas de sépia e oliva
   e manchas de pincel. Cards, campos e botões impressos: contorno a tinta e sombra deslocada sem desfoque.
 */
 
@@ -11,17 +11,22 @@
   :root {
     /*
       Superfícies e tintas: a fonte única das cores de base. O tailwind.config.js repete os mesmos valores
-      (paper, paper-2, ink, ink-soft, vermilion) para as classes utilitárias. Não há branco puro no app.
+      para as classes utilitárias (paper, ink, umber, sepia, brown, olive, vermilion, ochre). Não há branco puro no app.
     */
     --page: #f7f3ee; /* fundo da página */
     --paper: #f2ead9; /* fundo de campo, cards e texto claro sobre tinta */
     --paper-2: #e6d9be; /* áreas agrupadas */
     --ink: #1c1a17;
     --ink-soft: #4a463e;
-    --vermilion: #b8402a;
+    --vermilion: #b8402a; /* selecionado: aba ativa, opção escolhida */
+    --vermilion-deep: #8a3b27; /* texto de erro ou de piora */
+    --umber: #78614e; /* o marrom do Smeargle: rótulos, anotações e o cabeçalho */
     --ink-sepia: #5c4033;
     --ink-brown: #785132;
     --ink-olive: #829b72;
+    --olive-deep: #5b7856;
+    --olive-ink: #3d5438;
+    --ochre-deep: #6b4a10;
     /*
       Cores de tipo: o fundo do chip e a cor do texto (tinta ou papel), escolhida para contraste WCAG AA de 4,5:1.
       Ground, Flying, Psychic, Rock e Steel foram ajustados alguns pontos a partir da paleta proposta para passar.
@@ -174,12 +179,13 @@
   }
 
   /*
-    Foco dos campos no papel (conteúdo e modais): contorno vermelhão deslocado, sem brilho. O !important vence
+    Foco dos campos no papel (conteúdo e modais): contorno cobalto deslocado, sem brilho; o vermelhão fica só para
+    o que está selecionado e o ocre para os selos. O !important vence
     os anéis (focus:ring-*) espalhados nos componentes. O header, escuro, mantém o sublinhado pistache.
   */
   :where(main, [role='dialog'], [role='alertdialog']) :is(input, select, textarea, button):focus-visible,
   :where(main, [role='dialog'], [role='alertdialog']) :is(input:not([type='checkbox']), select, textarea):focus {
-    outline: 2px solid var(--vermilion) !important;
+    outline: 2px solid var(--paint-cobalt) !important;
     outline-offset: 2px;
     box-shadow: none !important;
   }
@@ -227,7 +233,7 @@
     No hover sobem para cima e para a esquerda e a sombra cresce; ao apertar, assentam no papel.
   */
   .btn-action {
-    @apply inline-flex h-11 items-center justify-center gap-2 rounded-[3px] border-[1.5px] border-[#1C1A17] bg-smeargle-olive px-5 font-reading text-[15px] font-semibold leading-none text-ink shadow-[3px_3px_0_#4A463E] transition-[transform,box-shadow,background-color] duration-150 ease-out hover:-translate-x-px hover:-translate-y-px hover:bg-[#789364] hover:shadow-[4px_4px_0_#4A463E] active:translate-x-px active:translate-y-px active:shadow-[1px_1px_0_#4A463E] focus:outline-none focus-visible:ring-2 focus-visible:ring-paint-cobalt focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-60 motion-reduce:transition-none motion-reduce:hover:translate-x-0 motion-reduce:hover:translate-y-0;
+    @apply inline-flex h-11 items-center justify-center gap-2 rounded-[3px] border-[1.5px] border-ink bg-smeargle-olive px-5 font-reading text-[15px] font-semibold leading-none text-ink shadow-[3px_3px_0_#4A463E] transition-[transform,box-shadow,background-color] duration-150 ease-out hover:-translate-x-px hover:-translate-y-px hover:bg-[#789364] hover:shadow-[4px_4px_0_#4A463E] active:translate-x-px active:translate-y-px active:shadow-[1px_1px_0_#4A463E] focus:outline-none focus-visible:ring-2 focus-visible:ring-paint-cobalt focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-60 motion-reduce:transition-none motion-reduce:hover:translate-x-0 motion-reduce:hover:translate-y-0;
   }
 
   .btn-action > svg {
@@ -235,7 +241,7 @@
   }
 
   .btn-outline {
-    @apply inline-flex min-h-11 items-center justify-center gap-2 rounded-[3px] border-[1.5px] border-[#1C1A17] bg-[#F2EAD9] px-4 py-2 font-reading text-[15px] font-medium text-[#1C1A17] shadow-[3px_3px_0_#4A463E] transition-[transform,box-shadow,background-color] duration-150 ease-out hover:-translate-x-px hover:-translate-y-px hover:bg-[#E6D9BE] hover:shadow-[4px_4px_0_#4A463E] active:translate-x-px active:translate-y-px active:shadow-[1px_1px_0_#4A463E] focus:outline-none focus-visible:ring-2 focus-visible:ring-paint-cobalt focus-visible:ring-offset-2 motion-reduce:transition-none motion-reduce:hover:translate-x-0 motion-reduce:hover:translate-y-0;
+    @apply inline-flex min-h-11 items-center justify-center gap-2 rounded-[3px] border-[1.5px] border-ink bg-paper px-4 py-2 font-reading text-[15px] font-medium text-ink shadow-[3px_3px_0_#4A463E] transition-[transform,box-shadow,background-color] duration-150 ease-out hover:-translate-x-px hover:-translate-y-px hover:bg-paper-2 hover:shadow-[4px_4px_0_#4A463E] active:translate-x-px active:translate-y-px active:shadow-[1px_1px_0_#4A463E] focus:outline-none focus-visible:ring-2 focus-visible:ring-paint-cobalt focus-visible:ring-offset-2 motion-reduce:transition-none motion-reduce:hover:translate-x-0 motion-reduce:hover:translate-y-0;
   }
 
   /* Título de bloco: o ponto é uma gota de tinta. */
@@ -302,21 +308,31 @@
     background-position: 0 100%;
   }
 
+  /* Com a barra do turno no rodapé (celular), o botão de voltar ao topo sobe para não ficar embaixo dela. */
+  body:has([data-turn-bar]) .back-to-top {
+    bottom: 7.5rem;
+  }
+
+  /* Barra de HP como uma pincelada: pontas irregulares, sem contorno. */
+  .hp-brush {
+    clip-path: polygon(0 22%, 2% 4%, 30% 0, 70% 6%, 98% 0, 100% 26%, 99.5% 78%, 97% 100%, 62% 94%, 25% 100%, 2.5% 96%, 0 74%);
+  }
+
   .paper-field {
     @apply h-10 w-full rounded-[3px] border-[1.5px] border-ink bg-paper px-3 font-reading text-[15px] text-ink transition-colors placeholder:italic disabled:cursor-not-allowed disabled:opacity-60;
   }
 
   .paper-label {
-    @apply mb-1 block font-reading text-sm font-semibold leading-none text-[#4A463E];
+    @apply mb-1 block font-reading text-sm font-semibold leading-none text-ink-soft;
   }
 
   /* Abas de seção: o nome na serifa de leitura e uma pincelada vermelhão sublinhando a ativa, sem fundo. */
   .ink-tab {
-    @apply relative inline-flex min-h-11 cursor-pointer items-center gap-1.5 px-2.5 pb-2 font-reading text-base font-medium leading-none text-[#4A463E] transition-colors hover:text-[#5C4033] focus:outline-none focus-visible:ring-2 focus-visible:ring-paint-cobalt disabled:cursor-not-allowed disabled:opacity-40;
+    @apply relative inline-flex min-h-11 cursor-pointer items-center gap-1.5 px-2.5 pb-2 font-reading text-base font-medium leading-none text-ink-soft transition-colors hover:text-sepia focus:outline-none focus-visible:ring-2 focus-visible:ring-paint-cobalt disabled:cursor-not-allowed disabled:opacity-40;
   }
 
   .ink-tab[aria-selected='true'] {
-    @apply font-semibold text-[#1C1A17];
+    @apply font-semibold text-ink;
   }
 
   .ink-tab[aria-selected='true']::after {
@@ -330,7 +346,7 @@
 
   /* Selo de tinta: anel com contorno a tinta e sombra de impressão, para ícones e números de destaque. */
   .ink-stamp {
-    @apply inline-flex items-center justify-center rounded-full border-[1.5px] border-[#1C1A17] bg-[#F2EAD9] text-[#1C1A17] shadow-[2px_2px_0_#4A463E];
+    @apply inline-flex items-center justify-center rounded-full border-[1.5px] border-ink bg-paper text-ink shadow-[2px_2px_0_#4A463E];
   }
 }
 
@@ -342,14 +358,14 @@
   .brush-bar-track {
     height: 0.6rem;
     border-radius: 0.35rem 0.5rem 0.4rem 0.3rem / 0.3rem 0.45rem 0.35rem 0.4rem;
-    background: rgba(42, 36, 33, 0.07);
+    background: rgba(28, 26, 23, 0.07);
   }
 
   .brush-bar {
     height: 100%;
     background-image:
       repeating-linear-gradient(180deg, rgba(242, 234, 217, 0.22) 0 1px, transparent 1px 3px),
-      linear-gradient(90deg, rgba(42, 36, 33, 0.1), transparent 30%, transparent 85%, rgba(42, 36, 33, 0.18));
+      linear-gradient(90deg, rgba(28, 26, 23, 0.1), transparent 30%, transparent 85%, rgba(28, 26, 23, 0.18));
     -webkit-mask:
       linear-gradient(#000, #000) left / calc(100% - 13px) 100% no-repeat,
       url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 14 10' preserveAspectRatio='none'%3E%3Cpath d='M0 0h6c2 0 3 1 4 1.5S13 2 13 3s-2 1-2 2 3 1 3 2-3 1-4 1.5S8 10 6 10H0z'/%3E%3C/svg%3E") right / 14px 100% no-repeat;

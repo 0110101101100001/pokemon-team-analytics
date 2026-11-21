@@ -20,7 +20,7 @@ const describeError = (error) =>
     : error?.message ?? 'Algo deu errado. Tente novamente.';
 
 const ICON_BUTTON_CLASS =
-  'rounded-lg p-2 text-[#78614E]/75 transition-colors hover:bg-[#78614E]/10 hover:text-[#78614E] focus:outline-none focus-visible:ring-2 focus-visible:ring-paint-cobalt disabled:cursor-wait disabled:opacity-60';
+  'rounded-sketch p-2 text-umber/75 transition-colors hover:bg-umber/10 hover:text-umber focus:outline-none focus-visible:ring-2 focus-visible:ring-paint-cobalt disabled:cursor-wait disabled:opacity-60';
 
 const TeamSprites = memo(function TeamSprites({ pokemons }) {
   return (
@@ -29,7 +29,7 @@ const TeamSprites = memo(function TeamSprites({ pokemons }) {
         <li
           key={pokemon.id}
           title={formatSlug(pokemon.name)}
-          className="h-9 w-9 rounded-full border border-[#78614E]/25 bg-paper shadow-sm"
+          className="h-9 w-9 rounded-full border border-umber/25 bg-paper shadow-sm"
         >
           <img src={thumbnailSpriteUrl(pokemon.id)} alt={formatSlug(pokemon.name)} width={36} height={36} loading="lazy" decoding="async" className="h-full w-full object-contain" />
         </li>
@@ -52,10 +52,10 @@ const SavedTeamRow = memo(function SavedTeamRow({ team, onLoad, onDelete }) {
   }, [onDelete, team.id]);
 
   return (
-    <li className="rounded-xl border border-[#78614E]/20 bg-paper/70 px-3 py-2.5 shadow-card">
+    <li className="rounded-sketch border border-umber/20 bg-paper/70 px-3 py-2.5 shadow-card">
       <div className="flex items-center gap-3">
         <div className="min-w-0 flex-1">
-          <p className="truncate font-display text-base font-bold text-[#78614E]">{team.name}</p>
+          <p className="truncate font-display text-base font-bold text-umber">{team.name}</p>
           <p className="font-serif text-[11px] italic text-smeargle-textDim/70">
             {DATE_FORMAT.format(new Date(team.created_at))}
           </p>
@@ -63,15 +63,15 @@ const SavedTeamRow = memo(function SavedTeamRow({ team, onLoad, onDelete }) {
         <TeamSprites pokemons={team.pokemons} />
       </div>
 
-      <div className="mt-2 flex items-center justify-end gap-1 border-t border-[#5C4033]/20 pt-2">
+      <div className="mt-2 flex items-center justify-end gap-1 border-t border-sepia/20 pt-2">
         {confirming ? (
           <>
-            <span className="mr-auto font-hand text-lg leading-none text-[#8A3B27]">Apagar este time?</span>
+            <span className="mr-auto font-hand text-lg leading-none text-vermilion-deep">Apagar este time?</span>
             <button
               type="button"
               onClick={() => setConfirming(false)}
               disabled={deleting}
-              className="rounded-lg px-3 py-1.5 text-xs font-semibold text-[#78614E] transition-colors hover:bg-[#78614E]/10 focus:outline-none focus-visible:ring-2 focus-visible:ring-paint-cobalt"
+              className="rounded-sketch px-3 py-1.5 text-xs font-semibold text-umber transition-colors hover:bg-umber/10 focus:outline-none focus-visible:ring-2 focus-visible:ring-paint-cobalt"
             >
               Cancelar
             </button>
@@ -79,7 +79,7 @@ const SavedTeamRow = memo(function SavedTeamRow({ team, onLoad, onDelete }) {
               type="button"
               onClick={handleDelete}
               disabled={deleting}
-              className="inline-flex items-center gap-1.5 rounded-lg bg-[#B5543C] px-3 py-1.5 text-xs font-semibold text-paper transition-colors hover:bg-[#8A3B27] focus:outline-none focus-visible:ring-2 focus-visible:ring-[#B5543C]/50 disabled:cursor-wait disabled:opacity-70"
+              className="inline-flex items-center gap-1.5 rounded-sketch bg-vermilion px-3 py-1.5 text-xs font-semibold text-paper transition-colors hover:bg-vermilion-deep focus:outline-none focus-visible:ring-2 focus-visible:ring-paint-cobalt disabled:cursor-wait disabled:opacity-70"
             >
               {deleting && <Loader2 className="h-3.5 w-3.5 animate-spin" aria-hidden="true" />}
               Apagar
@@ -90,7 +90,7 @@ const SavedTeamRow = memo(function SavedTeamRow({ team, onLoad, onDelete }) {
             <button
               type="button"
               onClick={() => onLoad(team)}
-              className="inline-flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-semibold text-smeargle-ink-darkGreen transition-colors hover:bg-smeargle-olive/15 focus:outline-none focus-visible:ring-2 focus-visible:ring-paint-cobalt"
+              className="inline-flex items-center gap-1.5 rounded-sketch px-3 py-1.5 text-xs font-semibold text-smeargle-ink-darkGreen transition-colors hover:bg-smeargle-olive/15 focus:outline-none focus-visible:ring-2 focus-visible:ring-paint-cobalt"
             >
               <Download className="h-3.5 w-3.5" aria-hidden="true" />
               Carregar
@@ -196,37 +196,37 @@ export default function TeamManagerModal({ open, onClose, session, team = [], on
 
   return (
     <div
-      className="fixed inset-0 z-[60] flex items-center justify-center bg-[#2A2421]/55 p-4 md:bg-[#2A2421]/40 md:backdrop-blur-sm animate-fade-in"
+      className="fixed inset-0 z-[60] flex items-center justify-center bg-ink/60 p-4 animate-fade-in motion-reduce:animate-none md:bg-ink/45"
       onMouseDown={(e) => e.target === e.currentTarget && onClose?.()}
     >
       <div
         role="dialog"
         aria-modal="true"
         aria-labelledby={`${ids}-title`}
-        className="relative flex max-h-[85vh] w-full max-w-md flex-col rounded-panel border border-[#78614E]/30 bg-paper p-7 shadow-lg md:bg-paper/85 md:shadow-panel md:backdrop-blur-xl animate-bubble-pop"
+        className="relative flex max-h-[85vh] w-full max-w-md flex-col paper-card p-7 shadow-panel animate-bubble-pop motion-reduce:animate-none"
       >
         <button
           type="button"
           onClick={onClose}
           aria-label="Fechar"
-          className="absolute right-4 top-4 rounded-full p-1.5 text-[#78614E]/70 transition-colors hover:bg-[#78614E]/10 hover:text-[#78614E] focus:outline-none focus-visible:ring-2 focus-visible:ring-paint-cobalt"
+          className="absolute right-4 top-4 rounded-full p-1.5 text-umber/70 transition-colors hover:bg-umber/10 hover:text-umber focus:outline-none focus-visible:ring-2 focus-visible:ring-paint-cobalt"
         >
           <X className="h-4 w-4" />
         </button>
 
         <header className="mb-5 pr-6">
-          <h2 id={`${ids}-title`} className="font-display text-2xl font-bold text-[#78614E]">Meus times</h2>
+          <h2 id={`${ids}-title`} className="font-display text-2xl font-bold text-umber">Meus times</h2>
           <p className="mt-1 font-serif text-sm italic text-smeargle-textDim/80">Salve seus times e retome de onde parou.</p>
         </header>
 
         {!userId ? (
-          <p className="rounded-xl border border-dashed border-[#78614E]/30 px-4 py-6 text-center font-serif text-sm italic text-smeargle-textDim/80">
+          <p className="rounded-sketch border border-dashed border-umber/30 px-4 py-6 text-center font-serif text-sm italic text-smeargle-textDim/80">
             Entre na sua conta para salvar e ver seus times.
           </p>
         ) : (
           <>
             <form onSubmit={handleSave} className="mb-4">
-              <label htmlFor={`${ids}-name`} className="mb-1.5 block font-hand text-lg leading-none text-[#78614E]">
+              <label htmlFor={`${ids}-name`} className="mb-1.5 block font-hand text-lg leading-none text-umber">
                 Salvar time atual
                 <span className="ml-2 font-sans text-[11px] text-smeargle-textDim/70">{team.length}/{MAX_TEAM_SIZE}</span>
               </label>
@@ -244,7 +244,7 @@ export default function TeamManagerModal({ open, onClose, session, team = [], on
                 <button
                   type="submit"
                   disabled={!canSave}
-                  className="inline-flex h-11 shrink-0 items-center gap-2 rounded-xl bg-[#78614E] px-4 text-sm font-semibold tracking-wide text-paper shadow-hard transition-all hover:translate-x-[2px] hover:translate-y-[2px] hover:shadow-hard-hover focus:outline-none focus-visible:ring-2 focus-visible:ring-paint-cobalt disabled:pointer-events-none disabled:opacity-50"
+                  className="btn-action shrink-0 px-4 disabled:pointer-events-none"
                 >
                   {saving ? <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" /> : <Save className="h-4 w-4" aria-hidden="true" />}
                   Salvar
@@ -253,7 +253,7 @@ export default function TeamManagerModal({ open, onClose, session, team = [], on
             </form>
 
             {error && (
-              <p role="alert" className="mb-4 flex items-start gap-2 rounded-xl border border-[#B5543C]/30 bg-[#B5543C]/10 px-3 py-2 text-xs text-[#8A3B27]">
+              <p role="alert" className="mb-4 flex items-start gap-2 rounded-sketch border border-vermilion/30 bg-vermilion/10 px-3 py-2 text-xs text-vermilion-deep">
                 <TriangleAlert className="mt-0.5 h-3.5 w-3.5 shrink-0" aria-hidden="true" />
                 {error}
               </p>
@@ -261,13 +261,13 @@ export default function TeamManagerModal({ open, onClose, session, team = [], on
 
             <div className="-mr-2 min-h-0 flex-1 overflow-y-auto pr-2">
               {status === 'loading' ? (
-                <p className="flex items-center justify-center gap-2 py-8 font-hand text-xl text-[#78614E]">
+                <p className="flex items-center justify-center gap-2 py-8 font-hand text-xl text-umber">
                   <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" />
                   Molhando o pincel...
                 </p>
               ) : teams.length === 0 ? (
                 <p className="flex flex-col items-center gap-2 py-8 text-center font-serif text-sm italic text-smeargle-textDim/70">
-                  <BookOpen className="h-6 w-6 text-[#78614E]/50" aria-hidden="true" />
+                  <BookOpen className="h-6 w-6 text-umber/50" aria-hidden="true" />
                   Você ainda não salvou nenhum time.
                 </p>
               ) : (

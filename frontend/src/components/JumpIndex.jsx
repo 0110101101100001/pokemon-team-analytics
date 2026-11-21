@@ -12,13 +12,13 @@ export function scrollToElement(element) {
 export default function JumpIndex({ label, items, onJump }) {
   return (
     <nav aria-label={label} className="mb-5 flex flex-wrap items-center gap-1.5">
-      <span className="mr-1 font-reading text-sm italic text-[#4A463E]">Ir para:</span>
+      <span className="mr-1 font-reading text-sm italic text-ink-soft">Ir para:</span>
       {items.map((item) => (
         <button
           key={item.key}
           type="button"
           onClick={() => onJump(item.key)}
-          className="h-8 cursor-pointer rounded-[2px] border-[1.5px] border-[#1C1A17]/70 px-2.5 font-reading text-sm text-[#1C1A17] transition-colors hover:bg-[#E6D9BE] focus:outline-none focus-visible:ring-2 focus-visible:ring-paint-cobalt"
+          className="h-8 cursor-pointer rounded-[2px] border-[1.5px] border-ink/70 px-2.5 font-reading text-sm text-ink transition-colors hover:bg-paper-2 focus:outline-none focus-visible:ring-2 focus-visible:ring-paint-cobalt"
         >
           <span className="font-mono text-xs tabular-nums">{item.generation}ª</span> · {item.region}
         </button>

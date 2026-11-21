@@ -64,8 +64,8 @@ const formatSpeciesName = (slug) =>
 const EvolutionBadge = memo(function EvolutionBadge({ icon, text }) {
   const Icon = BADGE_ICONS[icon] ?? Sparkles;
   return (
-    <span className="inline-flex items-center gap-1 px-1.5 py-[2px] rounded-md bg-paper border border-[#785132]/30 text-[10px] font-semibold text-[#2A2421] leading-tight shadow-2xs">
-      <Icon className="w-3 h-3 shrink-0 text-[#78614E]" aria-hidden="true" />
+    <span className="inline-flex items-center gap-1 px-1.5 py-[2px] rounded-sketch bg-paper border border-brown/30 text-[10px] font-semibold text-ink leading-tight shadow-2xs">
+      <Icon className="w-3 h-3 shrink-0 text-umber" aria-hidden="true" />
       {text}
     </span>
   );
@@ -77,10 +77,10 @@ const defaultVarietyOf = (species) => species?.varieties?.find((v) => v.is_defau
 const SpeciesNode = memo(function SpeciesNode({ node, current, onSelect }) {
   const regional = Boolean(node.regionLabel);
   const ring = current
-    ? 'border-[#829b72] shadow-[0_0_0_4px_rgba(130,155,114,0.18)]'
+    ? 'border-olive shadow-[0_0_0_4px_rgba(130,155,114,0.18)]'
     : regional
-      ? 'border-dashed border-[#5B7856]/70 shadow-[0_0_0_3px_rgba(164,194,148,0.25)]'
-      : 'border-[#785132]/35 shadow-2xs';
+      ? 'border-dashed border-olive-deep/70 shadow-[0_0_0_3px_rgba(164,194,148,0.25)]'
+      : 'border-brown/35 shadow-2xs';
 
   const name = formatSpeciesName(node.id);
   const Tag = onSelect && !current ? 'button' : 'div';
@@ -101,7 +101,7 @@ const SpeciesNode = memo(function SpeciesNode({ node, current, onSelect }) {
     >
       <div
         className={`relative flex items-center justify-center rounded-[3px] bg-paper border-2 transition-[box-shadow,transform] ${ring} ${
-          interactive ? 'group-hover:-translate-x-px group-hover:-translate-y-px group-hover:border-[#2A2421] group-hover:shadow-[2px_2px_0_#4A463E] motion-reduce:group-hover:translate-x-0 motion-reduce:group-hover:translate-y-0' : ''
+          interactive ? 'group-hover:-translate-x-px group-hover:-translate-y-px group-hover:border-ink group-hover:shadow-[2px_2px_0_#4A463E] motion-reduce:group-hover:translate-x-0 motion-reduce:group-hover:translate-y-0' : ''
         }`}
         style={{ width: SPRITE_R * 2, height: SPRITE_R * 2 }}
       >
@@ -114,19 +114,19 @@ const SpeciesNode = memo(function SpeciesNode({ node, current, onSelect }) {
           className="object-contain md:drop-shadow-sm"
         />
         {regional && (
-          <span className="absolute -bottom-1.5 left-1/2 -translate-x-1/2 px-1.5 rounded-[3px] bg-[#5B7856] text-[8px] font-bold uppercase tracking-wider text-[#F7F3EE] shadow-2xs">
+          <span className="absolute -bottom-1.5 left-1/2 -translate-x-1/2 px-1.5 rounded-[3px] bg-olive-deep text-[8px] font-bold uppercase tracking-wider text-page shadow-2xs">
             {node.regionLabel}
           </span>
         )}
       </div>
       <span
         className={`mt-1.5 text-[11px] font-serif text-center leading-tight ${
-          current ? 'font-black text-[#2A2421]' : 'font-bold text-[#2A2421]/85'
-        } ${interactive ? 'underline decoration-transparent decoration-dashed underline-offset-2 group-hover:decoration-[#78614E]/60' : ''}`}
+          current ? 'font-black text-ink' : 'font-bold text-ink/85'
+        } ${interactive ? 'underline decoration-transparent decoration-dashed underline-offset-2 group-hover:decoration-umber/60' : ''}`}
       >
         {name}
       </span>
-      <span className="text-[9px] font-mono tracking-wide text-[#78614E]">
+      <span className="text-[9px] font-mono tracking-wide text-umber">
         #{String(node.speciesId).padStart(3, '0')}
       </span>
     </Tag>
@@ -181,7 +181,7 @@ function EvolutionTree({ chain, currentSpecies, currentForm, currentFormId, onSe
 
   if (region && !speciesByName) {
     return (
-      <p className="py-6 text-center font-hand text-lg text-[#78614E] animate-pulse">
+      <p className="py-6 text-center font-hand text-lg text-umber animate-pulse">
         traçando a linha de {REGIONS[region].label}...
       </p>
     );
@@ -199,7 +199,7 @@ function EvolutionTree({ chain, currentSpecies, currentForm, currentFormId, onSe
         <div className="relative shrink-0" style={{ width: NODE_W, height: ROW_H - PAD_TOP + 8 }}>
           <SpeciesNode node={{ ...layout.nodes[0], stage: 0, row: 0 }} current />
         </div>
-        <p className="text-xs italic text-[#78614E]">Esta espécie não evolui.</p>
+        <p className="text-xs italic text-umber">Esta espécie não evolui.</p>
       </div>
     );
   }
@@ -218,7 +218,7 @@ function EvolutionTree({ chain, currentSpecies, currentForm, currentFormId, onSe
         {Array.from({ length: layout.stageCount }, (_, stage) => (
           <span
             key={stage}
-            className="absolute top-0 text-center text-[9px] font-bold uppercase tracking-[0.18em] text-[#78614E]/80"
+            className="absolute top-0 text-center text-[9px] font-bold uppercase tracking-[0.18em] text-umber/80"
             style={{ left: nodeX(stage), width: NODE_W }}
           >
             {STAGE_LABELS[stage] ?? `${stage}ª evolução`}
@@ -271,7 +271,7 @@ function EvolutionTree({ chain, currentSpecies, currentForm, currentFormId, onSe
             >
               {edge.alternatives.map((badges, index) => (
                 <div key={index} className="flex flex-wrap items-center justify-center gap-1">
-                  {index > 0 && <span className="text-[9px] italic text-[#78614E]">ou</span>}
+                  {index > 0 && <span className="text-[9px] italic text-umber">ou</span>}
                   {badges.map((badge) => <EvolutionBadge key={badge.text} {...badge} />)}
                 </div>
               ))}
@@ -285,16 +285,16 @@ function EvolutionTree({ chain, currentSpecies, currentForm, currentFormId, onSe
       </div>
 
       {(region || hasOutOfLine) && (
-        <p className="mt-2 flex flex-wrap items-center justify-center gap-x-3 gap-y-1 text-[10px] text-[#78614E]">
+        <p className="mt-2 flex flex-wrap items-center justify-center gap-x-3 gap-y-1 text-[10px] text-umber">
           {region && (
             <span className="inline-flex items-center gap-1.5">
-              <span className="w-3 h-3 rounded-[3px] border-2 border-dashed border-[#5B7856]/70" aria-hidden="true" />
+              <span className="w-3 h-3 rounded-[3px] border-2 border-dashed border-olive-deep/70" aria-hidden="true" />
               Linha evolutiva de {REGIONS[region].label}
             </span>
           )}
           {hasOutOfLine && (
             <span className="inline-flex items-center gap-1.5">
-              <span className="w-3 h-3 rounded-[3px] bg-[#785132]/25" aria-hidden="true" />
+              <span className="w-3 h-3 rounded-[3px] bg-brown/25" aria-hidden="true" />
               {region ? 'esmaecido: não pertence a esta variante' : 'esmaecido: só uma forma regional evolui para esta espécie'}
             </span>
           )}

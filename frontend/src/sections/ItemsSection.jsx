@@ -219,7 +219,7 @@ export default function ItemsSection({ entryByName, onSelectPokemon }) {
         title="Inventário e Mochila"
         subtitle={(
           <>
-            <span className="font-semibold tabular-nums text-[#2A2421]">{count}</span>{' '}
+            <span className="font-semibold tabular-nums text-ink">{count}</span>{' '}
             {showingMegas && `Mega${count !== 1 ? 's e Primais' : ''}`}
             {showingBerries && `Berr${count !== 1 ? 'ies' : 'y'}`}
             {!showingMegas && !showingBerries && `ite${count !== 1 ? 'ns' : 'm'}`}
@@ -260,12 +260,12 @@ export default function ItemsSection({ entryByName, onSelectPokemon }) {
       ) : index.status === 'ready' ? (
         <ItemGrid items={items} onSelect={selectItem} />
       ) : index.status === 'error' ? (
-        <p role="alert" className="flex items-center justify-center gap-2 py-16 text-sm font-medium text-[#8A3B27]">
+        <p role="alert" className="flex items-center justify-center gap-2 py-16 text-sm font-medium text-vermilion-deep">
           <TriangleAlert className="h-4 w-4 shrink-0" aria-hidden="true" />
           Não foi possível carregar os itens agora. Tente de novo em instantes.
         </p>
       ) : (
-        <p className="flex items-center justify-center gap-2 py-16 text-sm font-medium text-[#78614E]">
+        <p className="flex items-center justify-center gap-2 py-16 text-sm font-medium text-umber">
           <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" />
           Revirando a mochila...
         </p>

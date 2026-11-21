@@ -11,15 +11,15 @@ const pct = (value) => `${value.toLocaleString('pt-BR', { maximumFractionDigits:
  */
 function FixProposal({ result, members, onApply, onSeeOptions, onClose }) {
   const close = (
-    <button type="button" onClick={onClose} aria-label="Fechar proposta" className="cursor-pointer rounded-full p-1 text-[#78614E] hover:bg-[#78614E]/10 focus:outline-none focus-visible:ring-2 focus-visible:ring-paint-cobalt">
+    <button type="button" onClick={onClose} aria-label="Fechar proposta" className="cursor-pointer rounded-full p-1 text-umber hover:bg-umber/10 focus:outline-none focus-visible:ring-2 focus-visible:ring-paint-cobalt">
       <X className="h-3.5 w-3.5" aria-hidden="true" />
     </button>
   );
 
   if (!result.option) {
     return (
-      <div role="status" className="flex items-start gap-2 rounded-[4px] border border-[#B5543C]/30 bg-[#B5543C]/5 p-2.5 font-reading text-xs text-smeargle-text">
-        <Wand2 className="mt-0.5 h-4 w-4 shrink-0 text-[#A0442F]" aria-hidden="true" />
+      <div role="status" className="flex items-start gap-2 rounded-[4px] border border-vermilion/30 bg-vermilion/5 p-2.5 font-reading text-xs text-smeargle-text">
+        <Wand2 className="mt-0.5 h-4 w-4 shrink-0 text-vermilion-deep" aria-hidden="true" />
         <div className="flex-1 space-y-1.5">
           <p>{result.reason}</p>
           {result.closest && (
@@ -36,8 +36,8 @@ function FixProposal({ result, members, onApply, onSeeOptions, onClose }) {
   const { target, option, slotIndex } = result;
   const others = option.fixed.filter((threat) => threat.name !== target.name).slice(0, 3).map((threat) => threat.name);
   return (
-    <div role="status" className="flex items-start gap-2 rounded-[4px] border border-[#829b72]/45 bg-[#829b72]/10 p-2.5 font-reading text-xs text-smeargle-text">
-      <Wand2 className="mt-0.5 h-4 w-4 shrink-0 text-[#4C6440]" aria-hidden="true" />
+    <div role="status" className="flex items-start gap-2 rounded-[4px] border border-olive/45 bg-olive/10 p-2.5 font-reading text-xs text-smeargle-text">
+      <Wand2 className="mt-0.5 h-4 w-4 shrink-0 text-olive-ink" aria-hidden="true" />
       <div className="flex-1 space-y-1.5">
         <p>
           {target.name} ({pct(target.usage)} de uso) está {target.status === 'none' ? 'sem resposta' : 'com resposta fraca'}.

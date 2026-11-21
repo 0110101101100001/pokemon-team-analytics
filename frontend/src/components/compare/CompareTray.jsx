@@ -26,7 +26,7 @@ function CompareTray({ names, entryByName, onRemove, onOpen }) {
               type="button"
               onClick={() => onRemove(entry.name)}
               aria-label={`Tirar ${formatSlug(entry.name)} da comparação`}
-              className="absolute -right-1 -top-1 inline-flex h-5 w-5 cursor-pointer items-center justify-center rounded-full border border-ink bg-paper text-ink transition-colors hover:bg-[#E6D9BE] focus:outline-none focus-visible:ring-2 focus-visible:ring-paint-cobalt"
+              className="absolute -right-1 -top-1 inline-flex h-5 w-5 cursor-pointer items-center justify-center rounded-full border border-ink bg-paper text-ink transition-colors hover:bg-paper-2 focus:outline-none focus-visible:ring-2 focus-visible:ring-paint-cobalt"
             >
               <X className="h-3 w-3" aria-hidden="true" />
             </button>

@@ -5,9 +5,9 @@ import { fetchGenderlessSpecies, thumbnailSpriteUrl } from '../services/api';
 import { breedingPartners, genderRatio, hatchInfo } from '../utils/breeding';
 import { eggGroupLabel, formatSlug } from '../utils/filters';
 
-const LABEL = 'block text-[10px] font-semibold uppercase text-[#78614E]';
-const TILE = 'rounded-[4px] border border-[#2A2421]/10 bg-paper/80 p-2.5';
-const NOTE = 'font-reading text-sm italic text-[#4A463E]';
+const LABEL = 'block text-[10px] font-semibold uppercase text-umber';
+const TILE = 'rounded-[4px] border border-ink/10 bg-paper/80 p-2.5';
+const NOTE = 'font-reading text-sm italic text-ink-soft';
 const MALE = '#4F6D8A';
 const FEMALE = '#9E3D64';
 
@@ -36,7 +36,7 @@ function GenderTile({ rate }) {
           </div>
         </>
       ) : (
-        <span className="text-xs font-bold text-[#2A2421]">Sem gênero</span>
+        <span className="text-xs font-bold text-ink">Sem gênero</span>
       )}
     </div>
   );
@@ -52,13 +52,13 @@ export const BreedingBasics = memo(function BreedingBasics({ species }) {
       {hatch && (
         <div className={TILE}>
           <span className={LABEL}>Ovo</span>
-          <span className="block text-xs font-bold text-[#2A2421]">{hatch.cycles} ciclos</span>
-          <span className="text-[11px] text-[#4A463E]">cerca de {hatch.steps.toLocaleString('pt-BR')} passos</span>
+          <span className="block text-xs font-bold text-ink">{hatch.cycles} ciclos</span>
+          <span className="text-[11px] text-ink-soft">cerca de {hatch.steps.toLocaleString('pt-BR')} passos</span>
         </div>
       )}
       <div className={`${TILE} col-span-2`}>
         <span className={LABEL}>Grupos de ovo</span>
-        <span className="text-xs font-bold text-[#2A2421]">{eggGroups.map(eggGroupLabel).join(' · ') || '—'}</span>
+        <span className="text-xs font-bold text-ink">{eggGroups.map(eggGroupLabel).join(' · ') || '—'}</span>
       </div>
     </div>
   );
@@ -67,8 +67,8 @@ export const BreedingBasics = memo(function BreedingBasics({ species }) {
 function PartnerGroup({ group, partners, onSelectPokemon }) {
   return (
     <div className="space-y-1.5">
-      <p className="text-xs font-bold text-[#2A2421]">
-        {eggGroupLabel(group)} <span className="font-mono font-medium tabular-nums text-[#78614E]">· {partners.length}</span>
+      <p className="text-xs font-bold text-ink">
+        {eggGroupLabel(group)} <span className="font-mono font-medium tabular-nums text-umber">· {partners.length}</span>
       </p>
       {partners.length > 0 ? (
         // Colunas de no mínimo 4,5rem (cabe um nome de 12 letras) que se ajustam à largura; a altura cabe umas quatro linhas sem passar de metade da tela.
@@ -85,7 +85,7 @@ function PartnerGroup({ group, partners, onSelectPokemon }) {
                   type="button"
                   onClick={() => onSelectPokemon(entry.name)}
                   aria-label={`Abrir a ficha de ${name}`}
-                  className="group/sprite relative flex w-full cursor-pointer justify-center overflow-hidden rounded-[3px] border border-[#78614E]/20 bg-paper transition-colors hover:border-[#78614E]/60 focus:outline-none focus-visible:ring-2 focus-visible:ring-paint-cobalt"
+                  className="group/sprite relative flex w-full cursor-pointer justify-center overflow-hidden rounded-[3px] border border-umber/20 bg-paper transition-colors hover:border-umber/60 focus:outline-none focus-visible:ring-2 focus-visible:ring-paint-cobalt"
                 >
                   <img src={thumbnailSpriteUrl(entry.id)} alt="" width={56} height={56} loading="lazy" decoding="async" className="h-14 w-14 object-contain [image-rendering:pixelated]" />
                   {/* O nome aparece dentro do quadro no hover e no foco pelo teclado (a rolagem da grade não o corta); nome longo quebra a linha. */}
@@ -125,7 +125,7 @@ function PartnerSearch({ value, onChange }) {
     <div className="relative">
       <label className="block">
         <span className="sr-only">Buscar Pokémon nos grupos de ovo</span>
-        <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-[#78614E]/70" aria-hidden="true" />
+        <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-umber/70" aria-hidden="true" />
         <input
           type="search"
           value={value}
@@ -140,7 +140,7 @@ function PartnerSearch({ value, onChange }) {
           type="button"
           onClick={() => onChange('')}
           aria-label="Limpar a busca"
-          className="absolute right-1.5 top-1/2 flex h-6 w-6 -translate-y-1/2 cursor-pointer items-center justify-center rounded-[3px] text-[#78614E] transition-colors hover:bg-[#78614E]/10 hover:text-[#2A2421] focus:outline-none focus-visible:ring-2 focus-visible:ring-paint-cobalt"
+          className="absolute right-1.5 top-1/2 flex h-6 w-6 -translate-y-1/2 cursor-pointer items-center justify-center rounded-[3px] text-umber transition-colors hover:bg-umber/10 hover:text-ink focus:outline-none focus-visible:ring-2 focus-visible:ring-paint-cobalt"
         >
           <X className="h-4 w-4" aria-hidden="true" />
         </button>
@@ -203,15 +203,15 @@ function BreedingPartners({ species, entries, onSelectPokemon }) {
   const [opened, setOpened] = useState(false);
   return (
     <details
-      className="group rounded-[4px] border border-[#2A2421]/12 bg-paper"
+      className="group rounded-[4px] border border-ink/12 bg-paper"
       onToggle={(e) => e.currentTarget.open && setOpened(true)}
     >
       <summary className="flex cursor-pointer list-none items-center gap-2 px-3 py-2.5 focus:outline-none focus-visible:ring-2 focus-visible:ring-paint-cobalt [&::-webkit-details-marker]:hidden">
-        <span className="font-reading text-sm font-bold text-[#2A2421]">Com quem cruza</span>
-        <span className="text-xs text-[#78614E]">{eggGroupsOf(species).map(eggGroupLabel).join(' · ')}</span>
-        <ChevronDown className="ml-auto h-4 w-4 shrink-0 text-[#78614E] transition-transform group-open:rotate-180 motion-reduce:transition-none" aria-hidden="true" />
+        <span className="font-reading text-sm font-bold text-ink">Com quem cruza</span>
+        <span className="text-xs text-umber">{eggGroupsOf(species).map(eggGroupLabel).join(' · ')}</span>
+        <ChevronDown className="ml-auto h-4 w-4 shrink-0 text-umber transition-transform group-open:rotate-180 motion-reduce:transition-none" aria-hidden="true" />
       </summary>
-      <div className="border-t border-[#2A2421]/12 px-3 pb-3 pt-2.5">
+      <div className="border-t border-ink/12 px-3 pb-3 pt-2.5">
         {opened && <PartnerList species={species} entries={entries} onSelectPokemon={onSelectPokemon} />}
       </div>
     </details>

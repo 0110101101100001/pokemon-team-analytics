@@ -13,7 +13,7 @@ export default function TrainerSprite({ trainer, entryByName }) {
   const attempt = failure.slug === trainer.slug ? failure.attempt : 0;
   const src = sources[attempt];
 
-  if (!src) return <span aria-hidden="true" className="font-serif text-5xl font-bold text-[#1C1A17]/45">?</span>;
+  if (!src) return <span aria-hidden="true" className="font-serif text-5xl font-bold text-ink/45">?</span>;
   return (
     <img
       src={src}

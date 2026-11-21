@@ -35,7 +35,7 @@ function SketchPlanForm({ plan, onChange, seed, pool, onRun, running, disabled }
 
   return (
     <form
-      className="space-y-4 rounded-sketch border border-[#2A2421]/15 bg-paper/60 p-3 sm:p-4"
+      className="space-y-4 rounded-sketch border border-ink/15 bg-paper/60 p-3 sm:p-4"
       onSubmit={(event) => {
         event.preventDefault();
         onRun();
@@ -45,7 +45,7 @@ function SketchPlanForm({ plan, onChange, seed, pool, onRun, running, disabled }
         <span className="paper-label">Fixos</span>
         <ul className="flex flex-wrap items-center gap-1.5" aria-label="Pokémon fixos do rascunho">
           {seed.map((pokemon) => (
-            <li key={pokemon.id} className="flex items-center gap-1 rounded-[3px] border border-[#78614E]/25 bg-paper py-0.5 pl-0.5 pr-2.5 font-reading text-xs font-semibold text-smeargle-text">
+            <li key={pokemon.id} className="flex items-center gap-1 rounded-[3px] border border-umber/25 bg-paper py-0.5 pl-0.5 pr-2.5 font-reading text-xs font-semibold text-smeargle-text">
               <MiniSprite pokemon={pokemon} />
               {formatSlug(pokemon.name)}
             </li>
@@ -72,8 +72,8 @@ function SketchPlanForm({ plan, onChange, seed, pool, onRun, running, disabled }
               onClick={() => onChange({ archetype: option.key })}
               className={`cursor-pointer rounded-[3px] border px-3 py-1.5 text-xs font-semibold transition-[background-color,border-color,box-shadow] focus:outline-none focus-visible:ring-2 focus-visible:ring-paint-cobalt ${
                 plan.archetype === option.key
-                  ? 'border-[#2A2421]/70 bg-[#829b72] text-ink shadow-[2px_2px_0_rgba(42,36,33,0.25)]'
-                  : 'border-[#2A2421]/20 bg-paper text-smeargle-text hover:border-[#2A2421]/45'
+                  ? 'border-vermilion bg-vermilion text-paper shadow-[2px_2px_0_rgba(28,26,23,0.25)]'
+                  : 'border-ink/20 bg-paper text-smeargle-text hover:border-ink/45'
               }`}
             >
               {option.label}
@@ -100,11 +100,11 @@ function SketchPlanForm({ plan, onChange, seed, pool, onRun, running, disabled }
                   type="button"
                   onClick={() => unban(pokemon.name)}
                   aria-label={`Voltar a usar ${formatSlug(pokemon.name)}`}
-                  className="flex cursor-pointer items-center gap-1 rounded-[3px] border border-[#9E3D64]/30 bg-[#9E3D64]/5 py-0.5 pl-0.5 pr-2 font-reading text-xs text-smeargle-text transition-colors hover:bg-[#9E3D64]/15 focus:outline-none focus-visible:ring-2 focus-visible:ring-paint-cobalt"
+                  className="flex cursor-pointer items-center gap-1 rounded-[3px] border border-paint-magenta/30 bg-paint-magenta/5 py-0.5 pl-0.5 pr-2 font-reading text-xs text-smeargle-text transition-colors hover:bg-paint-magenta/15 focus:outline-none focus-visible:ring-2 focus-visible:ring-paint-cobalt"
                 >
                   <MiniSprite pokemon={pokemon} faded />
-                  <span className="line-through decoration-[#9E3D64]/60">{formatSlug(pokemon.name)}</span>
-                  <X className="h-3 w-3 text-[#9E3D64]" aria-hidden="true" />
+                  <span className="line-through decoration-paint-magenta/60">{formatSlug(pokemon.name)}</span>
+                  <X className="h-3 w-3 text-paint-magenta" aria-hidden="true" />
                 </button>
               </li>
             ))}
@@ -117,7 +117,7 @@ function SketchPlanForm({ plan, onChange, seed, pool, onRun, running, disabled }
           type="checkbox"
           checked={plan.maxTwoPerType}
           onChange={(e) => onChange({ maxTwoPerType: e.target.checked })}
-          className="h-4 w-4 cursor-pointer accent-[#829b72]"
+          className="h-4 w-4 cursor-pointer accent-olive"
         />
         No máximo 2 Pokémon do mesmo tipo
       </label>

@@ -30,7 +30,7 @@ const KINDS = [
 
 function KindTabs({ value, onChange }) {
   return (
-    <div role="tablist" aria-label="Tipo de golpe" className="inline-flex flex-wrap gap-1 border-b-[1.5px] border-[#1C1A17]/70">
+    <div role="tablist" aria-label="Tipo de golpe" className="inline-flex flex-wrap gap-1 border-b-[1.5px] border-ink/70">
       {KINDS.map((kind) => {
         const selected = kind.value === value;
         return (
@@ -41,7 +41,7 @@ function KindTabs({ value, onChange }) {
             aria-selected={selected}
             onClick={() => onChange(kind.value)}
             className={`relative h-9 cursor-pointer rounded-[2px] px-3 font-reading text-[15px] transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-paint-cobalt ${
-              selected ? 'font-semibold text-[#1C1A17]' : 'text-[#4A463E] hover:text-[#1C1A17]'
+              selected ? 'font-semibold text-ink' : 'text-ink-soft hover:text-ink'
             }`}
           >
             {kind.label}
@@ -125,7 +125,7 @@ export default function MovesSection({ entryByName, onSelectPokemon }) {
         title="Movimentos"
         subtitle={(
           <>
-            <span className="font-semibold tabular-nums text-[#2A2421]">{count}</span>{' '}
+            <span className="font-semibold tabular-nums text-ink">{count}</span>{' '}
             {`golpe${count !== 1 ? 's' : ''}`}
             {deferredQuery.trim() && <> para <span className="font-serif italic">“{deferredQuery.trim()}”</span></>}
           </>
@@ -140,7 +140,7 @@ export default function MovesSection({ entryByName, onSelectPokemon }) {
       <KindTabs value={kind} onChange={setKind} />
 
       {(kind === 'learnable' || contest) && (
-        <p className="font-reading text-sm italic text-[#785132]">* Clique no nome do golpe para ver mais informações.</p>
+        <p className="font-reading text-sm italic text-brown">* Clique no nome do golpe para ver mais informações.</p>
       )}
 
       {contest && <ContestTable moves={contestMoves} openMove={openMove} onToggleMove={toggleMove} onSelectMove={setDetail} />}

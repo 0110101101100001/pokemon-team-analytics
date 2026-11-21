@@ -7,14 +7,14 @@ import { formatSlug } from '../../utils/filters';
 
 const NUMBER_CLASS =
   'h-8 w-full rounded-[3px] border-[1.5px] border-ink bg-paper px-1.5 text-center font-mono text-sm tabular-nums text-ink';
-const HEAD_CLASS = 'pb-1 text-[10px] font-bold uppercase tracking-wider text-[#78614E]';
+const HEAD_CLASS = 'pb-1 text-[10px] font-bold uppercase tracking-wider text-umber';
 
 const natureLabel = ({ name, plus, minus }) =>
   plus ? `${formatSlug(name)} (+${STAT_LABELS[plus]} −${STAT_LABELS[minus]})` : `${formatSlug(name)} (neutra)`;
 
 const totalClass = (nature, key) => {
   if (nature.plus === key) return 'text-smeargle-ink-darkGreen';
-  if (nature.minus === key) return 'text-[#8A3B27]';
+  if (nature.minus === key) return 'text-vermilion-deep';
   return 'text-smeargle-text';
 };
 
@@ -87,13 +87,13 @@ function StatSpreadEditor({ baseStats, set, onChange }) {
       </table>
 
       <div className="mt-1.5 flex items-center gap-2">
-        <div className="h-2 flex-1 overflow-hidden rounded-[3px] border border-[#78614E]/20 bg-[#F7F3EE]" aria-hidden="true">
+        <div className="h-2 flex-1 overflow-hidden rounded-[3px] border border-umber/20 bg-page" aria-hidden="true">
           <div
-            className={`h-full rounded-[3px] transition-[width] duration-200 motion-reduce:transition-none ${remaining > 0 ? 'bg-smeargle-olive' : 'bg-[#5C4033]'}`}
+            className={`h-full rounded-[3px] transition-[width] duration-200 motion-reduce:transition-none ${remaining > 0 ? 'bg-smeargle-olive' : 'bg-sepia'}`}
             style={{ width: `${(used / MAX_EV_TOTAL) * 100}%` }}
           />
         </div>
-        <p className="shrink-0 font-mono text-xs font-bold tabular-nums text-[#78614E]" aria-live="polite">
+        <p className="shrink-0 font-mono text-xs font-bold tabular-nums text-umber" aria-live="polite">
           {used}/{MAX_EV_TOTAL} EVs
           <span className="ml-1.5 font-hand text-base font-normal">{remaining > 0 ? `faltam ${remaining}` : 'completo'}</span>
         </p>

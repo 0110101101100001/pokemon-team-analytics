@@ -3,22 +3,27 @@ import {
   BALL_MOVES, BITE_MOVES, GRASSY_HALVED, MOLD_BREAKERS, PRIORITY_BLOCKERS, PULSE_MOVES, RECOIL_MOVES, RESIST_BERRIES,
   SLICING_MOVES, SOUND_MOVES, TYPE_BOOST_ITEMS, UNBREAKABLE_ABILITIES, WIND_MOVES, isPunch,
 } from '../data/battleModifiers';
+import { NATURAL_GIFT } from '../data/battleModifiers';
+import { currentHp, fixedDamage, hiddenPowerType, variablePower } from './variablePower';
 
 /*
   Fórmula de dano da Geração 5 em diante para batalhas simples, na ordem dos jogos. Os modificadores são em 4096 avos:
   4096 = ×1; 6144 = ×1,5; 2048 = ×0,5. Cada etapa arredonda como os jogos (metade para baixo).
 
-  Lado (attacker/defender): { level, types, originalTypes, tera, stats, boosts, item, ability, status }
+  Lado (attacker/defender): { level, types, originalTypes, tera, stats, boosts, item, ability, status }, e para os golpes de
+  poder variável e dano fixo (utils/variablePower): { weight, currentHp, happiness, ivs, baseStats, lastHit, toxicTurns };
+  `turnsOut` conta os turnos do lado em campo (Fake Out e First Impression só valem no primeiro).
   `types` são os tipos em batalha (o Tera já aplicado); `originalTypes`, os da espécie ou forma, que valem para o STAB.
   `ability` já vem resolvida pela seção (Neutralizing Gas zera a do oponente).
   Golpe: { slug, type, category, power, priority, effectChance, hits, maxHits, crit }
   Campo: { weather, terrain, magicRoom, wonderRoom, gravity, trickRoom }; o clima já chega anulado por Cloud Nine e Air Lock.
   Trick Room não muda o dano: só inverte quem age primeiro, o que a calculadora mostra ao lado da velocidade.
   Condições do lado: { reflect, lightScreen, auroraVeil, protect, ... }
-  Quem defende está com o HP cheio: Multiscale, Tera Shell e Sturdy valem.
+  PS atuais: `currentHp` (sem ele, cheio). Multiscale, Shadow Shield, Tera Shell e Sturdy só valem com os PS cheios.
 */
 
 const ONE = 4096;
+const NO_SIDE_CONDITIONS = { tailwind: false };
 
 const pokeRound = (value) => (value % 1 > 0.5 ? Math.ceil(value) : Math.floor(value));
 const applyMod = (value, mod) => pokeRound((value * mod) / ONE);
@@ -57,7 +62,10 @@ const MOVE_GROUP_IMMUNITIES = {
 const TERRAIN_BOOSTS = { electric: 'electric', grassy: 'grass', psychic: 'psychic' };
 const WEATHER_BALL_TYPES = { sun: 'fire', 'harsh-sun': 'fire', rain: 'water', 'heavy-rain': 'water', sand: 'rock', snow: 'ice' };
 const SOLAR_MOVES = new Set(['solar-beam', 'solar-blade']);
-const FACADE_STATUSES = new Set(['burn', 'poison', 'paralysis']);
+// Só funcionam no primeiro turno do usuário em campo (`turnsOut` 0).
+export const FIRST_TURN_MOVES = new Set(['fake-out', 'first-impression']);
+const FACADE_STATUSES = new Set(['burn', 'poison', 'toxic', 'paralysis']);
+const isPoisoned = (side) => side.status === 'poison' || side.status === 'toxic';
 const SUN = new Set(['sun', 'harsh-sun']);
 const RAIN = new Set(['rain', 'heavy-rain']);
 const STAT_ORDER = ['atk', 'def', 'spa', 'spd', 'spe'];
@@ -92,8 +100,11 @@ export function paradoxStat(side, field) {
   ));
 }
 
-/** Um golpe entra na conta se causa dano e tem poder (do golpe ou informado à mão). */
-export const isCalculable = (move) => Boolean(move && move.category !== 'status' && move.power);
+/**
+ * Todo golpe de dano entra na conta, com poder fixo ou não; o poder variável é resolvido em calculateDamage,
+ * que devolve um motivo quando não sabe calculá-lo.
+ */
+export const isCalculable = (move) => Boolean(move && move.category !== 'status');
 
 function effectiveTypeMultiplier(moveType, defenderTypes, { field, move, attackerAbility, groundHitsFlying }) {
   return defenderTypes.reduce((total, defenseType) => {
@@ -132,7 +143,9 @@ function stabOf(attacker, moveType) {
 /** Tipo final do golpe e se ganhou o bônus de troca de tipo (-ate e Normalize, ×1,2). */
 function resolveMoveType(move, attacker, field, teraBlast) {
   if (teraBlast) return { moveType: attacker.tera, typeChanged: false };
-  const moveType = move.slug === 'weather-ball' ? WEATHER_BALL_TYPES[field.weather] ?? move.type : move.type;
+  let moveType = move.slug === 'weather-ball' ? WEATHER_BALL_TYPES[field.weather] ?? move.type : move.type;
+  if (move.slug === 'hidden-power' && attacker.ivs) moveType = hiddenPowerType(attacker.ivs);
+  if (move.slug === 'natural-gift' && NATURAL_GIFT[attacker.item]) moveType = NATURAL_GIFT[attacker.item].type;
   if (attacker.ability === 'normalize') return { moveType: 'normal', typeChanged: true };
   const ateType = ATE_ABILITIES[attacker.ability];
   if (ateType && moveType === 'normal') return { moveType: ateType, typeChanged: true };
@@ -141,7 +154,8 @@ function resolveMoveType(move, attacker, field, teraBlast) {
 }
 
 /** Motivo de o golpe não acertar ou não causar dano antes da tabela de tipos; null se acerta. */
-function immunityReason({ move, moveType, defenderAbility, defenderAirborne, defenderSide, field }) {
+function immunityReason({ attacker, move, moveType, defenderAbility, defenderAirborne, defenderSide, field }) {
+  if (FIRST_TURN_MOVES.has(move.slug) && attacker.turnsOut > 0) return 'Só funciona no primeiro turno do usuário em campo.';
   // Golpes Z e Max atravessam Protect, com 1/4 do dano (ver os modificadores finais).
   if (defenderSide.protect && !move.powered) return 'O alvo está protegido (Protect).';
   if (field.weather === 'harsh-sun' && moveType === 'water') return 'Golpes de Water evaporam no sol extremo.';
@@ -168,7 +182,7 @@ const failed = (reason, hp) => ({ rolls: [0], extraRolls: null, hits: 1, min: 0,
  * Golpes de vários acertos devolvem `hits` > 1: o total de um uso soma um resultado por acerto.
  * Com Parental Bond, `extraRolls` traz os resultados do segundo acerto (×0,25).
  */
-export function calculateDamage({ attacker, defender, move, field, defenderSide }) {
+export function calculateDamage({ attacker, defender, move, field, defenderSide, attackerSide = NO_SIDE_CONDITIONS }) {
   const hp = defender.stats.hp;
   const attackerItem = activeItem(attacker, field);
   const defenderItem = activeItem(defender, field);
@@ -189,25 +203,44 @@ export function calculateDamage({ attacker, defender, move, field, defenderSide 
   const defenderAirborne = airborneBy({ ...defender, ability: defenderAbility }, field);
   const defenderGrounded = !defenderAirborne;
 
-  const reason = immunityReason({ move, moveType, defenderAbility, defenderAirborne, defenderSide, field });
+  const reason = immunityReason({ attacker, move, moveType, defenderAbility, defenderAirborne, defenderSide, field });
   if (reason) return failed(reason, hp);
 
   const groundHitsFlying = moveType === 'ground' && (field.gravity || move.slug === 'thousand-arrows');
   let typeMultiplier = effectiveTypeMultiplier(moveType, defender.types, { field, move, attackerAbility: attacker.ability, groundHitsFlying });
   if (typeMultiplier === 0) return failed('O alvo é imune a este tipo de golpe.', hp);
   if (defenderAbility === 'wonder-guard' && typeMultiplier <= 1) return failed('Wonder Guard: só golpes super efetivos acertam.', hp);
-  if (defenderAbility === 'tera-shell') typeMultiplier = Math.min(typeMultiplier, 0.5);
+  const defenderFull = currentHp(defender) === hp;
+  if (defenderAbility === 'tera-shell' && defenderFull) typeMultiplier = Math.min(typeMultiplier, 0.5);
+
+  // Dano fixo (Seismic Toss, Super Fang, Counter, OHKO…): só a imunidade de tipo vale; o resto da fórmula não.
+  const fixed = fixedDamage(move, { attacker, defender, defenderAbility });
+  if (fixed?.reason) return failed(fixed.reason, hp);
+  if (fixed) {
+    return {
+      rolls: fixed.rolls, extraRolls: null, hits: 1, min: fixed.rolls[0], max: fixed.rolls.at(-1),
+      typeMultiplier, stab: false, crit: false, hp, moveType, fixed, variablePower: null, reason: null,
+    };
+  }
 
   const crit = !['battle-armor', 'shell-armor'].includes(defenderAbility)
-    && (move.crit || (attacker.ability === 'merciless' && defender.status === 'poison'));
+    && (move.crit || (attacker.ability === 'merciless' && isPoisoned(defender)));
 
   /* ---- poder */
-  let basePower = move.power;
+  const variable = move.power ? null : variablePower(move, {
+    attacker,
+    defender,
+    attackerItem,
+    attackerSpeed: calcSpeed(attacker, attackerSide, field),
+    defenderSpeed: calcSpeed(defender, defenderSide, field),
+  });
+  if (variable?.reason) return failed(variable.reason, hp);
+  let basePower = variable ? variable.power : move.power;
   if (move.slug === 'weather-ball' && WEATHER_BALL_TYPES[field.weather]) basePower *= 2;
   if (move.slug === 'facade' && FACADE_STATUSES.has(attacker.status)) basePower *= 2;
   if (move.slug === 'acrobatics' && !attackerItem) basePower *= 2;
   if (move.slug === 'hex' && (defender.status || defender.ability === 'comatose')) basePower *= 2;
-  if (move.slug === 'venoshock' && defender.status === 'poison') basePower *= 2;
+  if (move.slug === 'venoshock' && isPoisoned(defender)) basePower *= 2;
   // Com Tera, golpes do tipo Tera com menos de 60 de poder sobem para 60 (exceto os de vários acertos e os de prioridade).
   if (teraActive && moveType === attacker.tera && basePower < 60 && !(move.maxHits > 1) && !(move.priority > 0)) basePower = 60;
 
@@ -222,7 +255,7 @@ export function calculateDamage({ attacker, defender, move, field, defenderSide 
   if (attacker.ability === 'punk-rock' && SOUND_MOVES.has(move.slug)) powerMods.push(5325);
   if (attacker.ability === 'sheer-force' && move.effectChance) powerMods.push(5325);
   if (attacker.ability === 'sand-force' && field.weather === 'sand' && ['rock', 'ground', 'steel'].includes(moveType)) powerMods.push(5325);
-  if (attacker.ability === 'toxic-boost' && physical && attacker.status === 'poison') powerMods.push(6144);
+  if (attacker.ability === 'toxic-boost' && physical && isPoisoned(attacker)) powerMods.push(6144);
   if (attacker.ability === 'flare-boost' && !physical && attacker.status === 'burn') powerMods.push(6144);
   if (attacker.ability === 'steely-spirit' && moveType === 'steel') powerMods.push(6144);
   // Fairy Aura e Dark Aura valem para os dois lados; Aura Break inverte o efeito.
@@ -291,7 +324,7 @@ export function calculateDamage({ attacker, defender, move, field, defenderSide 
   const screened = (physical && defenderSide.reflect) || (!physical && defenderSide.lightScreen) || defenderSide.auroraVeil;
   if (screened && !crit && attacker.ability !== 'infiltrator') finalMods.push(2048);
   if (move.powered && defenderSide.protect) finalMods.push(1024);
-  if (['multiscale', 'shadow-shield'].includes(defenderAbility)) finalMods.push(2048);
+  if (defenderFull && ['multiscale', 'shadow-shield'].includes(defenderAbility)) finalMods.push(2048);
   if (['filter', 'solid-rock', 'prism-armor'].includes(defenderAbility) && typeMultiplier > 1) finalMods.push(3072);
   if (defenderAbility === 'fluffy' && moveType === 'fire') finalMods.push(8192);
   if (defenderAbility === 'ice-scales' && !physical) finalMods.push(2048);
@@ -347,6 +380,9 @@ export function calculateDamage({ attacker, defender, move, field, defenderSide 
     crit,
     hp,
     moveType,
+    fixed: null,
+    // Golpe de poder variável: o poder usado e de onde ele veio.
+    variablePower: variable,
     reason: null,
   };
 }
@@ -389,7 +425,7 @@ function perUseDistribution({ rolls, hits, extraRolls }) {
  * Hazards na entrada e o saldo de HP por turno (perdas menos recuperação), com o nome de cada efeito.
  * `attacker` entra pelas habilidades que ferem o oponente a cada turno (Bad Dreams).
  */
-function residualEffects(defender, defenderSide, field, attacker) {
+export function residualEffects(defender, defenderSide, field, attacker) {
   const hp = defender.stats.hp;
   const item = activeItem(defender, field);
   const { ability } = defender;
@@ -419,12 +455,14 @@ function residualEffects(defender, defenderSide, field, attacker) {
       && !SAND_IMMUNE_ABILITIES.has(ability) && item !== 'safety-goggles') lose(1 / 16, 'areia');
     if (defender.status === 'burn') lose(ability === 'heatproof' ? 1 / 32 : 1 / 16, 'queimadura');
     if (defender.status === 'poison' && ability !== 'poison-heal') lose(1 / 8, 'veneno');
+    // Veneno forte: 1/16 no primeiro turno, 2/16 no segundo… até 15/16.
+    if (defender.status === 'toxic' && ability !== 'poison-heal') lose(Math.min(15, (defender.toxicTurns ?? 0) + 1) / 16, 'veneno forte');
     if (asleep && attacker?.ability === 'bad-dreams') lose(1 / 8, 'Bad Dreams');
     if (SUN.has(field.weather) && ability === 'dry-skin') lose(1 / 8, 'Dry Skin no sol');
     if (SUN.has(field.weather) && ability === 'solar-power') lose(1 / 8, 'Solar Power');
   }
 
-  if (defender.status === 'poison' && ability === 'poison-heal') heal(1 / 8, 'Poison Heal');
+  if (isPoisoned(defender) && ability === 'poison-heal') heal(1 / 8, 'Poison Heal');
   if (RAIN.has(field.weather) && ability === 'dry-skin') heal(1 / 8, 'Dry Skin na chuva');
   if (RAIN.has(field.weather) && ability === 'rain-dish') heal(1 / 16, 'Rain Dish');
   if (field.weather === 'snow' && ability === 'ice-body') heal(1 / 16, 'Ice Body');
@@ -451,8 +489,8 @@ function chanceLabel(chance) {
 const listNotes = (notes) => (notes.length > 1 ? `${notes.slice(0, -1).join(', ')} e ${notes.at(-1)}` : notes[0]);
 
 /** Sturdy segura o primeiro golpe com 1 HP: só com HP cheio, contra um acerto só e sem Mold Breaker. */
-const sturdyHolds = (result, defender, attacker, entry) => defender.ability === 'sturdy' && entry === 0
-  && result.hits === 1 && !result.extraRolls && !MOLD_BREAKERS.has(attacker?.ability);
+export const sturdyHolds = (result, defender, attacker, entry = 0) => defender.ability === 'sturdy' && entry === 0
+  && currentHp(defender) === defender.stats.hp && result.hits === 1 && !result.extraRolls && !MOLD_BREAKERS.has(attacker?.ability);
 
 /**
  * Em quantos usos do golpe o alvo cai, em até 4, contando hazards na entrada e o saldo de HP
@@ -462,19 +500,23 @@ export function describeKnockout(result, { attacker, defender, defenderSide, fie
   if (result.reason) return { text: result.reason, turns: null, chance: 0 };
 
   const { hp } = result;
-  const { entry, perTurn, notes } = residualEffects(defender, defenderSide, field, attacker);
+  const remaining = currentHp(defender);
+  // Hazards só contam na entrada: com PS já perdidos, o alvo está em campo.
+  const effects = residualEffects(defender, defenderSide, field, attacker);
+  const entry = remaining === hp ? effects.entry : 0;
+  const { perTurn, notes } = effects;
   const use = perUseDistribution(result);
   const sturdy = sturdyHolds(result, defender, attacker, entry);
   const allNotes = sturdy ? [...notes, 'Sturdy'] : notes;
   const suffix = allNotes.length ? ` (com ${listNotes(allNotes)})` : '';
   // Com Sturdy, o primeiro uso deixa o alvo com pelo menos 1 HP.
-  const firstUse = sturdy ? capDamage(use, hp - 1) : use;
+  const firstUse = sturdy ? capDamage(use, remaining - 1) : use;
 
   let total = firstUse;
   for (let turns = 1; turns <= MAX_TURNS; turns += 1) {
     if (turns > 1) total = convolve(total, use);
     // HP que ainda falta tirar depois dos hazards e do saldo dos turnos anteriores; a recuperação não passa do HP cheio.
-    const needed = Math.min(hp, hp - entry - (turns - 1) * perTurn);
+    const needed = Math.min(hp, remaining - entry - (turns - 1) * perTurn);
     let chance = 0;
     for (const [damage, probability] of total) if (damage >= needed) chance += probability;
     if (chance > 1e-9) {
@@ -485,7 +527,7 @@ export function describeKnockout(result, { attacker, defender, defenderSide, fie
   }
 
   const average = (result.min + result.max) / 2;
-  const estimate = perTurn < 0 && average <= -perTurn ? null : Math.ceil(hp / Math.max(average - Math.max(-perTurn, 0), 1));
+  const estimate = perTurn < 0 && average <= -perTurn ? null : Math.ceil(remaining / Math.max(average - Math.max(-perTurn, 0), 1));
   return {
     text: estimate ? `Cerca de ${estimate}HKO${suffix}.` : `Não derruba: a recuperação cobre o dano${suffix}.`,
     turns: null,
