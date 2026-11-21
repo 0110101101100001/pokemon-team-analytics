@@ -2,7 +2,7 @@
 
 Pokédex com dados competitivos da Smogon, fichas de campo e um team builder.
 
-**Produção:** [smearglepedia.netlify.app](https://smearglepediaa.netlify.app) · API: [pokemon-team-analytics.onrender.com](https://pokemon-team-analytics.onrender.com/docs)
+**Produção:** [smearglepediaa.netlify.app](https://smearglepediaa.netlify.app) · API: [pokemon-team-analytics.onrender.com](https://pokemon-team-analytics.onrender.com/docs)
 
 ![Tela inicial da Smearglepedia](img.png)
 
@@ -16,7 +16,7 @@ Pokédex com dados competitivos da Smogon, fichas de campo e um team builder.
 | Dados de Pokémon | PokéAPI, consultada direto pelo navegador | — |
 | Dados competitivos | Estatísticas mensais da Smogon, importadas para a tabela `smogon_stats` | — |
 
-O frontend busca na PokéAPI os dados de espécies, golpes e habilidades, e no backend as estatísticas da Smogon. O login e os times salvos usam o Supabase direto, com a chave anon. O backend valida o JWT do Supabase nas rotas protegidas e é o único que usa a service role.
+O frontend busca na PokéAPI os dados de espécies, golpes e habilidades, e no backend as estatísticas da Smogon. O login e os times salvos usam o Supabase direto, com a chave anon. O frontend monta o cliente só com `@supabase/auth-js` e `@supabase/postgrest-js` (`services/supabase.js`), sem o `supabase-js` completo: storage, realtime e functions não são usados e deixavam o pacote inicial cerca de 100 KB maior. O backend valida o JWT do Supabase nas rotas protegidas e é o único que usa a service role.
 
 ## Funcionalidades
 
@@ -39,6 +39,14 @@ O frontend busca na PokéAPI os dados de espécies, golpes e habilidades, e no b
   - Exportação do time para o Pokémon Showdown.
   - Mostra a tabela de fraquezas e cobertura do time.
   - Times salvos na conta do usuário.
+- **Liga:** líderes de ginásio, Elite 4, campeões, rivais, equipes vilãs e as facções de Hisui, de Kanto a Kitakami, lidos da tabela `PokemonTrainers`.
+  - Cada card junta as batalhas do treinador; a ficha mostra o time de cada batalha e abre o confronto na calculadora de dano.
+  - Os cards seguem a ordem do jogo dentro de cada região: líderes, Elite 4, campeão, rivais e depois as equipes vilãs, com o chefe antes dos subordinados. O mapa de papéis fica em `frontend/src/utils/trainers.js`; um papel que não estiver nele vai para o fim da lista.
+- **Links diretos:** a ficha de um Pokémon e a de um treinador têm endereço próprio, que pode ser compartilhado.
+  - `#/pokedex?pokemon=garchomp` abre a ficha do Garchomp; o parâmetro funciona em qualquer aba.
+  - `#/treinadores/giovanni` abre o Giovanni na Liga.
+  - Aberta por clique, a ficha ganha uma entrada no histórico e o botão voltar a fecha. Trocar de Pokémon dentro dela (evolução, forma) não cria entradas novas.
+- **Prévia do link:** `frontend/public/og.png` (1200×630) e as tags Open Graph do `index.html` dão imagem e descrição ao link no WhatsApp, Discord e redes sociais.
 - **Mobile:** em telas pequenas, blur, sombras longas, a inclinação 3D dos cards e o embed do mascote ficam desligados.
 
 ## Rodando localmente
@@ -94,7 +102,7 @@ As `VITE_*` são embutidas no bundle durante o build. Depois de alterá-las no N
 - Start: `uvicorn app.main:app --host 0.0.0.0 --port $PORT`
 - Health check: `/health`
 
-`ALLOWED_ORIGINS` precisa incluir `https://smearglepedia.netlify.app`, sem barra no final.
+`ALLOWED_ORIGINS` precisa incluir `https://smearglepediaa.netlify.app`, sem barra no final.
 
 No plano gratuito o Render suspende o serviço após 15 minutos sem tráfego, e a primeira requisição seguinte demora para responder. Por isso as leituras da Smogon (selo da grade, ficha, meta do team builder) vão direto ao Supabase, liberadas pela política `smogon_stats_public_read` (os treinadores, pela `pokemon_trainers_public_read`); o backend fica com a recomendação e a sincronização. O Supabase gratuito também pausa projetos inativos.
 
@@ -102,8 +110,15 @@ No plano gratuito o Render suspende o serviço após 15 minutos sem tráfego, e 
 
 `ci.yml` roda em push na `main` e na `futuras-atualizacoes` e em todo pull request:
 
-- frontend: `npm run lint` e `npm run build`;
+- frontend: `npm run lint`, `npm test` e `npm run build`;
 - backend: `ruff check .` e `pytest` (Supabase falso em memória, sem rede).
+
+O `npm test` inclui `trainers-data.test.js`, que lê a tabela `PokemonTrainers` e falha se aparecer uma região, papel, etapa, mecânica ou jogo que o frontend não conhece. Ele usa os secrets `SUPABASE_URL` e `SUPABASE_KEY` e é pulado quando eles não estão definidos (pull requests de forks, por exemplo). Para rodar localmente:
+
+```bash
+cd frontend
+SUPABASE_URL=... SUPABASE_KEY=... npx vitest run src/utils/trainers-data.test.js
+```
 
 Com tudo verde em um push na `main`, o job `deploy-backend` chama o deploy hook do Render. Para usar, desligue o auto-deploy do serviço no Render e salve a URL do hook no secret `RENDER_DEPLOY_HOOK_URL`; sem o secret, o job não faz nada.
 
@@ -120,6 +135,7 @@ ruff check . && pytest
 | `keep-alive.yml` | a cada 10 minutos | `GET /health` no Render, para o serviço não dormir | nenhum |
 | `smogon-sync.yml` | dia 2, 06:00 | `POST /api/admin/sync-smogon` e espera até todos os tiers estarem no mês anterior | `SUPABASE_JWT_SECRET` |
 | `supabase-keepalive.yml` | de 3 em 3 dias, 09:00 | consulta a tabela `smogon_stats` no Supabase | `SUPABASE_URL`, `SUPABASE_KEY` |
+| `trainer-data-check.yml` | segunda, 12:00 | o mesmo teste de dados da `PokemonTrainers`, porque a tabela muda direto no Supabase, sem push | `SUPABASE_URL`, `SUPABASE_KEY` |
 | `keep-active.yml` | dia 1, 05:00 | commit vazio na `main`, para o GitHub não desativar os agendamentos | nenhum |
 
 Os secrets ficam em Settings > Secrets and variables > Actions. Todos os workflows também podem ser disparados manualmente na aba Actions.
@@ -167,8 +183,8 @@ backend/
 frontend/
   src/
     sections/        uma tela por aba: Pokédex, Movimentos, Habilidades, Itens, Treinadores, Team Builder, Damage Calculator
-    components/      grade, ficha, modais; layout/ (header, abas, filtros contextuais), team/, calc/, items/, leaders/
-    navigation/      lista das abas e rotas por hash (#/pokedex, #/itens…)
+    components/      grade, ficha, modais; layout/ (header, abas, filtros contextuais), team/, calc/, items/, trainers/
+    navigation/      lista das abas e endereços por hash (#/pokedex, #/treinadores/giovanni, ?pokemon=…)
     data/            jogos e dexes regionais, TMs por jogo, índice da Pokédex
     hooks/           filtros da Pokédex, dex regional, dados de batalha, pontuação do team builder
     services/        PokéAPI (com cache no IndexedDB), backend e Supabase
@@ -179,7 +195,7 @@ scripts/
   build-battle-data.mjs    gera frontend/src/data/battle-data.json (atributos base e golpes, para o esboço)
   build-abilities.mjs      gera frontend/src/data/abilities.json (habilidades, efeito curto e quem tem cada uma)
   build-items.mjs          gera frontend/src/data/items.json (itens com categoria e bolso, para a aba Itens)
-supabase/migrations/ políticas e índices da tabela smogon_stats
+supabase/migrations/ políticas e índices das tabelas smogon_stats e PokemonTrainers
 .github/workflows/   CI, keep-alives, sincronização mensal e commit de atividade
 netlify.toml         build e headers do frontend
 docker-compose.yml   backend local
