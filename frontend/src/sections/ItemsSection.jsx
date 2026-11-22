@@ -16,6 +16,7 @@ import { ITEM_GROUPS, OTHER_GROUP, categoryOrder, itemGroupOf } from '../data/it
 import MACHINES from '../data/machines.json';
 import { TYPE_NAMES, fetchItemIndex } from '../services/api';
 import { formatSlug } from '../utils/filters';
+import { movePowerOf } from '../utils/movePower';
 import { MEGAS, filterMegas } from '../utils/megas';
 import { resolveTrainerPokemon } from '../utils/trainers';
 
@@ -53,7 +54,7 @@ const MACHINE_GAMES = GAMES.filter((game) => MACHINES.games[game.id] && game.id 
 const machinesOf = (gameId) =>
   MACHINES.games[gameId].map(([code, move]) => {
     const [type, damageClass, power, accuracy] = MACHINES.moves[move];
-    return { code, move, type, damageClass, power, accuracy };
+    return { code, move, type, damageClass, power: movePowerOf({ name: move, power }), accuracy };
   });
 
 const toSearchSlug = (text) => text.trim().toLowerCase().replace(/\s+/g, '-');

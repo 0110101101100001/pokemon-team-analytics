@@ -19,15 +19,16 @@ const hitRange = ({ minHits, maxHits }) => Array.from({ length: maxHits - minHit
 /**
  * Um dos quatro golpes de um lado: escolha do golpe, tipo, categoria e poder, crítico e,
  * nos golpes de vários acertos com número variável, quantos acertos entram na conta.
+ * `battleType`: o tipo do golpe nesta batalha, já com habilidade, item, forma, clima e modo Z ou Max.
  * `gmaxMove`: o G-Max do Pokémon, que acrescenta o modo G-Max; sem ele, um G-Max já escolhido vale como Max.
  */
-function MoveSlot({ index, slot, learnset, gmaxMove, onChange }) {
+function MoveSlot({ index, slot, learnset, gmaxMove, battleType, onChange }) {
   const { move } = slot;
   const mode = slot.mode === 'gmax' && !gmaxMove ? 'max' : slot.mode ?? '';
   const modes = [['', 'Normal'], ...Object.entries(POWERED_MODES), ...(gmaxMove ? [['gmax', 'G-Max']] : [])];
   const isStatus = move?.damageClass === 'status';
   const variableHits = move?.maxHits > move?.minHits && !mode;
-  const powered = mode && canPowerUp(move) ? poweredMove(move, mode, gmaxMove) : null;
+  const powered = mode && canPowerUp(move) ? poweredMove(move, mode, gmaxMove, battleType || move.type) : null;
 
   const patch = useCallback((changes) => onChange(index, changes), [index, onChange]);
   const pickMove = useCallback((slug) => {
@@ -64,13 +65,13 @@ function MoveSlot({ index, slot, learnset, gmaxMove, onChange }) {
 
       {move && (
         <div className="mt-1.5 flex flex-wrap items-center gap-x-2 gap-y-1 text-[11px] font-medium text-smeargle-textDim">
-          <PokemonTypeBadge type={move.type} className="!px-1.5 !text-[8px]" />
+          <PokemonTypeBadge type={battleType || move.type} className="!px-1.5 !text-[8px]" />
           <span>{CATEGORY_LABELS[move.damageClass]}</span>
           {isStatus ? (
             <span className="font-serif italic">· não causa dano</span>
           ) : powered ? (
             <span className="font-mono tabular-nums">
-              · {powered.name}, poder {move.power} → <strong className="text-ink">{powered.power}</strong>
+              · {powered.name}, poder {move.power ?? 'variável'} → <strong className="text-ink">{powered.power}</strong>
             </span>
           ) : (
             <span className="font-mono tabular-nums">· poder {move.power ?? 'variável'}</span>

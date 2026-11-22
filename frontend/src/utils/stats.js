@@ -1,3 +1,5 @@
+import { withMaxPower } from './movePower';
+
 export const STAT_KEYS = ['hp', 'atk', 'def', 'spa', 'spd', 'spe'];
 
 export const STAT_LABELS = { hp: 'HP', atk: 'Atk', def: 'Def', spa: 'SpA', spd: 'SpD', spe: 'Spe' };
@@ -82,7 +84,7 @@ export function normalizeBattleSet(stored) {
     teraType: TERA_TYPE_SET.has(stored.teraType) ? stored.teraType : null,
     evs: Object.fromEntries(STAT_KEYS.map((key) => [key, clamp(stored.evs?.[key], 0, MAX_EV)])),
     ivs: Object.fromEntries(STAT_KEYS.map((key) => [key, clamp(stored.ivs?.[key] ?? MAX_IV, 0, MAX_IV)])),
-    moves: base.moves.map((_, index) => (stored.moves?.[index]?.slug ? stored.moves[index] : null)),
+    moves: base.moves.map((_, index) => (stored.moves?.[index]?.slug ? withMaxPower(stored.moves[index]) : null)),
   };
 }
 

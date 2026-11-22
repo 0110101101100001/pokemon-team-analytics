@@ -90,7 +90,7 @@ function Field({ label, children, className = '' }) {
  * Um lado da calculadora: o Pokémon (pela busca ou do time), Mega/Primal, Tera, nível, habilidade, item, status,
  * os estágios de cada atributo, os quatro golpes e, recolhidos, natureza, EVs e IVs.
  */
-function CombatantPanel({ caption, title, pickerPlaceholder, side, battle, forms, gmaxMove, hpPreview, ability, speed, faster, airborne, pool, teams, loggedIn, teamsOpen, extraSource, onChange, onMoveChange, onPick, onLogin, className = '' }) {
+function CombatantPanel({ caption, title, pickerPlaceholder, side, battle, forms, gmaxMove, moveTypes, ownTypes, hpPreview, ability, speed, faster, airborne, pool, teams, loggedIn, teamsOpen, extraSource, onChange, onMoveChange, onPick, onLogin, className = '' }) {
   const { pokemon, set, boosts } = side;
 
   const patchSet = useCallback((changes) => onChange({ set: { ...set, ...changes } }), [set, onChange]);
@@ -98,6 +98,9 @@ function CombatantPanel({ caption, title, pickerPlaceholder, side, battle, forms
 
   const boosted = BOOST_KEYS.some((key) => boosts[key] !== 0);
   const stagesId = useId();
+  const typeBySlot = moveTypes.split(',');
+  // Os tipos em batalha sem o Tera (Plate, Memory, Forecast); antes de os dados chegarem, os da Pokédex.
+  const shownTypes = ownTypes?.split(',') ?? pokemon?.types;
 
   return (
     <section className={`paper-card p-4 sm:p-5 ${className}`} aria-label={title}>
@@ -130,7 +133,7 @@ function CombatantPanel({ caption, title, pickerPlaceholder, side, battle, forms
                 {battle.status === 'loading' && <Loader2 className="h-3.5 w-3.5 shrink-0 animate-spin text-umber" aria-label="carregando atributos" />}
               </p>
               <div className="mt-1 flex flex-wrap items-center gap-1">
-                {(battle.types.length ? battle.types : pokemon.types).map((type) => (
+                {shownTypes.map((type) => (
                   <PokemonTypeBadge key={type} type={type} className={side.tera && side.tera !== 'stellar' ? 'line-through opacity-50' : ''} />
                 ))}
                 {side.tera && (
@@ -247,7 +250,7 @@ function CombatantPanel({ caption, title, pickerPlaceholder, side, battle, forms
             <ul className="space-y-1.5">
               {side.moves.map((slot, index) => (
                 // Os quatro espaços são fixos: a posição é a identidade de cada um.
-                <MoveSlot key={index} index={index} slot={slot} learnset={battle.learnset} gmaxMove={gmaxMove} onChange={onMoveChange} />
+                <MoveSlot key={index} index={index} slot={slot} learnset={battle.learnset} gmaxMove={gmaxMove} battleType={typeBySlot[index]} onChange={onMoveChange} />
               ))}
             </ul>
           </div>

@@ -1,6 +1,8 @@
 // Atributos base, peso e golpes de src/data/battle-data.json (gerado por scripts/build-battle-data.mjs).
 // As funções recebem o objeto já carregado, para rodarem também no Worker e nos testes.
 
+import { movePowerOf } from './movePower';
+
 const STAT_KEYS = ['hp', 'atk', 'def', 'spa', 'spd', 'spe'];
 
 let request = null;
@@ -32,7 +34,7 @@ export function moveSummaryOf(data, slug) {
     slug,
     type,
     damageClass,
-    power,
+    power: movePowerOf({ name: slug, power }),
     priority,
     effectChance,
     ...(maxHits > 1 && { minHits, maxHits }),

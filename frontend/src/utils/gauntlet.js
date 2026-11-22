@@ -1,6 +1,7 @@
 import { createField, createSideConditions, defaultHits } from '../components/calc/calcState';
 import { baseStatsOf, weightOf } from './battleData';
 import { calcSpeed, calculateDamage, isCalculable } from './damage';
+import { formTypes } from '../data/formItems';
 import { formatSlug } from './filters';
 import { probableSet } from './sketchSets';
 import { calcStats } from './stats';
@@ -51,10 +52,12 @@ const BOOST_LABELS = { atk: 'Atk', def: 'Def', spa: 'SpA', spd: 'SpD', spe: 'Spe
 
 /** Lado no formato de calculateDamage a partir de uma entrada da Pokédex, do set e dos atributos base. */
 export function combatantOf(entry, set, baseStats, { boosts = NO_BOOSTS, tera = '', weight = null } = {}) {
+  const originalTypes = formTypes(entry.name, set.item) ?? entry.types;
   return {
     level: set.level,
-    types: tera && tera !== 'stellar' ? [tera] : entry.types,
-    originalTypes: entry.types,
+    species: entry.name,
+    types: tera && tera !== 'stellar' ? [tera] : originalTypes,
+    originalTypes,
     tera,
     stats: calcStats(baseStats, set),
     boosts: { ...NO_BOOSTS, ...boosts },

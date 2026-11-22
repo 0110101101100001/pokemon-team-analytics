@@ -1,6 +1,7 @@
-import { activeItem, calcSpeed, calculateDamage, residualEffects, sturdyHolds } from './damage';
+import { activeItem, calcSpeed, calculateDamage, isDynamaxed, poweredType, residualEffects, sturdyHolds } from './damage';
 import { formatSlug } from './filters';
-import { PROTECT_MOVES, SLEEP_TURNS, applyMoveEffects, isFieldMove } from './moveEffects';
+import { PROTECT_MOVES, SLEEP_TURNS, activeField, applyMoveEffects, isFieldMove, removesSecondary } from './moveEffects';
+import { poweredMove } from './poweredMoves';
 import { currentHp } from './variablePower';
 
 /*
@@ -30,9 +31,13 @@ export function averageDamage(result) {
 
 /** Quem age primeiro (0 ou 1): prioridade maior, depois mais rápido (mais lento sob Trick Room); empate, o seu lado. */
 export function turnOrder(combatants, moves, sideConditions, field) {
-  const priority = moves.map((move) => move?.priority ?? 0);
+  // Z e Max agem com prioridade 0; a do golpe original só conta para o que bloqueia prioridade.
+  const priority = moves.map((move) => (move?.powered ? 0 : move?.priority ?? 0));
   if (priority[0] !== priority[1]) return priority[0] > priority[1] ? [0, 1] : [1, 0];
-  const speeds = combatants.map((combatant, index) => calcSpeed(combatant, sideConditions[index], field));
+  const speeds = combatants.map((combatant, index) => {
+    const noScarf = isDynamaxed(moves[index]) && combatant.item === 'choice-scarf';
+    return calcSpeed(noScarf ? { ...combatant, item: '' } : combatant, sideConditions[index], field);
+  });
   if (speeds[0] === speeds[1]) return [0, 1];
   const firstIsFaster = speeds[0] > speeds[1];
   return firstIsFaster !== Boolean(field.trickRoom) ? [0, 1] : [1, 0];
@@ -53,6 +58,14 @@ function skipsTurn(battle, index) {
   battle.status[index] = '';
   battle.sleepTurns[index] = null;
   return null;
+}
+
+/** Z e Max são decididos na hora do ataque: o clima, o terreno ou a Gravity podem ter mudado no mesmo turno. */
+function convertNow(move, attacker, field) {
+  if (!move?.powerUp) return move;
+  const { move: original, mode, gmaxMove } = move.powerUp;
+  const { category, hits, crit } = move;
+  return { ...poweredMove(original, mode, gmaxMove, poweredType(original, mode, attacker, field)), category, hits, crit };
 }
 
 /**
@@ -96,7 +109,7 @@ export function simulateTurn({ combatants, moves, sideConditions, field, names }
 
   for (const from of turnOrder(combatants, chosen, battle.conditions, battle.field)) {
     const to = 1 - from;
-    const move = chosen[from];
+    const move = convertNow(chosen[from], state(from), activeField(battle));
     if (!move || battle.hp[from] <= 0) continue;
     acted[from] = true;
     const moveName = move.name ?? formatSlug(move.slug);
@@ -144,7 +157,7 @@ export function simulateTurn({ combatants, moves, sideConditions, field, names }
     const attacker = state(from);
     const defender = state(to);
     const result = calculateDamage({
-      attacker, defender, move, field: battle.field, attackerSide: battle.conditions[from], defenderSide: battle.conditions[to],
+      attacker, defender, move, field: activeField(battle), attackerSide: battle.conditions[from], defenderSide: battle.conditions[to],
       targetMoved: acted[to],
     });
     if (move.slug === 'bide') battle.bide[from] = null;
@@ -162,7 +175,8 @@ export function simulateTurn({ combatants, moves, sideConditions, field, names }
 
     const notes = applyMoveEffects(battle, { from, to, move, damage, names });
     // Recuo certo (Fake Out): só tira a vez se o alvo ainda não agiu neste turno.
-    if (damage > 0 && move.effects?.flinchChance >= 100 && !acted[to] && battle.hp[to] > 0) {
+    if (damage > 0 && move.effects?.flinchChance >= 100 && !removesSecondary(move, attacker)
+      && !isDynamaxed(chosen[to]) && !acted[to] && battle.hp[to] > 0) {
       const target = combatants[to];
       if (FLINCH_IMMUNE_ABILITIES.has(target.ability)) notes.push(`${names[to]} não recua (${formatSlug(target.ability)})`);
       else if (activeItem(target, battle.field) === 'covert-cloak') notes.push(`${names[to]} não recua (Covert Cloak)`);
@@ -176,7 +190,8 @@ export function simulateTurn({ combatants, moves, sideConditions, field, names }
     if (result.fixed?.selfFaint) {
       battle.hp[from] = 0;
       say(from, `${names[from]} desmaia (Final Gambit).`, 'faint');
-    } else if (damage > 0 && activeItem(attacker, battle.field) === 'life-orb' && attacker.ability !== 'magic-guard') {
+    } else if (damage > 0 && activeItem(attacker, battle.field) === 'life-orb' && attacker.ability !== 'magic-guard'
+      && !removesSecondary(move, attacker)) {
       const recoil = Math.min(battle.hp[from], Math.floor(attacker.stats.hp / 10));
       battle.hp[from] -= recoil;
       say(from, `${names[from]} perde ${recoil} PS pela Life Orb.`, 'damage');
@@ -190,7 +205,7 @@ export function simulateTurn({ combatants, moves, sideConditions, field, names }
     if (battle.hp[index] <= 0) return;
     const other = 1 - index;
     const combatant = state(index);
-    const effects = residualEffects(combatant, battle.conditions[index], battle.field, state(other));
+    const effects = residualEffects(combatant, battle.conditions[index], activeField(battle), state(other));
     if (battle.status[index] === 'toxic') battle.toxicTurns[index] += 1;
     // As notas também trazem os hazards de entrada, que não acontecem no fim do turno.
     const notes = effects.notes.filter((note) => note !== 'Stealth Rock' && !note.endsWith('Spikes'));

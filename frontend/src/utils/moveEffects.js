@@ -1,9 +1,13 @@
 import { effectiveness } from './typeChart';
+import {
+  MOLD_BREAKERS, PRIMAL_WEATHERS, WEATHER_ABILITIES, WEATHER_SUPPRESSORS, hasSecondaryEffect,
+} from '../data/battleModifiers';
 
 /*
   Efeitos de um golpe no turno simulado, a partir do que a PokéAPI publica (services/api.js → moveEffectsOf):
   estágios, status, cura, dreno e recuo, Leech Seed, e os golpes que mudam o campo (clima, terreno, telas, salas,
   hazards). Só entram os efeitos certos (chance 0 ou 100): a simulação usa o resultado médio, não sorteia.
+  Golpes Z não têm efeito; os Max e G-Max têm os próprios (MAX_EFFECTS).
   `battle` é o estado mutável do turno: { combatants, hp, boosts, status, toxicTurns, sleepTurns, conditions, field }.
 */
 
@@ -23,6 +27,38 @@ const TERRAIN_MOVES = { 'electric-terrain': 'electric', 'grassy-terrain': 'grass
 const USER_SIDE_MOVES = { reflect: 'reflect', 'light-screen': 'lightScreen', 'aurora-veil': 'auroraVeil', tailwind: 'tailwind' };
 // Trick Room, Gravity e as salas: usar de novo desfaz.
 const ROOM_MOVES = { 'trick-room': 'trickRoom', gravity: 'gravity', 'magic-room': 'magicRoom', 'wonder-room': 'wonderRoom' };
+// user e foe: estágios; condition entra no lado de quem usa, hazard no do alvo.
+// Efeitos sorteados ou que a calculadora não acompanha (confusão, dano por 4 turnos) ficam de fora.
+const MAX_EFFECTS = {
+  'max-strike': { foe: { spe: -1 } },
+  'max-knuckle': { user: { atk: 1 } },
+  'max-airstream': { user: { spe: 1 } },
+  'max-ooze': { user: { spa: 1 } },
+  'max-quake': { user: { spd: 1 } },
+  'max-steelspike': { user: { def: 1 } },
+  'max-flutterby': { foe: { spa: -1 } },
+  'max-phantasm': { foe: { def: -1 } },
+  'max-wyrmwind': { foe: { atk: -1 } },
+  'max-darkness': { foe: { spd: -1 } },
+  'max-flare': { weather: 'sun' },
+  'max-geyser': { weather: 'rain' },
+  'max-rockfall': { weather: 'sand' },
+  'max-hailstorm': { weather: 'snow' },
+  'max-overgrowth': { terrain: 'grassy' },
+  'max-lightning': { terrain: 'electric' },
+  'max-mindstorm': { terrain: 'psychic' },
+  'max-starfall': { terrain: 'misty' },
+  'g-max-foam-burst': { foe: { spe: -2 } },
+  'g-max-volt-crash': { status: 'paralysis' },
+  'g-max-malodor': { status: 'poison' },
+  'g-max-resonance': { condition: 'auroraVeil' },
+  'g-max-stonesurge': { hazard: 'stealthRock' },
+  'g-max-gravitas': { gravity: true },
+  'g-max-finale': { heal: 1 / 6 },
+  'g-max-sweetness': { cure: true },
+  'g-max-wind-rage': { clear: true },
+};
+const CONDITION_LABELS = { auroraVeil: 'Aurora Veil', stealthRock: 'Stealth Rock' };
 const WEATHER_HEAL = new Set(['moonlight', 'synthesis', 'morning-sun']);
 // Curam o alvo, não o usuário.
 const HEALS_TARGET = new Set(['heal-pulse', 'floral-healing']);
@@ -98,6 +134,81 @@ function changeStages(battle, index, changes, fromOpponent) {
   return applied;
 }
 
+/** O campo como vale agora: com Cloud Nine ou Air Lock em campo, sem clima. */
+export function activeField(battle) {
+  const suppressed = battle.combatants.some(({ ability }, index) => battle.hp[index] > 0 && WEATHER_SUPPRESSORS.has(ability));
+  return suppressed ? { ...battle.field, weather: '' } : battle.field;
+}
+
+/** Troca o clima e devolve a frase do registro; climas primais não cedem. */
+function setWeather(battle, weather) {
+  const primal = PRIMAL_WEATHERS.has(battle.field.weather)
+    || battle.combatants.some(({ ability }, index) => battle.hp[index] > 0 && PRIMAL_WEATHERS.has(WEATHER_ABILITIES[ability]));
+  if (primal) return 'o clima primal não muda';
+  battle.field = { ...battle.field, weather };
+  return `o clima vira ${WEATHER_LABELS[weather]}`;
+}
+
+/** Se o Sheer Force do usuário tira o efeito secundário do golpe (e, com ele, o custo da Life Orb). */
+export const removesSecondary = (move, user) => user.ability === 'sheer-force' && hasSecondaryEffect(move);
+
+/** Se o efeito secundário não chega ao alvo: Shield Dust ou Covert Cloak. */
+function shielded(battle, { from, to, move }) {
+  if (!hasSecondaryEffect(move)) return false;
+  const target = battle.combatants[to];
+  if (target.ability === 'shield-dust' && !MOLD_BREAKERS.has(battle.combatants[from].ability)) return true;
+  return target.item === 'covert-cloak' && !battle.field.magicRoom && target.ability !== 'klutz';
+}
+
+/** Efeito de um golpe Max ou G-Max que acertou. */
+function applyMaxEffect(battle, { from, to, move, names }) {
+  const effect = MAX_EFFECTS[move.slug];
+  if (!effect) return [];
+  const notes = [];
+  const targetUp = battle.hp[to] > 0;
+  for (const [key, index] of [['user', from], ['foe', to]]) {
+    if (!effect[key] || battle.hp[index] <= 0) continue;
+    const changes = Object.entries(effect[key]).map(([stat, change]) => ({ stat, change }));
+    const applied = changeStages(battle, index, changes, key === 'foe');
+    if (applied.length) notes.push(`${key === 'foe' ? `${names[to]}: ` : ''}${applied.join(', ')}`);
+  }
+  if (effect.weather) notes.push(setWeather(battle, effect.weather));
+  if (effect.terrain) {
+    battle.field = { ...battle.field, terrain: effect.terrain };
+    notes.push(`${TERRAIN_LABELS[effect.terrain]} em campo`);
+  }
+  if (effect.gravity && !battle.field.gravity) {
+    battle.field = { ...battle.field, gravity: true };
+    notes.push('Gravity ativado');
+  }
+  for (const [condition, index] of [[effect.condition, from], [effect.hazard, to]]) {
+    if (!condition) continue;
+    battle.conditions[index] = { ...battle.conditions[index], [condition]: true };
+    notes.push(`${CONDITION_LABELS[condition]} no lado de ${names[index]}`);
+  }
+  if (effect.status && targetUp && !statusBlocked(battle, to, effect.status, move)) {
+    battle.status[to] = effect.status;
+    battle.toxicTurns[to] = 0;
+    notes.push(`${names[to]} ficou ${STATUS_LABELS[effect.status]}`);
+  }
+  if (effect.heal) {
+    const healed = heal(battle, from, Math.floor(battle.combatants[from].stats.hp * effect.heal));
+    if (healed) notes.push(`recupera ${healed} PS`);
+  }
+  if (effect.cure && battle.status[from]) {
+    battle.status[from] = '';
+    battle.toxicTurns[from] = 0;
+    notes.push('cura o próprio status');
+  }
+  if (effect.clear) {
+    battle.conditions[from] = { ...battle.conditions[from], stealthRock: false, spikes: 0 };
+    battle.conditions[to] = { ...battle.conditions[to], stealthRock: false, spikes: 0, reflect: false, lightScreen: false, auroraVeil: false };
+    battle.field = { ...battle.field, terrain: '' };
+    notes.push('limpa telas, hazards e terreno');
+  }
+  return notes;
+}
+
 const isCertain = (chance) => chance === 0 || chance >= 100;
 
 /** Se os estágios do golpe vão para o usuário (Draco Meteor, Close Combat, Swords Dance) ou para o alvo. */
@@ -121,10 +232,15 @@ function payHpCost(battle, index, slug, isStatusMove) {
  * Devolve as frases do registro (sem o nome de quem usou).
  */
 export function applyMoveEffects(battle, { from, to, move, damage, names }) {
+  if (move.powered) return damage > 0 ? applyMaxEffect(battle, { from, to, move, names }) : [];
   const effects = move.effects;
   const notes = [];
   const user = battle.combatants[from];
   const isStatusMove = move.category === 'status';
+  const { weather } = activeField(battle);
+  const noSecondary = !isStatusMove && removesSecondary(move, user);
+  // Efeitos no alvo de um golpe de dano: nada se ele caiu ou se está protegido do efeito secundário.
+  const targetSpared = !isStatusMove && (battle.hp[to] <= 0 || shielded(battle, { from, to, move }));
   if (!effects) return isStatusMove ? ['efeito desconhecido (golpe sem dados da PokéAPI)'] : notes;
 
   // Cura do usuário (Recover, Roost; Moonlight e afins dependem do clima; Rest dorme).
@@ -143,8 +259,8 @@ export function applyMoveEffects(battle, { from, to, move, damage, names }) {
   if (effects.healing > 0 && isStatusMove) {
     const healedIndex = HEALS_TARGET.has(move.slug) ? to : from;
     let fraction = effects.healing / 100;
-    if (WEATHER_HEAL.has(move.slug) && battle.field.weather) fraction = ['sun', 'harsh-sun'].includes(battle.field.weather) ? 2 / 3 : 1 / 4;
-    if (move.slug === 'shore-up' && battle.field.weather === 'sand') fraction = 2 / 3;
+    if (WEATHER_HEAL.has(move.slug) && weather) fraction = ['sun', 'harsh-sun'].includes(weather) ? 2 / 3 : 1 / 4;
+    if (move.slug === 'shore-up' && weather === 'sand') fraction = 2 / 3;
     if (move.slug === 'floral-healing' && battle.field.terrain === 'grassy') fraction = 2 / 3;
     const healed = heal(battle, healedIndex, Math.floor(battle.combatants[healedIndex].stats.hp * fraction));
     const who = healedIndex === to ? `${names[to]}: ` : '';
@@ -170,8 +286,9 @@ export function applyMoveEffects(battle, { from, to, move, damage, names }) {
   // Tera Blast só baixa Atk e SpA do usuário com Tera Stellar.
   const statChanges = MISSING_STAT_CHANGES[move.slug] ?? effects.statChanges;
   const statsApply = move.slug !== 'tera-blast' || user.tera === 'stellar';
-  if (statChanges.length && statsApply && (isStatusMove || damage > 0) && isCertain(effects.statChance)) {
-    const toUser = statsGoToUser(move, effects);
+  const toUser = statsGoToUser(move, effects);
+  if (statChanges.length && statsApply && !noSecondary && (toUser || !targetSpared)
+    && (isStatusMove || damage > 0) && isCertain(effects.statChance)) {
     const index = toUser ? from : to;
     const applied = changeStages(battle, index, statChanges, !toUser);
     if (applied.length) notes.push(`${toUser ? '' : `${names[to]}: `}${applied.join(', ')}`);
@@ -179,7 +296,7 @@ export function applyMoveEffects(battle, { from, to, move, damage, names }) {
   }
 
   // Status e Leech Seed.
-  if (effects.ailment && !CONDITIONAL_AILMENTS.has(move.slug) && (isStatusMove || damage > 0) && isCertain(effects.ailmentChance)) {
+  if (effects.ailment && !noSecondary && !targetSpared && !CONDITIONAL_AILMENTS.has(move.slug) && (isStatusMove || damage > 0) && isCertain(effects.ailmentChance)) {
     const ailment = move.slug === 'toxic' ? 'toxic' : effects.ailment;
     if (ailment === 'leech-seed') {
       if (battle.combatants[to].types.includes('grass')) notes.push('falhou: o tipo Grass é imune a Leech Seed');
@@ -203,14 +320,13 @@ export function applyMoveEffects(battle, { from, to, move, damage, names }) {
 
   // Campo.
   if (WEATHER_MOVES[move.slug]) {
-    battle.field = { ...battle.field, weather: WEATHER_MOVES[move.slug] };
-    notes.push(`o clima vira ${WEATHER_LABELS[WEATHER_MOVES[move.slug]]}`);
+    notes.push(setWeather(battle, WEATHER_MOVES[move.slug]));
   } else if (TERRAIN_MOVES[move.slug]) {
     battle.field = { ...battle.field, terrain: TERRAIN_MOVES[move.slug] };
     notes.push(`${TERRAIN_LABELS[TERRAIN_MOVES[move.slug]]} em campo`);
   } else if (USER_SIDE_MOVES[move.slug]) {
     const key = USER_SIDE_MOVES[move.slug];
-    if (key === 'auroraVeil' && battle.field.weather !== 'snow') notes.push('falhou: Aurora Veil precisa de neve');
+    if (key === 'auroraVeil' && weather !== 'snow') notes.push('falhou: Aurora Veil precisa de neve');
     else {
       battle.conditions[from] = { ...battle.conditions[from], [key]: true };
       notes.push(`${move.slug.replace(/-/g, ' ')} no seu lado`);

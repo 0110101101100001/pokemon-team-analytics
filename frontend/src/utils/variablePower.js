@@ -1,4 +1,5 @@
 import { NATURAL_GIFT } from '../data/battleModifiers';
+import { DRIVE_TYPES, MEMORY_TYPES, PLATE_TYPES } from '../data/formItems';
 
 /*
   Golpes sem poder fixo na PokéAPI, porque ele depende da batalha.
@@ -41,7 +42,12 @@ const FLING_POWER = {
   eviolite: 40, 'sharp-beak': 50, 'poison-barb': 70, 'dragon-fang': 70,
   'assault-vest': 80, 'heavy-duty-boots': 80, 'safety-goggles': 80, 'hard-stone': 100,
 };
-const flingPower = (item) => FLING_POWER[item] ?? (NATURAL_GIFT[item] ? 10 : null);
+function flingPower(item) {
+  if (PLATE_TYPES[item]) return 90;
+  if (DRIVE_TYPES[item]) return 70;
+  if (MEMORY_TYPES[item]) return 50;
+  return FLING_POWER[item] ?? (NATURAL_GIFT[item] ? 10 : null);
+}
 
 /** PS atuais do lado: `currentHp` quando a batalha já tirou algum; senão, cheio. */
 export const currentHp = (side) => Math.min(side.stats.hp, Math.max(0, side.currentHp ?? side.stats.hp));

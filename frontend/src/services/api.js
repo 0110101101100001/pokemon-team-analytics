@@ -2,6 +2,9 @@ import { supabase } from './supabase';
 import { HIDDEN_ITEM_CATEGORIES } from '../data/itemCategories';
 import { readCached, writeCached } from './persistentCache';
 import { evolutionsByItem } from '../utils/itemData';
+import { movePowerOf } from '../utils/movePower';
+
+export { movePowerOf };
 
 const POKEAPI_BASE = 'https://pokeapi.co/api/v2';
 
@@ -207,11 +210,6 @@ export const fetchTypeData = (typeName) =>
 const MULTI_HIT_FALLBACK = { 'population-bomb': [1, 10], 'triple-dive': [3, 3], 'twin-beam': [2, 2], 'tachyon-cutter': [2, 2] };
 // Dreno e recuo dos golpes da Geração 9, que a PokéAPI publica sem `meta`.
 const DRAIN_FALLBACK = { 'bitter-blade': 50, 'matcha-gotcha': 50, 'wave-crash': -33 };
-// Return e Frustration dependem da felicidade; a calculadora considera o poder máximo (felicidade 255 e 0).
-const MAX_HAPPINESS_POWER = { return: 102, frustration: 102 };
-
-/** Poder do golpe, com o de felicidade máxima no Return e no Frustration. */
-export const movePowerOf = (data) => data?.power ?? MAX_HAPPINESS_POWER[data?.name] ?? null;
 
 /**
  * O essencial de um golpe para cobertura e cálculo de dano; null se o golpe não existir.

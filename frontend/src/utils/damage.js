@@ -1,9 +1,10 @@
 import { effectiveness } from './typeChart';
 import {
   BALL_MOVES, BITE_MOVES, GRASSY_HALVED, MOLD_BREAKERS, PRIORITY_BLOCKERS, PULSE_MOVES, RECOIL_MOVES, RESIST_BERRIES,
-  SLICING_MOVES, SOUND_MOVES, TYPE_BOOST_ITEMS, UNBREAKABLE_ABILITIES, WIND_MOVES, isPunch,
+  SLICING_MOVES, SOUND_MOVES, TYPE_BOOST_ITEMS, UNBREAKABLE_ABILITIES, WIND_MOVES, boostedBySheerForce, isPunch,
 } from '../data/battleModifiers';
 import { NATURAL_GIFT } from '../data/battleModifiers';
+import { DRIVE_TYPES, MEMORY_TYPES, PLATE_TYPES, heldForGood } from '../data/formItems';
 import { currentHp, fixedDamage, hiddenPowerType, variablePower } from './variablePower';
 
 /*
@@ -12,10 +13,12 @@ import { currentHp, fixedDamage, hiddenPowerType, variablePower } from './variab
 
   Lado (attacker/defender): { level, types, originalTypes, tera, stats, boosts, item, ability, status }, e para os golpes de
   poder variável e dano fixo (utils/variablePower): { weight, currentHp, ivs, baseStats, lastHit, toxicTurns };
+  `species` é o nome na PokéAPI, para golpes e itens que dependem da forma;
   `turnsOut` conta os turnos do lado em campo (Fake Out e First Impression só valem no primeiro).
   `types` são os tipos em batalha (o Tera já aplicado); `originalTypes`, os da espécie ou forma, que valem para o STAB.
   `ability` já vem resolvida pela seção (Neutralizing Gas zera a do oponente).
-  Golpe: { slug, type, category, power, priority, effectChance, hits, maxHits, crit }
+  Golpe: { slug, type, category, power, priority, effectChance, hits, maxHits, crit }; Z e Max já chegam com o tipo
+  decidido por poweredType.
   Campo: { weather, terrain, magicRoom, wonderRoom, gravity, trickRoom }; o clima já chega anulado por Cloud Nine e Air Lock.
   Trick Room não muda o dano: só inverte quem age primeiro, o que a calculadora mostra ao lado da velocidade.
   Condições do lado: { reflect, lightScreen, auroraVeil, protect, ... }
@@ -35,6 +38,18 @@ export const applyBoost = (stat, stage) => Math.floor(stat * boostMultiplier(sta
 export const BOOST_STAGES = [6, 5, 4, 3, 2, 1, 0, -1, -2, -3, -4, -5, -6];
 
 const ATE_ABILITIES = { aerilate: 'flying', pixilate: 'fairy', refrigerate: 'ice', galvanize: 'electric' };
+// Mantêm o próprio tipo com -ate e Normalize; virando Max, a exceção não vale.
+const ATE_EXEMPT = new Set(['judgment', 'multi-attack', 'natural-gift', 'revelation-dance', 'techno-blast', 'terrain-pulse', 'weather-ball']);
+const NORMALIZE_EXEMPT = new Set([...ATE_EXEMPT, 'hidden-power', 'struggle']);
+const ITEM_TYPED_MOVES = { judgment: PLATE_TYPES, 'multi-attack': MEMORY_TYPES, 'techno-blast': DRIVE_TYPES };
+const FORM_TYPED_MOVES = {
+  'ivy-cudgel': { 'ogerpon-wellspring-mask': 'water', 'ogerpon-hearthflame-mask': 'fire', 'ogerpon-cornerstone-mask': 'rock' },
+  'raging-bull': { 'tauros-paldea-combat-breed': 'fighting', 'tauros-paldea-blaze-breed': 'fire', 'tauros-paldea-aqua-breed': 'water' },
+  'aura-wheel': { 'morpeko-hangry': 'dark' },
+};
+// Estes G-Max atravessam Protect com o dano inteiro.
+const FULL_THROUGH_PROTECT = new Set(['g-max-one-blow', 'g-max-rapid-flow']);
+const IGNORES_ABILITY = new Set(['g-max-drum-solo', 'g-max-fireball', 'g-max-hydrosnipe']);
 const TYPE_ABILITY_BOOSTS = {
   transistor: ['electric', 5325],
   'dragons-maw': ['dragon', 6144],
@@ -61,6 +76,7 @@ const MOVE_GROUP_IMMUNITIES = {
 };
 const TERRAIN_BOOSTS = { electric: 'electric', grassy: 'grass', psychic: 'psychic' };
 const WEATHER_BALL_TYPES = { sun: 'fire', 'harsh-sun': 'fire', rain: 'water', 'heavy-rain': 'water', sand: 'rock', snow: 'ice' };
+const FORECAST_TYPES = { sun: 'fire', 'harsh-sun': 'fire', rain: 'water', 'heavy-rain': 'water', snow: 'ice' };
 const SOLAR_MOVES = new Set(['solar-beam', 'solar-blade']);
 // Golpes especiais que acertam a Def do alvo.
 const HITS_DEFENSE = new Set(['psyshock', 'psystrike', 'secret-sword']);
@@ -78,8 +94,11 @@ const SUN = new Set(['sun', 'harsh-sun']);
 const RAIN = new Set(['rain', 'heavy-rain']);
 const STAT_ORDER = ['atk', 'def', 'spa', 'spd', 'spe'];
 
-/** Item em efeito: Magic Room desliga todos. */
-export const activeItem = (side, field) => (field.magicRoom ? '' : side.item);
+/** Item em efeito: Magic Room desliga todos; Klutz, o do próprio Pokémon. */
+export const activeItem = (side, field) => (field.magicRoom || side.ability === 'klutz' ? '' : side.item);
+
+/** Se o usuário está em Dynamax ao usar o golpe: Choice e Gorilla Tactics param de valer e ele não recua. */
+export const isDynamaxed = (move) => move?.powered === 'max' || move?.powered === 'gmax';
 
 /**
  * O que deixa o Pokémon no ar ('flying', 'levitate' ou 'air-balloon'), ou null se está no chão.
@@ -90,6 +109,13 @@ export function airborneBy(side, field) {
   if (side.types.includes('flying')) return 'flying';
   if (side.ability === 'levitate') return 'levitate';
   return activeItem(side, field) === 'air-balloon' ? 'air-balloon' : null;
+}
+
+/** O lado com o tipo que o clima lhe dá: Castform com Forecast. */
+export function withWeatherType(side, field) {
+  if (side.species !== 'castform' || side.ability !== 'forecast') return side;
+  const originalTypes = [FORECAST_TYPES[field.weather] ?? 'normal'];
+  return { ...side, originalTypes, types: side.tera && side.tera !== 'stellar' ? side.types : originalTypes };
 }
 
 export const isGrounded = (side, field) => !airborneBy(side, field);
@@ -148,19 +174,56 @@ function stabOf(attacker, moveType) {
   return { stab: true, stabMod: !tera && adaptability ? 8192 : 6144 };
 }
 
+/** Tipo que o próprio golpe assume na batalha, antes das habilidades. */
+function ownType(move, attacker, field) {
+  if (move.slug === 'tera-blast' && attacker.tera && attacker.tera !== 'stellar') return attacker.tera;
+  if (move.slug === 'weather-ball') return WEATHER_BALL_TYPES[field.weather] ?? move.type;
+  if (move.slug === 'hidden-power' && attacker.ivs) return hiddenPowerType(attacker.ivs);
+  const item = activeItem(attacker, field);
+  if (ITEM_TYPED_MOVES[move.slug]) return ITEM_TYPED_MOVES[move.slug][item] ?? move.type;
+  if (FORM_TYPED_MOVES[move.slug]) return FORM_TYPED_MOVES[move.slug][attacker.species] ?? move.type;
+  if (move.slug === 'revelation-dance') return attacker.types[0] ?? move.type;
+  if (move.slug === 'natural-gift' && NATURAL_GIFT[item]) return NATURAL_GIFT[item].type;
+  if (move.slug === 'terrain-pulse' && isGrounded(attacker, field)) return TERRAIN_PULSE_TYPES[field.terrain] ?? move.type;
+  return move.type;
+}
+
+/** Tipo dado por -ate ou Normalize a um golpe que já está com `type`; null se a habilidade não age nele. */
+function abilityType(move, type, attacker, toMax = false) {
+  if (move.slug === 'tera-blast' && attacker.tera) return null;
+  const normalize = attacker.ability === 'normalize';
+  if (!toMax && (normalize ? NORMALIZE_EXEMPT : ATE_EXEMPT).has(move.slug)) return null;
+  if (normalize) return 'normal';
+  return type === 'normal' ? ATE_ABILITIES[attacker.ability] ?? null : null;
+}
+
+/**
+ * Tipo com que o golpe vira Z ou Max, que decide qual golpe ele vira. No Z só a Weather Ball muda de tipo e as
+ * habilidades não agem; no Max (e G-Max) valem o tipo do próprio golpe e as habilidades.
+ */
+export function poweredType(move, mode, attacker, field) {
+  if (mode === 'z') return move.slug === 'weather-ball' ? ownType(move, attacker, field) : move.type;
+  const type = ownType(move, attacker, field);
+  return abilityType(move, type, attacker, true) ?? type;
+}
+
 /** Tipo final do golpe e se ganhou o bônus de troca de tipo (-ate e Normalize, ×1,2). */
-function resolveMoveType(move, attacker, field, teraBlast) {
-  if (teraBlast) return { moveType: attacker.tera, typeChanged: false };
-  let moveType = move.slug === 'weather-ball' ? WEATHER_BALL_TYPES[field.weather] ?? move.type : move.type;
-  if (move.slug === 'hidden-power' && attacker.ivs) moveType = hiddenPowerType(attacker.ivs);
-  if (move.slug === 'natural-gift' && NATURAL_GIFT[attacker.item]) moveType = NATURAL_GIFT[attacker.item].type;
-  if (move.slug === 'terrain-pulse' && isGrounded(attacker, field)) moveType = TERRAIN_PULSE_TYPES[field.terrain] ?? moveType;
-  if (attacker.ability === 'normalize') return { moveType: 'normal', typeChanged: true };
-  const ateType = ATE_ABILITIES[attacker.ability];
-  if (ateType && moveType === 'normal') return { moveType: ateType, typeChanged: true };
+function resolveMoveType(move, attacker, field) {
+  // Z e Max já vêm com o tipo. O Normalize age de novo sobre o Max, e só por isso ele ganha o bônus; as -ate, não.
+  if (move.powered) {
+    return { moveType: move.type, typeChanged: move.powered !== 'z' && attacker.ability === 'normalize' };
+  }
+  const moveType = ownType(move, attacker, field);
+  const changedType = abilityType(move, moveType, attacker);
+  if (changedType) return { moveType: changedType, typeChanged: true };
   if (attacker.ability === 'liquid-voice' && SOUND_MOVES.has(move.slug)) return { moveType: 'water', typeChanged: false };
   return { moveType, typeChanged: false };
 }
+
+/** Tipo para exibir: o que entra na conta; golpes de status mostram o próprio. */
+export const battleTypeOf = (move, attacker, field) => (
+  attacker && isCalculable(move) ? resolveMoveType(move, attacker, field).moveType : move.type
+);
 
 /** Motivo de o golpe não acertar ou não causar dano antes da tabela de tipos; null se acerta. */
 function immunityReason({ attacker, move, moveType, defenderAbility, defenderAirborne, defenderSide, field }) {
@@ -201,11 +264,13 @@ function strikesFirst(attackerSpeed, defenderSpeed, field, targetMoved) {
  * Golpes de vários acertos devolvem `hits` > 1: o total de um uso soma um resultado por acerto.
  * Com Parental Bond, `extraRolls` traz os resultados do segundo acerto (×0,25).
  */
-export function calculateDamage({ attacker, defender, move, field, defenderSide, attackerSide = NO_SIDE_CONDITIONS, targetMoved }) {
+export function calculateDamage({ attacker: user, defender: target, move, field, defenderSide, attackerSide = NO_SIDE_CONDITIONS, targetMoved }) {
+  const attacker = withWeatherType(user, field);
+  const defender = withWeatherType(target, field);
   const hp = defender.stats.hp;
   const attackerItem = activeItem(attacker, field);
   const defenderItem = activeItem(defender, field);
-  const breaksAbilities = MOLD_BREAKERS.has(attacker.ability);
+  const breaksAbilities = MOLD_BREAKERS.has(attacker.ability) || IGNORES_ABILITY.has(move.slug);
   const defenderAbility = breaksAbilities && !UNBREAKABLE_ABILITIES.has(defender.ability) ? '' : defender.ability;
   const fieldAbilities = [attacker.ability, defender.ability];
   const teraActive = Boolean(attacker.tera) && attacker.tera !== 'stellar';
@@ -215,7 +280,7 @@ export function calculateDamage({ attacker, defender, move, field, defenderSide,
     ? applyBoost(attacker.stats.atk, attacker.boosts.atk) > applyBoost(attacker.stats.spa, attacker.boosts.spa)
     : move.category === 'physical';
 
-  const { moveType, typeChanged } = resolveMoveType(move, attacker, field, teraBlast);
+  const { moveType, typeChanged } = resolveMoveType(move, attacker, field);
 
   const attackerGrounded = isGrounded(attacker, field);
   // Com Mold Breaker o Levitate do alvo não conta: ele fica no chão, sofre Ground e os terrenos.
@@ -253,7 +318,7 @@ export function calculateDamage({ attacker, defender, move, field, defenderSide,
   let basePower = variable ? variable.power : move.power;
   if (move.slug === 'weather-ball' && WEATHER_BALL_TYPES[field.weather]) basePower *= 2;
   if (move.slug === 'facade' && FACADE_STATUSES.has(attacker.status)) basePower *= 2;
-  if (move.slug === 'acrobatics' && !attackerItem) basePower *= 2;
+  if (move.slug === 'acrobatics' && !attacker.item) basePower *= 2;
   if (move.slug === 'hex' && (defender.status || defender.ability === 'comatose')) basePower *= 2;
   if (move.slug === 'venoshock' && isPoisoned(defender)) basePower *= 2;
   if (move.slug === 'barb-barrage' && isPoisoned(defender)) basePower *= 2;
@@ -276,7 +341,7 @@ export function calculateDamage({ attacker, defender, move, field, defenderSide,
   if (attacker.ability === 'sharpness' && SLICING_MOVES.has(move.slug)) powerMods.push(6144);
   if (attacker.ability === 'reckless' && RECOIL_MOVES.has(move.slug)) powerMods.push(4915);
   if (attacker.ability === 'punk-rock' && SOUND_MOVES.has(move.slug)) powerMods.push(5325);
-  if (attacker.ability === 'sheer-force' && move.effectChance) powerMods.push(5325);
+  if (attacker.ability === 'sheer-force' && boostedBySheerForce(move)) powerMods.push(5325);
   if (attacker.ability === 'sand-force' && field.weather === 'sand' && ['rock', 'ground', 'steel'].includes(moveType)) powerMods.push(5325);
   if (attacker.ability === 'toxic-boost' && physical && isPoisoned(attacker)) powerMods.push(6144);
   if (attacker.ability === 'flare-boost' && !physical && attacker.status === 'burn') powerMods.push(6144);
@@ -284,7 +349,10 @@ export function calculateDamage({ attacker, defender, move, field, defenderSide,
   // Fairy Aura e Dark Aura valem para os dois lados; Aura Break inverte o efeito.
   const aura = (moveType === 'fairy' && fieldAbilities.includes('fairy-aura')) || (moveType === 'dark' && fieldAbilities.includes('dark-aura'));
   if (aura) powerMods.push(fieldAbilities.includes('aura-break') ? 3072 : 5448);
-  if (move.slug === 'knock-off' && defenderItem) powerMods.push(6144);
+  // Knock Off olha o item segurado, mesmo desligado, e só ganha o bônus se puder tirá-lo.
+  if (move.slug === 'knock-off' && defender.item && ![attacker, defender].some((side) => heldForGood(side.species, defender.item))) {
+    powerMods.push(6144);
+  }
   if (move.slug === 'expanding-force' && field.terrain === 'psychic' && attackerGrounded) powerMods.push(6144);
   if (move.slug === 'misty-explosion' && field.terrain === 'misty' && attackerGrounded) powerMods.push(6144);
   if (move.slug === 'psyblade' && field.terrain === 'electric') powerMods.push(6144);
@@ -306,8 +374,9 @@ export function calculateDamage({ attacker, defender, move, field, defenderSide,
   let attackStage = defenderAbility === 'unaware' ? 0 : attackSource.boosts[attackKey];
   if (crit) attackStage = Math.max(attackStage, 0);
   const attackMods = [];
+  const dynamaxed = isDynamaxed(move);
   if (physical && ['huge-power', 'pure-power'].includes(attacker.ability)) attackMods.push(8192);
-  if (physical && ['hustle', 'gorilla-tactics'].includes(attacker.ability)) attackMods.push(6144);
+  if (physical && (attacker.ability === 'hustle' || (attacker.ability === 'gorilla-tactics' && !dynamaxed))) attackMods.push(6144);
   if (physical && attacker.ability === 'guts' && attacker.status) attackMods.push(6144);
   if (physical && attacker.ability === 'flower-gift' && SUN.has(field.weather)) attackMods.push(6144);
   if (physical && attacker.ability === 'slow-start') attackMods.push(2048);
@@ -321,8 +390,8 @@ export function calculateDamage({ attacker, defender, move, field, defenderSide,
   // As habilidades "of Ruin" agem no campo: Mold Breaker não as desliga.
   if (physical && defender.ability === 'tablets-of-ruin' && attacker.ability !== 'tablets-of-ruin') attackMods.push(3072);
   if (!physical && defender.ability === 'vessel-of-ruin' && attacker.ability !== 'vessel-of-ruin') attackMods.push(3072);
-  if (physical && attackerItem === 'choice-band') attackMods.push(6144);
-  if (!physical && attackerItem === 'choice-specs') attackMods.push(6144);
+  if (physical && !dynamaxed && attackerItem === 'choice-band') attackMods.push(6144);
+  if (!physical && !dynamaxed && attackerItem === 'choice-specs') attackMods.push(6144);
   if (defenderAbility === 'thick-fat' && ['fire', 'ice'].includes(moveType)) attackMods.push(2048);
   if (defenderAbility === 'heatproof' && moveType === 'fire') attackMods.push(2048);
   if (defenderAbility === 'purifying-salt' && moveType === 'ghost') attackMods.push(2048);
@@ -353,7 +422,7 @@ export function calculateDamage({ attacker, defender, move, field, defenderSide,
   const finalMods = [];
   const screened = (physical && defenderSide.reflect) || (!physical && defenderSide.lightScreen) || defenderSide.auroraVeil;
   if (screened && !crit && attacker.ability !== 'infiltrator') finalMods.push(2048);
-  if (move.powered && defenderSide.protect) finalMods.push(1024);
+  if (move.powered && defenderSide.protect && !FULL_THROUGH_PROTECT.has(move.slug)) finalMods.push(1024);
   if (defenderFull && ['multiscale', 'shadow-shield'].includes(defenderAbility)) finalMods.push(2048);
   if (['filter', 'solid-rock', 'prism-armor'].includes(defenderAbility) && typeMultiplier > 1) finalMods.push(3072);
   if (defenderAbility === 'fluffy' && moveType === 'fire') finalMods.push(8192);
@@ -411,6 +480,7 @@ export function calculateDamage({ attacker, defender, move, field, defenderSide,
     crit,
     hp,
     moveType,
+    breaksAbilities,
     fixed: null,
     // Golpe de poder variável: o poder usado e de onde ele veio.
     variablePower: variable,
@@ -456,7 +526,8 @@ function perUseDistribution({ rolls, hits, extraRolls }) {
  * Hazards na entrada e o saldo de HP por turno (perdas menos recuperação), com o nome de cada efeito.
  * `attacker` entra pelas habilidades que ferem o oponente a cada turno (Bad Dreams).
  */
-export function residualEffects(defender, defenderSide, field, attacker) {
+export function residualEffects(side, defenderSide, field, attacker) {
+  const defender = withWeatherType(side, field);
   const hp = defender.stats.hp;
   const item = activeItem(defender, field);
   const { ability } = defender;
@@ -519,9 +590,9 @@ function chanceLabel(chance) {
 
 const listNotes = (notes) => (notes.length > 1 ? `${notes.slice(0, -1).join(', ')} e ${notes.at(-1)}` : notes[0]);
 
-/** Sturdy segura o primeiro golpe com 1 HP: só com HP cheio, contra um acerto só e sem Mold Breaker. */
+/** Sturdy segura o primeiro golpe com 1 HP: só com HP cheio, contra um acerto só e se o golpe não ignora habilidades. */
 export const sturdyHolds = (result, defender, attacker, entry = 0) => defender.ability === 'sturdy' && entry === 0
-  && currentHp(defender) === defender.stats.hp && result.hits === 1 && !result.extraRolls && !MOLD_BREAKERS.has(attacker?.ability);
+  && currentHp(defender) === defender.stats.hp && result.hits === 1 && !result.extraRolls && !result.breaksAbilities && !MOLD_BREAKERS.has(attacker?.ability);
 
 /**
  * Em quantos usos do golpe o alvo cai, em até 4, contando hazards na entrada e o saldo de HP

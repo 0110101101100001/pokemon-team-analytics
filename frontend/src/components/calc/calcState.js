@@ -1,4 +1,6 @@
 import { createBattleSet } from '../../utils/stats';
+import { withMaxPower } from '../../utils/movePower';
+import { poweredType } from '../../utils/damage';
 import { poweredMove } from '../../utils/poweredMoves';
 
 export const MOVE_SLOTS = 4;
@@ -28,7 +30,7 @@ export const createSide = () => ({
   item: '',
   status: '',
   // PS atuais (null = cheio), turnos de veneno forte e o último golpe recebido ({ damage, category }), que a
-  // barra de PS e o botão de passar o turno atualizam. Felicidade só vale para Return e Frustration.
+  // barra de PS e o botão de passar o turno atualizam.
   currentHp: null,
   toxicTurns: 0,
   // Turnos de sono que faltam (null = 2, a média) e o Bide em curso ({ turns, stored }).
@@ -55,7 +57,7 @@ export function sideFromPokemon(pokemon, set = null) {
     item: set.item ?? '',
     ability: set.ability ?? '',
     tera: set.teraType ?? '',
-    moves: side.moves.map((slot, index) => createMoveSlot(set.moves?.[index] ?? null)),
+    moves: side.moves.map((slot, index) => createMoveSlot(withMaxPower(set.moves?.[index] ?? null))),
   };
 }
 
@@ -83,9 +85,13 @@ export const createField = () => ({
 /**
  * O golpe como a fórmula espera, com o crítico e os acertos escolhidos no espaço; como Z, Max ou G-Max, se escolhido.
  * `gmaxMove` é o G-Max do Pokémon (gmaxMoveOf), ou null se ele não tem forma Gigantamax.
+ * `battle` ({ attacker, field }) decide o tipo do Z ou Max; sem ela, fica o tipo do golpe.
  */
-export function resolveSlot(slot, gmaxMove = null) {
+export function resolveSlot(slot, gmaxMove = null, battle = null) {
   if (!slot.move) return null;
-  const move = poweredMove(slot.move, slot.mode, gmaxMove);
+  const type = slot.mode && battle?.attacker
+    ? poweredType(slot.move, slot.mode, battle.attacker, battle.field)
+    : slot.move.type;
+  const move = poweredMove(slot.move, slot.mode, gmaxMove, type);
   return { ...move, category: move.damageClass, hits: move.powered ? 1 : slot.hits, crit: slot.crit };
 }

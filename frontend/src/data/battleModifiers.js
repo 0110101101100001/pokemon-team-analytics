@@ -1,4 +1,5 @@
 import berries from './berries.json';
+import { DRIVE_TYPES, MEMORY_TYPES, PLATE_TYPES } from './formItems';
 // Itens, habilidades e grupos de golpes que a calculadora de dano sabe aplicar.
 // Slugs da PokéAPI. O que não estiver aqui pode ser escolhido, mas não altera a conta.
 
@@ -24,6 +25,7 @@ export const TYPE_BOOST_ITEMS = {
   'black-glasses': 'dark',
   'metal-coat': 'steel',
   'fairy-feather': 'fairy',
+  ...PLATE_TYPES,
 };
 
 // Berry que corta pela metade um golpe super efetivo do tipo (Chilan vale para Normal em qualquer caso).
@@ -74,6 +76,13 @@ export const ITEM_GROUPS = [
       ['wise-glasses', 'Wise Glasses · especial ×1,1'],
       ['booster-energy', 'Booster Energy · ativa Protosynthesis e Quark Drive'],
       ...Object.entries(TYPE_BOOST_ITEMS).map(([slug, type]) => [slug, `${slugLabel(slug)} · ${typeLabel(type)} ×1,2`]),
+    ],
+  },
+  {
+    label: 'Memories e Drives',
+    items: [
+      ...Object.entries(MEMORY_TYPES).map(([slug, type]) => [slug, `${slugLabel(slug)} · Multi-Attack vira ${typeLabel(type)}`]),
+      ...Object.entries(DRIVE_TYPES).map(([slug, type]) => [slug, `${slugLabel(slug)} · Techno Blast vira ${typeLabel(type)}`]),
     ],
   },
   {
@@ -163,6 +172,8 @@ export const ABILITY_EFFECTS = {
   fluffy: 'Fire recebido ×2',
   'marvel-scale': 'Def ×1,5 com status',
   'magic-guard': 'sem dano indireto',
+  klutz: 'ignora o próprio item',
+  forecast: 'Castform muda de tipo com o clima',
   'swift-swim': 'Spe ×2 na chuva',
   chlorophyll: 'Spe ×2 no sol',
   'sand-rush': 'Spe ×2 na areia',
@@ -237,6 +248,37 @@ export const WEATHER_SUPPRESSORS = new Set(['cloud-nine', 'air-lock']);
 export const PRIORITY_BLOCKERS = new Set(['dazzling', 'queenly-majesty', 'armor-tail']);
 
 /* ---------------------------------------------------------------- golpes */
+
+// Efeito secundário é o que o Sheer Force troca por poder e o Shield Dust barra. A chance de efeito da PokéAPI não
+// serve sozinha: ela marca 100 em golpes sem efeito secundário (Close Combat) e falta em vários da Geração 9.
+const NOT_SECONDARY = new Set([
+  'behemoth-bash', 'behemoth-blade', 'bind', 'bolt-beak', 'clamp', 'clanging-scales', 'close-combat',
+  'draco-meteor', 'dragon-ascent', 'dragon-darts', 'dual-wingbeat', 'dynamax-cannon', 'eternabeam',
+  'expanding-force', 'false-surrender', 'fire-spin', 'fishious-rend', 'fleur-cannon', 'flip-turn',
+  'frost-breath', 'grassy-glide', 'hammer-arm', 'hyperspace-fury', 'ice-hammer', 'infestation', 'jaw-lock',
+  'lash-out', 'leaf-storm', 'magma-storm', 'max-airstream', 'max-darkness', 'max-flare', 'max-flutterby',
+  'max-geyser', 'max-hailstorm', 'max-knuckle', 'max-lightning', 'max-mindstorm', 'max-ooze', 'max-overgrowth',
+  'max-phantasm', 'max-quake', 'max-rockfall', 'max-starfall', 'max-steelspike', 'max-strike', 'max-wyrmwind',
+  'meteor-assault', 'meteor-beam', 'misty-explosion', 'overheat', 'psycho-boost', 'rising-voltage', 'sand-tomb',
+  'sappy-seed', 'scale-shot', 'skull-bash', 'smack-down', 'snap-trap', 'snipe-shot', 'steel-beam',
+  'steel-roller', 'superpower', 'surging-strikes', 'thousand-arrows', 'thunder-cage', 'triple-axel', 'v-create',
+  'whirlpool', 'wicked-blow', 'wrap',
+]);
+const MISSING_SECONDARY = new Set([
+  'alluring-voice', 'anchor-shot', 'aqua-step', 'axe-kick', 'barb-barrage', 'bitter-malice', 'blazing-torque',
+  'bleakwind-storm', 'ceaseless-edge', 'chilling-water', 'combat-torque', 'dire-claw', 'esper-wing',
+  'genesis-supernova', 'infernal-parade', 'lumina-crash', 'magical-torque', 'malignant-chain', 'matcha-gotcha',
+  'mortal-spin', 'mountain-gale', 'mystical-power', 'noxious-torque', 'pounce', 'psychic-noise',
+  'psyshield-bash', 'salt-cure', 'sandsear-storm', 'sparkling-aria', 'spirit-shackle', 'springtide-storm',
+  'stone-axe', 'syrup-bomb', 'torch-song', 'trailblaze', 'triple-arrows', 'upper-hand', 'wicked-torque',
+  'wildbolt-storm',
+]);
+// Ganham o bônus do Sheer Force sem perder o efeito.
+const BOOST_ONLY = new Set(['electro-shot', 'order-up']);
+
+export const hasSecondaryEffect = (move) => !move.powered
+  && (MISSING_SECONDARY.has(move.slug) || (Boolean(move.effectChance) && !NOT_SECONDARY.has(move.slug)));
+export const boostedBySheerForce = (move) => hasSecondaryEffect(move) || BOOST_ONLY.has(move.slug);
 
 const PUNCH_MOVES = new Set([
   'sky-uppercut', 'hammer-arm', 'ice-hammer', 'meteor-mash', 'double-iron-bash', 'rage-fist',

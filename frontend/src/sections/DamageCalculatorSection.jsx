@@ -8,6 +8,7 @@ import { createField, createSide, resolveSlot, sideFromPokemon } from '../compon
 import SectionHeading, { HEADING_PILL_CLASS } from '../components/layout/SectionHeading';
 import { useBattleForms, useFormBattleData } from '../hooks/usePokemonBattleData';
 import { useSavedTeams } from '../hooks/useSavedTeams';
+import { formTypes } from '../data/formItems';
 import { gmaxMoveOf } from '../data/gmaxMoves';
 import TurnPanel from '../components/calc/TurnPanel';
 import BattleScoreboard from '../components/calc/BattleScoreboard';
@@ -15,7 +16,7 @@ import MobileTurnBar from '../components/calc/MobileTurnBar';
 import { simulateTurn } from '../utils/turn';
 import { fetchMoveSummary } from '../services/api';
 import { PRIMAL_WEATHERS, TERRAIN_ABILITIES, WEATHER_ABILITIES, WEATHER_SUPPRESSORS } from '../data/battleModifiers';
-import { airborneBy, calcSpeed, calculateDamage, describeKnockout, isCalculable } from '../utils/damage';
+import { airborneBy, battleTypeOf, calcSpeed, calculateDamage, describeKnockout, isCalculable, withWeatherType } from '../utils/damage';
 import { calcStats } from '../utils/stats';
 import { formatSlug } from '../utils/filters';
 import { navigateHash } from '../navigation/hashRoute';
@@ -33,9 +34,10 @@ const SIDES = [
  * (Stellar mantém os originais), e os originais seguem valendo para o STAB.
  */
 function toCombatant(side, battle, ability) {
-  const originalTypes = battle.types.length ? battle.types : side.pokemon.types;
+  const originalTypes = formTypes(side.pokemon.name, side.item) ?? (battle.types.length ? battle.types : side.pokemon.types);
   return {
     level: side.set.level,
+    species: side.pokemon.name,
     types: side.tera && side.tera !== 'stellar' ? [side.tera] : originalTypes,
     originalTypes,
     tera: side.tera,
@@ -194,20 +196,30 @@ export default function DamageCalculatorSection({ pool, team, session, onLogin }
   // Velocidade e o que deixa cada lado no ar valem mesmo antes do outro lado ser escolhido.
   const sideStates = useMemo(
     () => sides.map((side, index) => {
-      if (!side.pokemon || !battles[index].baseStats) return { speed: null, airborne: null };
-      const combatant = toCombatant(side, battles[index], abilities[index]);
-      return { speed: calcSpeed(combatant, battleField.sides[index], battleField), airborne: airborneBy(combatant, battleField) };
+      if (!side.pokemon || !battles[index].baseStats) return { combatant: null, speed: null, airborne: null };
+      const combatant = withWeatherType(toCombatant(side, battles[index], abilities[index]), battleField);
+      return { combatant, speed: calcSpeed(combatant, battleField.sides[index], battleField), airborne: airborneBy(combatant, battleField) };
     }),
     [sides, battles[0], battles[1], abilities[0], abilities[1], battleField],
   );
   const speeds = sideStates.map((state) => state.speed);
 
+  const sideMoves = useMemo(
+    () => sides.map((side, index) => side.moves.map((slot) => (
+      resolveSlot(slot, gmaxMoves[index], { attacker: sideStates[index].combatant, field: battleField })
+    ))),
+    [sides, gmaxMoves[0], gmaxMoves[1], sideStates, battleField],
+  );
+  // Como texto, para o painel memorizado só re-renderizar quando um tipo muda.
+  const moveTypes = sideMoves.map((moves, index) => moves
+    .map((move) => (move ? battleTypeOf(move, sideStates[index].combatant, battleField) : ''))
+    .join(','));
+
   const directions = useMemo(() => [0, 1].map((from) => {
     const to = 1 - from;
     const rows = [];
     if (combatants) {
-      sides[from].moves.forEach((slot, slotIndex) => {
-        const move = resolveSlot(slot, gmaxMoves[from]);
+      sideMoves[from].forEach((move, slotIndex) => {
         if (!isCalculable(move)) return;
         const context = { attacker: combatants[from], defender: combatants[to], attackerSide: battleField.sides[from], defenderSide: battleField.sides[to], field: battleField };
         const result = calculateDamage({ move, ...context });
@@ -215,7 +227,7 @@ export default function DamageCalculatorSection({ pool, team, session, onLogin }
       });
     }
     return { key: from, attacker: shownPokemon(sides[from], battles[from]), defender: shownPokemon(sides[to], battles[to]), rows };
-  }), [combatants, sides, gmaxMoves[0], gmaxMoves[1], battles[0], battles[1], battleField]);
+  }), [combatants, sides, sideMoves, battles[0], battles[1], battleField]);
 
   // O detalhe mostra o golpe escolhido; se ele sumiu, o primeiro golpe com conta.
   const allRows = directions.flatMap((direction) => direction.rows.map((row) => ({ ...row, side: direction.key })));
@@ -235,7 +247,7 @@ export default function DamageCalculatorSection({ pool, team, session, onLogin }
       const chosen = sides[index].moves[slot];
       return chosen?.move ? { ...chosen, move: await withEffects(chosen.move) } : null;
     }));
-    const moves = slots.map((slot, index) => (slot ? resolveSlot(slot, gmaxMoves[index]) : null));
+    const moves = slots.map((slot, index) => (slot ? resolveSlot(slot, gmaxMoves[index], { attacker: combatants[index], field: battleField }) : null));
     const turn = simulateTurn({ combatants, moves, sideConditions: battleField.sides, field: battleField, names });
     const start = turnLog.start ?? { sides: sides.map(battleSnapshot), field };
     setSides((current) => current.map((side, index) => {
@@ -346,6 +358,8 @@ export default function DamageCalculatorSection({ pool, team, session, onLogin }
             battle={battles[index]}
             forms={forms[index]}
             gmaxMove={gmaxMoves[index]}
+            moveTypes={moveTypes[index]}
+            ownTypes={sideStates[index].combatant?.originalTypes.join(',')}
             hpPreview={previews[index]}
             ability={chosenAbilities[index]}
             speed={speeds[index]}
