@@ -2,18 +2,37 @@ import { memo, useId, useRef } from 'react';
 import { createPortal } from 'react-dom';
 import { ExternalLink, Github, X } from 'lucide-react';
 import { useModalBehavior } from '../hooks/useModalBehavior';
+import { SECTIONS } from '../navigation/sections';
 
 const REPOSITORY_URL = 'https://github.com/0110101101100001/pokemon-team-analytics';
 const REPOSITORY_LABEL = REPOSITORY_URL.replace('https://github.com/', '');
 
+const SUMMARIES = {
+  pokedex: 'Dex nacional e regionais, formas, filtros e comparação de até 4 Pokémon. A ficha traz evolução, locais, criação, golpes por geração, uso na Smogon, builds e tabela de velocidade.',
+  moves: 'Golpes e quem aprende cada um, com Z, Max, G-Max e Contests.',
+  abilities: 'O efeito de cada habilidade e quem pode ter cada uma.',
+  items: 'Itens, TMs por jogo, Megas e Primais, e Berries.',
+  trainers: 'Líderes, Elite 4, campeões, rivais e vilões de Kanto a Paldea, com Hisui e Kitakami. O time de cada batalha abre na calculadora.',
+  teamBuilder: 'Cobertura, fraquezas, sugestões e esboço de times de singles, com nota no teste do meta e exportação para o Showdown.',
+  damageCalculator: 'Dano em batalhas simples pela fórmula da Gen 5+ e simulador de turnos com trocas, clima, terreno, Tera, golpes Z e Dynamax.',
+};
+
 const STACK = [
-  { name: 'React + Vite', role: 'interface (SPA)', url: 'https://react.dev' },
-  { name: 'FastAPI', role: 'API e estatísticas da Smogon', url: 'https://fastapi.tiangolo.com' },
+  { name: 'React + Vite', role: 'interface e cálculos no navegador', url: 'https://react.dev' },
+  { name: 'Tailwind CSS', role: 'estilo', url: 'https://tailwindcss.com' },
   { name: 'Supabase', role: 'banco de dados e login', url: 'https://supabase.com' },
-  { name: 'PokéAPI', role: 'dados de Pokémon, golpes e habilidades', url: 'https://pokeapi.co' },
+  { name: 'FastAPI', role: 'importação das estatísticas', url: 'https://fastapi.tiangolo.com' },
+  { name: 'GitHub Actions', role: 'testes e tarefas agendadas', url: 'https://github.com/features/actions' },
+];
+
+const SOURCES = [
+  { name: 'PokéAPI', role: 'Pokémon, golpes, itens, sprites e cries', url: 'https://pokeapi.co' },
+  { name: 'Smogon', role: 'builds e uso mensal na Gen 9', url: 'https://www.smogon.com/stats/' },
+  { name: 'Pokémon Showdown', role: 'sprites animados e de treinadores', url: 'https://pokemonshowdown.com' },
 ];
 
 const LINK = 'rounded focus:outline-none focus-visible:ring-2 focus-visible:ring-paint-cobalt';
+const TERM = 'text-[10px] font-bold uppercase tracking-wider text-umber';
 
 function ExternalAnchor({ href, className = '', children }) {
   return (
@@ -21,6 +40,26 @@ function ExternalAnchor({ href, className = '', children }) {
       {children}
       <span className="sr-only"> (abre em nova aba)</span>
     </a>
+  );
+}
+
+function CreditList({ title, entries }) {
+  return (
+    <div>
+      <dt className={TERM}>{title}</dt>
+      <dd className="mt-1">
+        <ul className="divide-y divide-ink-soft/10 rounded-sketch border border-ink-soft/10 bg-page/50">
+          {entries.map(({ name, role, url }) => (
+            <li key={name} className="flex flex-wrap items-baseline justify-between gap-x-3 px-3 py-2">
+              <ExternalAnchor href={url} className="font-semibold text-ink underline decoration-dotted decoration-umber/50 underline-offset-4 hover:text-olive-deep">
+                {name}
+              </ExternalAnchor>
+              <span className="text-xs text-umber">{role}</span>
+            </li>
+          ))}
+        </ul>
+      </dd>
+    </div>
   );
 }
 
@@ -38,7 +77,7 @@ function AboutModal({ onClose }) {
         role="dialog"
         aria-modal="true"
         aria-labelledby={titleId}
-        className="relative flex max-h-[85vh] w-full max-w-md flex-col paper-card shadow-panel animate-bubble-pop motion-reduce:animate-none"
+        className="relative flex max-h-[85vh] w-full max-w-lg flex-col paper-card shadow-panel animate-bubble-pop motion-reduce:animate-none"
       >
         <header className="flex items-start gap-3 border-b border-sepia/25 px-6 pb-4 pt-5">
           <div className="min-w-0 flex-1">
@@ -58,19 +97,48 @@ function AboutModal({ onClose }) {
           </button>
         </header>
 
-        <div className="space-y-5 overflow-y-auto overscroll-contain px-6 pb-6 pt-4 text-sm text-ink">
+        {/* Focável para rolar pelo teclado: a lista de abas não tem links. */}
+        <div
+          role="region"
+          aria-labelledby={titleId}
+          tabIndex={0}
+          className="space-y-5 overflow-y-auto overscroll-contain px-6 pb-6 pt-4 text-sm text-ink focus:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-paint-cobalt"
+        >
           <p className="leading-relaxed">
-            Pokédex com estatísticas competitivas da Smogon, fichas de campo e um team builder.
+            Guia de campo de Pokémon, do jogo principal ao competitivo: consulte a Pokédex, estude os treinadores,
+            monte seu time e teste as batalhas. É gratuito e não exige conta para usar.
           </p>
 
           <dl className="space-y-4">
             <div>
-              <dt className="text-[10px] font-bold uppercase tracking-wider text-umber">Desenvolvedor</dt>
+              <dt className={TERM}>O que tem em cada aba</dt>
+              <dd className="mt-1">
+                <ul className="space-y-2.5">
+                  {SECTIONS.map(({ id, label, icon: Icon }) => (
+                    <li key={id} className="flex gap-2.5">
+                      <Icon className="mt-0.5 h-4 w-4 shrink-0 text-umber" aria-hidden="true" />
+                      <p className="min-w-0 leading-snug">
+                        <strong className="block font-serif">{label}</strong>
+                        {SUMMARIES[id]}
+                      </p>
+                    </li>
+                  ))}
+                </ul>
+              </dd>
+            </div>
+
+            <div>
+              <dt className={TERM}>Com uma conta</dt>
+              <dd className="mt-0.5 leading-snug">Você guarda favoritos, histórico de fichas e times salvos.</dd>
+            </div>
+
+            <div>
+              <dt className={TERM}>Desenvolvedor</dt>
               <dd className="mt-0.5 font-serif text-base font-bold text-ink">Kaíque Nunes</dd>
             </div>
 
             <div>
-              <dt className="text-[10px] font-bold uppercase tracking-wider text-umber">Código-fonte</dt>
+              <dt className={TERM}>Código-fonte</dt>
               <dd className="mt-1">
                 <ExternalAnchor
                   href={REPOSITORY_URL}
@@ -83,25 +151,12 @@ function AboutModal({ onClose }) {
               </dd>
             </div>
 
-            <div>
-              <dt className="text-[10px] font-bold uppercase tracking-wider text-umber">Tecnologias</dt>
-              <dd className="mt-1">
-                <ul className="divide-y divide-ink-soft/10 rounded-sketch border border-ink-soft/10 bg-page/50">
-                  {STACK.map(({ name, role, url }) => (
-                    <li key={name} className="flex flex-wrap items-baseline justify-between gap-x-3 px-3 py-2">
-                      <ExternalAnchor href={url} className="font-semibold text-ink underline decoration-dotted decoration-umber/50 underline-offset-4 hover:text-olive-deep">
-                        {name}
-                      </ExternalAnchor>
-                      <span className="text-xs text-umber">{role}</span>
-                    </li>
-                  ))}
-                </ul>
-              </dd>
-            </div>
+            <CreditList title="Fontes dos dados" entries={SOURCES} />
+            <CreditList title="Tecnologias" entries={STACK} />
           </dl>
 
           <p className="border-t border-sepia/20 pt-3 text-[11px] italic leading-snug text-umber/85">
-            Dados competitivos da Smogon. Projeto de fã, sem afiliação com Nintendo, Game Freak ou The Pokémon Company.
+            Projeto de fã, sem afiliação com Nintendo, Game Freak, The Pokémon Company, Smogon ou Pokémon Showdown.
           </p>
         </div>
       </div>
