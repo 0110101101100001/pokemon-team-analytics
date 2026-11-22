@@ -250,7 +250,7 @@ function AdvancedFiltersComponent({ eggGroups, onAddFilter }) {
         </button>
       </div>
 
-      <p className="mt-2 px-1 pb-0.5 font-hand text-base leading-tight text-page/70">
+      <p className="mt-2 px-1 pb-0.5 font-hand text-base leading-tight text-page/90">
         gerações, regiões e raridades se somam dentro do grupo (ou); os demais filtros precisam ser todos atendidos (e).
       </p>
     </div>
