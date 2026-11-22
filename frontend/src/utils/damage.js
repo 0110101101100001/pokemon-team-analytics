@@ -5,6 +5,7 @@ import {
 } from '../data/battleModifiers';
 import { NATURAL_GIFT } from '../data/battleModifiers';
 import { DRIVE_TYPES, MEMORY_TYPES, PLATE_TYPES, heldForGood } from '../data/formItems';
+import { baseMaxHp, hpRatio, withoutDynamax } from './dynamax';
 import { currentHp, fixedDamage, hiddenPowerType, variablePower } from './variablePower';
 
 /*
@@ -13,6 +14,7 @@ import { currentHp, fixedDamage, hiddenPowerType, variablePower } from './variab
 
   Lado (attacker/defender): { level, types, originalTypes, tera, stats, boosts, item, ability, status }, e para os golpes de
   poder variável e dano fixo (utils/variablePower): { weight, currentHp, ivs, baseStats, lastHit, toxicTurns };
+  `dynamax` e `baseHp` vêm de utils/dynamax e `volatiles`, dos G-Max (utils/moveEffects);
   `species` é o nome na PokéAPI, para golpes e itens que dependem da forma;
   `turnsOut` conta os turnos do lado em campo (Fake Out e First Impression só valem no primeiro).
   `types` são os tipos em batalha (o Tera já aplicado); `originalTypes`, os da espécie ou forma, que valem para o STAB.
@@ -49,6 +51,17 @@ const FORM_TYPED_MOVES = {
 };
 // Estes G-Max atravessam Protect com o dano inteiro.
 const FULL_THROUGH_PROTECT = new Set(['g-max-one-blow', 'g-max-rapid-flow']);
+const THROUGH_MAX_GUARD = new Set([...FULL_THROUGH_PROTECT, 'feint', 'future-sight', 'doom-desire']);
+// Dobram contra quem está em Dynamax.
+const ANTI_DYNAMAX = new Set(['behemoth-blade', 'behemoth-bash', 'dynamax-cannon']);
+// Dano por turno dos G-Max: [nome, tipo imune].
+const GMAX_DAMAGE = {
+  'g-max-wildfire': ['G-Max Wildfire', 'fire'],
+  'g-max-vine-lash': ['G-Max Vine Lash', 'grass'],
+  'g-max-cannonade': ['G-Max Cannonade', 'water'],
+  'g-max-volcalith': ['G-Max Volcalith', 'rock'],
+};
+const TRAP_NAMES = { 'g-max-centiferno': 'G-Max Centiferno', 'g-max-sandblast': 'G-Max Sandblast' };
 const IGNORES_ABILITY = new Set(['g-max-drum-solo', 'g-max-fireball', 'g-max-hydrosnipe']);
 const TYPE_ABILITY_BOOSTS = {
   transistor: ['electric', 5325],
@@ -229,6 +242,7 @@ export const battleTypeOf = (move, attacker, field) => (
 function immunityReason({ attacker, move, moveType, defenderAbility, defenderAirborne, defenderSide, field }) {
   if (FIRST_TURN_MOVES.has(move.slug) && attacker.turnsOut > 0) return 'Só funciona no primeiro turno do usuário em campo.';
   // Golpes Z e Max atravessam Protect, com 1/4 do dano (ver os modificadores finais).
+  if (defenderSide.maxGuard && !THROUGH_MAX_GUARD.has(move.slug)) return 'O alvo está protegido (Max Guard).';
   if (defenderSide.protect && !move.powered) return 'O alvo está protegido (Protect).';
   if (field.weather === 'harsh-sun' && moveType === 'water') return 'Golpes de Water evaporam no sol extremo.';
   if (field.weather === 'heavy-rain' && moveType === 'fire') return 'Golpes de Fire se apagam na chuva torrencial.';
@@ -308,7 +322,7 @@ export function calculateDamage({ attacker: user, defender: target, move, field,
   }
 
   const crit = !['battle-armor', 'shell-armor'].includes(defenderAbility)
-    && (move.crit || ALWAYS_CRIT.has(move.slug) || (attacker.ability === 'merciless' && isPoisoned(defender)));
+    && (move.crit || ALWAYS_CRIT.has(move.slug) || attacker.volatiles?.critStage >= 3 || (attacker.ability === 'merciless' && isPoisoned(defender)));
 
   /* ---- poder */
   const attackerSpeed = calcSpeed(attacker, attackerSide, field);
@@ -374,7 +388,7 @@ export function calculateDamage({ attacker: user, defender: target, move, field,
   let attackStage = defenderAbility === 'unaware' ? 0 : attackSource.boosts[attackKey];
   if (crit) attackStage = Math.max(attackStage, 0);
   const attackMods = [];
-  const dynamaxed = isDynamaxed(move);
+  const dynamaxed = Boolean(attacker.dynamax) || isDynamaxed(move);
   if (physical && ['huge-power', 'pure-power'].includes(attacker.ability)) attackMods.push(8192);
   if (physical && (attacker.ability === 'hustle' || (attacker.ability === 'gorilla-tactics' && !dynamaxed))) attackMods.push(6144);
   if (physical && attacker.ability === 'guts' && attacker.status) attackMods.push(6144);
@@ -434,6 +448,7 @@ export function calculateDamage({ attacker: user, defender: target, move, field,
   if (SUPER_EFFECTIVE_BOOST.has(move.slug) && typeMultiplier > 1) finalMods.push(5461);
   if (attackerItem === 'expert-belt' && typeMultiplier > 1) finalMods.push(4915);
   if (attackerItem === 'life-orb') finalMods.push(5324);
+  if (defender.dynamax && ANTI_DYNAMAX.has(move.slug)) finalMods.push(8192);
   const berryType = RESIST_BERRIES[defenderItem];
   if (berryType === moveType && (typeMultiplier > 1 || berryType === 'normal')) finalMods.push(2048);
   const finalMod = chainMods(finalMods);
@@ -488,6 +503,15 @@ export function calculateDamage({ attacker: user, defender: target, move, field,
   };
 }
 
+/** Dano médio de se acertar na confusão: físico, 40 de poder, sem tipo. */
+export function confusionDamage(side) {
+  const attack = applyBoost(side.stats.atk, side.boosts.atk);
+  const defense = applyBoost(side.stats.def, side.boosts.def);
+  const base = Math.floor(Math.floor((Math.floor((2 * side.level) / 5 + 2) * 40 * attack) / defense) / 50) + 2;
+  // O fator aleatório vai de 85% a 100%.
+  return Math.max(1, Math.floor(base * 0.925));
+}
+
 /* ---------------------------------------------------------------- nocaute */
 
 const MAX_TURNS = 4;
@@ -509,6 +533,10 @@ function rollDistribution(rolls) {
   return distribution;
 }
 
+/** Saldo perdido do fim do turno `from` + 1 ao fim do turno `to`, com as perdas que têm prazo. */
+const drainBetween = ({ perTurn, timed }, from, to) => perTurn * (to - from)
+  + timed.reduce((total, { amount, turns }) => total + amount * Math.max(0, Math.min(to, turns) - Math.min(from, turns)), 0);
+
 function capDamage(distribution, cap) {
   const capped = new Map();
   for (const [damage, p] of distribution) capped.set(Math.min(damage, cap), (capped.get(Math.min(damage, cap)) ?? 0) + p);
@@ -528,13 +556,15 @@ function perUseDistribution({ rolls, hits, extraRolls }) {
  */
 export function residualEffects(side, defenderSide, field, attacker) {
   const defender = withWeatherType(side, field);
-  const hp = defender.stats.hp;
+  const hp = baseMaxHp(defender);
   const item = activeItem(defender, field);
   const { ability } = defender;
   const magicGuard = ability === 'magic-guard';
   const grounded = isGrounded(defender, field);
   const asleep = defender.status === 'sleep' || ability === 'comatose';
   const notes = [];
+  // `timed`: perdas com prazo, { amount, turns }, que não entram em perTurn.
+  const timed = [];
   let entry = 0;
   let perTurn = 0;
   const lose = (fraction, note) => { perTurn += Math.floor(hp * fraction); notes.push(note); };
@@ -545,6 +575,10 @@ export function residualEffects(side, defenderSide, field, attacker) {
       entry += Math.floor((hp * effectiveness('rock', defender.types)) / 8);
       notes.push('Stealth Rock');
     }
+    if (defenderSide.steelsurge) {
+      entry += Math.floor((hp * effectiveness('steel', defender.types)) / 8);
+      notes.push('Steelsurge');
+    }
     if (defenderSide.spikes > 0 && grounded) {
       entry += Math.floor(hp * SPIKES_FRACTION[defenderSide.spikes]);
       notes.push(`${defenderSide.spikes}× Spikes`);
@@ -552,6 +586,16 @@ export function residualEffects(side, defenderSide, field, attacker) {
   }
 
   if (!magicGuard) {
+    const lasting = defenderSide.gmaxDamage;
+    if (lasting && !defender.types.includes(GMAX_DAMAGE[lasting.slug][1])) {
+      timed.push({ amount: Math.floor(hp / 6), turns: lasting.turns });
+      notes.push(GMAX_DAMAGE[lasting.slug][0]);
+    }
+    const trap = defender.volatiles?.trap;
+    if (trap) {
+      timed.push({ amount: Math.floor(hp / 8), turns: trap.turns });
+      notes.push(TRAP_NAMES[trap.slug]);
+    }
     if (defenderSide.leechSeed && !defender.types.includes('grass')) lose(1 / 8, 'Leech Seed');
     if (field.weather === 'sand' && !defender.types.some((type) => SAND_IMMUNE_TYPES.includes(type))
       && !SAND_IMMUNE_ABILITIES.has(ability) && item !== 'safety-goggles') lose(1 / 16, 'areia');
@@ -574,7 +618,8 @@ export function residualEffects(side, defenderSide, field, attacker) {
     lose(1 / 8, 'Black Sludge');
   }
   if (field.terrain === 'grassy' && grounded) heal(1 / 16, 'Grassy Terrain');
-  return { entry, perTurn, notes };
+  // A entrada vem antes do Dynamax, então dobra junto com os PS.
+  return { entry: defender.dynamax ? entry * hpRatio(defender.species) : entry, perTurn, timed, notes };
 }
 
 const percent = (value) => value.toLocaleString('pt-BR', { maximumFractionDigits: 1 });
@@ -615,10 +660,28 @@ export function describeKnockout(result, { attacker, defender, defenderSide, fie
   const firstUse = sturdy ? capDamage(use, remaining - 1) : use;
 
   let total = firstUse;
+  // PS de onde a conta parte e o teto deles; quando o Dynamax acaba, os dois passam a ser os normais.
+  let start = remaining - entry;
+  let cap = hp;
+  let since = 0;
   for (let turns = 1; turns <= MAX_TURNS; turns += 1) {
+    if (defender.dynamax && turns === defender.dynamax + 1) {
+      const normal = baseMaxHp(defender);
+      const drained = drainBetween(effects, 0, defender.dynamax);
+      const converted = new Map();
+      for (const [damage, probability] of total) {
+        const left = Math.min(cap, start - drained) - damage;
+        const dealt = left <= 0 ? Infinity : normal - withoutDynamax(left, defender.species);
+        converted.set(dealt, (converted.get(dealt) ?? 0) + probability);
+      }
+      total = converted;
+      start = normal;
+      cap = normal;
+      since = defender.dynamax;
+    }
     if (turns > 1) total = convolve(total, use);
     // HP que ainda falta tirar depois dos hazards e do saldo dos turnos anteriores; a recuperação não passa do HP cheio.
-    const needed = Math.min(hp, remaining - entry - (turns - 1) * perTurn);
+    const needed = Math.min(cap, start - drainBetween(effects, since, turns - 1));
     let chance = 0;
     for (const [damage, probability] of total) if (damage >= needed) chance += probability;
     if (chance > 1e-9) {
@@ -629,7 +692,11 @@ export function describeKnockout(result, { attacker, defender, defenderSide, fie
   }
 
   const average = (result.min + result.max) / 2;
-  const estimate = perTurn < 0 && average <= -perTurn ? null : Math.ceil(remaining / Math.max(average - Math.max(-perTurn, 0), 1));
+  const pace = Math.max(average - Math.max(-perTurn, 0), 1);
+  // O que resta quando o Dynamax acaba cai pela metade.
+  const boosted = defender.dynamax ? defender.dynamax * pace : Infinity;
+  const toDeal = remaining > boosted ? boosted + (remaining - boosted) / hpRatio(defender.species) : remaining;
+  const estimate = perTurn < 0 && average <= -perTurn ? null : Math.ceil(toDeal / pace);
   return {
     text: estimate ? `Cerca de ${estimate}HKO${suffix}.` : `Não derruba: a recuperação cobre o dano${suffix}.`,
     turns: null,
@@ -644,7 +711,7 @@ export function calcSpeed(side, sideConditions, field) {
   const item = activeItem(side, field);
   let speed = applyBoost(side.stats.spe, side.boosts.spe);
   const mods = [];
-  if (item === 'choice-scarf') mods.push(6144);
+  if (item === 'choice-scarf' && !side.dynamax) mods.push(6144);
   if (sideConditions.tailwind) mods.push(8192);
   if (side.ability === 'swift-swim' && RAIN.has(field.weather)) mods.push(8192);
   if (side.ability === 'chlorophyll' && SUN.has(field.weather)) mods.push(8192);

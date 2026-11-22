@@ -17,6 +17,7 @@ const CONDITION_LABELS = {
   auroraVeil: 'Aurora Veil',
   tailwind: 'Tailwind',
   stealthRock: 'Stealth Rock',
+  steelsurge: 'Steelsurge',
 };
 
 const OUTLINE = 'inline-flex h-5 items-center border-[1.5px] px-1 font-mono text-[10px] font-bold leading-none tabular-nums';
@@ -25,6 +26,20 @@ function statusDetail(side) {
   if (side.status === 'toxic') return ` ${Math.min(15, (side.toxicTurns ?? 0) + 1)}/16`;
   if (side.status === 'sleep') return ` ${side.sleepTurns ?? 2}`;
   return '';
+}
+
+/** Selos do que os G-Max deixaram no Pokémon e no lado dele. */
+function gmaxStates({ volatiles = {} }, conditions) {
+  const { trap, confusion, infatuated, yawn, torment, critStage } = volatiles;
+  return [
+    conditions?.gmaxDamage && `Dano G-Max ${conditions.gmaxDamage.turns}t`,
+    trap && `Preso ${trap.turns}t`,
+    confusion > 0 && `Confuso ${confusion}t`,
+    infatuated && 'Apaixonado',
+    yawn > 0 && 'Sonolento',
+    torment > 0 && `Torment ${torment}t`,
+    critStage > 0 && `Crít. +${critStage}`,
+  ].filter(Boolean);
 }
 
 /**
@@ -36,7 +51,8 @@ function StateChips({ side, conditions, className = '' }) {
   const boosts = Object.entries(side.boosts ?? {}).filter(([, stage]) => stage);
   const active = Object.entries(CONDITION_LABELS).filter(([key]) => conditions?.[key]);
   const spikes = conditions?.spikes ?? 0;
-  if (!status && boosts.length === 0 && active.length === 0 && !spikes && !side.bide) return null;
+  const lingering = gmaxStates(side, conditions);
+  if (!status && boosts.length === 0 && active.length === 0 && !spikes && !side.bide && !side.dynamax && lingering.length === 0) return null;
 
   return (
     <ul className={`flex flex-wrap gap-1 ${className}`} aria-label="Estado em batalha">
@@ -55,6 +71,8 @@ function StateChips({ side, conditions, className = '' }) {
       ))}
       {active.map(([key, label]) => <li key={key} className={`${OUTLINE} border-sepia/50 font-reading text-sepia`}>{label}</li>)}
       {spikes > 0 && <li className={`${OUTLINE} border-sepia/50 font-reading text-sepia`}>{spikes}× Spikes</li>}
+      {side.dynamax > 0 && <li className={`${OUTLINE} border-vermilion text-vermilion-deep`}>Dynamax {side.dynamax}t</li>}
+      {lingering.map((label) => <li key={label} className={`${OUTLINE} border-ochre text-ochre-deep`}>{label}</li>)}
       {side.bide && <li className={`${OUTLINE} border-ochre text-ochre-deep`}>Bide {side.bide.turns}/2</li>}
     </ul>
   );

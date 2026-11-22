@@ -17,6 +17,7 @@ import { simulateTurn } from '../utils/turn';
 import { fetchMoveSummary } from '../services/api';
 import { PRIMAL_WEATHERS, TERRAIN_ABILITIES, WEATHER_ABILITIES, WEATHER_SUPPRESSORS } from '../data/battleModifiers';
 import { airborneBy, battleTypeOf, calcSpeed, calculateDamage, describeKnockout, isCalculable, withWeatherType } from '../utils/damage';
+import { hpRatio } from '../utils/dynamax';
 import { calcStats } from '../utils/stats';
 import { formatSlug } from '../utils/filters';
 import { navigateHash } from '../navigation/hashRoute';
@@ -34,6 +35,9 @@ const SIDES = [
  * (Stellar mantém os originais), e os originais seguem valendo para o STAB.
  */
 function toCombatant(side, battle, ability) {
+  const stats = calcStats(battle.baseStats, side.set);
+  const baseHp = stats.hp;
+  if (side.dynamax) stats.hp *= hpRatio(side.pokemon.name);
   const originalTypes = formTypes(side.pokemon.name, side.item) ?? (battle.types.length ? battle.types : side.pokemon.types);
   return {
     level: side.set.level,
@@ -41,7 +45,11 @@ function toCombatant(side, battle, ability) {
     types: side.tera && side.tera !== 'stellar' ? [side.tera] : originalTypes,
     originalTypes,
     tera: side.tera,
-    stats: calcStats(battle.baseStats, side.set),
+    stats,
+    baseHp,
+    dynamax: side.dynamax,
+    dynamaxSpent: side.dynamaxSpent,
+    volatiles: side.volatiles,
     boosts: side.boosts,
     item: side.item,
     ability,
@@ -89,7 +97,7 @@ const shownPokemon = (side, battle) => (side.pokemon && side.form
   : side.pokemon);
 
 // O que a simulação muda em cada lado; "recomeçar" volta ao que era antes do primeiro turno.
-const BATTLE_KEYS = ['currentHp', 'boosts', 'status', 'toxicTurns', 'sleepTurns', 'bide', 'lastHit', 'turnsOut'];
+const BATTLE_KEYS = ['currentHp', 'boosts', 'status', 'toxicTurns', 'sleepTurns', 'bide', 'lastHit', 'turnsOut', 'dynamax', 'dynamaxSpent', 'volatiles'];
 const battleSnapshot = (side) => Object.fromEntries(BATTLE_KEYS.map((key) => [key, side[key]]));
 
 // Resumos antigos (times salvos antes dos efeitos ou do recuo) não têm `effects` completos: busca de novo, do cache.
@@ -151,9 +159,14 @@ export default function DamageCalculatorSection({ pool, team, session, onLogin }
       moves: side.moves.map((slot, s) => (s === slotIndex ? { ...slot, ...changes } : slot)),
     })));
   }, []);
+  // Um terreno removido volta quando outro Pokémon ou outra habilidade entra em campo.
+  const restoreTerrain = useCallback(() => {
+    setField((current) => (current.terrain === 'none' ? { ...current, terrain: '' } : current));
+  }, []);
   const pickPokemon = useCallback((index, pokemon, set) => {
     setSides((current) => current.map((side, i) => (i === index ? sideFromPokemon(pokemon, set) : side)));
-  }, []);
+    restoreTerrain();
+  }, [restoreTerrain]);
 
   const patchField = useCallback((changes) => setField((current) => ({ ...current, ...changes })), []);
   const patchFieldSide = useCallback((index, changes) => {
@@ -162,10 +175,13 @@ export default function DamageCalculatorSection({ pool, team, session, onLogin }
 
   // Callbacks estáveis por lado, para os painéis memorizados não re-renderizarem à toa.
   const handlers = useMemo(() => [0, 1].map((index) => ({
-    change: (changes) => patchSide(index, changes),
+    change: (changes) => {
+      patchSide(index, changes);
+      if ('ability' in changes) restoreTerrain();
+    },
     move: (slotIndex, changes) => patchMove(index, slotIndex, changes),
     pick: (pokemon, set) => pickPokemon(index, pokemon, set),
-  })), [patchSide, patchMove, pickPokemon]);
+  })), [patchSide, patchMove, pickPokemon, restoreTerrain]);
 
   const ready = sides.every((side, index) => side.pokemon && battles[index].baseStats);
 
@@ -189,7 +205,8 @@ export default function DamageCalculatorSection({ pool, team, session, onLogin }
   const battleField = useMemo(() => {
     let weather = autoWeather && (!field.weather || PRIMAL_WEATHERS.has(autoWeather.value)) ? autoWeather.value : field.weather;
     if (weatherSuppressor) weather = '';
-    const terrain = field.terrain || autoTerrain?.value || '';
+    // 'none': removido na batalha, então a habilidade que o trouxe não o repõe.
+    const terrain = field.terrain === 'none' ? '' : field.terrain || autoTerrain?.value || '';
     return { ...field, weather, terrain };
   }, [field, autoWeather, autoTerrain, weatherSuppressor]);
 
@@ -252,12 +269,16 @@ export default function DamageCalculatorSection({ pool, team, session, onLogin }
     const start = turnLog.start ?? { sides: sides.map(battleSnapshot), field };
     setSides((current) => current.map((side, index) => {
       const next = turn.sides[index];
-      return { ...side, ...next, currentHp: next.currentHp === combatants[index].stats.hp ? null : next.currentHp };
+      const max = combatants[index].baseHp * (next.dynamax ? hpRatio(combatants[index].species) : 1);
+      return { ...side, ...next, currentHp: next.currentHp === max ? null : next.currentHp };
     }));
     setField((current) => ({
       ...current,
       ...['weather', 'terrain', 'trickRoom', 'gravity', 'magicRoom', 'wonderRoom']
-        .reduce((changes, key) => (turn.field[key] !== battleField[key] ? { ...changes, [key]: turn.field[key] } : changes), {}),
+        .reduce((changes, key) => {
+          if (turn.field[key] === battleField[key]) return changes;
+          return { ...changes, [key]: key === 'terrain' && !turn.field[key] ? 'none' : turn.field[key] };
+        }, {}),
       sides: turn.conditions,
     }));
     const changed = [

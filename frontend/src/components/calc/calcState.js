@@ -1,9 +1,12 @@
 import { createBattleSet } from '../../utils/stats';
 import { withMaxPower } from '../../utils/movePower';
+import { effectiveMode } from '../../utils/dynamax';
 import { poweredType } from '../../utils/damage';
 import { poweredMove } from '../../utils/poweredMoves';
 
 export const MOVE_SLOTS = 4;
+// O que um golpe de status vira em Dynamax.
+const MAX_GUARD = { slug: 'max-guard', name: 'Max Guard', type: 'normal', damageClass: 'status', power: null, priority: 4 };
 
 /**
  * Acertos que entram na conta: o número fixo do golpe (Double Kick 2) ou, nos de 2 a 5, 3
@@ -37,6 +40,10 @@ export const createSide = () => ({
   sleepTurns: null,
   bide: null,
   lastHit: null,
+  // Dynamax (utils/dynamax) e o que os G-Max deixam no Pokémon (utils/moveEffects).
+  dynamax: 0,
+  dynamaxSpent: false,
+  volatiles: {},
   // Turnos em campo: Fake Out e First Impression só funcionam com 0.
   turnsOut: 0,
   boosts: { atk: 0, def: 0, spa: 0, spd: 0, spe: 0 },
@@ -70,6 +77,8 @@ export const createSideConditions = () => ({
   tailwind: false,
   protect: false,
   leechSeed: false,
+  steelsurge: false,
+  gmaxDamage: null,
 });
 
 export const createField = () => ({
@@ -89,9 +98,10 @@ export const createField = () => ({
  */
 export function resolveSlot(slot, gmaxMove = null, battle = null) {
   if (!slot.move) return null;
-  const type = slot.mode && battle?.attacker
-    ? poweredType(slot.move, slot.mode, battle.attacker, battle.field)
-    : slot.move.type;
-  const move = poweredMove(slot.move, slot.mode, gmaxMove, type);
-  return { ...move, category: move.damageClass, hits: move.powered ? 1 : slot.hits, crit: slot.crit };
+  const attacker = battle?.attacker;
+  if (attacker?.dynamax && slot.move.damageClass === 'status') return { ...MAX_GUARD, category: 'status', hits: 1, crit: false };
+  const mode = effectiveMode(slot.mode, attacker);
+  const type = mode && attacker ? poweredType(slot.move, mode, attacker, battle.field) : slot.move.type;
+  const move = poweredMove(slot.move, mode, gmaxMove, type);
+  return { ...move, category: move.damageClass, hits: move.powered ? 1 : slot.hits, crit: slot.crit, outcome: slot.outcome };
 }

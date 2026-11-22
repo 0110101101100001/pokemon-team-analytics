@@ -3,6 +3,8 @@ import PokemonTypeBadge from '../PokemonTypeBadge';
 import SuggestField from '../SuggestField';
 import { fetchMoveSummary } from '../../services/api';
 import { defaultHits } from './calcState';
+import { GMAX_OUTCOMES } from '../../data/gmaxMoves';
+import { effectiveMode } from '../../utils/dynamax';
 import { formatSlug } from '../../utils/filters';
 import { POWERED_MODES, canPowerUp, poweredMove } from '../../utils/poweredMoves';
 
@@ -22,14 +24,21 @@ const hitRange = ({ minHits, maxHits }) => Array.from({ length: maxHits - minHit
  * `battleType`: o tipo do golpe nesta batalha, já com habilidade, item, forma, clima e modo Z ou Max.
  * `gmaxMove`: o G-Max do Pokémon, que acrescenta o modo G-Max; sem ele, um G-Max já escolhido vale como Max.
  */
-function MoveSlot({ index, slot, learnset, gmaxMove, battleType, onChange }) {
+function MoveSlot({ index, slot, learnset, gmaxMove, battleType, dynamax, dynamaxSpent, onChange }) {
   const { move } = slot;
-  const mode = slot.mode === 'gmax' && !gmaxMove ? 'max' : slot.mode ?? '';
-  const modes = [['', 'Normal'], ...Object.entries(POWERED_MODES), ...(gmaxMove ? [['gmax', 'G-Max']] : [])];
+  const chosenMode = effectiveMode(slot.mode, { dynamax, dynamaxSpent });
+  const mode = chosenMode === 'gmax' && !gmaxMove ? 'max' : chosenMode;
+  // Em Dynamax só existem Max e G-Max; depois que ele acaba, nenhum dos dois.
+  const modes = [['', 'Normal'], ...Object.entries(POWERED_MODES), ...(gmaxMove ? [['gmax', 'G-Max']] : [])].filter(([option]) => {
+    const isMax = option === 'max' || option === 'gmax';
+    if (dynamax) return isMax;
+    return !(dynamaxSpent && isMax);
+  });
   const isStatus = move?.damageClass === 'status';
   const variableHits = move?.maxHits > move?.minHits && !mode;
   const powered = mode && canPowerUp(move) ? poweredMove(move, mode, gmaxMove, battleType || move.type) : null;
 
+  const outcomes = powered?.powered === 'gmax' ? GMAX_OUTCOMES[powered.slug] : null;
   const patch = useCallback((changes) => onChange(index, changes), [index, onChange]);
   const pickMove = useCallback((slug) => {
     if (!slug) {
@@ -68,7 +77,7 @@ function MoveSlot({ index, slot, learnset, gmaxMove, battleType, onChange }) {
           <PokemonTypeBadge type={battleType || move.type} className="!px-1.5 !text-[8px]" />
           <span>{CATEGORY_LABELS[move.damageClass]}</span>
           {isStatus ? (
-            <span className="font-serif italic">· não causa dano</span>
+            <span className="font-serif italic">{dynamax ? '· vira Max Guard' : '· não causa dano'}</span>
           ) : powered ? (
             <span className="font-mono tabular-nums">
               · {powered.name}, poder {move.power ?? 'variável'} → <strong className="text-ink">{powered.power}</strong>
@@ -93,6 +102,19 @@ function MoveSlot({ index, slot, learnset, gmaxMove, battleType, onChange }) {
                 </button>
               ))}
             </span>
+          )}
+          {outcomes && (
+            <label className="flex items-center gap-1 font-hand text-base leading-none text-umber">
+              sorteio
+              <select
+                value={outcomes.some(([value]) => value === slot.outcome) ? slot.outcome : outcomes[0][0]}
+                onChange={(e) => patch({ outcome: e.target.value })}
+                aria-label={`Sorteio do golpe ${index + 1}`}
+                className="h-7 max-w-full cursor-pointer rounded-[3px] border-[1.5px] border-ink bg-paper px-1 font-reading text-xs text-ink"
+              >
+                {outcomes.map(([value, label]) => <option key={value} value={value}>{label}</option>)}
+              </select>
+            </label>
           )}
           {variableHits && (
             <label className="ml-auto flex items-center gap-1 font-hand text-base leading-none text-umber">

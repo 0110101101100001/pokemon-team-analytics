@@ -40,6 +40,16 @@ const GMAX_MOVES = {
   'urshifu-rapid-strike': move('G-Max Rapid Flow', 'water', 'Atinge mesmo através de Protect e Max Guard.'),
 };
 
+// O que o jogo sorteia e quem usa a calculadora escolhe, pelo slug do G-Max; a primeira opção é o padrão.
+export const GMAX_OUTCOMES = {
+  'g-max-befuddle': [['poison', 'envenena'], ['paralysis', 'paralisa'], ['sleep', 'adormece']],
+  'g-max-stun-shock': [['paralysis', 'paralisa'], ['poison', 'envenena']],
+  'g-max-snooze': [['yawn', 'dá sonolência (50%)'], ['none', 'sem efeito (50%)']],
+  'g-max-cuddle': [['infatuated', 'apaixona (gêneros opostos)'], ['none', 'sem efeito']],
+  'g-max-centiferno': [['4', 'prende por 4 turnos'], ['5', 'prende por 5 turnos']],
+  'g-max-sandblast': [['4', 'prende por 4 turnos'], ['5', 'prende por 5 turnos']],
+};
+
 // Toxtricity tem duas formas Gigantamax; as outras espécies, uma só: "<espécie>-gmax".
 const GMAX_FORMS = { toxtricity: ['toxtricity-amped-gmax', 'toxtricity-low-key-gmax'] };
 

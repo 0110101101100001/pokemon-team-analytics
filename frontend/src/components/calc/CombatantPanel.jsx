@@ -9,6 +9,7 @@ import StatSpreadEditor from '../battle/StatSpreadEditor';
 import { TYPE_NAMES, animatedSpriteUrl, thumbnailSpriteUrl } from '../../services/api';
 import { ABILITY_EFFECTS, ITEM_GROUPS, KNOWN_ITEMS, STATUSES } from '../../data/battleModifiers';
 import { BOOST_STAGES } from '../../utils/damage';
+import { hpRatio, toggleDynamax } from '../../utils/dynamax';
 import { formatSlug } from '../../utils/filters';
 import { MAX_EV_TOTAL, STAT_LABELS, calcStats, clampLevel, evTotal } from '../../utils/stats';
 
@@ -98,6 +99,7 @@ function CombatantPanel({ caption, title, pickerPlaceholder, side, battle, forms
 
   const boosted = BOOST_KEYS.some((key) => boosts[key] !== 0);
   const stagesId = useId();
+  const maxHp = stats && stats.hp * (side.dynamax ? hpRatio(pokemon?.name) : 1);
   const typeBySlot = moveTypes.split(',');
   // Os tipos em batalha sem o Tera (Plate, Memory, Forecast); antes de os dados chegarem, os da Pokédex.
   const shownTypes = ownTypes?.split(',') ?? pokemon?.types;
@@ -203,12 +205,25 @@ function CombatantPanel({ caption, title, pickerPlaceholder, side, battle, forms
           </div>
 
           {stats && (
-            <HpBar
-              current={Math.min(side.currentHp ?? stats.hp, stats.hp)}
-              max={stats.hp}
-              preview={hpPreview}
-              onChange={(hp) => onChange({ currentHp: hp === stats.hp ? null : hp })}
-            />
+            <>
+              <HpBar
+                current={Math.min(side.currentHp ?? maxHp, maxHp)}
+                max={maxHp}
+                preview={hpPreview}
+                onChange={(hp) => onChange({ currentHp: hp === maxHp ? null : hp })}
+              />
+              <button
+                type="button"
+                aria-pressed={Boolean(side.dynamax)}
+                onClick={() => onChange(toggleDynamax(side, stats.hp))}
+                title="PS dobrados por 3 turnos; os golpes viram Max e os de status, Max Guard"
+                className={`h-7 cursor-pointer rounded-[3px] border px-2.5 font-serif text-[11px] font-semibold transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-paint-cobalt ${
+                  side.dynamax ? 'border-vermilion bg-vermilion text-paper' : 'border-umber/25 bg-paper/70 text-umber hover:border-umber/50'
+                }`}
+              >
+                {side.dynamax ? `Em Dynamax · ${side.dynamax} ${side.dynamax > 1 ? 'turnos' : 'turno'}` : 'Dynamax'}
+              </button>
+            </>
           )}
 
           <Field label="habilidade">
@@ -250,7 +265,7 @@ function CombatantPanel({ caption, title, pickerPlaceholder, side, battle, forms
             <ul className="space-y-1.5">
               {side.moves.map((slot, index) => (
                 // Os quatro espaços são fixos: a posição é a identidade de cada um.
-                <MoveSlot key={index} index={index} slot={slot} learnset={battle.learnset} gmaxMove={gmaxMove} battleType={typeBySlot[index]} onChange={onMoveChange} />
+                <MoveSlot key={index} index={index} slot={slot} learnset={battle.learnset} gmaxMove={gmaxMove} dynamax={side.dynamax} dynamaxSpent={side.dynamaxSpent} battleType={typeBySlot[index]} onChange={onMoveChange} />
               ))}
             </ul>
           </div>

@@ -14,6 +14,7 @@ const ROOMS = [
 
 const SIDE_TOGGLES = [
   { key: 'stealthRock', label: 'Stealth Rock' },
+  { key: 'steelsurge', label: 'Steelsurge' },
   { key: 'reflect', label: 'Reflect' },
   { key: 'lightScreen', label: 'Light Screen' },
   { key: 'auroraVeil', label: 'Aurora Veil' },
@@ -59,6 +60,17 @@ function SideConditions({ index, title, conditions, flash, onChange }) {
             {label}
           </Chip>
         ))}
+        {conditions.gmaxDamage && (
+          <Chip
+            key={flashKey(flash, `${index}:gmaxDamage`)}
+            pressed
+            title="Tirar este efeito do campo"
+            flashing={flashClass(flash, `${index}:gmaxDamage`)}
+            onToggle={() => onChange({ gmaxDamage: null })}
+          >
+            {formatSlug(conditions.gmaxDamage.slug).replace('G Max', 'G-Max')} · {conditions.gmaxDamage.turns}t
+          </Chip>
+        )}
         <label
           key={flashKey(flash, `${index}:spikes`)}
           className={`flex h-7 items-center gap-1 rounded-[3px] border border-umber/25 bg-paper/70 pl-2.5 pr-1 font-serif text-[11px] font-semibold text-umber ${flashClass(flash, `${index}:spikes`)}`}
@@ -97,6 +109,7 @@ function FieldPanel({ field, autoWeather, autoTerrain, weatherSuppressor, sideTi
         <label key={flashKey(flash, 'terrain')} className={`min-w-0 rounded-[3px] ${flashClass(flash, 'terrain')}`}>
           <span className="mb-0.5 block font-hand text-base leading-none text-umber">terreno</span>
           <select value={field.terrain} onChange={(e) => onChange({ terrain: e.target.value })} className={SELECT}>
+            {(autoTerrain || field.terrain === 'none') && <option value="none">Terreno removido</option>}
             {TERRAINS.map((terrain) => <option key={terrain.value} value={terrain.value}>{terrain.label}</option>)}
           </select>
         </label>

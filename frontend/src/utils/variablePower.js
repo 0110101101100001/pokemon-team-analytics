@@ -1,11 +1,12 @@
 import { NATURAL_GIFT } from '../data/battleModifiers';
+import { withoutDynamax } from './dynamax';
 import { DRIVE_TYPES, MEMORY_TYPES, PLATE_TYPES } from '../data/formItems';
 
 /*
   Golpes sem poder fixo na PokéAPI, porque ele depende da batalha.
   - Poder variável: cada regra devolve { power, note } (a nota explica de onde veio o número) ou { reason }.
   - Dano fixo (Seismic Toss, Super Fang, Counter, OHKO…): o dano sai direto, sem a fórmula; { rolls, note } ou { reason }.
-  Lado: { level, types, stats, boosts, weight (kg), currentHp, ivs, baseStats, lastHit, bide }.
+  Lado: { level, types, stats, boosts, weight (kg), currentHp, dynamax, ivs, baseStats, lastHit, bide }.
   `lastHit` é o último golpe que o lado recebeu ({ damage, category }) e `bide` o Bide em curso ({ turns, stored }),
   ambos anotados ao passar o turno.
 */
@@ -55,6 +56,9 @@ const hpNote = (who, side) => `${who} com ${currentHp(side)}/${side.stats.hp} PS
 const positiveBoosts = (boosts) => Object.values(boosts).reduce((total, stage) => total + Math.max(0, stage), 0);
 const kg = (weight) => `${weight.toLocaleString('pt-BR')} kg`;
 const berryName = (slug) => slug.split('-').map((word) => word.charAt(0).toUpperCase() + word.slice(1)).join(' ');
+const immuneInDynamax = { reason: 'Falha: o alvo está em Dynamax.' };
+// PS atuais do alvo fora do Dynamax, que é o que Super Fang e Endeavor leem.
+const normalHp = (side) => (side.dynamax ? withoutDynamax(currentHp(side), side.species) : currentHp(side));
 const needWeight = { reason: 'Falta o peso dos Pokémon para calcular o poder.' };
 
 const RULES = {
@@ -111,11 +115,13 @@ const RULES = {
 };
 
 function targetWeight({ defender }) {
+  if (defender.dynamax) return immuneInDynamax;
   if (!defender.weight) return needWeight;
   return { power: below(TARGET_WEIGHT, defender.weight), note: `alvo com ${kg(defender.weight)}` };
 }
 
 function relativeWeight({ attacker, defender }) {
+  if (defender.dynamax) return immuneInDynamax;
   if (!attacker.weight || !defender.weight) return needWeight;
   return { power: atLeast(WEIGHT_RATIO, attacker.weight / defender.weight), note: `${kg(attacker.weight)} contra ${kg(defender.weight)}` };
 }
@@ -152,7 +158,7 @@ export function variablePower(move, context) {
 const OHKO_MOVES = new Set(['fissure', 'guillotine', 'horn-drill', 'sheer-cold']);
 const same = (damage) => Array(16).fill(damage);
 const byLevel = ({ attacker }) => ({ rolls: same(attacker.level), note: `dano igual ao nível (${attacker.level})` });
-const halfOfTarget = ({ defender }) => ({ rolls: same(Math.max(1, Math.floor(currentHp(defender) / 2))), note: 'metade dos PS atuais do alvo' });
+const halfOfTarget = ({ defender }) => ({ rolls: same(Math.max(1, Math.floor(normalHp(defender) / 2))), note: 'metade dos PS atuais do alvo' });
 
 // Devolvem o dano recebido: [categoria exigida (null = qualquer), multiplicador, nome, o que precisa ter recebido].
 const COUNTERS = {
@@ -176,7 +182,7 @@ const FIXED = {
   ruination: halfOfTarget,
   'natures-madness': halfOfTarget,
   endeavor: ({ attacker, defender }) => {
-    const damage = currentHp(defender) - currentHp(attacker);
+    const damage = normalHp(defender) - currentHp(attacker);
     return damage > 0
       ? { rolls: same(damage), note: 'deixa o alvo com os PS do usuário' }
       : { reason: 'Endeavor falha: o alvo não tem mais PS que o usuário.' };
@@ -202,6 +208,7 @@ function counterDamage(slug, { attacker }) {
 }
 
 function ohkoDamage(slug, { attacker, defender, defenderAbility }) {
+  if (defender.dynamax) return immuneInDynamax;
   if (defenderAbility === 'sturdy') return { reason: 'Sturdy: o alvo é imune a golpes de nocaute instantâneo.' };
   if (attacker.level < defender.level) return { reason: 'Golpes de nocaute instantâneo falham contra alvos de nível maior.' };
   if (slug === 'sheer-cold' && defender.types.includes('ice')) return { reason: 'Sheer Cold não afeta o tipo Ice.' };

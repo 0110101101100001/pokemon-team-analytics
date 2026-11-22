@@ -1,3 +1,6 @@
+import { GMAX_OUTCOMES } from '../data/gmaxMoves';
+import { isGrounded } from './damage';
+import { baseMaxHp } from './dynamax';
 import { effectiveness } from './typeChart';
 import {
   MOLD_BREAKERS, PRIMAL_WEATHERS, WEATHER_ABILITIES, WEATHER_SUPPRESSORS, hasSecondaryEffect,
@@ -8,7 +11,10 @@ import {
   estágios, status, cura, dreno e recuo, Leech Seed, e os golpes que mudam o campo (clima, terreno, telas, salas,
   hazards). Só entram os efeitos certos (chance 0 ou 100): a simulação usa o resultado médio, não sorteia.
   Golpes Z não têm efeito; os Max e G-Max têm os próprios (MAX_EFFECTS).
-  `battle` é o estado mutável do turno: { combatants, hp, boosts, status, toxicTurns, sleepTurns, conditions, field }.
+  `battle` é o estado mutável do turno: { combatants, hp, boosts, status, toxicTurns, sleepTurns, volatiles, conditions, field }.
+  `volatiles` é o que os G-Max deixam no Pokémon: { trap: { slug, turns }, confusion (ações), infatuated,
+  yawn (turnos), torment (turnos), critStage, lastMove }. O dano por turno deles fica no lado (gmaxDamage).
+  O que o jogo sorteia é escolhido no golpe (GMAX_OUTCOMES); confusão e paixão entram pela média.
 */
 
 export const PROTECT_MOVES = new Set([
@@ -28,7 +34,7 @@ const USER_SIDE_MOVES = { reflect: 'reflect', 'light-screen': 'lightScreen', 'au
 // Trick Room, Gravity e as salas: usar de novo desfaz.
 const ROOM_MOVES = { 'trick-room': 'trickRoom', gravity: 'gravity', 'magic-room': 'magicRoom', 'wonder-room': 'wonderRoom' };
 // user e foe: estágios; condition entra no lado de quem usa, hazard no do alvo.
-// Efeitos sorteados ou que a calculadora não acompanha (confusão, dano por 4 turnos) ficam de fora.
+// `sorted`: o que sai do sorteio escolhido; `unmodeled`: o que a calculadora não tem como contar.
 const MAX_EFFECTS = {
   'max-strike': { foe: { spe: -1 } },
   'max-knuckle': { user: { atk: 1 } },
@@ -57,8 +63,41 @@ const MAX_EFFECTS = {
   'g-max-finale': { heal: 1 / 6 },
   'g-max-sweetness': { cure: true },
   'g-max-wind-rage': { clear: true },
+  'g-max-wildfire': { lasting: true },
+  'g-max-vine-lash': { lasting: true },
+  'g-max-cannonade': { lasting: true },
+  'g-max-volcalith': { lasting: true },
+  'g-max-centiferno': { trap: true },
+  'g-max-sandblast': { trap: true },
+  'g-max-befuddle': { sorted: true },
+  'g-max-stun-shock': { sorted: true },
+  'g-max-snooze': { sorted: true },
+  'g-max-cuddle': { sorted: true },
+  'g-max-gold-rush': { confusion: true },
+  'g-max-smite': { confusion: true },
+  'g-max-meltdown': { torment: true },
+  'g-max-chi-strike': { critStage: true },
+  'g-max-steelsurge': { hazard: 'steelsurge' },
+  'g-max-terror': { unmodeled: 'a troca bloqueada não entra na conta (não há trocas)' },
+  'g-max-tartness': { unmodeled: 'a Evasão não entra na conta (todo golpe acerta)' },
+  'g-max-depletion': { unmodeled: 'o PP não entra na conta' },
+  'g-max-replenish': { unmodeled: 'a Berry não volta: a conta não consome Berries' },
 };
-const CONDITION_LABELS = { auroraVeil: 'Aurora Veil', stealthRock: 'Stealth Rock' };
+const GMAX_DURATION = 4;
+const TORMENT_TURNS = 3;
+// A confusão atrapalha de 1 a 4 ações; a simulação usa 2, como no sono.
+const CONFUSED_ACTIONS = 2;
+// Sonolência: adormece no fim do turno seguinte.
+const YAWN_TURNS = 2;
+const IMMUNE_STATUSES = {
+  insomnia: ['sleep'], 'vital-spirit': ['sleep'], 'sweet-veil': ['sleep'],
+  immunity: ['poison', 'toxic'], 'pastel-veil': ['poison', 'toxic'],
+  limber: ['paralysis'],
+  'water-veil': ['burn'], 'water-bubble': ['burn'], 'thermal-exchange': ['burn'],
+  'magma-armor': ['freeze'],
+  'purifying-salt': [...MAIN_STATUSES, 'toxic'], comatose: [...MAIN_STATUSES, 'toxic'],
+};
+const CONDITION_LABELS = { steelsurge: 'Steelsurge', auroraVeil: 'Aurora Veil', stealthRock: 'Stealth Rock' };
 const WEATHER_HEAL = new Set(['moonlight', 'synthesis', 'morning-sun']);
 // Curam o alvo, não o usuário.
 const HEALS_TARGET = new Set(['heal-pulse', 'floral-healing']);
@@ -102,18 +141,23 @@ function heal(battle, index, amount) {
 }
 
 /** Motivo de o alvo não receber o status, ou null se recebe. */
-function statusBlocked(battle, index, status, move) {
+function statusBlocked(battle, index, status, move, from = null) {
   const target = battle.combatants[index];
   const { types } = target;
+  const ignored = from != null && from !== index && MOLD_BREAKERS.has(battle.combatants[from].ability);
+  if (!ignored) {
+    if (IMMUNE_STATUSES[target.ability]?.includes(status)) return 'é imune pela habilidade';
+    if (target.ability === 'leaf-guard' && ['sun', 'harsh-sun'].includes(activeField(battle).weather)) return 'é protegido pela Leaf Guard';
+  }
   if (battle.status[index]) return `${STATUS_LABELS[battle.status[index]] ?? 'com status'}, não recebe outro`;
-  if (battle.field.terrain === 'misty' && !types.includes('flying')) return 'Misty Terrain protege de status';
+  if (battle.field.terrain === 'misty' && isGrounded(target, battle.field)) return 'Misty Terrain protege de status';
   if (POWDER_MOVES.has(move.slug) && types.includes('grass')) return 'o tipo Grass é imune a pós';
   if (move.slug === 'thunder-wave' && effectiveness('electric', types) === 0) return 'imune a Thunder Wave';
   if (status === 'burn' && types.includes('fire')) return 'o tipo Fire não se queima';
   if ((status === 'poison' || status === 'toxic') && (types.includes('poison') || types.includes('steel'))) return 'imune a veneno';
   if (status === 'paralysis' && types.includes('electric')) return 'o tipo Electric não fica paralisado';
   if (status === 'freeze' && types.includes('ice')) return 'o tipo Ice não congela';
-  if (status === 'sleep' && battle.field.terrain === 'electric') return 'Electric Terrain impede o sono';
+  if (status === 'sleep' && battle.field.terrain === 'electric' && isGrounded(target, battle.field)) return 'Electric Terrain impede o sono';
   return null;
 }
 
@@ -160,6 +204,85 @@ function shielded(battle, { from, to, move }) {
   return target.item === 'covert-cloak' && !battle.field.magicRoom && target.ability !== 'klutz';
 }
 
+/** Põe no alvo um status de G-Max e devolve a frase do registro. */
+function inflict(battle, { from, to, move, names }, status) {
+  const blocked = statusBlocked(battle, to, status, move, from);
+  if (blocked) return `falhou: ${names[to]} ${blocked}`;
+  battle.status[to] = status;
+  battle.toxicTurns[to] = 0;
+  if (status === 'sleep') battle.sleepTurns[to] = SLEEP_TURNS;
+  return `${names[to]} ficou ${STATUS_LABELS[status]}`;
+}
+
+/** O que um G-Max deixa no alvo além de estágios e status; devolve as frases do registro. */
+function applyLingering(battle, context, effect, outcome) {
+  const { from, to, move, names } = context;
+  const target = battle.combatants[to];
+  const ability = MOLD_BREAKERS.has(battle.combatants[from].ability) ? '' : target.ability;
+  const current = battle.volatiles[to];
+  const set = (changes) => { battle.volatiles[to] = { ...current, ...changes }; };
+
+  if (effect.trap && !current.trap) {
+    set({ trap: { slug: move.slug, turns: Number(outcome) } });
+    return [`${names[to]} fica preso por ${outcome} turnos`];
+  }
+  if (effect.confusion && !current.confusion) {
+    if (ability === 'own-tempo') return [`${names[to]} não se confunde (Own Tempo)`];
+    if (battle.field.terrain === 'misty' && isGrounded(target, battle.field)) return [`${names[to]} não se confunde (Misty Terrain)`];
+    set({ confusion: CONFUSED_ACTIONS });
+    return [`${names[to]} ficou confuso`];
+  }
+  if (effect.torment && !current.torment && !target.dynamax) {
+    if (ability === 'aroma-veil') return [`${names[to]} ignora o Torment (Aroma Veil)`];
+    set({ torment: TORMENT_TURNS });
+    return [`${names[to]} não pode repetir golpe`];
+  }
+  if (!effect.sorted || outcome === 'none') return [];
+  if (outcome === 'infatuated') {
+    if (current.infatuated) return [];
+    if (ability === 'oblivious' || ability === 'aroma-veil') return [`${names[to]} não se apaixona (habilidade)`];
+    set({ infatuated: true });
+    return [`${names[to]} se apaixonou`];
+  }
+  if (outcome === 'yawn') {
+    if (current.yawn) return [];
+    const blocked = statusBlocked(battle, to, 'sleep', move, from);
+    if (blocked) return [`falhou: ${names[to]} ${blocked}`];
+    set({ yawn: YAWN_TURNS });
+    return [`${names[to]} ficou sonolento`];
+  }
+  return [inflict(battle, context, outcome)];
+}
+
+/** Fim do turno dos efeitos com prazo; devolve as linhas do registro. */
+export function passEffects(battle, names) {
+  const lines = [];
+  [0, 1].forEach((index) => {
+    const lasting = battle.conditions[index].gmaxDamage;
+    if (lasting) {
+      const gmaxDamage = lasting.turns > 1 ? { ...lasting, turns: lasting.turns - 1 } : null;
+      battle.conditions[index] = { ...battle.conditions[index], gmaxDamage };
+    }
+    if (battle.hp[index] <= 0) {
+      battle.volatiles[index] = {};
+      return;
+    }
+    const next = { ...battle.volatiles[index] };
+    if (next.trap) next.trap = next.trap.turns > 1 ? { ...next.trap, turns: next.trap.turns - 1 } : null;
+    if (next.torment) next.torment -= 1;
+    if (next.yawn) {
+      next.yawn -= 1;
+      if (!next.yawn && !statusBlocked(battle, index, 'sleep', { slug: 'yawn' })) {
+        battle.status[index] = 'sleep';
+        battle.sleepTurns[index] = SLEEP_TURNS;
+        lines.push({ side: index, kind: 'status', text: `${names[index]} adormeceu de sonolência.` });
+      }
+    }
+    battle.volatiles[index] = next;
+  });
+  return lines;
+}
+
 /** Efeito de um golpe Max ou G-Max que acertou. */
 function applyMaxEffect(battle, { from, to, move, names }) {
   const effect = MAX_EFFECTS[move.slug];
@@ -186,11 +309,22 @@ function applyMaxEffect(battle, { from, to, move, names }) {
     battle.conditions[index] = { ...battle.conditions[index], [condition]: true };
     notes.push(`${CONDITION_LABELS[condition]} no lado de ${names[index]}`);
   }
-  if (effect.status && targetUp && !statusBlocked(battle, to, effect.status, move)) {
-    battle.status[to] = effect.status;
-    battle.toxicTurns[to] = 0;
-    notes.push(`${names[to]} ficou ${STATUS_LABELS[effect.status]}`);
+  if (effect.status && targetUp) notes.push(inflict(battle, { from, to, move, names }, effect.status));
+  if (targetUp) {
+    const options = GMAX_OUTCOMES[move.slug];
+    const outcome = options && (options.find(([value]) => value === move.outcome) ?? options[0])[0];
+    notes.push(...applyLingering(battle, { from, to, move, names }, effect, outcome));
   }
+  if (effect.lasting && !battle.conditions[to].gmaxDamage) {
+    battle.conditions[to] = { ...battle.conditions[to], gmaxDamage: { slug: move.slug, turns: GMAX_DURATION } };
+    notes.push(`dano por ${GMAX_DURATION} turnos no lado de ${names[to]}`);
+  }
+  if (effect.critStage && (battle.volatiles[from].critStage ?? 0) < 3) {
+    const critStage = (battle.volatiles[from].critStage ?? 0) + 1;
+    battle.volatiles[from] = { ...battle.volatiles[from], critStage };
+    notes.push(`crítico +${critStage}`);
+  }
+  if (effect.unmodeled) notes.push(effect.unmodeled);
   if (effect.heal) {
     const healed = heal(battle, from, Math.floor(battle.combatants[from].stats.hp * effect.heal));
     if (healed) notes.push(`recupera ${healed} PS`);
@@ -201,8 +335,8 @@ function applyMaxEffect(battle, { from, to, move, names }) {
     notes.push('cura o próprio status');
   }
   if (effect.clear) {
-    battle.conditions[from] = { ...battle.conditions[from], stealthRock: false, spikes: 0 };
-    battle.conditions[to] = { ...battle.conditions[to], stealthRock: false, spikes: 0, reflect: false, lightScreen: false, auroraVeil: false };
+    battle.conditions[from] = { ...battle.conditions[from], stealthRock: false, steelsurge: false, spikes: 0 };
+    battle.conditions[to] = { ...battle.conditions[to], stealthRock: false, steelsurge: false, spikes: 0, reflect: false, lightScreen: false, auroraVeil: false };
     battle.field = { ...battle.field, terrain: '' };
     notes.push('limpa telas, hazards e terreno');
   }
@@ -262,7 +396,7 @@ export function applyMoveEffects(battle, { from, to, move, damage, names }) {
     if (WEATHER_HEAL.has(move.slug) && weather) fraction = ['sun', 'harsh-sun'].includes(weather) ? 2 / 3 : 1 / 4;
     if (move.slug === 'shore-up' && weather === 'sand') fraction = 2 / 3;
     if (move.slug === 'floral-healing' && battle.field.terrain === 'grassy') fraction = 2 / 3;
-    const healed = heal(battle, healedIndex, Math.floor(battle.combatants[healedIndex].stats.hp * fraction));
+    const healed = heal(battle, healedIndex, Math.floor(baseMaxHp(battle.combatants[healedIndex]) * fraction));
     const who = healedIndex === to ? `${names[to]}: ` : '';
     notes.push(healed ? `${who}+${healed} PS` : `${who}os PS já estão cheios`);
   }
@@ -305,7 +439,7 @@ export function applyMoveEffects(battle, { from, to, move, damage, names }) {
         notes.push(`${names[to]} foi semeado`);
       }
     } else if (MAIN_STATUSES.has(ailment) || ailment === 'toxic') {
-      const blocked = statusBlocked(battle, to, ailment, move);
+      const blocked = statusBlocked(battle, to, ailment, move, from);
       if (blocked) notes.push(`falhou: ${names[to]} ${blocked}`);
       else {
         battle.status[to] = ailment;

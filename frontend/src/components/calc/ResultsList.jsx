@@ -32,7 +32,7 @@ function ResultsList({ directions, selected, onSelect }) {
                     }`}
                   >
                     <span className="truncate font-reading text-sm font-semibold text-smeargle-text">
-                      {formatSlug(move.slug)}{move.poweredFrom ? ` (${formatSlug(move.poweredFrom)})` : ''}{move.crit ? ' (crít.)' : ''}
+                      {move.name ?? formatSlug(move.slug)}{move.poweredFrom ? ` (${formatSlug(move.poweredFrom)})` : ''}{move.crit ? ' (crít.)' : ''}
                     </span>
                     <span className="font-mono text-xs font-bold tabular-nums text-umber">
                       {result.reason ? '—' : `${damagePercent(result.min, result.hp)}–${damagePercent(result.max, result.hp)}%`}

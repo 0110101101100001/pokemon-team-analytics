@@ -1,6 +1,9 @@
-import { activeItem, calcSpeed, calculateDamage, isDynamaxed, poweredType, residualEffects, sturdyHolds } from './damage';
+import {
+  activeItem, calcSpeed, calculateDamage, confusionDamage, isDynamaxed, poweredType, residualEffects, sturdyHolds,
+} from './damage';
+import { baseMaxHp, dynamaxed, withoutDynamax } from './dynamax';
 import { formatSlug } from './filters';
-import { PROTECT_MOVES, SLEEP_TURNS, activeField, applyMoveEffects, isFieldMove, removesSecondary } from './moveEffects';
+import { PROTECT_MOVES, SLEEP_TURNS, activeField, applyMoveEffects, isFieldMove, passEffects, removesSecondary } from './moveEffects';
 import { poweredMove } from './poweredMoves';
 import { currentHp } from './variablePower';
 
@@ -16,9 +19,19 @@ import { currentHp } from './variablePower';
 
   Recuo (flinch): um golpe com 100% de recuo que acerta antes do alvo agir tira a vez dele (Fake Out). Inner Focus,
   Shield Dust e Covert Cloak impedem; Steadfast sobe a Spe de quem recua. Chances menores não entram (resultado médio).
+
+  Dynamax: escolher um Max ou G-Max liga o Dynamax no começo do turno, e ele acaba no fim do terceiro.
+  Confusão (33% de se acertar) e paixão (50% de não agir) entram pela média no dano; um golpe de status só falha
+  se a chance de agir ficar abaixo de 50%.
 */
 
 const FLINCH_IMMUNE_ABILITIES = new Set(['inner-focus', 'shield-dust']);
+
+// Chance de crítico com os acúmulos do G-Max Chi Strike (com 3, calculateDamage já dá o crítico).
+const CRIT_CHANCE = [0, 1 / 8, 1 / 2];
+const CONFUSION_SELF_HIT = 0.33;
+const INFATUATION_STOP = 0.5;
+const PROTECTS_FROM_MAX = 'max-guard';
 
 const average = (rolls) => rolls.reduce((total, roll) => total + roll, 0) / rolls.length;
 
@@ -64,8 +77,8 @@ function skipsTurn(battle, index) {
 function convertNow(move, attacker, field) {
   if (!move?.powerUp) return move;
   const { move: original, mode, gmaxMove } = move.powerUp;
-  const { category, hits, crit } = move;
-  return { ...poweredMove(original, mode, gmaxMove, poweredType(original, mode, attacker, field)), category, hits, crit };
+  const { category, hits, crit, outcome } = move;
+  return { ...poweredMove(original, mode, gmaxMove, poweredType(original, mode, attacker, field)), category, hits, crit, outcome };
 }
 
 /**
@@ -74,7 +87,9 @@ function convertNow(move, attacker, field) {
  * Devolve o novo estado de cada lado ({ hp, boosts, status, toxicTurns, sleepTurns, bide, lastHit }),
  * as condições de cada lado, o campo e as linhas do registro.
  */
-export function simulateTurn({ combatants, moves, sideConditions, field, names }) {
+export function simulateTurn({ combatants: entering, moves, sideConditions, field, names }) {
+  const activates = entering.map((side, index) => !side.dynamax && currentHp(side) > 0 && isDynamaxed(moves[index]));
+  const combatants = entering.map((side, index) => (activates[index] ? dynamaxed(side) : side));
   const battle = {
     combatants,
     hp: combatants.map(currentHp),
@@ -85,8 +100,9 @@ export function simulateTurn({ combatants, moves, sideConditions, field, names }
     bide: combatants.map((combatant) => combatant.bide ?? null),
     turnsOut: combatants.map((combatant) => combatant.turnsOut ?? 0),
     lastHit: [null, null],
+    volatiles: combatants.map((combatant) => ({ ...combatant.volatiles })),
     // Protect só vale no turno em que é usado: a marcação manual do campo não entra na simulação.
-    conditions: sideConditions.map((conditions) => ({ ...conditions, protect: false })),
+    conditions: sideConditions.map((conditions) => ({ ...conditions, protect: false, maxGuard: false })),
     field: { ...field },
   };
   const log = [];
@@ -100,12 +116,16 @@ export function simulateTurn({ combatants, moves, sideConditions, field, names }
     toxicTurns: battle.toxicTurns[index],
     lastHit: battle.lastHit[index],
     bide: battle.bide[index],
+    volatiles: battle.volatiles[index],
   });
   // Quem está acumulando Bide só usa Bide.
   const chosen = moves.map((move, index) => (battle.bide[index] ? BIDE : move));
   const protecting = [false, false];
   const acted = [false, false];
   const flinched = [false, false];
+  activates.forEach((active, index) => {
+    if (active) say(index, `${names[index]} entra em Dynamax.`, 'status');
+  });
 
   for (const from of turnOrder(combatants, chosen, battle.conditions, battle.field)) {
     const to = 1 - from;
@@ -127,9 +147,38 @@ export function simulateTurn({ combatants, moves, sideConditions, field, names }
       continue;
     }
 
+    const usedSlug = move.poweredFrom ?? move.slug;
+    if (battle.volatiles[from].torment && !combatants[from].dynamax && battle.volatiles[from].lastMove === usedSlug) {
+      say(from, `${names[from]} não pode repetir ${moveName} (Torment).`);
+      continue;
+    }
+
+    // Parte das vezes em que o lado consegue agir.
+    let actChance = 1;
+    if (battle.volatiles[from].confusion) {
+      battle.volatiles[from] = { ...battle.volatiles[from], confusion: battle.volatiles[from].confusion - 1 };
+      actChance = 1 - CONFUSION_SELF_HIT;
+      const hurt = Math.min(battle.hp[from], Math.round(confusionDamage(state(from)) * CONFUSION_SELF_HIT));
+      battle.hp[from] -= hurt;
+      say(from, `${names[from]} está confuso: em média perde ${hurt} PS e age em 67% das vezes.`, 'damage');
+      if (battle.hp[from] === 0) {
+        say(from, `${names[from]} desmaiou.`, 'faint');
+        continue;
+      }
+    }
+    if (battle.volatiles[from].infatuated) {
+      actChance *= 1 - INFATUATION_STOP;
+      say(from, `${names[from]} está apaixonado: age em metade das vezes.`);
+    }
+    if (move.category === 'status' && actChance < 0.5) {
+      say(from, `${names[from]} não consegue usar ${moveName}.`);
+      continue;
+    }
+    battle.volatiles[from] = { ...battle.volatiles[from], lastMove: usedSlug };
+
     if (PROTECT_MOVES.has(move.slug)) {
       protecting[from] = true;
-      battle.conditions[from] = { ...battle.conditions[from], protect: true };
+      battle.conditions[from] = { ...battle.conditions[from], protect: true, maxGuard: move.slug === PROTECTS_FROM_MAX };
       say(from, `${names[from]} usa ${moveName} e se protege.`, 'status');
       continue;
     }
@@ -167,7 +216,16 @@ export function simulateTurn({ combatants, moves, sideConditions, field, names }
     }
 
     let damage = averageDamage(result);
+    const critChance = result.crit || result.fixed ? 0 : CRIT_CHANCE[attacker.volatiles.critStage] ?? 0;
+    if (critChance) {
+      const critical = calculateDamage({
+        attacker, defender, move: { ...move, crit: true }, field: activeField(battle),
+        attackerSide: battle.conditions[from], defenderSide: battle.conditions[to], targetMoved: acted[to],
+      });
+      damage = Math.round(damage * (1 - critChance) + averageDamage(critical) * critChance);
+    }
     if (sturdyHolds(result, defender, attacker) && damage >= battle.hp[to]) damage = battle.hp[to] - 1;
+    if (actChance < 1) damage = Math.round(damage * actChance);
     damage = Math.min(damage, battle.hp[to]);
     battle.hp[to] -= damage;
     battle.lastHit[to] = { damage, category: move.category };
@@ -176,7 +234,7 @@ export function simulateTurn({ combatants, moves, sideConditions, field, names }
     const notes = applyMoveEffects(battle, { from, to, move, damage, names });
     // Recuo certo (Fake Out): só tira a vez se o alvo ainda não agiu neste turno.
     if (damage > 0 && move.effects?.flinchChance >= 100 && !removesSecondary(move, attacker)
-      && !isDynamaxed(chosen[to]) && !acted[to] && battle.hp[to] > 0) {
+      && !combatants[to].dynamax && !acted[to] && battle.hp[to] > 0) {
       const target = combatants[to];
       if (FLINCH_IMMUNE_ABILITIES.has(target.ability)) notes.push(`${names[to]} não recua (${formatSlug(target.ability)})`);
       else if (activeItem(target, battle.field) === 'covert-cloak') notes.push(`${names[to]} não recua (Covert Cloak)`);
@@ -192,7 +250,7 @@ export function simulateTurn({ combatants, moves, sideConditions, field, names }
       say(from, `${names[from]} desmaia (Final Gambit).`, 'faint');
     } else if (damage > 0 && activeItem(attacker, battle.field) === 'life-orb' && attacker.ability !== 'magic-guard'
       && !removesSecondary(move, attacker)) {
-      const recoil = Math.min(battle.hp[from], Math.floor(attacker.stats.hp / 10));
+      const recoil = Math.min(battle.hp[from], Math.floor(baseMaxHp(attacker) / 10));
       battle.hp[from] -= recoil;
       say(from, `${names[from]} perde ${recoil} PS pela Life Orb.`, 'damage');
     }
@@ -208,9 +266,9 @@ export function simulateTurn({ combatants, moves, sideConditions, field, names }
     const effects = residualEffects(combatant, battle.conditions[index], activeField(battle), state(other));
     if (battle.status[index] === 'toxic') battle.toxicTurns[index] += 1;
     // As notas também trazem os hazards de entrada, que não acontecem no fim do turno.
-    const notes = effects.notes.filter((note) => note !== 'Stealth Rock' && !note.endsWith('Spikes'));
+    const notes = effects.notes.filter((note) => note !== 'Stealth Rock' && note !== 'Steelsurge' && !note.endsWith('Spikes'));
     const before = battle.hp[index];
-    battle.hp[index] = Math.min(combatant.stats.hp, Math.max(0, battle.hp[index] - effects.perTurn));
+    battle.hp[index] = Math.min(combatant.stats.hp, Math.max(0, battle.hp[index] - effects.perTurn - effects.timed.reduce((total, loss) => total + loss.amount, 0)));
     const change = battle.hp[index] - before;
     if (change !== 0) {
       say(index, `${names[index]}: ${change > 0 ? '+' : '−'}${Math.abs(change)} PS no fim do turno (${notes.join(', ')}).`, change > 0 ? 'heal' : 'damage');
@@ -218,7 +276,7 @@ export function simulateTurn({ combatants, moves, sideConditions, field, names }
 
     // Leech Seed: o que o semeado perde vai para quem plantou, se ele estiver de pé.
     if (battle.conditions[index].leechSeed && notes.includes('Leech Seed') && battle.hp[other] > 0) {
-      const drained = Math.min(before, Math.floor(combatant.stats.hp / 8));
+      const drained = Math.min(before, Math.floor(baseMaxHp(combatant) / 8));
       const max = combatants[other].stats.hp;
       const healed = Math.max(0, Math.min(drained, max - battle.hp[other]));
       battle.hp[other] += healed;
@@ -227,8 +285,23 @@ export function simulateTurn({ combatants, moves, sideConditions, field, names }
     if (battle.hp[index] === 0) say(index, `${names[index]} desmaiou.`, 'faint');
   });
 
+  for (const line of passEffects(battle, names)) say(line.side, line.text, line.kind);
+
+  const dynamax = combatants.map((side, index) => {
+    if (!side.dynamax) return { dynamax: 0, dynamaxSpent: Boolean(side.dynamaxSpent) };
+    const left = battle.hp[index] > 0 ? side.dynamax - 1 : 0;
+    if (left) return { dynamax: left, dynamaxSpent: false };
+    if (battle.hp[index] > 0) {
+      battle.hp[index] = withoutDynamax(battle.hp[index], side.species);
+      say(index, `${names[index]} sai do Dynamax.`, 'status');
+    }
+    return { dynamax: 0, dynamaxSpent: true };
+  });
+
   return {
     sides: [0, 1].map((index) => ({
+      ...dynamax[index],
+      volatiles: battle.volatiles[index],
       currentHp: battle.hp[index],
       boosts: battle.boosts[index],
       status: battle.status[index],
@@ -240,7 +313,7 @@ export function simulateTurn({ combatants, moves, sideConditions, field, names }
       turnsOut: battle.turnsOut[index] + 1,
     })),
     // Protect não passa para o turno seguinte: devolve a marcação manual de antes.
-    conditions: battle.conditions.map((conditions, index) => ({ ...conditions, protect: sideConditions[index].protect })),
+    conditions: battle.conditions.map(({ maxGuard, ...conditions }, index) => ({ ...conditions, protect: sideConditions[index].protect })),
     field: battle.field,
     log,
   };
