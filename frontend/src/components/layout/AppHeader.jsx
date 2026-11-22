@@ -6,12 +6,12 @@ import { DEFAULT_SECTION, sectionHref } from '../../navigation/sections';
 const EASE = 'transition-[padding,margin,width,height,max-height,opacity,font-size] duration-300 max-md:duration-200 ease-[cubic-bezier(0.22,1,0.36,1)] motion-reduce:transition-none';
 
 /*
-  Marca: no topo, a logo completa (public/logo-header-*: a logo-clara sem a margem transparente, 367 × 96,
-  2x = 734 × 192); com o header recolhido, e sempre no celular, a logo reduzida (public/logo-reduzida-header-*,
+  Marca: no topo, a logo completa (public/logo-header-*: a logo-principal sem a margem transparente, 372 × 96,
+  2x = 744 × 192); com o header recolhido, e sempre no celular, a logo reduzida (public/logo-reduzida-header-*,
   233 × 44, 2x = 466 × 88), em traço claro sobre o marrom.
   As duas camadas ficam sobrepostas e trocam por opacidade; a escondida ganha `invisible`, que a tira também
   da leitura de tela. As imagens são definidas pela altura; a caixa repete a largura só para animar a troca.
-  Logo com 96px de altura (367px) onde cabe: de lg a xl o menu desce para a linha de baixo, e marca, menu e
+  Logo com 96px de altura (372px) onde cabe: de lg a xl o menu desce para a linha de baixo, e marca, menu e
   botões cabem numa linha a partir de 1440px; de 1340 a 1439px ela fica com 64px e de 1280 a 1339px, com 52px.
   Até 1535px o espaço entre marca, abas e botões encolhe (SectionTabs e gap da linha) para nada passar da borda.
   Logo reduzida: 44px no desktop recolhido; 34px no celular, para caber na linha de 380px (tela de 412px)
@@ -19,7 +19,7 @@ const EASE = 'transition-[padding,margin,width,height,max-height,opacity,font-si
 */
 const BOX = {
   collapsed: 'h-[34px] w-[180px] sm:h-11 sm:w-[233px] xl:h-10 xl:w-[212px] min-[1340px]:h-11 min-[1340px]:w-[233px]',
-  open: 'h-[34px] w-[180px] sm:h-[52px] sm:w-[199px] lg:h-24 lg:w-[367px] xl:h-[52px] xl:w-[199px] min-[1340px]:h-16 min-[1340px]:w-[245px] min-[1440px]:h-24 min-[1440px]:w-[367px]',
+  open: 'h-[34px] w-[180px] sm:h-[52px] sm:w-[202px] lg:h-24 lg:w-[372px] xl:h-[52px] xl:w-[202px] min-[1340px]:h-16 min-[1340px]:w-[248px] min-[1440px]:h-24 min-[1440px]:w-[372px]',
 };
 const SHOWN = 'visible opacity-100 scale-100';
 const HIDDEN = 'invisible opacity-0 scale-90';
@@ -32,7 +32,7 @@ function BrandMark({ collapsed }) {
         src="/logo-header-1x.png"
         srcSet="/logo-header-1x.png 1x, /logo-header-2x.png 2x"
         alt="Smearglepedia — guia de campo competitivo"
-        width={367}
+        width={372}
         height={96}
         decoding="async"
         className={`absolute left-0 top-0 h-full w-auto max-w-none origin-left ${LAYER} ${HIDDEN} ${collapsed ? '' : 'sm:visible sm:scale-100 sm:opacity-100'}`}
