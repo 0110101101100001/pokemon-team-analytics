@@ -310,9 +310,14 @@ export function battleTabsOf(battles) {
 const PICKER_STAGE_RANK = new Map([[STAGES['Main Story'], 0], [STAGES.Rematch, 1], [STAGES['Post-Game'], 2]]);
 const pickerStageRank = (stage) => PICKER_STAGE_RANK.get(stage) ?? PICKER_STAGE_RANK.size;
 
-const groupLabel = ({ games, location, role }, withGame) => [withGame && games, location, roleLabel(role)].filter(Boolean).join(' · ');
+// No seletor a etapa vem sempre escrita e na frente, onde um select estreito não a corta.
+const STAGE_NAMES = new Map([[STAGES['Main Story'], 'História'], [STAGES.Rematch, 'Revanche'], [STAGES['Post-Game'], 'Pós-jogo']]);
+export const stageName = (battle) => STAGE_NAMES.get(battle.stage) ?? null;
 
-// Rótulos repetidos (Rota 22 na 2ª e na 7ª batalha, os dois torneios do PWT) ganham etapa e, se preciso, o time ou a ordem.
+const groupLabel = (battle, withGame) =>
+  [withGame && battle.games, stageName(battle), battle.location, roleLabel(battle.role)].filter(Boolean).join(' · ');
+
+// Rótulos repetidos (Rota 22 na 2ª e na 7ª batalha, os dois torneios do PWT) ganham o time ou a ordem.
 // O sufixo só entra quando separa as opções de mesmo rótulo.
 function disambiguate(groups, extra) {
   const suffixesByLabel = new Map();
@@ -341,8 +346,7 @@ export function battleGroupsOf(trainer, game = null) {
       || gameRank(a.gameList[0]) - gameRank(b.gameList[0])
       || roleRank(a.role) - roleRank(b.role));
 
-  const byStage = disambiguate(groups, ({ variants: [first] }) => first.stage.label);
-  return disambiguate(byStage, ({ variants }) => (variants.length === 1 && variants[0].teamVariant) || `${variants[0].order}ª batalha`);
+  return disambiguate(groups, ({ variants }) => (variants.length === 1 && variants[0].teamVariant) || `${variants[0].order}ª batalha`);
 }
 
 /** O grupo só oferece variantes quando tem pelo menos dois times diferentes. */

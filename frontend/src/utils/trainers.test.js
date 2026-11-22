@@ -252,7 +252,7 @@ describe('batalhas na calculadora', () => {
     const groups = groupsOf(starters.map((variant) => row({
       Card_ID: variant, Trainer_Slug: 'blue', Trainer_Name: 'Blue', Role: 'Champion', Location: 'Indigo Plateau', Team_Variant: variant,
     })));
-    expect(summary(groups)).toEqual([['Red / Blue · Indigo Plateau · Campeão', ['Bulbasaur', 'Charmander', 'Squirtle']]]);
+    expect(summary(groups)).toEqual([['Red / Blue · História · Indigo Plateau · Campeão', ['Bulbasaur', 'Charmander', 'Squirtle']]]);
   });
 
   it('ordena por geração, etapa (história, revanche, pós-jogo) e ordem', () => {
@@ -272,8 +272,8 @@ describe('batalhas na calculadora', () => {
     });
     const [trainer] = groupTrainers([blue('Red / Blue', 'Cerulean City', 3), blue('Yellow', 'Route 22', 2), blue('Red / Blue', 'Route 22', 2)]);
     expect(gameLabelsOf(trainer.battles)).toEqual(['Red / Blue', 'Yellow']);
-    expect(battleGroupsOf(trainer, 'Red / Blue').map((group) => group.label)).toEqual(['Route 22 · Rival', 'Cerulean City · Rival']);
-    expect(battleGroupsOf(trainer, 'Yellow').map((group) => group.label)).toEqual(['Route 22 · Rival']);
+    expect(battleGroupsOf(trainer, 'Red / Blue').map((group) => group.label)).toEqual(['História · Route 22 · Rival', 'História · Cerulean City · Rival']);
+    expect(battleGroupsOf(trainer, 'Yellow').map((group) => group.label)).toEqual(['História · Route 22 · Rival']);
   });
 
   it("põe Let's Go antes de Sword / Shield", () => {
@@ -290,8 +290,8 @@ describe('batalhas na calculadora', () => {
       Battle_Stage: 'Post-Game', Order: order, Location: 'Pokémon World Tournament', Team_Variant: variant,
     });
     expect(summary(groupsOf([pwt('Kanto Leaders', 1), pwt('World Leaders', 2)]))).toEqual([
-      ['Black 2 / White 2 · Pokémon World Tournament · Líder de Ginásio · Kanto Leaders', []],
-      ['Black 2 / White 2 · Pokémon World Tournament · Líder de Ginásio · World Leaders', []],
+      ['Black 2 / White 2 · Pós-jogo · Pokémon World Tournament · Líder de Ginásio · Kanto Leaders', []],
+      ['Black 2 / White 2 · Pós-jogo · Pokémon World Tournament · Líder de Ginásio · World Leaders', []],
     ]);
 
     const cup = (stage, order) => row({
@@ -299,9 +299,17 @@ describe('batalhas na calculadora', () => {
       Battle_Stage: stage, Order: order, Role: 'Champion Cup', Location: 'Champion Cup',
     });
     expect(summary(groupsOf([cup('Main Story', 3), cup('Rematch', 2)]))).toEqual([
-      ['Sword / Shield · Champion Cup · Copa dos Campeões', []],
-      ['Sword / Shield · Champion Cup · Copa dos Campeões · revanche', []],
+      ['Sword / Shield · História · Champion Cup · Copa dos Campeões', []],
+      ['Sword / Shield · Revanche · Champion Cup · Copa dos Campeões', []],
     ]);
+  });
+
+  it('diz que é revanche mesmo quando é a única batalha ou o local é outro', () => {
+    const brock = (fields) => row({ Trainer_Slug: 'brock', Trainer_Name: 'Brock', Games_Label: 'HeartGold / SoulSilver', ...fields });
+    const rematch = brock({ Card_ID: 'rev', Battle_Stage: 'Rematch', Location: 'Fighting Dojo' });
+    const labels = (rows) => battleGroupsOf(groupTrainers(rows)[0], 'HeartGold / SoulSilver').map((group) => group.label);
+    expect(labels([rematch])).toEqual(['Revanche · Fighting Dojo · Líder de Ginásio']);
+    expect(labels([brock({ Card_ID: 'gym', Location: 'Pewter Gym' }), rematch])[1]).toMatch(/^Revanche/);
   });
 });
 
