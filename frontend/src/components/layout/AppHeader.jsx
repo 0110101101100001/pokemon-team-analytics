@@ -13,13 +13,14 @@ const FADE = 'transition-[opacity,transform] duration-300 ease-[cubic-bezier(0.2
   As duas camadas ficam sobrepostas e trocam por opacidade; a escondida ganha `invisible`, que a tira também
   da leitura de tela. As imagens são definidas pela altura; a caixa repete a largura só para animar a troca.
   Logo com 96px de altura (367px) onde cabe: de lg a xl o menu desce para a linha de baixo, e marca, menu e
-  botões cabem numa linha a partir de 1440px; entre 1280 e 1439px, com tudo numa linha, ela fica com 64px.
+  botões cabem numa linha a partir de 1440px; de 1340 a 1439px ela fica com 64px e de 1280 a 1339px, com 52px.
+  Até 1535px o espaço entre marca, abas e botões encolhe (SectionTabs e gap da linha) para nada passar da borda.
   Logo reduzida: 44px no desktop recolhido; 34px no celular, para caber na linha de 380px (tela de 412px)
   ao lado dos botões, com 8px entre eles.
 */
 const BOX = {
-  collapsed: 'h-[34px] w-[180px] sm:h-11 sm:w-[233px]',
-  open: 'h-[34px] w-[180px] sm:h-[52px] sm:w-[199px] lg:h-24 lg:w-[367px] xl:h-16 xl:w-[245px] min-[1440px]:h-24 min-[1440px]:w-[367px]',
+  collapsed: 'h-[34px] w-[180px] sm:h-11 sm:w-[233px] xl:h-10 xl:w-[212px] min-[1340px]:h-11 min-[1340px]:w-[233px]',
+  open: 'h-[34px] w-[180px] sm:h-[52px] sm:w-[199px] lg:h-24 lg:w-[367px] xl:h-[52px] xl:w-[199px] min-[1340px]:h-16 min-[1340px]:w-[245px] min-[1440px]:h-24 min-[1440px]:w-[367px]',
 };
 const SHOWN = 'visible opacity-100 scale-100';
 const HIDDEN = 'invisible opacity-0 scale-90';
@@ -68,7 +69,7 @@ function AppHeader({ activeId, collapsed, toolbarRef, children }) {
         <PaintSpeckle variant={1} color="#E3D8F0" className="absolute left-[56%] top-[44%] h-9 w-9 rotate-[200deg] opacity-45 xl:top-[52%]" />
       </div>
       <div className={`relative mx-auto max-w-[1700px] px-4 sm:px-6 lg:px-8 ${EASE} ${collapsed ? 'py-1.5' : 'py-2 sm:py-3 lg:py-1'}`}>
-        <div className="flex flex-wrap items-center gap-x-2 gap-y-1 sm:gap-x-3 xl:flex-nowrap xl:gap-x-6">
+        <div className="flex flex-wrap items-center gap-x-2 gap-y-1 sm:gap-x-3 xl:flex-nowrap xl:gap-x-3 min-[1536px]:gap-x-6">
           <h1 className="order-1 m-0 min-w-0 sm:shrink-0">
             <a
               href={sectionHref(DEFAULT_SECTION)}

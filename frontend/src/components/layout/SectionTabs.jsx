@@ -10,7 +10,7 @@ import { BrushUnderline } from '../InkDecor';
 function SectionTabs({ activeId, compact = false, className = '' }) {
   return (
     <nav aria-label="Seções" className={`flex justify-center ${className}`}>
-      <ul className="grid w-full grid-cols-7 gap-0.5 sm:flex sm:w-auto sm:items-center sm:gap-1">
+      <ul className="grid w-full grid-cols-7 gap-0.5 sm:flex sm:w-auto sm:items-center sm:gap-1 xl:gap-0.5 min-[1536px]:gap-1">
         {SECTIONS.map((section) => {
           const { id, label, shortLabel, icon: Icon, pigment } = section;
           const active = id === activeId;
@@ -19,7 +19,7 @@ function SectionTabs({ activeId, compact = false, className = '' }) {
               <a
                 href={sectionHref(section)}
                 aria-current={active ? 'page' : undefined}
-                className={`relative flex flex-col items-center gap-1 rounded-[3px] px-1 pb-2 pt-1.5 font-reading transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-paint-pistachio/70 sm:flex-row sm:gap-2 sm:px-3 sm:py-2 ${
+                className={`relative flex flex-col items-center gap-1 rounded-[3px] px-1 pb-2 pt-1.5 font-reading transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-paint-pistachio/70 sm:flex-row sm:gap-2 sm:px-3 sm:py-2 xl:px-2 min-[1536px]:px-3 ${
                   active ? 'font-semibold text-paper' : 'font-medium text-page/80 hover:text-paper'
                 }`}
               >

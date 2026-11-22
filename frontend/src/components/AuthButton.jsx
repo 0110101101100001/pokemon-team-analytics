@@ -45,7 +45,7 @@ function AuthButton({ session, onOpen }) {
   return (
     <div className="inline-flex h-9 items-center gap-1.5 rounded-[3px] border-[1.5px] border-page/55 pl-1.5 pr-1 font-reading text-sm font-medium text-paper sm:h-10">
       <Avatar user={user} />
-      {name && <span className="hidden max-w-[8rem] truncate sm:inline">{name}</span>}
+      {name && <span className="hidden max-w-[8rem] truncate sm:inline xl:max-w-[5rem] min-[1700px]:max-w-[8rem]">{name}</span>}
       <button
         type="button"
         onClick={handleSignOut}
