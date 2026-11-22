@@ -4,7 +4,6 @@ import { InkEdge, PaintSpeckle } from '../InkDecor';
 import { DEFAULT_SECTION, sectionHref } from '../../navigation/sections';
 
 const EASE = 'transition-[padding,margin,width,height,max-height,opacity,font-size] duration-300 max-md:duration-200 ease-[cubic-bezier(0.22,1,0.36,1)] motion-reduce:transition-none';
-const FADE = 'transition-[opacity,transform] duration-300 ease-[cubic-bezier(0.22,1,0.36,1)] motion-reduce:transition-none';
 
 /*
   Marca: no topo, a logo completa (public/logo-header-*: a logo-clara sem a margem transparente, 367 × 96,

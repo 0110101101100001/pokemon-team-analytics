@@ -1,4 +1,4 @@
-import { memo, useDeferredValue, useEffect, useMemo, useState } from 'react';
+import { memo, useCallback, useDeferredValue, useEffect, useMemo, useState } from 'react';
 import { Loader2, Search, TriangleAlert } from 'lucide-react';
 import { MemberShortcut, SelectField, SourcePanel } from './SourcePanel';
 import { fetchTrainers } from '../../services/trainers';
@@ -103,14 +103,14 @@ function TrainerTeamPicker({ pool, activeMember, initialBattleId = null, onPick 
 
   const entryByName = useMemo(() => new Map(pool.map((entry) => [entry.name, entry])), [pool]);
 
-  const membersOf = (chosen, battleData) => {
+  const membersOf = useCallback((chosen, battleData) => {
     if (!chosen || !battleData) return [];
     const summaryOf = (slug) => moveSummaryOf(battleData, slug);
     return chosen.team
       .map((member) => ({ member, entry: resolveTrainerPokemon(entryByName, member.slug) }))
       .filter(({ entry }) => entry)
       .map(({ member, entry }) => ({ member, entry, set: trainerMemberSet(member, summaryOf) }));
-  };
+  }, [entryByName]);
   // O time inteiro vai junto, para os outros virarem reservas.
   const teamPick = (chosen, team, index) => ({
     key: `trainer:${chosen.id}`,
@@ -151,7 +151,7 @@ function TrainerTeamPicker({ pool, activeMember, initialBattleId = null, onPick 
   const trainer = state.trainers.find((candidate) => candidate.slug === selection.slug);
   const { games, game, groups, group, battle } = useMemo(() => resolveSelection(trainer, selection), [trainer, selection]);
 
-  const members = useMemo(() => membersOf(battle, state.battleData), [battle, state.battleData, entryByName]);
+  const members = useMemo(() => membersOf(battle, state.battleData), [battle, state.battleData, membersOf]);
 
   return (
     <SourcePanel title="time de um treinador" selected={trainer && battle ? [trainer.name, stageName(battle)?.toLowerCase()].filter(Boolean).join(' · ') : trainer?.name} defaultOpen={Boolean(initialBattleId)} onOpen={load}>
