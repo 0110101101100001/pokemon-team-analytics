@@ -59,13 +59,13 @@ function BrandMark({ collapsed }) {
  */
 function AppHeader({ activeId, collapsed, toolbarRef, children }) {
   return (
-    <header className="sticky top-0 z-40 bg-umber text-page">
-      {/* Respingos claros de ateliê, atrás de tudo, presos às bordas: atrás de texto eles derrubam o contraste. Somem no celular, onde o header é estreito. */}
+    <header className="header-paper sticky top-0 z-40 bg-umber text-page">
+      {/* Respingos no creme da logo, só nas bordas livres: nunca atrás da logo, de texto ou da busca. Somem no celular. */}
       <div aria-hidden="true" className="pointer-events-none absolute inset-0 -z-10 hidden overflow-hidden md:block">
-        <PaintSpeckle variant={0} color="#F7F3EE" className="absolute left-[31%] top-0 h-12 w-12 -translate-y-[58%] opacity-50" />
-        <PaintSpeckle variant={1} color="#F2D9B8" className="absolute right-[11%] top-0 h-10 w-10 -translate-y-1/2 rotate-45 opacity-50" />
-        <PaintSpeckle variant={2} color="#DCEBCF" className="absolute right-0 top-[42%] h-14 w-14 translate-x-1/2 -rotate-12 opacity-45" />
-        <PaintSpeckle variant={1} color="#E3D8F0" className="absolute left-[56%] top-0 h-9 w-9 -translate-y-1/2 rotate-[200deg] opacity-45" />
+        <PaintSpeckle variant={0} className="absolute -top-1 left-0 h-8 w-8 -translate-x-1/3 opacity-40" />
+        <PaintSpeckle variant={1} className="absolute bottom-1 left-0 h-6 w-6 -translate-x-1/4 rotate-180 opacity-30" />
+        <PaintSpeckle variant={2} className="absolute right-0 top-[18%] h-8 w-8 translate-x-1/3 -rotate-12 opacity-40" />
+        <PaintSpeckle variant={1} className="absolute -bottom-1 right-0 h-7 w-7 translate-x-1/3 rotate-45 opacity-30" />
       </div>
       <div className={`relative mx-auto max-w-[1700px] px-4 sm:px-6 lg:px-8 ${EASE} ${collapsed ? 'py-1.5' : 'py-2 sm:py-3 lg:py-1'}`}>
         <div className="flex flex-wrap items-center gap-x-2 gap-y-1 sm:gap-x-3 xl:flex-nowrap xl:gap-x-3 min-[1536px]:gap-x-6">

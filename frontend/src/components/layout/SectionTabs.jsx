@@ -10,7 +10,7 @@ import { BrushUnderline } from '../InkDecor';
 function SectionTabs({ activeId, compact = false, className = '' }) {
   return (
     <nav aria-label="Seções" className={`flex justify-center ${className}`}>
-      <ul className="grid w-full grid-cols-7 gap-0.5 sm:flex sm:w-auto sm:items-center sm:gap-1 xl:gap-0.5 min-[1536px]:gap-1">
+      <ul className="header-menu-stroke grid w-full grid-cols-7 gap-0.5 sm:flex sm:w-auto sm:items-center sm:gap-1 xl:gap-0.5 min-[1536px]:gap-1">
         {SECTIONS.map((section) => {
           const { id, label, shortLabel, icon: Icon, pigment } = section;
           const active = id === activeId;

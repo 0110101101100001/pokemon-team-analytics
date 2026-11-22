@@ -3,9 +3,10 @@ import { BrushUnderline, InkMarker } from '../InkDecor';
 
 // Campo de papel: só o sublinhado a tinta, sem caixa. No foco o sublinhado engrossa e pega o pistache.
 export const FIELD_CLASS =
-  'h-9 sm:h-10 w-full rounded-none border-0 border-b-[1.5px] border-page/50 bg-transparent text-paper [color-scheme:dark] transition-[border-color,border-width] hover:border-page/85 focus:outline-none focus:border-b-[2.5px] focus:border-paint-pistachio';
-export const SELECT_CLASS = `${FIELD_CLASS} appearance-none pl-1 pr-6 sm:pr-7 font-reading text-sm font-medium cursor-pointer`;
-export const TEXT_INPUT_BASE = `${FIELD_CLASS} pl-7 font-reading text-[15px] placeholder:italic placeholder:text-page/90`;
+  'h-9 sm:h-10 w-full rounded-none border-0 border-b-[1.5px] border-page/50 text-paper [color-scheme:dark] transition-[border-color,border-width] hover:border-page/85 focus:outline-none focus:border-b-[2.5px] focus:border-paint-pistachio';
+export const SELECT_CLASS = `${FIELD_CLASS} appearance-none bg-transparent pl-1 pr-6 sm:pr-7 font-reading text-sm font-medium cursor-pointer`;
+// A busca tem fundo liso: nada da textura passa atrás do que se digita.
+export const TEXT_INPUT_BASE = `${FIELD_CLASS} bg-umber pl-7 font-reading text-[15px] placeholder:italic placeholder:text-page/90`;
 // Botão do header: retângulo de contorno, como um carimbo. O fundo é opaco para os respingos não passarem atrás do texto.
 export const HEADER_BUTTON_CLASS =
   'relative h-9 sm:h-10 inline-flex items-center justify-center gap-2 rounded-[3px] border-[1.5px] border-page/55 bg-umber px-3 font-reading text-sm font-medium text-page transition-colors cursor-pointer hover:border-page hover:bg-[#6A5443] focus:outline-none focus-visible:ring-2 focus-visible:ring-paint-pistachio/70';
