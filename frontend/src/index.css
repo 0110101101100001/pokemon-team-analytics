@@ -385,13 +385,396 @@
 
 @layer components {
   /*
-    Papel do header: um grão só, em duas escalas (fino e nuvem larga) que somam até ±3% do marrom, sem degradê.
-    Os dois ladrilhos têm períodos diferentes, para a repetição não aparecer.
+    Papel do header, de baixo para cima: a nuvem larga de tom, as fibras (0,08 a 0,12, já no SVG) e o grão em
+    multiply. O grão só escurece, então o texto claro ganha contraste. Os ladrilhos têm períodos diferentes.
+    `--header-solid` é o tom médio do resultado: o fundo da busca e dos botões, que não levam textura.
   */
   .header-paper {
-    --header-paper: url('./assets/header/paper-grain.webp'), url('./assets/header/paper-tone.webp');
-    background-image: var(--header-paper);
-    background-position: 50% 0;
+    --header-paper: url('./assets/header/paper-tone.webp');
+    --header-solid: #6e5948;
+    /* Respiro lateral comum ao cartão da conta e ao Sobre; menor onde a linha de cima fica apertada. */
+    --header-control-pad: 12px;
+  }
+
+  @media (min-width: 640px) and (max-width: 767px), (min-width: 1280px) {
+    .header-paper {
+      --header-control-pad: 8px;
+    }
+  }
+
+  .header-texture {
+    isolation: isolate;
+    background: var(--umber) var(--header-paper) 50% 0;
+  }
+
+  .header-texture::before,
+  .header-texture::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+  }
+
+  .header-texture::before {
+    background: url('./assets/header/paper-fibers.svg') 0 0 / 467px 331px;
+  }
+
+  .header-texture::after {
+    background: url('./assets/header/paper-noise.svg') 0 0 / 240px 240px;
+    opacity: 0.17;
+    mix-blend-mode: multiply;
+  }
+
+  /*
+    Duas pinceladas secas, presas à faixa abaixo da logo e do menu. Cada uma acaba onde começa o fundo liso da busca,
+    que as cortaria em reto: a esquerda sob o recorte, a direita sob os selects (a linha de baixo, até lg).
+  */
+  .header-brush {
+    position: absolute;
+    z-index: -10;
+    max-height: 100%;
+    background: url('./assets/header/brush-left.svg') 0 0 / 100% 100% no-repeat;
+    opacity: 0.35;
+    pointer-events: none;
+  }
+
+  .header-brush-left {
+    left: -16px;
+    top: 12px;
+    width: 168px;
+    height: 44px;
+  }
+
+  .header-brush-right {
+    right: -16px;
+    bottom: 0;
+    width: 62%;
+    height: 40px;
+    background-image: url('./assets/header/brush-right.svg');
+    transform: scaleX(-1);
+  }
+
+  @media (min-width: 640px) {
+    .header-brush-left {
+      top: 6px;
+      width: 188px;
+      height: auto;
+      bottom: 0;
+    }
+
+    .header-brush-right {
+      height: 44px;
+    }
+  }
+
+  @media (min-width: 1024px) {
+    .header-brush-right {
+      width: 478px;
+      height: auto;
+      top: 6px;
+    }
+  }
+
+  @media (min-width: 1860px) {
+    .header-brush-left {
+      left: -96px;
+      width: 268px;
+    }
+  }
+
+  /*
+    Perfil: foto de usuário. A escala é uma só para o avatar e a prévia do painel. Em 1,2 as cabeças aparecem;
+    de 1,3 em diante o círculo já corta a de Pokémon altos, como Garchomp e Mewtwo.
+  */
+  .profile-avatar {
+    --photo-scale: 1.2;
+    position: relative;
+    display: flex;
+    flex-shrink: 0;
+    align-items: center;
+    justify-content: center;
+    width: 40px;
+    height: 40px;
+    padding: 0;
+    overflow: hidden;
+    border: 2px solid #3b2e25;
+    border-radius: 50%;
+    background-color: #efe6d6;
+    box-shadow: 0 1px 4px rgb(28 26 23 / 0.3);
+  }
+
+  /* Absoluta: o tamanho natural da arte (475px) não entra na conta do círculo. */
+  .profile-photo {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    max-width: none;
+    object-fit: contain;
+    transform: scale(var(--photo-scale));
+    transform-origin: center;
+  }
+
+  .profile-photo-pixel {
+    image-rendering: pixelated;
+  }
+
+  .profile-initial {
+    font-family: 'Playfair Display', Georgia, serif;
+    font-size: 1.375rem;
+    font-weight: 700;
+    line-height: 1;
+    color: #3b2e25;
+  }
+
+  .profile-avatar-preview {
+    width: 96px;
+    height: 96px;
+  }
+
+  /*
+    Cartão da conta: uma ficha de papel com avatar, nome e e-mail e o botão de entrar ou sair. A ficha tem a altura
+    dos outros botões do header e o avatar passa dela por igual em cima e embaixo, como um selo: a linha não cresce.
+    Abaixo de 640px fica só o avatar e o botão em ícone.
+  */
+  /* Papel da linha de cima: o cartão da conta e o Sobre têm a mesma ficha (altura, borda, cantos, fundo e texto). */
+  .account-card,
+  .header-paper-button {
+    flex-shrink: 0;
+    align-items: center;
+    height: 36px;
+    border: 2px solid #3b2e25;
+    border-radius: 9px 5px 8px 4px / 5px 8px 4px 9px;
+    background-color: rgb(239 230 214 / 0.85);
+    box-shadow: 0 1px 2px rgb(28 26 23 / 0.2);
+    color: #3b2e25;
+    font-family: 'Newsreader', Georgia, serif;
+    font-size: 0.875rem;
+    font-weight: 500;
+    line-height: 1;
+  }
+
+  .account-card {
+    display: flex;
+    gap: 2px;
+    padding: 0 2px 0 0;
+  }
+
+  .header-paper-button {
+    display: inline-flex;
+    justify-content: center;
+    gap: 8px;
+    padding: 0 var(--header-control-pad);
+    white-space: nowrap;
+    cursor: pointer;
+    transition: background-color 0.15s ease-out, color 0.15s ease-out;
+  }
+
+  .header-paper-button:hover,
+  .account-action:hover:not(:disabled) {
+    background-color: #7a5f4e;
+    color: #f3ead9;
+  }
+
+  .header-paper-button:focus-visible {
+    outline: none;
+    box-shadow: 0 0 0 2px #3b2e25, 0 0 0 4px #b5c99a;
+  }
+
+  .account-avatar {
+    cursor: pointer;
+    transition: border-color 0.15s ease-out, box-shadow 0.15s ease-out;
+  }
+
+  /* Só cor e sombra: nada muda de tamanho nem de lugar. */
+  .account-avatar:hover {
+    border-color: #7a5f4e;
+    box-shadow: 0 3px 7px rgb(28 26 23 / 0.4);
+  }
+
+  .account-card[data-guest] .profile-photo {
+    filter: grayscale(0.4);
+  }
+
+  .account-divider,
+  .account-text {
+    display: none;
+  }
+
+  .account-action {
+    display: inline-flex;
+    flex-shrink: 0;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    min-width: 30px;
+    height: 28px;
+    padding: 0;
+    border: 2px solid #3b2e25;
+    border-radius: 5px 3px 6px 3px;
+    background-color: transparent;
+    color: #3b2e25;
+    font: inherit;
+    white-space: nowrap;
+    cursor: pointer;
+    transition: background-color 0.15s ease-out, color 0.15s ease-out;
+  }
+
+  .account-action:disabled {
+    cursor: wait;
+  }
+
+  .account-action-label {
+    display: none;
+  }
+
+  /* O anel verde fica sobre um contorno escuro: assim aparece tanto no creme da ficha quanto no marrom do header. */
+  .account-card :is(.account-avatar, .account-action):focus-visible {
+    outline: none;
+    box-shadow: 0 0 0 2px #3b2e25, 0 0 0 4px #b5c99a;
+  }
+
+  .account-name,
+  .account-detail {
+    display: block;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .account-name {
+    font-family: 'Playfair Display', Georgia, serif;
+    font-size: 0.875rem;
+    font-weight: 700;
+    line-height: 1.125rem;
+    color: #3b2e25;
+  }
+
+  .account-card[data-guest] .account-text {
+    max-width: none;
+  }
+
+  .account-card[data-guest] .account-detail {
+    overflow: visible;
+    text-overflow: clip;
+  }
+
+  .account-detail {
+    font-size: 0.75rem;
+    line-height: 0.9375rem;
+    color: #6a5243;
+  }
+
+  @media (min-width: 640px) {
+    .account-card,
+    .header-paper-button {
+      height: 40px;
+    }
+
+    .account-card {
+      gap: 0;
+      padding: 0 var(--header-control-pad);
+    }
+
+    .account-avatar {
+      width: 52px;
+      height: 52px;
+    }
+
+    /* Header recolhido: a linha tem 40px, e o selo encolhe para não encostar na borda de cima. */
+    .account-card[data-compact] .account-avatar {
+      width: 44px;
+      height: 44px;
+    }
+
+    .account-divider {
+      display: block;
+      flex-shrink: 0;
+      width: 1px;
+      height: 24px;
+      margin: 0 8px;
+      background-color: #c9b79c;
+    }
+
+    .account-text {
+      display: block;
+      min-width: 0;
+      max-width: 100px;
+      margin-right: 8px;
+      text-align: left;
+    }
+
+    .account-action {
+      height: 30px;
+      padding: 0 10px;
+    }
+
+    .account-action-label {
+      display: inline;
+    }
+  }
+
+  @media (min-width: 768px) {
+    .account-text {
+      max-width: 150px;
+    }
+  }
+
+  /*
+    Onde logo, menu e botões quase enchem a linha (de 640 a 767px, com o header recolhido, e de 1280 a 1699px),
+    o botão fica só com a seta e o texto encurta: assim o menu não se move nem quebra de linha.
+  */
+  @media (min-width: 640px) and (max-width: 767px), (min-width: 1280px) and (max-width: 1699px) {
+    .account-text {
+      max-width: 84px;
+    }
+
+
+    .account-action {
+      width: 32px;
+      padding: 0;
+    }
+
+    .account-action-label {
+      display: none;
+    }
+  }
+
+  @media (min-width: 640px) and (max-width: 767px) {
+    .account-text {
+      max-width: 100px;
+    }
+  }
+
+  /*
+    Onde a linha de cima fica apertada (de 640 a 767px e de 1280px em diante, quando menu, logo e botões dividem a
+    mesma linha), o convite do visitante desce para 11px e o traço encosta mais: assim ele cabe inteiro, sem reticências.
+  */
+  @media (min-width: 640px) and (max-width: 767px), (min-width: 1280px) {
+    .account-card[data-guest] .account-detail {
+      font-size: 0.6875rem;
+    }
+
+    .account-divider {
+      margin: 0 4px;
+    }
+
+    .account-text {
+      margin-right: 6px;
+    }
+  }
+
+  @media (min-width: 1700px) {
+    .account-text {
+      max-width: 96px;
+    }
+  }
+
+  /* Onde logo, menu e botões quase enchem a linha, os botões com rótulo ficam sem ícone. */
+  @media (max-width: 479px), (min-width: 1280px) and (max-width: 1699px) {
+    .header-action-icon {
+      display: none;
+    }
   }
 
   /* Pincelada seca atrás das abas, e só delas. No celular, metade da altura. */
@@ -428,7 +811,7 @@
   /*
     Borda de pincel do header: um ladrilho de 960px que se repete na horizontal sem esticar. Uma linha
     orgânica suave, com a aguada leve que a tinta deixa ao espalhar e poucos riscos de pincel seco.
-    O papel é recortado por ele (::before) e a sombra interna acompanha o rasgo (::after).
+    O papel é recortado por ele (.ink-brush-paper) e a sombra interna acompanha o rasgo (::after).
     No celular o ladrilho encolhe um pouco.
   */
   .ink-brush-edge {
@@ -437,16 +820,13 @@
     --ink-edge-size: 960px 18px;
   }
 
-  .ink-brush-edge::before,
   .ink-brush-edge::after {
     content: '';
     position: absolute;
     inset: 0;
   }
 
-  .ink-brush-edge::before {
-    background: var(--header-paper);
-    background-color: var(--umber);
+  .ink-brush-paper {
     -webkit-mask: var(--ink-edge-shape) 0 0 / var(--ink-edge-size) repeat-x;
     mask: var(--ink-edge-shape) 0 0 / var(--ink-edge-size) repeat-x;
   }

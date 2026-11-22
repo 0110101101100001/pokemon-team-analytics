@@ -23,7 +23,11 @@ export const InkSplatter = memo(function InkSplatter({ className = '', color = '
  * O desenho é um ladrilho que se repete na horizontal sem esticar (index.css, .ink-brush-edge).
  */
 export const InkEdge = memo(function InkEdge({ className = '' }) {
-  return <div aria-hidden="true" className={`ink-brush-edge pointer-events-none w-full ${className}`} />;
+  return (
+    <div aria-hidden="true" className={`ink-brush-edge pointer-events-none w-full ${className}`}>
+      <span className="ink-brush-paper header-texture absolute inset-0" />
+    </div>
+  );
 });
 
 /**

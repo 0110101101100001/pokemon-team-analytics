@@ -1,7 +1,12 @@
-import { memo } from 'react';
+import { Suspense, lazy, memo, useCallback, useMemo, useState } from 'react';
 import SectionTabs from './SectionTabs';
 import { InkEdge, PaintSpeckle } from '../InkDecor';
+import ProfileAvatar from '../profile/ProfileAvatar';
+import { useProfilePokemon } from '../../hooks/useProfilePokemon';
+import { profileAccount } from '../../utils/profileAccount';
 import { DEFAULT_SECTION, sectionHref } from '../../navigation/sections';
+
+const ProfilePicker = lazy(() => import('../profile/ProfilePicker'));
 
 const EASE = 'transition-[padding,margin,width,height,max-height,opacity,font-size] duration-300 max-md:duration-200 ease-[cubic-bezier(0.22,1,0.36,1)] motion-reduce:transition-none';
 
@@ -56,10 +61,21 @@ function BrandMark({ collapsed }) {
  * Header fixo pintado a nanquim: marca, abas das seções e as ações passadas em `children` na primeira faixa;
  * logo abaixo, em toda a largura, a zona de controle da seção ativa. Os filtros não moram aqui: `toolbarRef`
  * expõe um espaço vazio que a seção preenche com <HeaderToolbar>; se a seção não tem filtros, o espaço some.
+ *
+ * Canto direito: o cartão da conta (avatar, nome, entrar ou sair) e Sobre. De xl em diante o grupo reserva sempre 261px e o que passa disso
+ * avança sobre a folga até o menu, que assim fica no mesmo lugar com ou sem conta. O grupo tem de caber em 270px até
+ * 1699px e em 365px depois: por isso, nas faixas apertadas, os rótulos perdem o ícone (.header-action-icon).
  */
-function AppHeader({ activeId, collapsed, toolbarRef, children }) {
+function AppHeader({ activeId, collapsed, toolbarRef, profilePool, profileUser, onProfileError, onLogin, accountAction, children }) {
+  const [profileId, chooseProfile] = useProfilePokemon(profileUser?.id ?? null, onProfileError);
+  const [pickerOpen, setPickerOpen] = useState(false);
+  const account = useMemo(() => profileAccount(profileUser), [profileUser]);
+  const openPicker = useCallback(() => setPickerOpen(true), []);
+  const closePicker = useCallback(() => setPickerOpen(false), []);
+
   return (
     <header className="header-paper sticky top-0 z-40 bg-umber text-page">
+      <div aria-hidden="true" className="header-texture pointer-events-none absolute inset-0 -z-10" />
       {/* Respingos no creme da logo, só nas bordas livres: nunca atrás da logo, de texto ou da busca. Somem no celular. */}
       <div aria-hidden="true" className="pointer-events-none absolute inset-0 -z-10 hidden overflow-hidden md:block">
         <PaintSpeckle variant={0} className="absolute -top-1 left-0 h-8 w-8 -translate-x-1/3 opacity-40" />
@@ -80,13 +96,34 @@ function AppHeader({ activeId, collapsed, toolbarRef, children }) {
 
           <SectionTabs activeId={activeId} compact={collapsed} className="order-3 w-full xl:order-2 xl:w-auto xl:flex-1" />
 
-          <div className="order-2 ml-auto flex shrink-0 items-center gap-1.5 sm:gap-2 xl:order-3 xl:ml-0">{children}</div>
+          <div className="order-2 ml-auto flex shrink-0 items-center justify-end gap-1 sm:gap-2 xl:order-3 xl:ml-0 xl:w-[261px] xl:gap-1.5 min-[1700px]:gap-2">
+            <ProfileAvatar
+              id={profileId}
+              account={account}
+              signedIn={Boolean(profileUser)}
+              compact={collapsed}
+              onOpen={profileUser ? openPicker : onLogin}
+              action={accountAction}
+            />
+            {children}
+          </div>
         </div>
 
-        <div ref={toolbarRef} className="mt-2 w-full empty:hidden sm:mt-3" />
+        {/* flow-root: a margem da faixa fica aqui dentro, e as pinceladas nunca sobem até a logo e o menu. */}
+        <div className="relative flow-root">
+          <span aria-hidden="true" className="header-brush header-brush-left" />
+          <span aria-hidden="true" className="header-brush header-brush-right" />
+          <div ref={toolbarRef} className="mt-2 w-full empty:hidden sm:mt-3" />
+        </div>
       </div>
 
       <InkEdge className="absolute left-0 top-full -mt-px" />
+
+      {pickerOpen && profileUser && (
+        <Suspense fallback={null}>
+          <ProfilePicker initial={account.initial} pool={profilePool} selectedId={profileId} onChoose={chooseProfile} onClose={closePicker} />
+        </Suspense>
+      )}
     </header>
   );
 }

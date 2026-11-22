@@ -150,6 +150,7 @@ export default function App() {
     setToast({ id: Date.now(), message, tone, action });
   }, []);
   const dismissToast = useCallback(() => setToast(null), []);
+  const notifyProfileError = useCallback((message) => notify(message, { tone: "info" }), [notify]);
 
   // O botão da ficha alterna: a entrada da grade entra no time com um set vazio (como pelo Team Builder) ou,
   // se a espécie já está no time, sai dele. Um aviso confirma o que aconteceu.
@@ -265,8 +266,10 @@ export default function App() {
           </Suspense>
         )}
 
-        <AppHeader activeId={section.id} collapsed={collapsed} toolbarRef={setToolbarSlot}>
-          <AuthButton session={session} onOpen={openAuth} />
+        <AppHeader activeId={section.id} collapsed={collapsed} toolbarRef={setToolbarSlot} profilePool={pokemonList} profileUser={session?.user} onProfileError={notifyProfileError}
+          onLogin={openAuth}
+          accountAction={<AuthButton session={session} onOpen={openAuth} />}
+        >
           <AboutButton onClick={openAbout} />
         </AppHeader>
 

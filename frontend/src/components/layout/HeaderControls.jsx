@@ -5,11 +5,11 @@ import { BrushUnderline, InkMarker } from '../InkDecor';
 export const FIELD_CLASS =
   'h-9 sm:h-10 w-full rounded-none border-0 border-b-[1.5px] border-page/50 text-paper [color-scheme:dark] transition-[border-color,border-width] hover:border-page/85 focus:outline-none focus:border-b-[2.5px] focus:border-paint-pistachio';
 export const SELECT_CLASS = `${FIELD_CLASS} appearance-none bg-transparent pl-1 pr-6 sm:pr-7 font-reading text-sm font-medium cursor-pointer`;
-// A busca tem fundo liso: nada da textura passa atrás do que se digita.
-export const TEXT_INPUT_BASE = `${FIELD_CLASS} bg-umber pl-7 font-reading text-[15px] placeholder:italic placeholder:text-page/90`;
+// A busca tem fundo liso, no tom médio do papel com textura: nada dela passa atrás do que se digita.
+export const TEXT_INPUT_BASE = `${FIELD_CLASS} bg-[var(--header-solid)] pl-7 font-reading text-[15px] placeholder:italic placeholder:text-page/90`;
 // Botão do header: retângulo de contorno, como um carimbo. O fundo é opaco para os respingos não passarem atrás do texto.
 export const HEADER_BUTTON_CLASS =
-  'relative h-9 sm:h-10 inline-flex items-center justify-center gap-2 rounded-[3px] border-[1.5px] border-page/55 bg-umber px-3 font-reading text-sm font-medium text-page transition-colors cursor-pointer hover:border-page hover:bg-[#6A5443] focus:outline-none focus-visible:ring-2 focus-visible:ring-paint-pistachio/70';
+  'relative h-9 sm:h-10 inline-flex items-center justify-center gap-2 rounded-[3px] border-[1.5px] border-page/55 bg-[var(--header-solid)] px-3 font-reading text-sm font-medium text-page transition-colors cursor-pointer hover:border-page hover:bg-[#5e4739] focus:outline-none focus-visible:ring-2 focus-visible:ring-paint-pistachio/70';
 export const TEXT_INPUT_CLASS = `${TEXT_INPUT_BASE} pr-3`;
 export const OPTION_CLASS = 'bg-ink text-page font-reading';
 export const ICON_CLASS = 'pointer-events-none absolute top-1/2 -translate-y-1/2 w-4 h-4 text-page/80';

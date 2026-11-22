@@ -1,6 +1,5 @@
 import { memo } from 'react';
 import { Info } from 'lucide-react';
-import { HEADER_BUTTON_CLASS } from './layout/HeaderControls';
 
 function AboutButton({ onClick }) {
   return (
@@ -8,9 +7,9 @@ function AboutButton({ onClick }) {
       type="button"
       onClick={onClick}
       aria-label="Sobre a Smearglepedia"
-      className={`${HEADER_BUTTON_CLASS} shrink-0`}
+      className="header-paper-button"
     >
-      <Info className="h-4 w-4" aria-hidden="true" />
+      <Info className="header-action-icon h-4 w-4" aria-hidden="true" />
       Sobre
     </button>
   );
