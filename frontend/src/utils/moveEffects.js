@@ -23,12 +23,23 @@ export const PROTECT_MOVES = new Set([
 const POWDER_MOVES = new Set(['spore', 'sleep-powder', 'stun-spore', 'poison-powder']);
 // Alvos que são o próprio usuário ou o lado dele: os estágios de um golpe de status vão para quem o usa.
 const SELF_TARGETS = new Set(['user', 'users-field', 'user-and-allies', 'user-or-ally', 'ally', 'all-allies']);
+// Queda vinda do oponente devolve +2.
+const DROP_RESPONSE = { defiant: 'atk', competitive: 'spa' };
+// Prendem com dano por 4 turnos (a média de 4 e 5).
+const BINDING_MOVES = new Set([
+  'bind', 'wrap', 'clamp', 'fire-spin', 'whirlpool', 'sand-tomb', 'magma-storm', 'infestation', 'snap-trap', 'thunder-cage',
+]);
+const BINDING_TURNS = 4;
+// Impedem a troca enquanto quem usou estiver em campo.
+const TRAPPING_MOVES = new Set(['mean-look', 'block', 'spider-web', 'anchor-shot', 'spirit-shackle', 'thousand-waves', 'jaw-lock']);
+const NO_HAZARDS = { stealthRock: false, steelsurge: false, spikes: 0, toxicSpikes: 0, stickyWeb: false };
+const NO_SCREENS = { reflect: false, lightScreen: false, auroraVeil: false };
 const STAT_GUARDS = new Set(['clear-body', 'white-smoke', 'full-metal-body']);
 const MAIN_STATUSES = new Set(['paralysis', 'sleep', 'freeze', 'burn', 'poison']);
 // Sono: os jogos sorteiam de 1 a 3 turnos sem agir; a simulação usa 2, a média (Rest dorme sempre 2).
 export const SLEEP_TURNS = 2;
 
-const WEATHER_MOVES = { 'sunny-day': 'sun', 'rain-dance': 'rain', sandstorm: 'sand', snowscape: 'snow', hail: 'snow' };
+const WEATHER_MOVES = { 'chilly-reception': 'snow', 'sunny-day': 'sun', 'rain-dance': 'rain', sandstorm: 'sand', snowscape: 'snow', hail: 'snow' };
 const TERRAIN_MOVES = { 'electric-terrain': 'electric', 'grassy-terrain': 'grassy', 'misty-terrain': 'misty', 'psychic-terrain': 'psychic' };
 const USER_SIDE_MOVES = { reflect: 'reflect', 'light-screen': 'lightScreen', 'aurora-veil': 'auroraVeil', tailwind: 'tailwind' };
 // Trick Room, Gravity e as salas: usar de novo desfaz.
@@ -78,7 +89,7 @@ const MAX_EFFECTS = {
   'g-max-meltdown': { torment: true },
   'g-max-chi-strike': { critStage: true },
   'g-max-steelsurge': { hazard: 'steelsurge' },
-  'g-max-terror': { unmodeled: 'a troca bloqueada não entra na conta (não há trocas)' },
+  'g-max-terror': { trapped: true },
   'g-max-tartness': { unmodeled: 'a Evasão não entra na conta (todo golpe acerta)' },
   'g-max-depletion': { unmodeled: 'o PP não entra na conta' },
   'g-max-replenish': { unmodeled: 'a Berry não volta: a conta não consome Berries' },
@@ -122,7 +133,7 @@ const HP_COST = { 'belly-drum': 1 / 2, 'fillet-away': 1 / 2, 'clangorous-soul': 
 
 /** Golpes que mudam o campo (clima, terreno, telas, salas, hazards): o registro os mostra com o ícone de campo. */
 export const isFieldMove = (slug) => Boolean(WEATHER_MOVES[slug] || TERRAIN_MOVES[slug] || USER_SIDE_MOVES[slug] || ROOM_MOVES[slug])
-  || slug === 'stealth-rock' || slug === 'spikes';
+  || ['stealth-rock', 'spikes', 'toxic-spikes', 'sticky-web', 'defog'].includes(slug);
 
 const STAT_LABELS = { atk: 'Atk', def: 'Def', spa: 'SpA', spd: 'SpD', spe: 'Spe' };
 const STATUS_LABELS = { paralysis: 'paralisado', sleep: 'dormindo', freeze: 'congelado', burn: 'queimado', poison: 'envenenado', toxic: 'muito envenenado' };
@@ -133,7 +144,7 @@ const ROOM_LABELS = { trickRoom: 'Trick Room', gravity: 'Gravity', magicRoom: 'M
 const signed = (value) => (value > 0 ? `+${value}` : `−${-value}`);
 
 /** Cura `amount` PS, sem passar do máximo; devolve quanto curou. */
-function heal(battle, index, amount) {
+export function heal(battle, index, amount) {
   const max = battle.combatants[index].stats.hp;
   const healed = Math.max(0, Math.min(amount, max - battle.hp[index]));
   battle.hp[index] += healed;
@@ -141,7 +152,7 @@ function heal(battle, index, amount) {
 }
 
 /** Motivo de o alvo não receber o status, ou null se recebe. */
-function statusBlocked(battle, index, status, move, from = null) {
+export function statusBlocked(battle, index, status, move, from = null) {
   const target = battle.combatants[index];
   const { types } = target;
   const ignored = from != null && from !== index && MOLD_BREAKERS.has(battle.combatants[from].ability);
@@ -162,9 +173,10 @@ function statusBlocked(battle, index, status, move, from = null) {
 }
 
 /** Muda os estágios de `index`; Contrary inverte, Simple dobra, Clear Body barra quedas vindas do oponente. */
-function changeStages(battle, index, changes, fromOpponent) {
+export function changeStages(battle, index, changes, fromOpponent) {
   const { ability } = battle.combatants[index];
   const applied = [];
+  let lowered = false;
   for (const { stat, change } of changes) {
     let delta = ability === 'contrary' ? -change : change;
     if (ability === 'simple') delta *= 2;
@@ -174,6 +186,10 @@ function changeStages(battle, index, changes, fromOpponent) {
     if (after === before) continue;
     battle.boosts[index] = { ...battle.boosts[index], [stat]: after };
     applied.push(`${STAT_LABELS[stat]} ${signed(after - before)}`);
+    if (after < before) lowered = true;
+  }
+  if (lowered && fromOpponent && DROP_RESPONSE[ability]) {
+    applied.push(...changeStages(battle, index, [{ stat: DROP_RESPONSE[ability], change: 2 }], false));
   }
   return applied;
 }
@@ -185,7 +201,7 @@ export function activeField(battle) {
 }
 
 /** Troca o clima e devolve a frase do registro; climas primais não cedem. */
-function setWeather(battle, weather) {
+export function setWeather(battle, weather) {
   const primal = PRIMAL_WEATHERS.has(battle.field.weather)
     || battle.combatants.some(({ ability }, index) => battle.hp[index] > 0 && PRIMAL_WEATHERS.has(WEATHER_ABILITIES[ability]));
   if (primal) return 'o clima primal não muda';
@@ -231,6 +247,10 @@ function applyLingering(battle, context, effect, outcome) {
     if (battle.field.terrain === 'misty' && isGrounded(target, battle.field)) return [`${names[to]} não se confunde (Misty Terrain)`];
     set({ confusion: CONFUSED_ACTIONS });
     return [`${names[to]} ficou confuso`];
+  }
+  if (effect.trapped && !current.trapped) {
+    set({ trapped: move.slug });
+    return [`${names[to]} não pode trocar`];
   }
   if (effect.torment && !current.torment && !target.dynamax) {
     if (ability === 'aroma-veil') return [`${names[to]} ignora o Torment (Aroma Veil)`];
@@ -335,8 +355,8 @@ function applyMaxEffect(battle, { from, to, move, names }) {
     notes.push('cura o próprio status');
   }
   if (effect.clear) {
-    battle.conditions[from] = { ...battle.conditions[from], stealthRock: false, steelsurge: false, spikes: 0 };
-    battle.conditions[to] = { ...battle.conditions[to], stealthRock: false, steelsurge: false, spikes: 0, reflect: false, lightScreen: false, auroraVeil: false };
+    battle.conditions[from] = { ...battle.conditions[from], ...NO_HAZARDS };
+    battle.conditions[to] = { ...battle.conditions[to], ...NO_HAZARDS, ...NO_SCREENS };
     battle.field = { ...battle.field, terrain: '' };
     notes.push('limpa telas, hazards e terreno');
   }
@@ -476,6 +496,52 @@ export function applyMoveEffects(battle, { from, to, move, damage, names }) {
     const spikes = Math.min(3, (battle.conditions[to].spikes ?? 0) + 1);
     battle.conditions[to] = { ...battle.conditions[to], spikes };
     notes.push(`${spikes}× Spikes no lado de ${names[to]}`);
+  } else if (move.slug === 'toxic-spikes') {
+    const toxicSpikes = Math.min(2, (battle.conditions[to].toxicSpikes ?? 0) + 1);
+    battle.conditions[to] = { ...battle.conditions[to], toxicSpikes };
+    notes.push(`${toxicSpikes}× Toxic Spikes no lado de ${names[to]}`);
+  } else if (move.slug === 'sticky-web') {
+    battle.conditions[to] = { ...battle.conditions[to], stickyWeb: true };
+    notes.push(`Sticky Web no lado de ${names[to]}`);
+  } else if (move.slug === 'defog') {
+    battle.conditions[from] = { ...battle.conditions[from], ...NO_HAZARDS };
+    battle.conditions[to] = { ...battle.conditions[to], ...NO_HAZARDS, ...NO_SCREENS };
+    battle.field = { ...battle.field, terrain: '' };
+    notes.push('limpa hazards, terreno e as telas do alvo');
+  } else if (move.slug === 'tidy-up') {
+    for (const index of [from, to]) battle.conditions[index] = { ...battle.conditions[index], ...NO_HAZARDS };
+    notes.push('limpa os hazards dos dois lados');
+  }
+
+  if (damage > 0 && !noSecondary) {
+    if ((move.slug === 'rapid-spin' || move.slug === 'mortal-spin') && battle.hp[from] > 0) {
+      battle.conditions[from] = { ...battle.conditions[from], ...NO_HAZARDS, leechSeed: false };
+      battle.volatiles[from] = { ...battle.volatiles[from], trap: null };
+      notes.push('limpa hazards e prisões do próprio lado');
+    } else if (move.slug === 'stone-axe') {
+      battle.conditions[to] = { ...battle.conditions[to], stealthRock: true };
+      notes.push(`Stealth Rock no lado de ${names[to]}`);
+    } else if (move.slug === 'ceaseless-edge') {
+      const spikes = Math.min(3, (battle.conditions[to].spikes ?? 0) + 1);
+      battle.conditions[to] = { ...battle.conditions[to], spikes };
+      notes.push(`${spikes}× Spikes no lado de ${names[to]}`);
+    }
+  }
+
+  // Prisões: com dano por turno (Fire Spin) ou só contra a troca (Mean Look).
+  if (!targetSpared && (isStatusMove || damage > 0)) {
+    if (BINDING_MOVES.has(move.slug) && !battle.volatiles[to].trap) {
+      battle.volatiles[to] = { ...battle.volatiles[to], trap: { slug: move.slug, turns: BINDING_TURNS } };
+      notes.push(`${names[to]} fica preso por ${BINDING_TURNS} turnos`);
+    } else if (TRAPPING_MOVES.has(move.slug) && !noSecondary) {
+      const held = move.slug === 'jaw-lock' ? [to, from] : [to];
+      for (const index of held) battle.volatiles[index] = { ...battle.volatiles[index], trapped: move.slug };
+      notes.push(`${held.map((index) => names[index]).join(' e ')} não pode trocar`);
+    }
+  }
+  if (move.slug === 'no-retreat') {
+    battle.volatiles[from] = { ...battle.volatiles[from], trapped: move.slug };
+    notes.push('não pode mais trocar');
   }
 
   if (isStatusMove && notes.length === 0) notes.push('sem efeito na conta');

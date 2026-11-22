@@ -18,6 +18,7 @@ const CONDITION_LABELS = {
   tailwind: 'Tailwind',
   stealthRock: 'Stealth Rock',
   steelsurge: 'Steelsurge',
+  stickyWeb: 'Sticky Web',
 };
 
 const OUTLINE = 'inline-flex h-5 items-center border-[1.5px] px-1 font-mono text-[10px] font-bold leading-none tabular-nums';
@@ -30,10 +31,12 @@ function statusDetail(side) {
 
 /** Selos do que os G-Max deixaram no Pokémon e no lado dele. */
 function gmaxStates({ volatiles = {} }, conditions) {
-  const { trap, confusion, infatuated, yawn, torment, critStage } = volatiles;
+  const { trap, trapped, confusion, infatuated, yawn, torment, critStage } = volatiles;
   return [
     conditions?.gmaxDamage && `Dano G-Max ${conditions.gmaxDamage.turns}t`,
+    conditions?.toxicSpikes > 0 && `${conditions.toxicSpikes}× Toxic Spikes`,
     trap && `Preso ${trap.turns}t`,
+    trapped && 'Sem troca',
     confusion > 0 && `Confuso ${confusion}t`,
     infatuated && 'Apaixonado',
     yawn > 0 && 'Sonolento',

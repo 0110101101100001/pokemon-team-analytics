@@ -61,7 +61,11 @@ const GMAX_DAMAGE = {
   'g-max-cannonade': ['G-Max Cannonade', 'water'],
   'g-max-volcalith': ['G-Max Volcalith', 'rock'],
 };
-const TRAP_NAMES = { 'g-max-centiferno': 'G-Max Centiferno', 'g-max-sandblast': 'G-Max Sandblast' };
+const TRAP_NAMES = {
+  'g-max-centiferno': 'G-Max Centiferno', 'g-max-sandblast': 'G-Max Sandblast',
+  bind: 'Bind', wrap: 'Wrap', clamp: 'Clamp', 'fire-spin': 'Fire Spin', whirlpool: 'Whirlpool', 'sand-tomb': 'Sand Tomb',
+  'magma-storm': 'Magma Storm', infestation: 'Infestation', 'snap-trap': 'Snap Trap', 'thunder-cage': 'Thunder Cage',
+};
 const IGNORES_ABILITY = new Set(['g-max-drum-solo', 'g-max-fireball', 'g-max-hydrosnipe']);
 const TYPE_ABILITY_BOOSTS = {
   transistor: ['electric', 5325],
@@ -648,10 +652,13 @@ export function describeKnockout(result, { attacker, defender, defenderSide, fie
 
   const { hp } = result;
   const remaining = currentHp(defender);
-  // Hazards só contam na entrada: com PS já perdidos, o alvo está em campo.
+  // Hazards só contam na entrada: com PS já perdidos ou a batalha em andamento, o alvo já está em campo.
   const effects = residualEffects(defender, defenderSide, field, attacker);
-  const entry = remaining === hp ? effects.entry : 0;
-  const { perTurn, notes } = effects;
+  const entry = remaining === hp && !defender.entered ? effects.entry : 0;
+  const { perTurn } = effects;
+  const notes = defender.entered
+    ? effects.notes.filter((note) => note !== 'Stealth Rock' && note !== 'Steelsurge' && !note.endsWith('Spikes'))
+    : effects.notes;
   const use = perUseDistribution(result);
   const sturdy = sturdyHolds(result, defender, attacker, entry);
   const allNotes = sturdy ? [...notes, 'Sturdy'] : notes;

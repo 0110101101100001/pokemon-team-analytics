@@ -2,6 +2,7 @@ import { memo, useCallback, useId, useMemo, useState } from 'react';
 import { ChevronDown, Feather, Gem, Loader2, Minus, Plus, RotateCcw, TriangleAlert, Wind } from 'lucide-react';
 import HpBar from './HpBar';
 import MoveSlot from './MoveSlot';
+import PartyStrip from './PartyStrip';
 import SavedTeamPicker from './SavedTeamPicker';
 import PokemonTypeBadge from '../PokemonTypeBadge';
 import PokemonPicker from '../battle/PokemonPicker';
@@ -91,7 +92,7 @@ function Field({ label, children, className = '' }) {
  * Um lado da calculadora: o Pokémon (pela busca ou do time), Mega/Primal, Tera, nível, habilidade, item, status,
  * os estágios de cada atributo, os quatro golpes e, recolhidos, natureza, EVs e IVs.
  */
-function CombatantPanel({ caption, title, pickerPlaceholder, side, battle, forms, gmaxMove, moveTypes, ownTypes, hpPreview, ability, speed, faster, airborne, pool, teams, loggedIn, teamsOpen, extraSource, onChange, onMoveChange, onPick, onLogin, className = '' }) {
+function CombatantPanel({ caption, title, pickerPlaceholder, side, battle, forms, gmaxMove, moveTypes, ownTypes, hpPreview, ability, speed, faster, airborne, pool, teams, loggedIn, teamsOpen, extraSource, planned, inBattle, onBring, onAddReserve, onRemoveReserve, onChange, onMoveChange, onPick, onLogin, className = '' }) {
   const { pokemon, set, boosts } = side;
 
   const patchSet = useCallback((changes) => onChange({ set: { ...set, ...changes } }), [set, onChange]);
@@ -117,7 +118,7 @@ function CombatantPanel({ caption, title, pickerPlaceholder, side, battle, forms
       <SavedTeamPicker
         teams={teams}
         loggedIn={loggedIn}
-        currentId={pokemon?.id}
+        activeMember={`${side.teamKey}|${side.teamIndex}`}
         defaultOpen={teamsOpen}
         onPick={onPick}
         onLogin={onLogin}
@@ -183,15 +184,27 @@ function CombatantPanel({ caption, title, pickerPlaceholder, side, battle, forms
             </p>
           )}
 
+          <PartyStrip
+            bench={side.bench}
+            pool={pool}
+            planned={planned}
+            inBattle={inBattle}
+            onBring={onBring}
+            onAdd={onAddReserve}
+            onRemove={onRemoveReserve}
+          />
+
           <div className="grid grid-cols-2 gap-2">
             <Field label="forma">
               <select
                 value={side.form}
                 onChange={(e) => onChange({ form: e.target.value, ability: '' })}
-                disabled={forms.length === 0}
+                disabled={forms.length === 0 && !side.form}
                 className={`${SELECT} disabled:cursor-not-allowed`}
               >
-                <option value="">{forms.length ? 'Normal' : 'Sem Mega'}</option>
+                <option value="">{forms.length || side.form ? 'Normal' : 'Sem Mega'}</option>
+                {/* Forma que veio da batalha (Palafin Hero). */}
+                {side.form && !forms.includes(side.form) && <option value={side.form}>{formatSlug(side.form)}</option>}
                 {forms.map((form) => <option key={form} value={form}>{formLabel(form, pokemon.name)}</option>)}
               </select>
             </Field>

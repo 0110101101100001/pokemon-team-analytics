@@ -1,18 +1,21 @@
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import CombatantPanel from '../components/calc/CombatantPanel';
 import DamageResult from '../components/calc/DamageResult';
 import FieldPanel from '../components/calc/FieldPanel';
 import ResultsList from '../components/calc/ResultsList';
 import TrainerTeamPicker from '../components/calc/TrainerTeamPicker';
-import { createField, createSide, resolveSlot, sideFromPokemon } from '../components/calc/calcState';
+import {
+  MAX_RESERVES, createField, createSide, resolveSlot, sideFromPokemon, sideFromTeam, swapIn,
+} from '../components/calc/calcState';
 import SectionHeading, { HEADING_PILL_CLASS } from '../components/layout/SectionHeading';
-import { useBattleForms, useFormBattleData } from '../hooks/usePokemonBattleData';
+import { fetchCombatData, useBattleForms, useFormBattleData } from '../hooks/usePokemonBattleData';
 import { useSavedTeams } from '../hooks/useSavedTeams';
 import { formTypes } from '../data/formItems';
 import { gmaxMoveOf } from '../data/gmaxMoves';
-import TurnPanel from '../components/calc/TurnPanel';
+import TurnPanel, { switchPick, switchUid, turnReady } from '../components/calc/TurnPanel';
 import BattleScoreboard from '../components/calc/BattleScoreboard';
 import MobileTurnBar from '../components/calc/MobileTurnBar';
+import { PHAZE_MOVES, PIVOT_MOVES, trapReason } from '../utils/switching';
 import { simulateTurn } from '../utils/turn';
 import { fetchMoveSummary } from '../services/api';
 import { PRIMAL_WEATHERS, TERRAIN_ABILITIES, WEATHER_ABILITIES, WEATHER_SUPPRESSORS } from '../data/battleModifiers';
@@ -34,12 +37,17 @@ const SIDES = [
  * Os tipos são os da forma escolhida (Mega/Primal); com Tera, os tipos em batalha passam a ser só o tipo Tera
  * (Stellar mantém os originais), e os originais seguem valendo para o STAB.
  */
-function toCombatant(side, battle, ability) {
+function toCombatant(side, battle, ability, rawAbility = ability) {
   const stats = calcStats(battle.baseStats, side.set);
   const baseHp = stats.hp;
   if (side.dynamax) stats.hp *= hpRatio(side.pokemon.name);
   const originalTypes = formTypes(side.pokemon.name, side.item) ?? (battle.types.length ? battle.types : side.pokemon.types);
   return {
+    uid: side.uid,
+    name: formatSlug(side.form || side.pokemon.name),
+    rawAbility,
+    entered: side.entered,
+    boostUsed: side.boostUsed,
     level: side.set.level,
     species: side.pokemon.name,
     types: side.tera && side.tera !== 'stellar' ? [side.tera] : originalTypes,
@@ -96,9 +104,50 @@ const shownPokemon = (side, battle) => (side.pokemon && side.form
   ? { id: battle.id ?? side.pokemon.id, name: side.form }
   : side.pokemon);
 
-// O que a simulação muda em cada lado; "recomeçar" volta ao que era antes do primeiro turno.
-const BATTLE_KEYS = ['currentHp', 'boosts', 'status', 'toxicTurns', 'sleepTurns', 'bide', 'lastHit', 'turnsOut', 'dynamax', 'dynamaxSpent', 'volatiles'];
-const battleSnapshot = (side) => Object.fromEntries(BATTLE_KEYS.map((key) => [key, side[key]]));
+// O que a simulação muda em cada Pokémon; "recomeçar" volta ao que era antes do primeiro turno.
+const BATTLE_KEYS = ['currentHp', 'boosts', 'status', 'toxicTurns', 'sleepTurns', 'bide', 'lastHit', 'turnsOut', 'dynamax', 'dynamaxSpent', 'volatiles', 'entered', 'boostUsed'];
+const BATTLE_FIELD_KEYS = ['weather', 'terrain', 'trickRoom', 'gravity', 'magicRoom', 'wonderRoom'];
+const membersOf = (side) => [side, ...side.bench];
+const pickReset = [null, null];
+// O herói do Palafin é a única forma que a própria batalha muda.
+const HERO_FORM = 'palafin-hero';
+
+/** O lado antes do primeiro turno: quem estava em campo, a ordem e o estado de cada um, por uid. */
+const battleSnapshot = (side) => ({
+  active: side.uid,
+  order: side.bench.map((member) => member.uid),
+  members: new Map(membersOf(side).map((member) => [
+    member.uid, { form: member.form, ...Object.fromEntries(BATTLE_KEYS.map((key) => [key, member[key]])) },
+  ])),
+});
+
+/** O lado de volta ao snapshot, mantendo o que foi editado no set e quem entrou no time depois. */
+function restoreSide(side, saved) {
+  const members = membersOf(side).map((member) => {
+    const before = saved.members.get(member.uid);
+    if (!before) return { ...member, bench: [] };
+    const { form, ...state } = before;
+    return { ...member, ...state, bench: [], form: member.form === HERO_FORM ? form : member.form };
+  });
+  const active = members.find((member) => member.uid === saved.active) ?? members[0];
+  const position = (member) => {
+    const at = saved.order.indexOf(member.uid);
+    return at === -1 ? saved.order.length : at;
+  };
+  const bench = members.filter((member) => member !== active).sort((a, b) => position(a) - position(b));
+  return { ...active, bench };
+}
+
+/** O lado depois do turno: o estado novo de quem está em campo e de quem saiu, e quem ficou na vaga de quem. */
+function sideAfterTurn(side, turn, index) {
+  const next = turn.sides[index];
+  const activeUid = turn.active[index];
+  const current = { ...next, currentHp: next.currentHp === turn.maxHp[index] ? null : next.currentHp };
+  const updated = (member) => ({ ...member, ...(member.uid === activeUid ? current : turn.benched.get(member.uid)) });
+  const { bench, ...own } = side;
+  const merged = { ...updated(own), bench: bench.map(updated) };
+  return activeUid === side.uid ? merged : swapIn(merged, activeUid);
+}
 
 // Resumos antigos (times salvos antes dos efeitos ou do recuo) não têm `effects` completos: busca de novo, do cache.
 const withEffects = (move) => (move && move.effects?.flinchChance === undefined ? fetchMoveSummary(move.slug).then((fresh) => fresh ?? move) : move);
@@ -120,6 +169,14 @@ export default function DamageCalculatorSection({ pool, team, session, onLogin }
   const [turnLog, setTurnLog] = useState({ turn: 0, history: [], start: null });
   // O que o último turno mudou no campo, para piscar no painel de campo.
   const [fieldFlash, setFieldFlash] = useState(null);
+  // Quem entra se o lado sair por U-turn, Roar e afins.
+  const [incoming, setIncoming] = useState(pickReset);
+  const [turnError, setTurnError] = useState(null);
+  const passing = useRef(false);
+  const inBattle = turnLog.history.length > 0;
+  // Lido pelos callbacks, que precisam ficar estáveis entre renderizações.
+  const latest = useRef(null);
+  latest.current = { sides, inBattle };
   // Vindo do card da Liga, o endereço traz a batalha; ela é lida uma vez e sai do endereço,
   // para um recarregamento não desfazer o que o usuário mudou depois.
   const [trainerBattleId] = useState(trainerBattleFromHash);
@@ -161,12 +218,54 @@ export default function DamageCalculatorSection({ pool, team, session, onLogin }
   }, []);
   // Um terreno removido volta quando outro Pokémon ou outra habilidade entra em campo.
   const restoreTerrain = useCallback(() => {
-    setField((current) => (current.terrain === 'none' ? { ...current, terrain: '' } : current));
+    setField((current) => (current.terrain === 'none' || current.weather === 'none'
+      ? { ...current, terrain: current.terrain === 'none' ? '' : current.terrain, weather: current.weather === 'none' ? '' : current.weather }
+      : current));
   }, []);
-  const pickPokemon = useCallback((index, pokemon, set) => {
-    setSides((current) => current.map((side, i) => (i === index ? sideFromPokemon(pokemon, set) : side)));
+  const pickTurnMove = useCallback((index, slot) => setTurnPicks((current) => current.map((pick, i) => (i === index ? slot : pick))), []);
+  const pickIncoming = useCallback((index, uid) => setIncoming((current) => current.map((pick, i) => (i === index ? uid : pick))), []);
+  // Antes da batalha a reserva só vai a campo; com ela em andamento, vira a troca do próximo turno.
+  const bringReserve = useCallback((index, uid) => {
+    if (latest.current.inBattle) {
+      pickTurnMove(index, switchPick(uid));
+      return;
+    }
+    setSides((current) => current.map((side, i) => (i === index ? swapIn(side, uid) : side)));
+    pickTurnMove(index, null);
     restoreTerrain();
-  }, [restoreTerrain]);
+  }, [pickTurnMove, restoreTerrain]);
+  const addReserve = useCallback((index, pokemon) => {
+    const reserve = sideFromPokemon(pokemon);
+    setSides((current) => current.map((side, i) => (
+      i === index && side.bench.length < MAX_RESERVES ? { ...side, bench: [...side.bench, reserve] } : side
+    )));
+  }, []);
+  const removeReserve = useCallback((index, uid) => {
+    setSides((current) => current.map((side, i) => (
+      i === index ? { ...side, bench: side.bench.filter((member) => member.uid !== uid) } : side
+    )));
+  }, []);
+  // Com `team`, o time inteiro vem junto; tocar em outro membro do mesmo time é uma troca, e não apaga o estado de ninguém.
+  const pickPokemon = useCallback((index, pokemon, set, team = null) => {
+    if (team) {
+      const side = latest.current.sides[index];
+      if (side.pokemon && side.teamKey === team.key) {
+        if (side.teamIndex === team.index) return;
+        const reserve = side.bench.find((member) => member.teamKey === team.key && member.teamIndex === team.index);
+        if (reserve) {
+          if (reserve.currentHp !== 0) bringReserve(index, reserve.uid);
+          return;
+        }
+      }
+    }
+    const picked = team ? sideFromTeam(team) : sideFromPokemon(pokemon, set);
+    setSides((current) => current.map((side, i) => {
+      if (i !== index) return side;
+      return team ? picked : { ...picked, bench: side.bench };
+    }));
+    pickTurnMove(index, null);
+    restoreTerrain();
+  }, [bringReserve, pickTurnMove, restoreTerrain]);
 
   const patchField = useCallback((changes) => setField((current) => ({ ...current, ...changes })), []);
   const patchFieldSide = useCallback((index, changes) => {
@@ -180,21 +279,29 @@ export default function DamageCalculatorSection({ pool, team, session, onLogin }
       if ('ability' in changes) restoreTerrain();
     },
     move: (slotIndex, changes) => patchMove(index, slotIndex, changes),
-    pick: (pokemon, set) => pickPokemon(index, pokemon, set),
-  })), [patchSide, patchMove, pickPokemon, restoreTerrain]);
+    pick: (pokemon, set, team) => pickPokemon(index, pokemon, set, team),
+    bring: (uid) => bringReserve(index, uid),
+    addReserve: (pokemon) => addReserve(index, pokemon),
+    removeReserve: (uid) => removeReserve(index, uid),
+  })), [patchSide, patchMove, pickPokemon, bringReserve, addReserve, removeReserve, restoreTerrain]);
 
   const ready = sides.every((side, index) => side.pokemon && battles[index].baseStats);
 
   const combatants = useMemo(
-    () => (ready ? sides.map((side, index) => toCombatant(side, battles[index], abilities[index])) : null),
+    () => (ready ? sides.map((side, index) => toCombatant(side, battles[index], abilities[index], chosenAbilities[index])) : null),
     // O hook devolve o mesmo objeto enquanto os dados não mudam, então cada lado entra como dependência.
-    [ready, sides, battles[0], battles[1], abilities[0], abilities[1]],
+    [ready, sides, battles[0], battles[1], abilities[0], abilities[1], chosenAbilities[0], chosenAbilities[1]],
   );
 
   const { autoWeather, autoTerrain } = useMemo(() => {
     const rawSpeeds = sides.map((side, index) => battles[index].baseStats && calcStats(battles[index].baseStats, side.set).spe);
     return {
-      autoWeather: fromAbilities(abilities, rawSpeeds, WEATHER_ABILITIES),
+      // Quem desmaiou não sustenta clima primal; o clima comum continua.
+      autoWeather: fromAbilities(
+        abilities.map((ability, index) => (sides[index].currentHp === 0 && PRIMAL_WEATHERS.has(WEATHER_ABILITIES[ability]) ? '' : ability)),
+        rawSpeeds,
+        WEATHER_ABILITIES,
+      ),
       autoTerrain: fromAbilities(abilities, rawSpeeds, TERRAIN_ABILITIES),
     };
   }, [abilities[0], abilities[1], sides, battles[0], battles[1]]);
@@ -202,13 +309,16 @@ export default function DamageCalculatorSection({ pool, team, session, onLogin }
 
   // Clima e terreno das habilidades valem quando nenhum foi escolhido à mão; os climas primais não podem ser trocados.
   // Cloud Nine e Air Lock anulam qualquer clima.
+  // O clima que existe no campo, mesmo anulado: o turno precisa dele para quando o Cloud Nine sair.
+  const rawWeather = autoWeather && (!field.weather || PRIMAL_WEATHERS.has(autoWeather.value))
+    ? autoWeather.value
+    : field.weather === 'none' ? '' : field.weather;
   const battleField = useMemo(() => {
-    let weather = autoWeather && (!field.weather || PRIMAL_WEATHERS.has(autoWeather.value)) ? autoWeather.value : field.weather;
-    if (weatherSuppressor) weather = '';
+    const weather = weatherSuppressor ? '' : rawWeather;
     // 'none': removido na batalha, então a habilidade que o trouxe não o repõe.
     const terrain = field.terrain === 'none' ? '' : field.terrain || autoTerrain?.value || '';
     return { ...field, weather, terrain };
-  }, [field, autoWeather, autoTerrain, weatherSuppressor]);
+  }, [field, rawWeather, autoTerrain, weatherSuppressor]);
 
   // Velocidade e o que deixa cada lado no ar valem mesmo antes do outro lado ser escolhido.
   const sideStates = useMemo(
@@ -257,48 +367,89 @@ export default function DamageCalculatorSection({ pool, team, session, onLogin }
   const activeSelection = current ? { side: current.side, slot: current.slotIndex } : selected;
 
   const names = sides.map((side, index) => (side.pokemon ? formatSlug(shownPokemon(side, battles[index]).name) : ''));
-  const pickTurnMove = useCallback((index, slot) => setTurnPicks((current) => current.map((pick, i) => (i === index ? slot : pick))), []);
+  const trapped = [0, 1].map((index) => (combatants ? trapReason(combatants[index], combatants[1 - index], battleField) : null));
   const passTurn = async () => {
-    if (!combatants) return;
-    const slots = await Promise.all(turnPicks.map(async (slot, index) => {
+    if (!combatants || passing.current) return;
+    const { ready: canPass, replacing } = turnReady(sides, turnPicks, trapped);
+    if (!canPass) return;
+    passing.current = true;
+    setTurnError(null);
+    try {
+      await playTurn(replacing);
+    } catch (error) {
+      console.warn('Turno não simulado:', error);
+      setTurnError('Não foi possível carregar os dados das reservas. Tente de novo.');
+    } finally {
+      passing.current = false;
+    }
+  };
+  async function playTurn(replacing) {
+    const switches = sides.map((side, index) => (
+      (replacing ? side.currentHp === 0 : !side.bide) ? switchUid(turnPicks[index]) : null
+    ));
+    const slotIndexes = turnPicks.map((pick, index) => (!replacing && switches[index] == null ? pick : null));
+    // As reservas só são carregadas quando alguém pode sair de campo.
+    const mayMove = switches.some((uid) => uid != null) || slotIndexes.some((slot, index) => {
+      const slug = sides[index].moves[slot]?.move?.slug;
+      return PIVOT_MOVES.has(slug) || PHAZE_MOVES.has(slug);
+    });
+    const bench = await Promise.all(sides.map((side) => Promise.all((mayMove ? side.bench : []).map(async (member) => {
+      const data = await fetchCombatData(member.pokemon.name, member.form);
+      const ability = data.abilities.includes(member.ability) ? member.ability : data.abilities[0] ?? '';
+      return toCombatant(member, data, ability);
+    }))));
+    const slots = await Promise.all(slotIndexes.map(async (slot, index) => {
       const chosen = sides[index].moves[slot];
       return chosen?.move ? { ...chosen, move: await withEffects(chosen.move) } : null;
     }));
     const moves = slots.map((slot, index) => (slot ? resolveSlot(slot, gmaxMoves[index], { attacker: combatants[index], field: battleField }) : null));
-    const turn = simulateTurn({ combatants, moves, sideConditions: battleField.sides, field: battleField, names });
+    const turnField = { ...battleField, weather: rawWeather };
+    const turn = simulateTurn({
+      combatants, moves, bench, switches, incoming, replacing, names, sideConditions: battleField.sides, field: turnField,
+    });
     const start = turnLog.start ?? { sides: sides.map(battleSnapshot), field };
-    setSides((current) => current.map((side, index) => {
-      const next = turn.sides[index];
-      const max = combatants[index].baseHp * (next.dynamax ? hpRatio(combatants[index].species) : 1);
-      return { ...side, ...next, currentHp: next.currentHp === max ? null : next.currentHp };
-    }));
+    setSides((current) => current.map((side, index) => sideAfterTurn(side, turn, index)));
+    // Quem entrou tem outros golpes, e quem caiu precisa de substituto: a escolha não vale mais.
+    setTurnPicks((current) => current.map((pick, index) => (
+      turn.active[index] !== sides[index].uid || turn.sides[index].currentHp === 0 || switches[index] != null ? null : pick
+    )));
     setField((current) => ({
       ...current,
-      ...['weather', 'terrain', 'trickRoom', 'gravity', 'magicRoom', 'wonderRoom']
-        .reduce((changes, key) => {
-          if (turn.field[key] === battleField[key]) return changes;
-          return { ...changes, [key]: key === 'terrain' && !turn.field[key] ? 'none' : turn.field[key] };
-        }, {}),
+      ...BATTLE_FIELD_KEYS.reduce((changes, key) => {
+        const value = turn.field[key];
+        const setters = { weather: WEATHER_ABILITIES, terrain: TERRAIN_ABILITIES }[key];
+        // Depois de uma troca, o clima e o terreno deixam de seguir a habilidade de quem está em campo.
+        if (setters && turn.switched) {
+          const wouldReturn = turn.abilities.some((ability) => setters[ability]);
+          return { ...changes, [key]: value || (wouldReturn ? 'none' : '') };
+        }
+        if (value === turnField[key]) return changes;
+        return { ...changes, [key]: setters && !value ? 'none' : value };
+      }, {}),
       sides: turn.conditions,
     }));
     const changed = [
-      ...['weather', 'terrain', 'trickRoom', 'gravity', 'magicRoom', 'wonderRoom'].filter((key) => turn.field[key] !== battleField[key]),
+      ...BATTLE_FIELD_KEYS.filter((key) => turn.field[key] !== turnField[key]),
       ...turn.conditions.flatMap((conditions, index) => Object.keys(conditions)
         .filter((key) => key !== 'protect' && conditions[key] !== battleField.sides[index][key])
         .map((key) => `${index}:${key}`)),
     ];
-    setFieldFlash(changed.length ? { keys: changed, token: turnLog.turn + 1 } : null);
-    setTurnLog((current) => ({
-      turn: current.turn + 1,
-      history: [{ turn: current.turn + 1, lines: turn.log }, ...current.history],
-      start,
-    }));
-  };
+    setFieldFlash(changed.length ? { keys: changed, token: turnLog.history.length + 1 } : null);
+    setTurnLog((current) => {
+      const number = replacing ? current.turn : current.turn + 1;
+      const entry = { id: current.history.length + 1, label: replacing ? `substituição após o turno ${number}` : `turno ${number}`, lines: turn.log };
+      return { turn: number, history: [entry, ...current.history], start };
+    });
+  }
   const resetBattle = () => {
     const { start } = turnLog;
     if (start) {
-      setSides((current) => current.map((side, index) => ({ ...side, ...start.sides[index] })));
+      setSides((current) => current.map((side, index) => restoreSide(side, start.sides[index])));
       setField(start.field);
+      // Uma troca muda os golpes em campo; sem ela, a escolha continua valendo.
+      setTurnPicks((current) => current.map((pick, index) => (sides[index].uid === start.sides[index].active ? pick : null)));
+      setIncoming(pickReset);
+      setTurnError(null);
     }
     setTurnLog({ turn: 0, history: [], start: null });
     setFieldFlash(null);
@@ -334,7 +485,7 @@ export default function DamageCalculatorSection({ pool, team, session, onLogin }
       />
 
       <BattleScoreboard fighters={fighters} />
-      <MobileTurnBar fighters={fighters} sides={sides} picks={turnPicks} onPass={passTurn} />
+      <MobileTurnBar fighters={fighters} sides={sides} picks={turnPicks} trapped={trapped} onPass={passTurn} />
 
       {/*
         Telas largas: seu Pokémon | resultado, golpes e campo | oponente.
@@ -346,6 +497,10 @@ export default function DamageCalculatorSection({ pool, team, session, onLogin }
             <TurnPanel
               sides={sides}
               picks={turnPicks}
+              incoming={incoming}
+              trapped={trapped}
+              error={turnError}
+              onIncoming={pickIncoming}
               turn={turnLog.turn}
               history={turnLog.history}
               names={names}
@@ -376,6 +531,11 @@ export default function DamageCalculatorSection({ pool, team, session, onLogin }
             caption={meta.caption}
             pickerPlaceholder={meta.picker}
             side={sides[index]}
+            planned={switchUid(turnPicks[index])}
+            inBattle={inBattle}
+            onBring={handlers[index].bring}
+            onAddReserve={handlers[index].addReserve}
+            onRemoveReserve={handlers[index].removeReserve}
             battle={battles[index]}
             forms={forms[index]}
             gmaxMove={gmaxMoves[index]}
@@ -392,7 +552,7 @@ export default function DamageCalculatorSection({ pool, team, session, onLogin }
             teamsOpen={index === 0}
             onLogin={onLogin}
             extraSource={meta.trainers && (
-              <TrainerTeamPicker pool={pool} currentId={sides[index].pokemon?.id} initialBattleId={trainerBattleId} onPick={handlers[index].pick} />
+              <TrainerTeamPicker pool={pool} activeMember={`${sides[index].teamKey}|${sides[index].teamIndex}`} initialBattleId={trainerBattleId} onPick={handlers[index].pick} />
             )}
             onChange={handlers[index].change}
             onMoveChange={handlers[index].move}

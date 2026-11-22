@@ -1,21 +1,18 @@
 import { memo } from 'react';
 import { SkipForward } from 'lucide-react';
 import { HpTrack } from './BattleScoreboard';
-import { turnReady } from './TurnPanel';
-import { formatSlug } from '../../utils/filters';
+import { actionName, turnReady } from './TurnPanel';
 
 /**
  * Celular: barra presa no rodapé com os PS dos dois lados, os golpes escolhidos para o turno e o botão de passar,
  * para seguir a batalha sem rolar até o painel do turno. Some em telas largas (lg) e enquanto falta um Pokémon.
  * `data-turn-bar` faz o botão de voltar ao topo subir (index.css).
  */
-function MobileTurnBar({ fighters, sides, picks, onPass }) {
+function MobileTurnBar({ fighters, sides, picks, trapped, onPass }) {
   if (fighters.some((fighter) => !fighter)) return null;
-  const { ready } = turnReady(sides, picks);
+  const { ready, replacing, over } = turnReady(sides, picks, trapped);
   const moveName = (index) => {
-    if (sides[index].bide) return 'Bide';
-    const move = sides[index].moves[picks[index]]?.move;
-    return move ? formatSlug(move.slug) : '—';
+    return sides[index].bide ? 'Bide' : actionName(sides[index], picks[index]);
   };
 
   return (
@@ -34,7 +31,7 @@ function MobileTurnBar({ fighters, sides, picks, onPass }) {
       </div>
       <button type="button" onClick={onPass} disabled={!ready} className="btn-action mt-1.5 h-9 w-full text-sm">
         <SkipForward className="h-4 w-4" aria-hidden="true" />
-        Passar o turno
+        {replacing && !over ? 'Colocar em campo' : 'Passar o turno'}
       </button>
     </div>
   );

@@ -15,6 +15,7 @@ const ROOMS = [
 const SIDE_TOGGLES = [
   { key: 'stealthRock', label: 'Stealth Rock' },
   { key: 'steelsurge', label: 'Steelsurge' },
+  { key: 'stickyWeb', label: 'Sticky Web' },
   { key: 'reflect', label: 'Reflect' },
   { key: 'lightScreen', label: 'Light Screen' },
   { key: 'auroraVeil', label: 'Aurora Veil' },
@@ -84,6 +85,19 @@ function SideConditions({ index, title, conditions, flash, onChange }) {
             {[0, 1, 2, 3].map((layers) => <option key={layers} value={layers}>{layers}</option>)}
           </select>
         </label>
+        <label
+          key={flashKey(flash, `${index}:toxicSpikes`)}
+          className={`flex h-7 items-center gap-1 rounded-[3px] border border-umber/25 bg-paper/70 pl-2.5 pr-1 font-serif text-[11px] font-semibold text-umber ${flashClass(flash, `${index}:toxicSpikes`)}`}
+        >
+          Toxic Spikes
+          <select
+            value={conditions.toxicSpikes}
+            onChange={(e) => onChange({ toxicSpikes: Number(e.target.value) })}
+            className="h-5 cursor-pointer rounded-[3px] bg-transparent font-mono text-[11px] focus:outline-none focus-visible:ring-2 focus-visible:ring-paint-cobalt"
+          >
+            {[0, 1, 2].map((layers) => <option key={layers} value={layers}>{layers}</option>)}
+          </select>
+        </label>
       </div>
     </fieldset>
   );
@@ -103,6 +117,7 @@ function FieldPanel({ field, autoWeather, autoTerrain, weatherSuppressor, sideTi
         <label key={flashKey(flash, 'weather')} className={`min-w-0 rounded-[3px] ${flashClass(flash, 'weather')}`}>
           <span className="mb-0.5 block font-hand text-base leading-none text-umber">clima</span>
           <select value={field.weather} onChange={(e) => onChange({ weather: e.target.value })} className={SELECT}>
+            {field.weather === 'none' && <option value="none">Clima encerrado</option>}
             {WEATHERS.map((weather) => <option key={weather.value} value={weather.value}>{weather.label}</option>)}
           </select>
         </label>
@@ -122,7 +137,7 @@ function FieldPanel({ field, autoWeather, autoTerrain, weatherSuppressor, sideTi
       ) : autoWeather && (!field.weather || PRIMAL_WEATHERS.has(autoWeather.value)) && (
         <p className="font-hand text-base leading-tight text-olive-deep">
           clima em campo: {weatherLabel(autoWeather.value)}, trazido por {formatSlug(autoWeather.ability)}
-          {field.weather && field.weather !== autoWeather.value ? ' (clima primal: não pode ser trocado)' : ''}
+          {field.weather && field.weather !== 'none' && field.weather !== autoWeather.value ? ' (clima primal: não pode ser trocado)' : ''}
         </p>
       )}
       {autoTerrain && !field.terrain && (

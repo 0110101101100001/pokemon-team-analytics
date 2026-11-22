@@ -5,6 +5,8 @@ import { poweredType } from '../../utils/damage';
 import { poweredMove } from '../../utils/poweredMoves';
 
 export const MOVE_SLOTS = 4;
+export const MAX_RESERVES = 5;
+let lastUid = 0;
 // O que um golpe de status vira em Dynamax.
 const MAX_GUARD = { slug: 'max-guard', name: 'Max Guard', type: 'normal', damageClass: 'status', power: null, priority: 4 };
 
@@ -22,6 +24,17 @@ export function defaultHits(move) {
 export const createMoveSlot = (move = null) => ({ move, hits: defaultHits(move), crit: false, mode: '' });
 
 export const createSide = () => ({
+  // Identidade do Pokémon no time: as trocas mudam a posição, não o uid.
+  uid: (lastUid += 1),
+  // Os outros Pokémon do lado, cada um como um lado sem reservas.
+  bench: [],
+  // De qual time veio e em qual posição ('' = escolhido à mão).
+  teamKey: '',
+  teamIndex: null,
+  // Se já está em campo desde que a batalha começou (os hazards de entrada já foram pagos).
+  entered: false,
+  // Intrepid Sword e Dauntless Shield só agem uma vez por batalha.
+  boostUsed: false,
   pokemon: null,
   // Mega ou Primal escolhida ("charizard-mega-x"); '' = a forma normal.
   form: '',
@@ -68,6 +81,22 @@ export function sideFromPokemon(pokemon, set = null) {
   };
 }
 
+/** Lado com o time inteiro: `index` em campo, os outros nas reservas, na ordem do time. */
+export function sideFromTeam({ key, index, members }) {
+  const built = members.slice(0, MAX_RESERVES + 1).map(({ pokemon, set }, at) => (
+    { ...sideFromPokemon(pokemon, set), teamKey: key, teamIndex: at }
+  ));
+  return { ...built[index], bench: built.filter((_, at) => at !== index) };
+}
+
+/** Põe a reserva `uid` em campo, sem efeitos; quem sai fica na vaga dela. */
+export function swapIn(side, uid) {
+  const incoming = side.bench.find((member) => member.uid === uid);
+  if (!incoming) return side;
+  const { bench, ...leaving } = side;
+  return { ...incoming, bench: bench.map((member) => (member.uid === uid ? { ...leaving, bench: [] } : member)) };
+}
+
 export const createSideConditions = () => ({
   stealthRock: false,
   spikes: 0,
@@ -78,6 +107,8 @@ export const createSideConditions = () => ({
   protect: false,
   leechSeed: false,
   steelsurge: false,
+  toxicSpikes: 0,
+  stickyWeb: false,
   gmaxDamage: null,
 });
 

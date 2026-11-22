@@ -10,19 +10,20 @@ const LINK = 'cursor-pointer font-semibold not-italic text-sepia underline under
  * escolher o time já põe o primeiro Pokémon em campo, com o set salvo; os outros viram atalhos.
  * Se o time escolhido sair da lista (apagado, logout), volta para o primeiro.
  */
-function SavedTeamPicker({ teams, loggedIn, currentId, defaultOpen = false, onPick, onLogin }) {
+function SavedTeamPicker({ teams, loggedIn, activeMember, defaultOpen = false, onPick, onLogin }) {
   const [teamId, setTeamId] = useState(null);
   const team = teams.find((source) => source.id === teamId) ?? teams[0];
 
-  const pick = (member) => {
-    const { set, ...entry } = member;
-    onPick(entry, set);
+  // O time inteiro vai junto, para os outros virarem reservas.
+  const pick = (source, index) => {
+    const members = source.members.map(({ set, ...pokemon }) => ({ pokemon, set }));
+    onPick(members[index].pokemon, members[index].set, { key: `team:${source.id}`, index, members });
   };
 
   const choose = (id) => {
     setTeamId(id);
-    const lead = teams.find((source) => source.id === id)?.members[0];
-    if (lead) pick(lead);
+    const source = teams.find((candidate) => candidate.id === id);
+    if (source?.members.length) pick(source, 0);
   };
 
   return (
@@ -35,14 +36,14 @@ function SavedTeamPicker({ teams, loggedIn, currentId, defaultOpen = false, onPi
             </SelectField>
           )}
           <ul className="flex flex-wrap gap-1.5" aria-label={`Pokémon de ${team.label}`}>
-            {team.members.map((member) => (
+            {team.members.map((member, index) => (
               <li key={`${team.id}-${member.id}`}>
                 <MemberShortcut
                   spriteId={member.id}
                   label={`Usar ${formatSlug(member.name)} de ${team.label}`}
                   caption={member.set?.level && member.set.level !== 100 ? `Nv. ${member.set.level}` : null}
-                  active={currentId === member.id}
-                  onClick={() => pick(member)}
+                  active={activeMember === `team:${team.id}|${index}`}
+                  onClick={() => pick(team, index)}
                 />
               </li>
             ))}

@@ -5,6 +5,22 @@ import { toBaseStats } from '../utils/stats';
 const EMPTY = { status: 'idle', id: null, types: [], baseStats: null, weight: null, learnset: [], abilities: [], hiddenAbility: null };
 const LOADING = { ...EMPTY, status: 'loading' };
 
+const battleDataFrom = (data) => ({
+  status: 'ready',
+  id: data.id,
+  types: data.types.map(({ type }) => type.name),
+  baseStats: toBaseStats(data.stats),
+  // A PokéAPI dá o peso em hectogramas.
+  weight: data.weight ? data.weight / 10 : null,
+  learnset: data.moves.map(({ move }) => move.name).sort(),
+  // Habilidades da espécie na ordem do jogo; a oculta vem por último.
+  abilities: data.abilities.map(({ ability }) => ability.name),
+  hiddenAbility: data.abilities.find((entry) => entry.is_hidden)?.ability.name ?? null,
+});
+
+/** Os dados do hook fora da renderização, para quem está na reserva; a forma, quando há, vale no lugar da base. */
+export const fetchCombatData = (name, form) => fetchPokemonDetail(form || name).then(battleDataFrom);
+
 /**
  * Atributos base, tipos, golpes que aprende e habilidades de um Pokémon, para o editor de sets e a calculadora.
  * `name` nulo desliga o hook. As respostas ficam no cache do serviço: voltar a um Pokémon não refaz a requisição.
@@ -16,19 +32,7 @@ export function usePokemonBattleData(name) {
     if (!name) return undefined;
     let active = true;
     fetchPokemonDetail(name)
-      .then((data) => active && setState({
-        name,
-        status: 'ready',
-        id: data.id,
-        types: data.types.map(({ type }) => type.name),
-        baseStats: toBaseStats(data.stats),
-        // A PokéAPI dá o peso em hectogramas.
-        weight: data.weight ? data.weight / 10 : null,
-        learnset: data.moves.map(({ move }) => move.name).sort(),
-        // Habilidades da espécie na ordem do jogo; a oculta vem por último.
-        abilities: data.abilities.map(({ ability }) => ability.name),
-        hiddenAbility: data.abilities.find((entry) => entry.is_hidden)?.ability.name ?? null,
-      }))
+      .then((data) => active && setState({ name, ...battleDataFrom(data) }))
       .catch(() => active && setState({ name, ...EMPTY, status: 'error' }));
     return () => { active = false; };
   }, [name]);

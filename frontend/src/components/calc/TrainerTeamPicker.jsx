@@ -4,7 +4,7 @@ import { MemberShortcut, SelectField, SourcePanel } from './SourcePanel';
 import { fetchTrainers } from '../../services/trainers';
 import { loadBattleData, moveSummaryOf } from '../../utils/battleData';
 import { formatSlug } from '../../utils/filters';
-import { battleGroupsOf, battleKey, createNameMatcher, gameLabelsOf, hasTeamVariants, resolveTrainerPokemon, trainerMemberSet } from '../../utils/trainers';
+import { battleGroupsOf, battleKey, createNameMatcher, gameLabelsOf, hasTeamVariants, resolveTrainerPokemon, stageName, trainerMemberSet } from '../../utils/trainers';
 
 const RESULT_LIMIT = 6;
 
@@ -97,19 +97,36 @@ function selectionForBattle(trainers, battleId) {
   return null;
 }
 
-function TrainerTeamPicker({ pool, currentId, initialBattleId = null, onPick }) {
+function TrainerTeamPicker({ pool, activeMember, initialBattleId = null, onPick }) {
   const [state, setState] = useState({ status: 'idle', trainers: [], battleData: null });
   const [selection, setSelection] = useState({ slug: '', game: '', groupKey: '', battleId: '' });
 
   const entryByName = useMemo(() => new Map(pool.map((entry) => [entry.name, entry])), [pool]);
+
+  const membersOf = (chosen, battleData) => {
+    if (!chosen || !battleData) return [];
+    const summaryOf = (slug) => moveSummaryOf(battleData, slug);
+    return chosen.team
+      .map((member) => ({ member, entry: resolveTrainerPokemon(entryByName, member.slug) }))
+      .filter(({ entry }) => entry)
+      .map(({ member, entry }) => ({ member, entry, set: trainerMemberSet(member, summaryOf) }));
+  };
+  // O time inteiro vai junto, para os outros virarem reservas.
+  const teamPick = (chosen, team, index) => ({
+    key: `trainer:${chosen.id}`,
+    index,
+    members: team.map(({ entry, set }) => ({ pokemon: entry, set })),
+  });
 
   // Ao trocar de treinador, jogo, batalha ou variante, o primeiro Pokémon do time já entra em campo.
   // Trocar de jogo volta para a primeira batalha dele; trocar de batalha, para a primeira variante.
   const apply = (next, trainers, battleData) => {
     setSelection(next);
     const lead = resolveSelection(trainers.find((candidate) => candidate.slug === next.slug), next).battle?.team[0];
-    const entry = lead && resolveTrainerPokemon(entryByName, lead.slug);
-    if (entry) onPick(entry, trainerMemberSet(lead, (moveSlug) => moveSummaryOf(battleData, moveSlug)));
+    if (!lead) return;
+    const { battle } = resolveSelection(trainers.find((candidate) => candidate.slug === next.slug), next);
+    const team = membersOf(battle, battleData);
+    if (team.length) onPick(team[0].entry, team[0].set, teamPick(battle, team, 0));
   };
   const choose = (slug, game = '', groupKey = '', battleId = '') =>
     apply({ slug, game, groupKey, battleId }, state.trainers, state.battleData);
@@ -134,17 +151,10 @@ function TrainerTeamPicker({ pool, currentId, initialBattleId = null, onPick }) 
   const trainer = state.trainers.find((candidate) => candidate.slug === selection.slug);
   const { games, game, groups, group, battle } = useMemo(() => resolveSelection(trainer, selection), [trainer, selection]);
 
-  const members = useMemo(() => {
-    if (!battle || !state.battleData) return [];
-    const summaryOf = (slug) => moveSummaryOf(state.battleData, slug);
-    return battle.team
-      .map((member) => ({ member, entry: resolveTrainerPokemon(entryByName, member.slug) }))
-      .filter(({ entry }) => entry)
-      .map(({ member, entry }) => ({ member, entry, set: trainerMemberSet(member, summaryOf) }));
-  }, [battle, state.battleData, entryByName]);
+  const members = useMemo(() => membersOf(battle, state.battleData), [battle, state.battleData, entryByName]);
 
   return (
-    <SourcePanel title="time de um treinador" selected={trainer?.name} defaultOpen={Boolean(initialBattleId)} onOpen={load}>
+    <SourcePanel title="time de um treinador" selected={trainer && battle ? [trainer.name, stageName(battle)?.toLowerCase()].filter(Boolean).join(' · ') : trainer?.name} defaultOpen={Boolean(initialBattleId)} onOpen={load}>
       {state.status === 'loading' && (
         <p className="flex items-center gap-2 py-2 font-reading text-sm italic text-umber">
           <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" />
@@ -163,7 +173,7 @@ function TrainerTeamPicker({ pool, currentId, initialBattleId = null, onPick }) 
       {state.status === 'ready' && (
         <>
           <TrainerSearch trainers={state.trainers} onPick={choose} />
-          {group && (games.length > 1 || groups.length > 1 || hasTeamVariants(group)) && (
+          {group && (
             <div className="flex flex-wrap items-end gap-2">
               {games.length > 1 && (
                 <div className="min-w-0 grow basis-40">
@@ -172,15 +182,14 @@ function TrainerTeamPicker({ pool, currentId, initialBattleId = null, onPick }) 
                   </SelectField>
                 </div>
               )}
-              {groups.length > 1 && (
-                <div className="min-w-0 grow-[2] basis-48">
-                  <SelectField label="batalha" value={group.key} onChange={(groupKey) => choose(trainer.slug, game, groupKey)}>
-                    {groups.map((candidate) => (
-                      <option key={candidate.key} value={candidate.key}>{candidate.label}</option>
-                    ))}
-                  </SelectField>
-                </div>
-              )}
+              {/* Aparece mesmo com uma batalha só: é onde se lê se ela é revanche. */}
+              <div className="min-w-0 grow-[2] basis-48">
+                <SelectField label="batalha" value={group.key} onChange={(groupKey) => choose(trainer.slug, game, groupKey)}>
+                  {groups.map((candidate) => (
+                    <option key={candidate.key} value={candidate.key}>{candidate.label}</option>
+                  ))}
+                </SelectField>
+              </div>
               {hasTeamVariants(group) && (
                 <div className="min-w-0 grow basis-32">
                   <SelectField label="variante" value={battle.id} onChange={(battleId) => choose(trainer.slug, game, group.key, battleId)}>
@@ -202,8 +211,8 @@ function TrainerTeamPicker({ pool, currentId, initialBattleId = null, onPick }) 
                     spriteId={entry.id}
                     label={`Usar ${formatSlug(entry.name)} (nível ${member.level}) de ${trainer.name}`}
                     caption={`Nv. ${member.level}`}
-                    active={currentId === entry.id}
-                    onClick={() => onPick(entry, set)}
+                    active={activeMember === `trainer:${battle.id}|${index}`}
+                    onClick={() => onPick(entry, set, teamPick(battle, members, index))}
                   />
                 </li>
               ))}
