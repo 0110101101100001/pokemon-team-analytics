@@ -1,5 +1,6 @@
 import { GMAX_OUTCOMES } from '../data/gmaxMoves';
-import { isGrounded } from './damage';
+import { SCREEN_BREAKERS, activeItem, isGrounded } from './damage';
+import { durationOf, withTimer } from './durations';
 import { baseMaxHp } from './dynamax';
 import { effectiveness } from './typeChart';
 import {
@@ -42,7 +43,7 @@ export const SLEEP_TURNS = 2;
 const WEATHER_MOVES = { 'chilly-reception': 'snow', 'sunny-day': 'sun', 'rain-dance': 'rain', sandstorm: 'sand', snowscape: 'snow', hail: 'snow' };
 const TERRAIN_MOVES = { 'electric-terrain': 'electric', 'grassy-terrain': 'grassy', 'misty-terrain': 'misty', 'psychic-terrain': 'psychic' };
 const USER_SIDE_MOVES = { reflect: 'reflect', 'light-screen': 'lightScreen', 'aurora-veil': 'auroraVeil', tailwind: 'tailwind' };
-// Trick Room, Gravity e as salas: usar de novo desfaz.
+// Trick Room e as salas: usar de novo desfaz. Gravity, não.
 const ROOM_MOVES = { 'trick-room': 'trickRoom', gravity: 'gravity', 'magic-room': 'magicRoom', 'wonder-room': 'wonderRoom' };
 // user e foe: estágios; condition entra no lado de quem usa, hazard no do alvo.
 // `sorted`: o que sai do sorteio escolhido; `unmodeled`: o que a calculadora não tem como contar.
@@ -108,7 +109,11 @@ const IMMUNE_STATUSES = {
   'magma-armor': ['freeze'],
   'purifying-salt': [...MAIN_STATUSES, 'toxic'], comatose: [...MAIN_STATUSES, 'toxic'],
 };
-const CONDITION_LABELS = { steelsurge: 'Steelsurge', auroraVeil: 'Aurora Veil', stealthRock: 'Stealth Rock' };
+const CONDITION_LABELS = {
+  steelsurge: 'Steelsurge', stealthRock: 'Stealth Rock',
+  reflect: 'Reflect', lightScreen: 'Light Screen', auroraVeil: 'Aurora Veil', tailwind: 'Tailwind',
+};
+const TERRAIN_CLEARERS = new Set(['ice-spinner', 'steel-roller']);
 const WEATHER_HEAL = new Set(['moonlight', 'synthesis', 'morning-sun']);
 // Curam o alvo, não o usuário.
 const HEALS_TARGET = new Set(['heal-pulse', 'floral-healing']);
@@ -194,18 +199,40 @@ export function changeStages(battle, index, changes, fromOpponent) {
   return applied;
 }
 
+const ENDING_LABELS = { ...CONDITION_LABELS, ...ROOM_LABELS };
+
 /** O campo como vale agora: com Cloud Nine ou Air Lock em campo, sem clima. */
 export function activeField(battle) {
   const suppressed = battle.combatants.some(({ ability }, index) => battle.hp[index] > 0 && WEATHER_SUPPRESSORS.has(ability));
   return suppressed ? { ...battle.field, weather: '' } : battle.field;
 }
 
-/** Troca o clima e devolve a frase do registro; climas primais não cedem. */
-export function setWeather(battle, weather) {
+/** Põe no campo um efeito com prazo, criado por `from`. */
+export function startOnField(battle, key, value, from) {
+  const item = activeItem(battle.combatants[from], battle.field);
+  battle.field = withTimer({ ...battle.field, [key]: value }, key, durationOf(key, value, item));
+}
+
+/** Põe no lado de `from` uma tela ou Tailwind, com prazo. */
+function startOnSide(battle, key, from) {
+  const item = activeItem(battle.combatants[from], battle.field);
+  battle.conditions[from] = withTimer({ ...battle.conditions[from], [key]: true }, key, durationOf(key, true, item));
+}
+
+/** A frase de quando um efeito com prazo termina. */
+export function endingText(key, value) {
+  if (key === 'weather') return `o clima (${WEATHER_LABELS[value] ?? value}) acabou`;
+  if (key === 'terrain') return `${TERRAIN_LABELS[value]} acabou`;
+  return `${ENDING_LABELS[key]} acabou`;
+}
+
+/** Troca o clima e devolve a frase do registro; climas primais não cedem e repetir não renova o prazo. */
+export function setWeather(battle, weather, from) {
   const primal = PRIMAL_WEATHERS.has(battle.field.weather)
     || battle.combatants.some(({ ability }, index) => battle.hp[index] > 0 && PRIMAL_WEATHERS.has(WEATHER_ABILITIES[ability]));
   if (primal) return 'o clima primal não muda';
-  battle.field = { ...battle.field, weather };
+  if (battle.field.weather === weather) return `falhou: já está em ${WEATHER_LABELS[weather]}`;
+  startOnField(battle, 'weather', weather, from);
   return `o clima vira ${WEATHER_LABELS[weather]}`;
 }
 
@@ -315,18 +342,19 @@ function applyMaxEffect(battle, { from, to, move, names }) {
     const applied = changeStages(battle, index, changes, key === 'foe');
     if (applied.length) notes.push(`${key === 'foe' ? `${names[to]}: ` : ''}${applied.join(', ')}`);
   }
-  if (effect.weather) notes.push(setWeather(battle, effect.weather));
-  if (effect.terrain) {
-    battle.field = { ...battle.field, terrain: effect.terrain };
+  if (effect.weather && battle.field.weather !== effect.weather) notes.push(setWeather(battle, effect.weather, from));
+  if (effect.terrain && battle.field.terrain !== effect.terrain) {
+    startOnField(battle, 'terrain', effect.terrain, from);
     notes.push(`${TERRAIN_LABELS[effect.terrain]} em campo`);
   }
   if (effect.gravity && !battle.field.gravity) {
-    battle.field = { ...battle.field, gravity: true };
+    startOnField(battle, 'gravity', true, from);
     notes.push('Gravity ativado');
   }
   for (const [condition, index] of [[effect.condition, from], [effect.hazard, to]]) {
-    if (!condition) continue;
-    battle.conditions[index] = { ...battle.conditions[index], [condition]: true };
+    if (!condition || battle.conditions[index][condition]) continue;
+    if (condition === effect.condition) startOnSide(battle, condition, index);
+    else battle.conditions[index] = { ...battle.conditions[index], [condition]: true };
     notes.push(`${CONDITION_LABELS[condition]} no lado de ${names[index]}`);
   }
   if (effect.status && targetUp) notes.push(inflict(battle, { from, to, move, names }, effect.status));
@@ -474,20 +502,27 @@ export function applyMoveEffects(battle, { from, to, move, damage, names }) {
 
   // Campo.
   if (WEATHER_MOVES[move.slug]) {
-    notes.push(setWeather(battle, WEATHER_MOVES[move.slug]));
+    notes.push(setWeather(battle, WEATHER_MOVES[move.slug], from));
   } else if (TERRAIN_MOVES[move.slug]) {
-    battle.field = { ...battle.field, terrain: TERRAIN_MOVES[move.slug] };
-    notes.push(`${TERRAIN_LABELS[TERRAIN_MOVES[move.slug]]} em campo`);
+    const terrain = TERRAIN_MOVES[move.slug];
+    if (battle.field.terrain === terrain) notes.push(`falhou: ${TERRAIN_LABELS[terrain]} já está em campo`);
+    else {
+      startOnField(battle, 'terrain', terrain, from);
+      notes.push(`${TERRAIN_LABELS[terrain]} em campo`);
+    }
   } else if (USER_SIDE_MOVES[move.slug]) {
     const key = USER_SIDE_MOVES[move.slug];
     if (key === 'auroraVeil' && weather !== 'snow') notes.push('falhou: Aurora Veil precisa de neve');
+    else if (battle.conditions[from][key]) notes.push(`falhou: ${CONDITION_LABELS[key]} já está no seu lado`);
     else {
-      battle.conditions[from] = { ...battle.conditions[from], [key]: true };
+      startOnSide(battle, key, from);
       notes.push(`${move.slug.replace(/-/g, ' ')} no seu lado`);
     }
   } else if (ROOM_MOVES[move.slug]) {
     const key = ROOM_MOVES[move.slug];
-    battle.field = { ...battle.field, [key]: !battle.field[key] };
+    if (key === 'gravity' && battle.field.gravity) return ['falhou: Gravity já está em campo'];
+    if (battle.field[key]) battle.field = { ...battle.field, [key]: false };
+    else startOnField(battle, key, true, from);
     notes.push(`${ROOM_LABELS[key]} ${battle.field[key] ? 'ativado' : 'desfeito'}`);
   } else if (move.slug === 'stealth-rock') {
     battle.conditions[to] = { ...battle.conditions[to], stealthRock: true };
@@ -526,6 +561,17 @@ export function applyMoveEffects(battle, { from, to, move, damage, names }) {
       battle.conditions[to] = { ...battle.conditions[to], spikes };
       notes.push(`${spikes}× Spikes no lado de ${names[to]}`);
     }
+  }
+
+  if (damage > 0 && SCREEN_BREAKERS.has(move.slug)) {
+    const side = battle.conditions[to];
+    if (side.reflect || side.lightScreen || side.auroraVeil) {
+      battle.conditions[to] = { ...side, ...NO_SCREENS };
+      notes.push(`quebra as telas de ${names[to]}`);
+    }
+  } else if (damage > 0 && TERRAIN_CLEARERS.has(move.slug) && battle.field.terrain) {
+    battle.field = { ...battle.field, terrain: '' };
+    notes.push('tira o terreno');
   }
 
   // Prisões: com dano por turno (Fire Spin) ou só contra a troca (Mean Look).

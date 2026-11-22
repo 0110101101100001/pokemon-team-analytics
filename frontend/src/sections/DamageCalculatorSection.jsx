@@ -19,7 +19,8 @@ import { PHAZE_MOVES, PIVOT_MOVES, trapReason } from '../utils/switching';
 import { simulateTurn } from '../utils/turn';
 import { fetchMoveSummary } from '../services/api';
 import { PRIMAL_WEATHERS, TERRAIN_ABILITIES, WEATHER_ABILITIES, WEATHER_SUPPRESSORS } from '../data/battleModifiers';
-import { airborneBy, battleTypeOf, calcSpeed, calculateDamage, describeKnockout, isCalculable, withWeatherType } from '../utils/damage';
+import { activeItem, airborneBy, battleTypeOf, calcSpeed, calculateDamage, describeKnockout, isCalculable, withWeatherType } from '../utils/damage';
+import { fieldAtTurn, withTimers } from '../utils/durations';
 import { hpRatio } from '../utils/dynamax';
 import { calcStats } from '../utils/stats';
 import { formatSlug } from '../utils/filters';
@@ -313,12 +314,17 @@ export default function DamageCalculatorSection({ pool, team, session, onLogin }
   const rawWeather = autoWeather && (!field.weather || PRIMAL_WEATHERS.has(autoWeather.value))
     ? autoWeather.value
     : field.weather === 'none' ? '' : field.weather;
+  const heldItems = sides.map((side, index) => activeItem({ item: side.item, ability: abilities[index] }, field));
   const battleField = useMemo(() => {
-    const weather = weatherSuppressor ? '' : rawWeather;
     // 'none': removido na batalha, então a habilidade que o trouxe não o repõe.
     const terrain = field.terrain === 'none' ? '' : field.terrain || autoTerrain?.value || '';
-    return { ...field, weather, terrain };
-  }, [field, rawWeather, autoTerrain, weatherSuppressor]);
+    // Os prazos são do clima que existe, mesmo com Cloud Nine o anulando.
+    const timed = withTimers(
+      { ...field, weather: rawWeather, terrain },
+      [0, 1].map((index) => ({ ability: abilities[index], item: heldItems[index] })),
+    );
+    return { ...timed, weather: weatherSuppressor ? '' : rawWeather };
+  }, [field, rawWeather, autoTerrain, weatherSuppressor, abilities[0], abilities[1], heldItems[0], heldItems[1]]);
 
   // Velocidade e o que deixa cada lado no ar valem mesmo antes do outro lado ser escolhido.
   const sideStates = useMemo(
@@ -350,7 +356,12 @@ export default function DamageCalculatorSection({ pool, team, session, onLogin }
         if (!isCalculable(move)) return;
         const context = { attacker: combatants[from], defender: combatants[to], attackerSide: battleField.sides[from], defenderSide: battleField.sides[to], field: battleField };
         const result = calculateDamage({ move, ...context });
-        rows.push({ slotIndex, move, result, ko: describeKnockout(result, context) });
+        // O golpe nos turnos seguintes, se até lá algum prazo acabar.
+        const resultAt = (turn) => {
+          const later = fieldAtTurn(battleField, turn);
+          return later && calculateDamage({ move, ...context, attackerSide: later.sides[from], defenderSide: later.sides[to], field: later });
+        };
+        rows.push({ slotIndex, move, result, ko: describeKnockout(result, { ...context, resultAt }) });
       });
     }
     return { key: from, attacker: shownPokemon(sides[from], battles[from]), defender: shownPokemon(sides[to], battles[to]), rows };
@@ -426,12 +437,13 @@ export default function DamageCalculatorSection({ pool, team, session, onLogin }
         if (value === turnField[key]) return changes;
         return { ...changes, [key]: setters && !value ? 'none' : value };
       }, {}),
+      timers: turn.field.timers,
       sides: turn.conditions,
     }));
     const changed = [
       ...BATTLE_FIELD_KEYS.filter((key) => turn.field[key] !== turnField[key]),
       ...turn.conditions.flatMap((conditions, index) => Object.keys(conditions)
-        .filter((key) => key !== 'protect' && conditions[key] !== battleField.sides[index][key])
+        .filter((key) => key !== 'protect' && key !== 'timers' && conditions[key] !== battleField.sides[index][key])
         .map((key) => `${index}:${key}`)),
     ];
     setFieldFlash(changed.length ? { keys: changed, token: turnLog.history.length + 1 } : null);
@@ -513,6 +525,8 @@ export default function DamageCalculatorSection({ pool, team, session, onLogin }
           </div>
           <FieldPanel
             field={field}
+            battleField={battleField}
+            rawWeather={rawWeather}
             autoWeather={autoWeather}
             autoTerrain={autoTerrain}
             weatherSuppressor={weatherSuppressor}

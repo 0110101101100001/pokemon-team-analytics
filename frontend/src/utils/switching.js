@@ -4,7 +4,7 @@ import {
 import { activeItem, applyBoost, isGrounded } from './damage';
 import { baseMaxHp, withoutDynamax } from './dynamax';
 import { formatSlug } from './filters';
-import { changeStages, setWeather, statusBlocked } from './moveEffects';
+import { changeStages, setWeather, startOnField, statusBlocked } from './moveEffects';
 import { effectiveness } from './typeChart';
 
 /*
@@ -215,16 +215,16 @@ function enterAbility(battle, index, names) {
   if (weather && battle.field.weather !== weather) {
     let note;
     if (PRIMAL_WEATHERS.has(weather)) {
-      battle.field = { ...battle.field, weather };
+      startOnField(battle, 'weather', weather, index);
       note = 'clima primal em campo';
     } else {
-      note = setWeather(battle, weather);
+      note = setWeather(battle, weather, index);
     }
     say(`${names[index]}: ${note} (${label}).`, 'field');
   }
   const terrain = TERRAIN_ABILITIES[ability];
   if (terrain && battle.field.terrain !== terrain) {
-    battle.field = { ...battle.field, terrain };
+    startOnField(battle, 'terrain', terrain, index);
     say(`${names[index]} traz ${formatSlug(`${terrain}-terrain`)}.`, 'field');
   }
   if (ability === 'screen-cleaner') {

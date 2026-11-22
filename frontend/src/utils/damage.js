@@ -5,6 +5,7 @@ import {
 } from '../data/battleModifiers';
 import { NATURAL_GIFT } from '../data/battleModifiers';
 import { DRIVE_TYPES, MEMORY_TYPES, PLATE_TYPES, heldForGood } from '../data/formItems';
+import { turnsLeft } from './durations';
 import { baseMaxHp, hpRatio, withoutDynamax } from './dynamax';
 import { currentHp, fixedDamage, hiddenPowerType, variablePower } from './variablePower';
 
@@ -66,6 +67,8 @@ const TRAP_NAMES = {
   bind: 'Bind', wrap: 'Wrap', clamp: 'Clamp', 'fire-spin': 'Fire Spin', whirlpool: 'Whirlpool', 'sand-tomb': 'Sand Tomb',
   'magma-storm': 'Magma Storm', infestation: 'Infestation', 'snap-trap': 'Snap Trap', 'thunder-cage': 'Thunder Cage',
 };
+// Derrubam as telas antes de causar o dano.
+export const SCREEN_BREAKERS = new Set(['brick-break', 'psychic-fangs', 'raging-bull']);
 const IGNORES_ABILITY = new Set(['g-max-drum-solo', 'g-max-fireball', 'g-max-hydrosnipe']);
 const TYPE_ABILITY_BOOSTS = {
   transistor: ['electric', 5325],
@@ -439,7 +442,7 @@ export function calculateDamage({ attacker: user, defender: target, move, field,
   /* ---- modificadores finais */
   const finalMods = [];
   const screened = (physical && defenderSide.reflect) || (!physical && defenderSide.lightScreen) || defenderSide.auroraVeil;
-  if (screened && !crit && attacker.ability !== 'infiltrator') finalMods.push(2048);
+  if (screened && !crit && attacker.ability !== 'infiltrator' && !SCREEN_BREAKERS.has(move.slug)) finalMods.push(2048);
   if (move.powered && defenderSide.protect && !FULL_THROUGH_PROTECT.has(move.slug)) finalMods.push(1024);
   if (defenderFull && ['multiscale', 'shadow-shield'].includes(defenderAbility)) finalMods.push(2048);
   if (['filter', 'solid-rock', 'prism-armor'].includes(defenderAbility) && typeMultiplier > 1) finalMods.push(3072);
@@ -571,8 +574,19 @@ export function residualEffects(side, defenderSide, field, attacker) {
   const timed = [];
   let entry = 0;
   let perTurn = 0;
-  const lose = (fraction, note) => { perTurn += Math.floor(hp * fraction); notes.push(note); };
-  const heal = (fraction, note) => { perTurn -= Math.floor(hp * fraction); notes.push(note); };
+  // `ticks`: quantas vezes ainda acontece, para o que tem prazo.
+  const change = (amount, note, ticks = null) => {
+    if (ticks === 0) return;
+    if (ticks) timed.push({ amount, turns: ticks });
+    else perTurn += amount;
+    notes.push(note);
+  };
+  const lose = (fraction, note, ticks) => change(Math.floor(hp * fraction), note, ticks);
+  const heal = (fraction, note, ticks) => change(-Math.floor(hp * fraction), note, ticks);
+  // O clima acaba antes de agir no último turno; o terreno, depois.
+  const weatherLeft = turnsLeft(field, 'weather');
+  const weatherTicks = weatherLeft ? weatherLeft - 1 : null;
+  const terrainTicks = turnsLeft(field, 'terrain') || null;
 
   if (!magicGuard && item !== 'heavy-duty-boots') {
     if (defenderSide.stealthRock) {
@@ -602,26 +616,26 @@ export function residualEffects(side, defenderSide, field, attacker) {
     }
     if (defenderSide.leechSeed && !defender.types.includes('grass')) lose(1 / 8, 'Leech Seed');
     if (field.weather === 'sand' && !defender.types.some((type) => SAND_IMMUNE_TYPES.includes(type))
-      && !SAND_IMMUNE_ABILITIES.has(ability) && item !== 'safety-goggles') lose(1 / 16, 'areia');
+      && !SAND_IMMUNE_ABILITIES.has(ability) && item !== 'safety-goggles') lose(1 / 16, 'areia', weatherTicks);
     if (defender.status === 'burn') lose(ability === 'heatproof' ? 1 / 32 : 1 / 16, 'queimadura');
     if (defender.status === 'poison' && ability !== 'poison-heal') lose(1 / 8, 'veneno');
     // Veneno forte: 1/16 no primeiro turno, 2/16 no segundo… até 15/16.
     if (defender.status === 'toxic' && ability !== 'poison-heal') lose(Math.min(15, (defender.toxicTurns ?? 0) + 1) / 16, 'veneno forte');
     if (asleep && attacker?.ability === 'bad-dreams') lose(1 / 8, 'Bad Dreams');
-    if (SUN.has(field.weather) && ability === 'dry-skin') lose(1 / 8, 'Dry Skin no sol');
-    if (SUN.has(field.weather) && ability === 'solar-power') lose(1 / 8, 'Solar Power');
+    if (SUN.has(field.weather) && ability === 'dry-skin') lose(1 / 8, 'Dry Skin no sol', weatherTicks);
+    if (SUN.has(field.weather) && ability === 'solar-power') lose(1 / 8, 'Solar Power', weatherTicks);
   }
 
   if (isPoisoned(defender) && ability === 'poison-heal') heal(1 / 8, 'Poison Heal');
-  if (RAIN.has(field.weather) && ability === 'dry-skin') heal(1 / 8, 'Dry Skin na chuva');
-  if (RAIN.has(field.weather) && ability === 'rain-dish') heal(1 / 16, 'Rain Dish');
-  if (field.weather === 'snow' && ability === 'ice-body') heal(1 / 16, 'Ice Body');
+  if (RAIN.has(field.weather) && ability === 'dry-skin') heal(1 / 8, 'Dry Skin na chuva', weatherTicks);
+  if (RAIN.has(field.weather) && ability === 'rain-dish') heal(1 / 16, 'Rain Dish', weatherTicks);
+  if (field.weather === 'snow' && ability === 'ice-body') heal(1 / 16, 'Ice Body', weatherTicks);
   if (item === 'leftovers' || (item === 'black-sludge' && defender.types.includes('poison'))) {
     heal(1 / 16, item === 'leftovers' ? 'Leftovers' : 'Black Sludge');
   } else if (item === 'black-sludge' && !magicGuard) {
     lose(1 / 8, 'Black Sludge');
   }
-  if (field.terrain === 'grassy' && grounded) heal(1 / 16, 'Grassy Terrain');
+  if (field.terrain === 'grassy' && grounded) heal(1 / 16, 'Grassy Terrain', terrainTicks);
   // A entrada vem antes do Dynamax, então dobra junto com os PS.
   return { entry: defender.dynamax ? entry * hpRatio(defender.species) : entry, perTurn, timed, notes };
 }
@@ -647,7 +661,7 @@ export const sturdyHolds = (result, defender, attacker, entry = 0) => defender.a
  * Em quantos usos do golpe o alvo cai, em até 4, contando hazards na entrada e o saldo de HP
  * entre um turno e outro. Devolve { text, turns, chance } com chance de 0 a 1.
  */
-export function describeKnockout(result, { attacker, defender, defenderSide, field }) {
+export function describeKnockout(result, { attacker, defender, defenderSide, field, resultAt }) {
   if (result.reason) return { text: result.reason, turns: null, chance: 0 };
 
   const { hp } = result;
@@ -686,7 +700,13 @@ export function describeKnockout(result, { attacker, defender, defenderSide, fie
       cap = normal;
       since = defender.dynamax;
     }
-    if (turns > 1) total = convolve(total, use);
+    if (turns > 1) {
+      // `resultAt` dá o golpe num turno em que telas, clima ou salas já acabaram (null se nada mudou).
+      const changed = resultAt?.(turns);
+      let next = use;
+      if (changed) next = changed.reason ? new Map([[0, 1]]) : perUseDistribution(changed);
+      total = convolve(total, next);
+    }
     // HP que ainda falta tirar depois dos hazards e do saldo dos turnos anteriores; a recuperação não passa do HP cheio.
     const needed = Math.min(cap, start - drainBetween(effects, since, turns - 1));
     let chance = 0;
@@ -698,11 +718,15 @@ export function describeKnockout(result, { attacker, defender, defenderSide, fie
     }
   }
 
-  const average = (result.min + result.max) / 2;
+  const lastUse = resultAt?.(MAX_TURNS + 1) ?? result;
+  if (lastUse.reason) return { text: `Não derruba: o golpe deixa de funcionar${suffix}.`, turns: null, chance: 0 };
+  const average = (lastUse.min + lastUse.max) / 2;
   const pace = Math.max(average - Math.max(-perTurn, 0), 1);
   // O que resta quando o Dynamax acaba cai pela metade.
   const boosted = defender.dynamax ? defender.dynamax * pace : Infinity;
-  const toDeal = remaining > boosted ? boosted + (remaining - boosted) / hpRatio(defender.species) : remaining;
+  const scheduled = effects.timed.reduce((sum, { amount, turns }) => sum + amount * turns, 0);
+  const left = remaining - scheduled;
+  const toDeal = Math.max(1, left > boosted ? boosted + (left - boosted) / hpRatio(defender.species) : left);
   const estimate = perTurn < 0 && average <= -perTurn ? null : Math.ceil(toDeal / pace);
   return {
     text: estimate ? `Cerca de ${estimate}HKO${suffix}.` : `Não derruba: a recuperação cobre o dano${suffix}.`,

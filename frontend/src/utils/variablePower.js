@@ -40,6 +40,7 @@ const FLING_POWER = {
   leftovers: 10, 'silk-scarf': 10, 'silver-powder': 10, 'fairy-feather': 10,
   'life-orb': 30, 'black-sludge': 30, 'booster-energy': 30, 'mystic-water': 30, 'miracle-seed': 30, 'never-melt-ice': 30,
   'black-belt': 30, 'soft-sand': 30, 'twisted-spoon': 30, 'spell-tag': 30, 'black-glasses': 30, 'metal-coat': 30,
+  'smooth-rock': 10, 'light-clay': 30, 'icy-rock': 40, 'heat-rock': 60, 'damp-rock': 60, 'terrain-extender': 60,
   eviolite: 40, 'sharp-beak': 50, 'poison-barb': 70, 'dragon-fang': 70,
   'assault-vest': 80, 'heavy-duty-boots': 80, 'safety-goggles': 80, 'hard-stone': 100,
 };

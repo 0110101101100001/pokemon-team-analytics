@@ -1,4 +1,5 @@
 import { memo } from 'react';
+import { turnsLeft } from '../../utils/durations';
 
 // Status como selo cheio na cor do tipo que combina com ele (queimadura = Fire, veneno = Poison…).
 const STATUS_CHIPS = {
@@ -72,7 +73,10 @@ function StateChips({ side, conditions, className = '' }) {
           {STAT_LABELS[stat]} {stage > 0 ? `+${stage}` : `−${-stage}`}
         </li>
       ))}
-      {active.map(([key, label]) => <li key={key} className={`${OUTLINE} border-sepia/50 font-reading text-sepia`}>{label}</li>)}
+      {active.map(([key, label]) => {
+        const left = turnsLeft(conditions, key);
+        return <li key={key} className={`${OUTLINE} border-sepia/50 font-reading text-sepia`}>{label}{left ? ` ${left}t` : ''}</li>;
+      })}
       {spikes > 0 && <li className={`${OUTLINE} border-sepia/50 font-reading text-sepia`}>{spikes}× Spikes</li>}
       {side.dynamax > 0 && <li className={`${OUTLINE} border-vermilion text-vermilion-deep`}>Dynamax {side.dynamax}t</li>}
       {lingering.map((label) => <li key={label} className={`${OUTLINE} border-ochre text-ochre-deep`}>{label}</li>)}

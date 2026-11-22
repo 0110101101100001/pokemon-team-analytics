@@ -110,6 +110,8 @@ export const createSideConditions = () => ({
   toxicSpikes: 0,
   stickyWeb: false,
   gmaxDamage: null,
+  // Turnos que faltam de cada efeito com prazo (utils/durations).
+  timers: {},
 });
 
 export const createField = () => ({
@@ -119,6 +121,7 @@ export const createField = () => ({
   wonderRoom: false,
   gravity: false,
   trickRoom: false,
+  timers: {},
   sides: [createSideConditions(), createSideConditions()],
 });
 

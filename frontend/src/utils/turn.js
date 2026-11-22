@@ -1,10 +1,11 @@
 import {
   activeItem, calcSpeed, calculateDamage, confusionDamage, isDynamaxed, poweredType, residualEffects, sturdyHolds,
 } from './damage';
+import { FIELD_TIMED, SIDE_TIMED, countDown, withTimers } from './durations';
 import { baseMaxHp, dynamaxed, hpRatio, withoutDynamax } from './dynamax';
 import { MOLD_BREAKERS } from '../data/battleModifiers';
 import { formatSlug } from './filters';
-import { PROTECT_MOVES, SLEEP_TURNS, activeField, applyMoveEffects, isFieldMove, passEffects, removesSecondary } from './moveEffects';
+import { PROTECT_MOVES, SLEEP_TURNS, activeField, applyMoveEffects, endingText, isFieldMove, passEffects, removesSecondary } from './moveEffects';
 import { poweredMove } from './poweredMoves';
 import {
   PHAZE_MOVES, PIVOT_MOVES, arrive, canDrag, incomingOf, releaseOpponent, replaceActive, settlePrimal, trapReason,
@@ -27,6 +28,8 @@ import { currentHp } from './variablePower';
   Dynamax: escolher um Max ou G-Max liga o Dynamax no começo do turno, e ele acaba no fim do terceiro.
   Confusão (33% de se acertar) e paixão (50% de não agir) entram pela média no dano; um golpe de status só falha
   se a chance de agir ficar abaixo de 50%.
+
+  Prazos (utils/durations): o clima conta antes do saldo do fim do turno; terreno, salas, telas e Tailwind, depois.
 
   Trocas (utils/switching): acontecem antes dos golpes e do Dynamax, o mais rápido primeiro; Pursuit pega quem sai.
   U-turn e afins trocam depois do golpe e Roar e afins arrastam: entra `incoming` ou, sem escolha, a primeira reserva
@@ -109,6 +112,11 @@ export function simulateTurn({
     !replacing && switches[index] == null && !side.dynamax && currentHp(side) > 0 && isDynamaxed(moves[index])
   ));
   const combatants = entering.map((side, index) => (activates[index] ? dynamaxed(side) : side));
+  // O que já estava em campo sem prazo anotado começa a contar agora.
+  const timed = withTimers(
+    { ...field, sides: sideConditions },
+    entering.map((side) => ({ ability: side.ability, item: activeItem(side, field) })),
+  );
   const battle = {
     combatants,
     hp: combatants.map(currentHp),
@@ -124,8 +132,8 @@ export function simulateTurn({
     bench: bench.map((members) => [...members]),
     benched: new Map(),
     // Protect só vale no turno em que é usado: a marcação manual do campo não entra na simulação.
-    conditions: sideConditions.map((conditions) => ({ ...conditions, protect: false, maxGuard: false })),
-    field: { ...field },
+    conditions: timed.sides.map((conditions) => ({ ...conditions, protect: false, maxGuard: false })),
+    field: { ...timed },
   };
   const log = [];
   // Cada linha do registro tem um tipo, que a interface mostra com ícone: damage, heal, status, field, faint, info.
@@ -370,12 +378,17 @@ export function simulateTurn({
   const order = turnOrder(combatants.map((_, index) => state(index)), chosen, battle.conditions, activeField(battle));
   for (const from of order) act(from);
 
+  const weatherPassed = countDown(battle.field, ['weather']);
+  battle.field = weatherPassed.next;
+  for (const [key, value] of weatherPassed.ended) say(0, `Fim do turno: ${endingText(key, value)}.`, 'field');
+
   // Fim do turno: o saldo por turno de cada lado que ainda está de pé (perdas menos recuperação).
   [0, 1].forEach((index) => {
     if (battle.hp[index] <= 0) return;
     const other = 1 - index;
     const combatant = state(index);
-    const effects = residualEffects(combatant, battle.conditions[index], activeField(battle), state(other));
+    // Sem os prazos: aqui só interessa o que age neste turno.
+    const effects = residualEffects(combatant, battle.conditions[index], { ...activeField(battle), timers: {} }, state(other));
     if (battle.status[index] === 'toxic') battle.toxicTurns[index] += 1;
     // As notas também trazem os hazards de entrada, que não acontecem no fim do turno.
     const notes = effects.notes.filter((note) => note !== 'Stealth Rock' && note !== 'Steelsurge' && !note.endsWith('Spikes'));
@@ -402,6 +415,15 @@ export function simulateTurn({
   });
 
   for (const line of passEffects(battle, names)) say(line.side, line.text, line.kind);
+
+  const fieldPassed = countDown(battle.field, FIELD_TIMED.filter((key) => key !== 'weather'));
+  battle.field = fieldPassed.next;
+  for (const [key, value] of fieldPassed.ended) say(0, `Fim do turno: ${endingText(key, value)}.`, 'field');
+  [0, 1].forEach((index) => {
+    const passed = countDown(battle.conditions[index], SIDE_TIMED);
+    battle.conditions[index] = passed.next;
+    for (const [key, value] of passed.ended) say(index, `${names[index]}: ${endingText(key, value)}.`, 'field');
+  });
 
   return outcome();
 
@@ -441,7 +463,11 @@ export function simulateTurn({
       benched: battle.benched,
       switched: arrived.some(Boolean),
       // Protect não passa para o turno seguinte: devolve a marcação manual de antes.
-      conditions: battle.conditions.map(({ maxGuard, ...conditions }, index) => ({ ...conditions, protect: sideConditions[index].protect })),
+      conditions: battle.conditions.map((conditions, index) => {
+        const kept = { ...conditions, protect: sideConditions[index].protect };
+        delete kept.maxGuard;
+        return kept;
+      }),
       field: battle.field,
       log,
     };

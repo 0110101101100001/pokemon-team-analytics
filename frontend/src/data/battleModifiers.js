@@ -103,6 +103,17 @@ export const ITEM_GROUPS = [
       .map((berry) => [berry.name, `${slugLabel(berry.name)} · ${typeLabel(berry.type)} ${berry.power + 20}`]),
   },
   {
+    label: 'Duração',
+    items: [
+      ['light-clay', 'Light Clay · telas por 8 turnos'],
+      ['heat-rock', 'Heat Rock · sol por 8 turnos'],
+      ['damp-rock', 'Damp Rock · chuva por 8 turnos'],
+      ['smooth-rock', 'Smooth Rock · areia por 8 turnos'],
+      ['icy-rock', 'Icy Rock · neve por 8 turnos'],
+      ['terrain-extender', 'Terrain Extender · terreno por 8 turnos'],
+    ],
+  },
+  {
     label: 'Recuperação e velocidade',
     items: [
       ['leftovers', 'Leftovers · recupera 1/16 por turno'],
