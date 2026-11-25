@@ -164,7 +164,7 @@ Depois de restaurar, refaça as políticas de RLS e os grants da tabela com as m
 
 ## Dados da Smogon
 
-`backend/app/scrapers/update_smogon.py` baixa os arquivos de uso e de moveset de `smogon.com/stats/<mês>/` para os tiers da Geração 9 (OU, Ubers, UU, RU, NU, PU, LC, Doubles OU) e faz upsert na tabela `smogon_stats`, com chave única `(name, tier, date)`.
+`backend/app/scrapers/update_smogon.py` baixa os arquivos de uso e de moveset de `smogon.com/stats/<mês>/` para os tiers da Geração 9 (OU, Ubers, UU, RU, NU, PU, LC, Doubles OU) e faz upsert na tabela `smogon_stats`, com chave única `(name, tier, date_month)`; `date_month` é o mês como `date` (dia 1). A coluna antiga `date` (texto `AAAA-MM`) ainda existe, preenchida por gatilho, até a fase B da migração `20261125215111_smogon_stats_date_month`.
 
 ```bash
 cd backend
@@ -174,7 +174,7 @@ python -m app.scrapers.update_smogon 2026-10    # mês específico
 
 A API usa sempre o mês mais recente que existir na tabela. A recomendação monta as matrizes de afinidade uma vez por tier e mês e as mantém em memória até chegar um mês novo.
 
-As migrations ficam em `supabase/migrations/`. A `name_key` (nome em minúsculas, coluna gerada) e o índice `(tier, name_key, date)` atendem a busca de um Pokémon por nome.
+As migrations ficam em `supabase/migrations/`. A `name_key` (nome em minúsculas, coluna gerada) e o índice `(tier, name_key, date_month)` atendem a busca de um Pokémon por nome.
 
 ## API
 
