@@ -135,12 +135,32 @@ ruff check . && pytest
 | `keep-alive.yml` | a cada 10 minutos | `GET /health` no Render, para o serviço não dormir | nenhum |
 | `smogon-sync.yml` | dia 2, 06:00 | `POST /api/admin/sync-smogon` e espera até todos os tiers estarem no mês anterior | `SUPABASE_JWT_SECRET` |
 | `supabase-keepalive.yml` | de 3 em 3 dias, 09:00 | consulta a tabela `smogon_stats` no Supabase | `SUPABASE_URL`, `SUPABASE_KEY` |
+| `backup.yml` | segunda, 06:00 | dump de `PokemonTrainers` e `smogon_stats` em `backups/`, com commit só quando os dados mudam | `SUPABASE_DB_URL` |
 | `trainer-data-check.yml` | segunda, 12:00 | o mesmo teste de dados da `PokemonTrainers`, porque a tabela muda direto no Supabase, sem push | `SUPABASE_URL`, `SUPABASE_ANON_KEY` |
 | `keep-active.yml` | dia 1, 05:00 | commit vazio na `main`, para o GitHub não desativar os agendamentos | nenhum |
 
 Os secrets ficam em Settings > Secrets and variables > Actions. Todos os workflows também podem ser disparados manualmente na aba Actions.
 
 O GitHub desativa workflows agendados após 60 dias sem atividade no repositório; o `keep-active.yml` evita isso com um commit vazio por mês, marcado com `[skip ci]` para não disparar deploy no Netlify.
+
+### Backup e restauração
+
+O `backup.yml` grava em `backups/`:
+
+- `PokemonTrainers.sql.gz` e `smogon_stats.sql.gz`: `pg_dump` de cada tabela (estrutura, índices e dados, sem dono nem grants);
+- `PokemonTrainers.csv`: a mesma tabela em CSV, para conferir no navegador ou em uma planilha.
+
+O secret `SUPABASE_DB_URL` é a connection string do **Session pooler** (Supabase > Connect > Session pooler, porta 5432), no formato `postgresql://postgres.<project-ref>:<senha>@aws-0-<região>.pooler.supabase.com:5432/postgres`. A conexão direta exige IPv6, que os runners do GitHub não têm, e o Transaction pooler (6543) não funciona com o `pg_dump`.
+
+Para restaurar uma tabela (com `psql` 17.6 ou mais novo, por causa do `\restrict` que o `pg_dump` grava no arquivo):
+
+```bash
+# Substitui a tabela inteira: o dump recria a tabela, então apague a atual antes (ou renomeie, para comparar).
+psql "$SUPABASE_DB_URL" -c 'alter table public."PokemonTrainers" rename to "PokemonTrainers_old";'
+gunzip -c backups/PokemonTrainers.sql.gz | psql "$SUPABASE_DB_URL" -v ON_ERROR_STOP=1
+```
+
+Depois de restaurar, refaça as políticas de RLS e os grants da tabela com as migrações de `supabase/migrations/` (o dump não os leva). Para voltar uma versão anterior, pegue o arquivo no histórico do git (`git log -- backups/`).
 
 ## Dados da Smogon
 
