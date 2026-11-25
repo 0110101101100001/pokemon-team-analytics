@@ -75,7 +75,7 @@ function PokedexSection({
   onLogin,
 }) {
   const collapsed = useHeaderCollapsed();
-  const { scope, game, dex, collection, searchTerm, applyFilters } = pokedex;
+  const { scope, game, dex, collection, searchTerm, applyFilters, suggestFor } = pokedex;
   const isRegional = scope === 'regional';
   const regional = useRegionalDex(isRegional ? dex.slug : null);
 
@@ -94,6 +94,10 @@ function PokedexSection({
   }, [collection, scopedList, collections.favorites, collections.history]);
 
   const filteredList = useMemo(() => applyFilters(baseList), [applyFilters, baseList]);
+  const suggestion = useMemo(
+    () => (filteredList.length === 0 ? suggestFor(baseList) : null),
+    [filteredList, suggestFor, baseList],
+  );
 
   const speciesCount = useMemo(() => pokemonList.filter((p) => !p.isForm).length, [pokemonList]);
   const collectionCounts = useMemo(
@@ -173,6 +177,7 @@ function PokedexSection({
           onToggleFavorite={onToggleFavorite}
           comparedSet={comparedSet}
           onToggleCompare={onToggleCompare}
+          suggestion={suggestion}
         />
       )}
     </div>

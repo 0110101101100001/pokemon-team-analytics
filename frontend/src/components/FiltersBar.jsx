@@ -10,7 +10,7 @@ import { TYPE_NAMES, fetchAbilityNames, fetchMoveNames } from '../services/api';
 import { FIXED_FILTERS, GENERATIONS, createFilter, eggGroupLabel, filterKey, formatSlug } from '../utils/filters';
 import { useDebouncedValue } from '../hooks/useDebouncedValue';
 
-const SEARCH_DEBOUNCE_MS = 250;
+const SEARCH_DEBOUNCE_MS = 150;
 
 const SCOPES = [
   { value: 'national', label: 'Nacional' },

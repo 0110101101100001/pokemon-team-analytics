@@ -29,6 +29,55 @@ export function createSearchMatcher(rawTerm) {
   return (p) => p.name.includes(slug);
 }
 
+/**
+ * Predicado dos filtros ativos, sem a busca. Gerações, regiões e raridades: OR dentro do grupo; os demais: AND.
+ * Filtros remotos ainda carregando (ou que falharam) são ignorados até terem o Set de ids. Null sem filtros.
+ */
+export function createFiltersMatcher(activeFilters, remoteFilterSets = {}) {
+  if (activeFilters.length === 0) return null;
+  const gens = new Set();
+  const regions = new Set();
+  const rarities = new Set();
+  const types = [];
+  const eggGroups = [];
+  const idSets = [];
+  const flags = [];
+  for (const f of activeFilters) {
+    if (f.type === 'generation') gens.add(Number(f.value));
+    else if (f.type === 'region') regions.add(f.value);
+    else if (f.type === 'rarity') rarities.add(f.value);
+    else if (f.type === 'type') types.push(f.value);
+    else if (f.type === 'eggGroup') eggGroups.push(f.value);
+    else if (f.type === 'mega') flags.push(['hasMega', f.value === 'with']);
+    else if (f.type === 'gmax') flags.push(['hasGmax', f.value === 'with']);
+    else if (remoteFilterSets[filterKey(f)] instanceof Set) idSets.push(remoteFilterSets[filterKey(f)]);
+  }
+  return (p) =>
+    (!gens.size || gens.has(p.generation)) &&
+    (!regions.size || (p.region !== null && (regions.has('any') || regions.has(p.region)))) &&
+    (!rarities.size || rarities.has(p.rarity ?? 'common')) &&
+    types.every((t) => p.types.includes(t)) &&
+    eggGroups.every((g) => p.eggGroups.includes(g)) &&
+    flags.every(([flag, expected]) => p[flag] === expected) &&
+    idSets.every((ids) => ids.has(p.id));
+}
+
+/**
+ * Filtros e busca sobre a lista da grade. Com busca, os resultados vêm por relevância (ver `createSearch`)
+ * e, dentro da mesma relevância, na ordem da lista.
+ */
+export function filterPokedex(list, { search = null, matchesFilters = null }) {
+  if (!search && !matchesFilters) return list;
+  if (!search) return list.filter(matchesFilters);
+
+  const ranked = [];
+  for (const entry of list) {
+    const rank = search(entry);
+    if (rank !== undefined && (!matchesFilters || matchesFilters(entry))) ranked.push({ entry, rank });
+  }
+  return ranked.sort((a, b) => a.rank - b.rank).map(({ entry }) => entry);
+}
+
 export const GENERATIONS = [
   { value: '1', label: '1ª geração · Kanto' },
   { value: '2', label: '2ª geração · Johto' },

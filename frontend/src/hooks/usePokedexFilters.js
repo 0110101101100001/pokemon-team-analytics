@@ -1,7 +1,8 @@
-import { useCallback, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { fetchPokemonIdsLearningMove, fetchPokemonIdsWithAbility } from '../services/api';
 import { DEFAULT_GAME_ID, gameById } from '../data/games';
-import { FIXED_FILTERS, SINGLE_VALUE_FILTERS, createSearchMatcher, filterKey } from '../utils/filters';
+import { FIXED_FILTERS, SINGLE_VALUE_FILTERS, createFiltersMatcher, filterKey, filterPokedex } from '../utils/filters';
+import { createSearch, createSearchIndex, loadFuzzySearch, suggestName } from '../utils/search';
 import { fetchPokemonIdsWithBuilds } from '../utils/smogonSets';
 
 // Filtros resolvidos sob demanda: cada um devolve o Set de ids de Pokémon que o cumprem.
@@ -61,39 +62,40 @@ export function usePokedexFilters(pokemonList) {
     setDexSlug(null);
   }, []);
 
-  // Gerações, regiões e raridades: OR dentro do grupo. Os demais critérios: AND.
-  // Filtros remotos ainda carregando (ou que falharam) são ignorados até terem o Set de ids.
-  const applyFilters = useCallback((list) => {
-    const matchesSearch = createSearchMatcher(searchTerm);
-    if (!matchesSearch && activeFilters.length === 0) return list;
+  // O fuzzy chega com a primeira busca; a busca em curso é refeita quando ele fica disponível.
+  const [fuzzyReady, setFuzzyReady] = useState(false);
+  const hasSearch = searchTerm.trim() !== '';
+  useEffect(() => {
+    if (!hasSearch || fuzzyReady) return undefined;
+    let active = true;
+    loadFuzzySearch().then((ready) => active && ready && setFuzzyReady(true));
+    return () => { active = false; };
+  }, [hasSearch, fuzzyReady]);
 
-    const gens = new Set();
-    const regions = new Set();
-    const rarities = new Set();
-    const types = [];
-    const eggGroups = [];
-    const idSets = [];
-    const flags = [];
-    for (const f of activeFilters) {
-      if (f.type === 'generation') gens.add(Number(f.value));
-      else if (f.type === 'region') regions.add(f.value);
-      else if (f.type === 'rarity') rarities.add(f.value);
-      else if (f.type === 'type') types.push(f.value);
-      else if (f.type === 'eggGroup') eggGroups.push(f.value);
-      else if (f.type === 'mega') flags.push(['hasMega', f.value === 'with']);
-      else if (f.type === 'gmax') flags.push(['hasGmax', f.value === 'with']);
-      else if (remoteFilterSets[filterKey(f)] instanceof Set) idSets.push(remoteFilterSets[filterKey(f)]);
-    }
-    return list.filter((p) =>
-      (!matchesSearch || matchesSearch(p)) &&
-      (!gens.size || gens.has(p.generation)) &&
-      (!regions.size || (p.region !== null && (regions.has('any') || regions.has(p.region)))) &&
-      (!rarities.size || rarities.has(p.rarity ?? 'common')) &&
-      types.every((t) => p.types.includes(t)) &&
-      eggGroups.every((g) => p.eggGroups.includes(g)) &&
-      flags.every(([flag, expected]) => p[flag] === expected) &&
-      idSets.every((ids) => ids.has(p.id)));
-  }, [searchTerm, activeFilters, remoteFilterSets]);
+  // Montado uma vez por lista, não a cada tecla.
+  const searchIndex = useMemo(() => createSearchIndex(pokemonList), [pokemonList]);
+  const search = useMemo(
+    () => createSearch(searchIndex, searchTerm),
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- fuzzyReady refaz a busca com o fuzzy já carregado
+    [searchIndex, searchTerm, fuzzyReady],
+  );
+  const matchesFilters = useMemo(
+    () => createFiltersMatcher(activeFilters, remoteFilterSets),
+    [activeFilters, remoteFilterSets],
+  );
+
+  const applyFilters = useCallback(
+    (list) => filterPokedex(list, { search, matchesFilters }),
+    [search, matchesFilters],
+  );
+
+  // Busca sem resultado: o nome mais parecido entre os que passam nos outros filtros.
+  const suggestFor = useCallback((list) => {
+    if (!search) return null;
+    const allowed = new Set((matchesFilters ? list.filter(matchesFilters) : list).map((entry) => entry.name));
+    return suggestName(searchIndex, searchTerm, allowed);
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- idem: a sugestão depende do fuzzy carregado
+  }, [search, matchesFilters, searchIndex, searchTerm, fuzzyReady]);
 
   const filterStatus = useMemo(() => {
     const status = {};
@@ -118,6 +120,7 @@ export function usePokedexFilters(pokemonList) {
       removeFilter,
       filterStatus,
       applyFilters,
+      suggestFor,
       advancedOpen,
       advancedCount,
       toggleAdvanced,
@@ -131,7 +134,7 @@ export function usePokedexFilters(pokemonList) {
       selectDex: setDexSlug,
     };
   }, [
-    searchTerm, activeFilters, addFilter, removeFilter, filterStatus, applyFilters,
+    searchTerm, activeFilters, addFilter, removeFilter, filterStatus, applyFilters, suggestFor,
     advancedOpen, advancedCount, toggleAdvanced, collection, scope, gameId, dexSlug, selectGame,
   ]);
 }
