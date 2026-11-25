@@ -20,8 +20,15 @@ function blotStyleFor(type) {
   return style;
 }
 
-/** Sprite da PokéAPI em 128px; se faltar (algumas formas não têm), um sinal de interrogação a tinta sobre a mancha. */
-function CardSprite({ src }) {
+// O React 18 não conhece fetchPriority: o atributo vai em minúsculas, como o HTML espera.
+const PRIORITY_LOADING = { loading: 'eager', fetchpriority: 'high' };
+const LAZY_LOADING = { loading: 'lazy' };
+
+/**
+ * Sprite da PokéAPI em 128px; se faltar (algumas formas não têm), um sinal de interrogação a tinta sobre a mancha.
+ * `priority`: card visível na abertura, carregado sem esperar o lazy loading.
+ */
+function CardSprite({ src, priority }) {
   const [failed, setFailed] = useState(false);
   if (failed) return <span aria-hidden="true" className="font-serif text-5xl font-bold text-ink/45">?</span>;
   return (
@@ -30,7 +37,7 @@ function CardSprite({ src }) {
       alt=""
       width={128}
       height={128}
-      loading="lazy"
+      {...(priority ? PRIORITY_LOADING : LAZY_LOADING)}
       decoding="async"
       onError={() => setFailed(true)}
       className="h-32 w-32 object-contain [image-rendering:pixelated]"
@@ -45,6 +52,8 @@ function PokemonCard({
   id,
   number,
   types = [],
+  index,
+  priority = false,
   isSelected,
   hasSmogonData = false,
   isFavorite = false,
@@ -57,7 +66,7 @@ function PokemonCard({
   const name = displayName(pokemon);
 
   return (
-    <article data-selected={isSelected} className="print-card select-none p-4">
+    <article data-selected={isSelected} data-card-index={index} className="print-card select-none p-4">
       {/*
         O card inteiro abre a ficha por este botão, esticado sobre ele. Favorito e comparar ficam acima (z-20) como irmãos,
         e não dentro: controle interativo aninhado em outro é HTML inválido e confunde leitores de tela.
@@ -87,7 +96,7 @@ function PokemonCard({
 
       <div className="relative isolate my-1 flex h-[150px] items-center justify-center">
         <span aria-hidden="true" className="print-blot absolute -z-10 h-[80%] aspect-[1.1]" style={blotStyleFor(types[0] ?? 'normal')} />
-        <CardSprite src={thumbnailSpriteUrl(id ?? number)} />
+        <CardSprite src={thumbnailSpriteUrl(id ?? number)} priority={priority} />
       </div>
 
       {/* Nomes longos de formas ("tauros paldea blaze breed") quebram entre palavras, nunca são cortados. */}

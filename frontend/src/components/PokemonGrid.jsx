@@ -1,18 +1,54 @@
-import { memo, useEffect, useMemo, useRef, useState } from 'react';
+import { memo, useCallback, useLayoutEffect, useMemo, useRef, useState, useSyncExternalStore } from 'react';
+import { measureElement, useWindowVirtualizer } from '@tanstack/react-virtual';
 import PokemonCard from './PokemonCard';
-import JumpIndex, { scrollToElement } from './JumpIndex';
+import JumpIndex from './JumpIndex';
 import { COMPARE_LIMIT } from '../utils/compare';
-import { GENERATIONS } from '../utils/filters';
+import { GENERATIONS, formatSlug } from '../utils/filters';
 import EmptyState from './EmptyState';
 
-const BATCH_SIZE = 24;
-// O próximo lote começa a ser montado antes de o fim da grade chegar à tela.
-const PRELOAD_MARGIN = '600px 0px';
+// Os breakpoints do Tailwind (sm, md, lg, xl): de 1 a 5 colunas.
+const COLUMN_QUERIES = [['(min-width: 1280px)', 5], ['(min-width: 1024px)', 4], ['(min-width: 768px)', 3], ['(min-width: 640px)', 2]];
+// Os primeiros cards aparecem logo na abertura: os sprites deles não esperam o lazy loading.
+const PRIORITY_CARDS = 10;
+// Altura reservada para o header fixo quando o salto leva a uma linha (o antigo scroll-mt-40).
+const HEADER_OFFSET = 160;
+const OVERSCAN_ROWS = 3;
+
+function readColumns() {
+  if (typeof window === 'undefined' || !window.matchMedia) return 1;
+  return COLUMN_QUERIES.find(([query]) => window.matchMedia(query).matches)?.[1] ?? 1;
+}
+
+function subscribeColumns(onChange) {
+  const lists = COLUMN_QUERIES.map(([query]) => window.matchMedia(query));
+  lists.forEach((list) => list.addEventListener('change', onChange));
+  return () => lists.forEach((list) => list.removeEventListener('change', onChange));
+}
+
+const useGridColumns = () => useSyncExternalStore(subscribeColumns, readColumns, () => 1);
+
+/**
+ * Distância do topo da grade ao topo do documento. Muda quando o header recolhe ou quando
+ * aparecem filtros e avisos acima dela; a altura do documento muda junto, daí o observer no body.
+ */
+function useDocumentOffset(ref) {
+  const [offset, setOffset] = useState(0);
+  useLayoutEffect(() => {
+    const node = ref.current;
+    if (!node) return undefined;
+    const update = () => setOffset(node.getBoundingClientRect().top + window.scrollY);
+    update();
+    const observer = new ResizeObserver(update);
+    observer.observe(document.body);
+    return () => observer.disconnect();
+  }, [ref]);
+  return offset;
+}
 
 /**
  * Posição do primeiro Pokémon de cada geração na lista, para o índice de saltos.
  * Só faz sentido na ordem nacional: se as espécies não vierem em ordem de geração
- * (Pokédex regional, coleções), devolve null. As formas ficam junto da espécie e não contam.
+ * (Pokédex regional, coleções, busca por relevância), devolve null. As formas ficam junto da espécie e não contam.
  */
 function generationStarts(list) {
   const starts = [];
@@ -29,6 +65,11 @@ function generationStarts(list) {
 
 const REGION_OF = Object.fromEntries(GENERATIONS.map(({ value, label }) => [value, label.split(' · ')[1]]));
 
+function emptyHint(suggestion) {
+  if (suggestion) return `Quis dizer: ${formatSlug(suggestion)}?`;
+  return 'Tente ajustar os filtros de busca ou limpe a pesquisa.';
+}
+
 function PokemonGrid({
   pokemonList,
   selectedName,
@@ -38,98 +79,119 @@ function PokemonGrid({
   onToggleFavorite,
   comparedSet,
   onToggleCompare,
+  suggestion = null,
 }) {
   const compareFull = (comparedSet?.size ?? 0) >= COMPARE_LIMIT;
-  const [visibleCount, setVisibleCount] = useState(BATCH_SIZE);
-  const [renderedList, setRenderedList] = useState(pokemonList);
-  const [jumpTarget, setJumpTarget] = useState(null);
-  const sentinelRef = useRef(null);
-  const gridRef = useRef(null);
+  const columns = useGridColumns();
+  const listRef = useRef(null);
+  const scrollMargin = useDocumentOffset(listRef);
+  // Altura medida de uma linha: estimativa das que ainda não foram montadas, para o salto cair no lugar certo.
+  const rowHeightRef = useRef(340);
+  // Primeiro card visível, para manter a posição quando o número de colunas muda (rotação, janela redimensionada).
+  const anchorRef = useRef(0);
+
+  const total = pokemonList.length;
+  const rowCount = Math.ceil(total / columns);
   const starts = useMemo(() => generationStarts(pokemonList), [pokemonList]);
   const jumpItems = useMemo(
     () => starts?.map(({ generation, index }) => ({ key: index, generation, region: REGION_OF[generation] })),
     [starts],
   );
 
-  // Busca ou filtro novo: volta ao primeiro lote em vez de manter centenas de cards montados.
-  if (renderedList !== pokemonList) {
-    setRenderedList(pokemonList);
-    setVisibleCount(BATCH_SIZE);
-  }
+  const virtualizer = useWindowVirtualizer({
+    count: rowCount,
+    estimateSize: () => rowHeightRef.current,
+    overscan: OVERSCAN_ROWS,
+    scrollMargin,
+    scrollPaddingStart: HEADER_OFFSET,
+    getItemKey: (row) => pokemonList[row * columns]?.name ?? row,
+    measureElement: (element, entry, instance) => {
+      const height = measureElement(element, entry, instance);
+      if (height > 0) rowHeightRef.current = height;
+      return height;
+    },
+    onChange: (instance) => {
+      if (instance.range) anchorRef.current = instance.range.startIndex * columns;
+    },
+  });
 
-  const total = pokemonList.length;
-  const shown = Math.min(visibleCount, total);
-  const hasMore = shown < total;
+  const lastColumns = useRef(columns);
+  useLayoutEffect(() => {
+    if (lastColumns.current === columns) return;
+    lastColumns.current = columns;
+    if (window.scrollY > scrollMargin) virtualizer.scrollToIndex(Math.floor(anchorRef.current / columns), { align: 'start' });
+  }, [columns, scrollMargin, virtualizer]);
 
-  // Um observer novo a cada lote: se o botão ainda estiver à vista, ele dispara de novo
-  // e a grade continua enchendo até preencher a tela.
-  useEffect(() => {
-    const node = sentinelRef.current;
-    if (!hasMore || !node || typeof IntersectionObserver === 'undefined') return undefined;
+  // Salto pelo índice: rola até a linha do card e, quando a rolagem termina, acerta a posição (as linhas
+  // medidas no caminho podem ter outra altura) e põe o foco no card.
+  const jumpTo = useCallback((index) => {
+    const row = Math.floor(index / columns);
+    const [top] = virtualizer.getOffsetForIndex(row, 'start') ?? [0];
+    const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    const settle = () => {
+      virtualizer.scrollToIndex(row, { align: 'start' });
+      requestAnimationFrame(() => {
+        listRef.current?.querySelector(`[data-card-index="${index}"] button`)?.focus({ preventScroll: true });
+      });
+    };
+    if (reduceMotion || Math.abs(window.scrollY - top) < 2) {
+      window.scrollTo({ top });
+      settle();
+      return;
+    }
+    const fallback = setTimeout(done, 1200);
+    function done() {
+      clearTimeout(fallback);
+      window.removeEventListener('scrollend', done);
+      settle();
+    }
+    window.addEventListener('scrollend', done, { once: true });
+    window.scrollTo({ top, behavior: 'smooth' });
+  }, [columns, virtualizer]);
 
-    const observer = new IntersectionObserver(
-      ([entry]) => entry.isIntersecting && setVisibleCount((count) => count + BATCH_SIZE),
-      { rootMargin: PRELOAD_MARGIN },
-    );
-    observer.observe(node);
-    return () => observer.disconnect();
-  }, [hasMore, shown]);
-
-  // Salto pelo índice: monta os cards até um lote depois do alvo e, já montado, rola até ele.
-  const jumpTo = (index) => {
-    setVisibleCount((count) => Math.max(count, index + BATCH_SIZE));
-    setJumpTarget(index);
-  };
-
-  useEffect(() => {
-    if (jumpTarget === null) return;
-    scrollToElement(gridRef.current?.children[jumpTarget]);
-    setJumpTarget(null);
-  }, [jumpTarget]);
+  const gridTemplateColumns = `repeat(${columns}, minmax(0, 1fr))`;
 
   return (
     <section className="w-full">
       {jumpItems && <JumpIndex label="Ir para a geração" items={jumpItems} onJump={jumpTo} />}
-      {/* Grade sempre com 100% do espaço, de 1 a 5 colunas dependendo da tela. scroll-mt deixa o card do salto abaixo do header fixo. */}
-      <div ref={gridRef} className="grid [&>*]:scroll-mt-40 grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4 lg:gap-5">
-        {pokemonList.slice(0, shown).map(({ name, id, number, types }) => (
-          <PokemonCard
-            key={name}
-            pokemon={name}
-            id={id}
-            number={number}
-            types={types}
-            isSelected={selectedName === name}
-            hasSmogonData={!!hasSmogonDataMap[name]}
-            isFavorite={favorites?.has(name) ?? false}
-            onSelect={onSelect}
-            onToggleFavorite={onToggleFavorite}
-            isCompared={comparedSet?.has(name) ?? false}
-            compareFull={compareFull}
-            onToggleCompare={onToggleCompare}
-          />
-        ))}
 
-        {total === 0 && (
-          <EmptyState className="py-24" title="nenhum Pokémon encontrado" hint="Tente ajustar os filtros de busca ou limpe a pesquisa." />
-        )}
-      </div>
-
-      {/*
-        Sentinela do scroll infinito. Também é um botão: serve ao teclado e a navegadores sem IntersectionObserver.
-        overflow-anchor: none impede o navegador de ancorar a rolagem nele: sem isso, cada lote inserido acima
-        faz a página rolar para acompanhar o botão, que continua à vista e carrega o lote seguinte, até o fim.
-      */}
-      {hasMore && (
-        <div className="mt-8 flex justify-center [overflow-anchor:none]">
-          <button
-            ref={sentinelRef}
-            type="button"
-            onClick={() => setVisibleCount((count) => count + BATCH_SIZE)}
-            className="inline-flex h-10 cursor-pointer items-center gap-2 rounded-[3px] border-[1.5px] border-ink/80 px-4 font-reading text-[15px] font-medium text-ink transition-colors hover:bg-paper-2 focus:outline-none focus-visible:ring-2 focus-visible:ring-paint-cobalt"
-          >
-            Mostrar mais <span className="font-mono text-xs tabular-nums text-ink-soft">{shown} de {total}</span>
-          </button>
+      {total === 0 ? (
+        <EmptyState className="py-24" title="nenhum Pokémon encontrado" hint={emptyHint(suggestion)} />
+      ) : (
+        // Só as linhas perto da tela ficam montadas; o contêiner tem a altura da grade inteira.
+        <div ref={listRef} className="relative" style={{ height: virtualizer.getTotalSize() }}>
+          {virtualizer.getVirtualItems().map((row) => {
+            const first = row.index * columns;
+            return (
+              <div
+                key={row.key}
+                ref={virtualizer.measureElement}
+                data-index={row.index}
+                className="absolute inset-x-0 top-0 grid gap-4 pb-4 lg:gap-5 lg:pb-5"
+                style={{ gridTemplateColumns, transform: `translateY(${row.start - scrollMargin}px)` }}
+              >
+                {pokemonList.slice(first, first + columns).map(({ name, id, number, types }, offset) => (
+                  <PokemonCard
+                    key={name}
+                    index={first + offset}
+                    priority={first + offset < PRIORITY_CARDS}
+                    pokemon={name}
+                    id={id}
+                    number={number}
+                    types={types}
+                    isSelected={selectedName === name}
+                    hasSmogonData={!!hasSmogonDataMap[name]}
+                    isFavorite={favorites?.has(name) ?? false}
+                    onSelect={onSelect}
+                    onToggleFavorite={onToggleFavorite}
+                    isCompared={comparedSet?.has(name) ?? false}
+                    compareFull={compareFull}
+                    onToggleCompare={onToggleCompare}
+                  />
+                ))}
+              </div>
+            );
+          })}
         </div>
       )}
     </section>
