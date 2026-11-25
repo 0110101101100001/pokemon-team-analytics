@@ -37,6 +37,7 @@ const MoveRow = memo(function MoveRow({ move, open, onToggle, onSelectMove, entr
           columns={COLUMN_COUNT}
           id={panelId}
           move={slug}
+          withMethods
           entryByName={entryByName}
           onSelectPokemon={onSelectPokemon}
         />

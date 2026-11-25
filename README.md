@@ -212,6 +212,8 @@ frontend/
     utils/           filtros, tabela de tipos, atributos (EVs/IVs/natureza), cálculo de dano
 scripts/
   build-machines.mjs       gera frontend/src/data/machines.json a partir dos CSVs da PokéAPI
+  build-move-learners.mjs  gera frontend/src/data/move-learners/ (como cada Pokémon aprende cada golpe) dos CSVs da PokéAPI
+  backup-supabase.mjs      cópia das tabelas em backups/ (usado pelo backup.yml); restore-supabase.mjs restaura
   build-pokedex-index.mjs  gera frontend/src/data/pokedex-index.json (variedades, espécies, tipos, grupos de ovos)
   build-battle-data.mjs    gera frontend/src/data/battle-data.json (atributos base e golpes, para o esboço)
   build-abilities.mjs      gera frontend/src/data/abilities.json (habilidades, efeito curto e quem tem cada uma)
