@@ -11,7 +11,7 @@ from app.core.config import (
     SUPABASE_URL,
 )
 from app.schemas.pokemon_stats import PokemonStatsResponse, SmogonNamesResponse
-from app.services.smogon_repository import latest_date, rows_at
+from app.services.smogon_repository import latest_date, month_of, month_start, rows_at
 
 router = APIRouter(tags=["Pokemon Stats"])
 
@@ -19,7 +19,7 @@ _supabase: Client = None  # type: ignore
 
 _NAMES_CACHE_TTL_S = 600
 _STATS_COLUMNS = (
-    "name, tier, date, raw_count, usage_percent, abilities, items, moves, "
+    "name, tier, date_month, raw_count, usage_percent, abilities, items, moves, "
     "spreads, tera_types, teammates, checks_and_counters"
 )
 _names_cache: Dict[str, object] = {"expires": 0.0, "value": None}
@@ -91,10 +91,10 @@ async def get_pokemon_stats(
     if date is None:
         latest = (
             sb.table(SMOGON_STATS_TABLE)
-            .select("date")
+            .select("date_month")
             .eq("tier", tier)
             .eq("name_key", name_key)
-            .order("date", desc=True)
+            .order("date_month", desc=True)
             .limit(1)
             .execute()
         )
@@ -107,14 +107,14 @@ async def get_pokemon_stats(
                     "Verifique o nome e o tier informados."
                 ),
             )
-        date = rows[0]["date"]
+        date = month_of(rows[0]["date_month"])
 
     # Consulta os dados completos
     response = (
         sb.table(SMOGON_STATS_TABLE)
         .select(_STATS_COLUMNS)
         .eq("tier", tier)
-        .eq("date", date)
+        .eq("date_month", month_start(date))
         .eq("name_key", name_key)
         .limit(1)
         .execute()
@@ -135,7 +135,7 @@ async def get_pokemon_stats(
     return PokemonStatsResponse(
         name=row.get("name", name),
         tier=row.get("tier", tier),
-        date=row.get("date", date),
+        date=month_of(row["date_month"]) if row.get("date_month") else date,
         raw_count=row.get("raw_count"),
         usage_percent=row.get("usage_percent"),
         abilities=row.get("abilities") or {},

@@ -286,13 +286,13 @@ def run_sync(
         print(f"Processados {len(moveset_data)} Pokémons de {tier_base}. Enviando ao Supabase...")
 
         # Limpa a tabela do tier/mês antes de reenviar (evita registros lixo anteriores)
-        supabase.table("smogon_stats").delete().eq("tier", tier_base).eq("date", date).execute()
+        supabase.table("smogon_stats").delete().eq("tier", tier_base).eq("date_month", f"{date}-01").execute()
 
         payloads = [
             {
                 "name": poke["name"],
                 "tier": tier_base,          # campo `format` da tabela (nome real da coluna: tier)
-                "date": date,
+                "date_month": f"{date}-01",  # date (dia 1); a coluna antiga `date` sai na fase B
                 "raw_count": poke["raw_count"],
                 "usage_percent": general_data.get(poke["name"], {}).get("usage_percentage"),
                 "abilities": poke["abilities"],
@@ -305,10 +305,10 @@ def run_sync(
             for poke in moveset_data
         ]
 
-        # Upsert em lotes usando a restrição de conflito única: (name, tier, date)
+        # Upsert em lotes usando a restrição de conflito única: (name, tier, date_month)
         for start in range(0, len(payloads), UPSERT_BATCH_SIZE):
             supabase.table("smogon_stats").upsert(
-                payloads[start:start + UPSERT_BATCH_SIZE], on_conflict="name,tier,date"
+                payloads[start:start + UPSERT_BATCH_SIZE], on_conflict="name,tier,date_month"
             ).execute()
         count = len(payloads)
 

@@ -63,7 +63,7 @@ def stats_row(name: str, tier: str, date: str, usage: float, teammates=None) -> 
     return {
         "name": name,
         "tier": tier,
-        "date": date,
+        "date_month": f"{date}-01",
         "raw_count": 100,
         "usage_percent": usage,
         "abilities": {},

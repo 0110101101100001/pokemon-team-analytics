@@ -67,7 +67,7 @@ async def sync_smogon(background_tasks: BackgroundTasks):
     """Dispara a sincronização sob demanda das estatísticas da Smogon no Supabase.
 
     Executa o scraper de movesets/estatísticas da Smogon em segundo plano e
-    grava os resultados na tabela ``smogon_stats`` (upsert por ``name, tier, date``).
+    grava os resultados na tabela ``smogon_stats`` (upsert por ``name, tier, date_month``).
 
     Requer autenticação via JWT do Supabase (mesma dependência usada em /api/recommend).
     """

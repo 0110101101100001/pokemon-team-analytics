@@ -6,14 +6,19 @@ import { withPersistentCache } from './persistentCache';
 const TABLE = 'smogon_stats';
 const PAGE_SIZE = 1000;
 const STATS_COLUMNS =
-  'name, tier, date, raw_count, usage_percent, abilities, items, moves, spreads, tera_types, teammates, checks_and_counters';
+  'name, tier, date_month, raw_count, usage_percent, abilities, items, moves, spreads, tera_types, teammates, checks_and_counters';
 
 // Tiers considerados para o selo "Smogon" da grade; tiers sem dados são ignorados.
 const BADGE_TIERS = ['gen9ou', 'gen9ubers', 'gen9uu', 'gen9ru', 'gen9nu', 'gen9pu', 'gen9lc', 'gen9doublesou'];
 
 // Os dados mudam uma vez por mês (smogon-sync.yml): as respostas ficam no IndexedDB por 24 h.
 const DAY_MS = 24 * 60 * 60 * 1000;
-const cached = (key, load) => withPersistentCache(`supabase:${TABLE}:${key}`, DAY_MS, load);
+// v2: as respostas passaram a vir com date_month no lugar de date.
+const cached = (key, load) => withPersistentCache(`supabase:${TABLE}:v2:${key}`, DAY_MS, load);
+
+// O mês da Smogon ('2026-10') e o valor de date_month na tabela (date, dia 1).
+const monthStart = (month) => `${month}-01`;
+const monthOf = (dateMonth) => dateMonth.slice(0, 7);
 
 /** Guarda a promessa por chave durante a sessão; uma falha não fica em cache. */
 function memoize(load) {
@@ -32,13 +37,13 @@ function memoize(load) {
 const latestDate = memoize(async (tier) => {
   const { data, error } = await supabase
     .from(TABLE)
-    .select('date')
+    .select('date_month')
     .eq('tier', tier)
-    .order('date', { ascending: false })
+    .order('date_month', { ascending: false })
     .limit(1)
     .maybeSingle();
   if (error) throw error;
-  return data?.date ?? null;
+  return data?.date_month ?? null;
 });
 
 async function selectAllPages(buildQuery) {
@@ -55,7 +60,7 @@ async function rowsAtLatest(tier, columns) {
   const date = await latestDate(tier);
   if (!date) return [];
   return selectAllPages(() =>
-    supabase.from(TABLE).select(columns).eq('tier', tier).eq('date', date).order('name'));
+    supabase.from(TABLE).select(columns).eq('tier', tier).eq('date_month', date).order('name'));
 }
 
 /**
@@ -77,7 +82,7 @@ export const fetchTopUsage = memoize((tier) => cached(`top:${tier}`, async () =>
     .from(TABLE)
     .select('name, usage_percent, spreads, items')
     .eq('tier', tier)
-    .eq('date', date)
+    .eq('date_month', date)
     .order('usage_percent', { ascending: false })
     .limit(TOP_USAGE_LIMIT);
   if (error) throw error;
@@ -100,6 +105,7 @@ export async function fetchSmogonStats(name, tier = 'gen9ou', { date, signal } =
   const data = await cached(`stats:${tier}:${name.toLowerCase()}:${date ?? 'latest'}`, () => queryStats(name, tier, { date, signal }));
   return data && {
     ...data,
+    date: monthOf(data.date_month),
     abilities: data.abilities ?? {},
     items: data.items ?? {},
     moves: data.moves ?? {},
@@ -116,8 +122,8 @@ async function queryStats(name, tier, { date, signal }) {
     .select(STATS_COLUMNS)
     .eq('tier', tier)
     .eq('name_key', name.toLowerCase());
-  if (date) query = query.eq('date', date);
-  query = query.order('date', { ascending: false }).limit(1);
+  if (date) query = query.eq('date_month', monthStart(date));
+  query = query.order('date_month', { ascending: false }).limit(1);
   if (signal) query = query.abortSignal(signal);
 
   const { data, error } = await query.maybeSingle();
