@@ -22,6 +22,12 @@ export async function fetchSavedTeams(userId) {
   return data ?? [];
 }
 
+/** Apaga um time salvo; a política da tabela só deixa apagar os da própria conta. */
+export async function deleteSavedTeam(id) {
+  const { error } = await supabase.from(TEAMS).delete().eq('id', id);
+  if (error) throw error;
+}
+
 /** Nomes dos Pokémon favoritos, do mais recente para o mais antigo. */
 export async function fetchFavorites(userId) {
   const { data, error } = await supabase

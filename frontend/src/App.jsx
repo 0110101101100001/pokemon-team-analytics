@@ -13,7 +13,9 @@ import { InkSplatter } from "./components/InkDecor";
 import PokedexSection from "./sections/PokedexSection";
 import { sectionFromPath } from "./navigation/sections";
 import { useHashOverlay, useHashRoute } from "./hooks/useHashPath";
-import { formatHash } from "./navigation/hashRoute";
+import { formatHash, navigateHash } from "./navigation/hashRoute";
+import { isAccountTab } from "./components/account/accountTabs";
+import { fromStoredTeam } from "./utils/savedTeams";
 import { usePokedexFilters } from "./hooks/usePokedexFilters";
 import { useScrollCollapsed } from "./hooks/useScrollCollapsed";
 import { useUserCollections } from "./hooks/useUserCollections";
@@ -42,6 +44,8 @@ const CompareModal = lazy(() => import("./components/compare/CompareModal"));
 
 const APP_NAME = "Smearglepedia";
 const POKEMON_PARAM = "pokemon";
+// Configurações da conta abertas, e em qual aba: `?conta=perfil|times|aparencia`.
+const ACCOUNT_PARAM = "conta";
 
 function SectionFallback() {
   return <SmeargleLoader label="Molhando o pincel..." className="py-24" />;
@@ -73,6 +77,9 @@ export default function App() {
   // A ficha aberta mora no endereço (`?pokemon=garchomp`): o link abre a ficha e o botão voltar a fecha.
   const selectedPokemon = route.params.get(POKEMON_PARAM);
   const sheet = useHashOverlay(Boolean(selectedPokemon));
+  const accountParam = route.params.get(ACCOUNT_PARAM);
+  const accountTab = isAccountTab(accountParam) ? accountParam : null;
+  const accountOverlay = useHashOverlay(Boolean(accountTab));
   const collections = useUserCollections(session);
   const { toggleFavorite, recordView } = collections;
   const pokedex = usePokedexFilters(pokemonList);
@@ -135,6 +142,23 @@ export default function App() {
     else params.delete(POKEMON_PARAM);
     return formatHash(route.segments.length ? route.segments : [section.path], params);
   }, [route, section]);
+
+  // O endereço com a aba da conta trocada (ou sem ela); a seção e a ficha aberta continuam.
+  const hashWithAccount = useCallback((tab) => {
+    const params = new URLSearchParams(route.params);
+    if (tab) params.set(ACCOUNT_PARAM, tab);
+    else params.delete(ACCOUNT_PARAM);
+    return formatHash(route.segments.length ? route.segments : [section.path], params);
+  }, [route, section]);
+  const openAccount = useCallback((tab) => accountOverlay.open(hashWithAccount(tab)), [accountOverlay, hashWithAccount]);
+  const changeAccountTab = useCallback((tab) => navigateHash(hashWithAccount(tab), { replace: true }), [hashWithAccount]);
+  const closeAccount = useCallback(() => accountOverlay.close(hashWithAccount(null)), [accountOverlay, hashWithAccount]);
+  // Abrir um time salvo leva ao Team Builder no lugar da entrada das configurações: voltar não reabre o modal.
+  const openSavedTeam = useCallback((saved) => {
+    setTeam(fromStoredTeam(saved.pokemons, pokemonList));
+    navigateHash("#/times", { replace: true });
+  }, [pokemonList]);
+  const createTeam = useCallback(() => navigateHash("#/times", { replace: true }), []);
 
   // Trocar de Pokémon com a ficha já aberta (evolução, forma) não empilha histórico: voltar fecha a ficha.
   const handleSelect = useCallback((name) => {
@@ -279,6 +303,12 @@ export default function App() {
           onLogin={openAuth}
           theme={theme}
           onChooseTheme={chooseTheme}
+          accountTab={accountTab}
+          onOpenAccount={openAccount}
+          onAccountTab={changeAccountTab}
+          onCloseAccount={closeAccount}
+          onOpenTeam={openSavedTeam}
+          onCreateTeam={createTeam}
           accountAction={<AuthButton session={session} onOpen={openAuth} />}
         >
           <AboutButton onClick={openAbout} />

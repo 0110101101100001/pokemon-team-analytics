@@ -1,12 +1,14 @@
-import { Suspense, lazy, memo, useCallback, useMemo, useState } from 'react';
+import { Suspense, lazy, memo, useCallback, useMemo, useRef, useState } from 'react';
 import SectionTabs from './SectionTabs';
 import { InkEdge, PaintSpeckle } from '../InkDecor';
 import ProfileAvatar from '../profile/ProfileAvatar';
 import { useProfilePokemon } from '../../hooks/useProfilePokemon';
 import { profileAccount } from '../../utils/profileAccount';
 import { DEFAULT_SECTION, sectionHref } from '../../navigation/sections';
+import { supabase } from '../../services/supabase';
 
-const ProfilePicker = lazy(() => import('../profile/ProfilePicker'));
+// As configurações só abrem por ação do usuário (ou link): ficam fora do pacote inicial.
+const AccountSettings = lazy(() => import('../account/AccountSettings'));
 
 const EASE = 'transition-[padding,margin,width,height,max-height,opacity,font-size] duration-300 max-md:duration-200 ease-[cubic-bezier(0.22,1,0.36,1)] motion-reduce:transition-none';
 
@@ -66,12 +68,22 @@ function BrandMark({ collapsed }) {
  * avança sobre a folga até o menu, que assim fica no mesmo lugar com ou sem conta. O grupo tem de caber em 270px até
  * 1699px e em 365px depois: por isso, nas faixas apertadas, os rótulos perdem o ícone (.header-action-icon).
  */
-function AppHeader({ activeId, collapsed, toolbarRef, profilePool, profileUser, onProfileError, onLogin, accountAction, children }) {
-  const [profileId, chooseProfile] = useProfilePokemon(profileUser?.id ?? null, onProfileError);
-  const [pickerOpen, setPickerOpen] = useState(false);
+function AppHeader({
+  activeId, collapsed, toolbarRef, profilePool, profileUser, onProfileError, onLogin, accountAction, children,
+  accountTab, onOpenAccount, onAccountTab, onCloseAccount, onOpenTeam, onCreateTeam, theme, onChooseTheme,
+}) {
+  const [profileId, chooseProfile, profileStatus] = useProfilePokemon(profileUser?.id ?? null, onProfileError);
   const account = useMemo(() => profileAccount(profileUser), [profileUser]);
-  const openPicker = useCallback(() => setPickerOpen(true), []);
-  const closePicker = useCallback(() => setPickerOpen(false), []);
+  const avatarRef = useRef(null);
+  const [signingOut, setSigningOut] = useState(false);
+  const openAccount = useCallback(() => onOpenAccount('perfil'), [onOpenAccount]);
+
+  const signOut = useCallback(async () => {
+    setSigningOut(true);
+    await supabase.auth.signOut();
+    setSigningOut(false);
+    onCloseAccount();
+  }, [onCloseAccount]);
 
   return (
     <header className="header-paper sticky top-0 z-40 bg-header text-header-ink">
@@ -102,8 +114,9 @@ function AppHeader({ activeId, collapsed, toolbarRef, profilePool, profileUser, 
               account={account}
               signedIn={Boolean(profileUser)}
               compact={collapsed}
-              onOpen={profileUser ? openPicker : onLogin}
+              onOpen={profileUser ? openAccount : onLogin}
               action={accountAction}
+              buttonRef={avatarRef}
             />
             {children}
           </div>
@@ -119,9 +132,20 @@ function AppHeader({ activeId, collapsed, toolbarRef, profilePool, profileUser, 
 
       <InkEdge className="absolute left-0 top-full -mt-px" />
 
-      {pickerOpen && profileUser && (
+      {accountTab && profileUser && (
         <Suspense fallback={null}>
-          <ProfilePicker initial={account.initial} pool={profilePool} selectedId={profileId} onChoose={chooseProfile} onClose={closePicker} />
+          <AccountSettings
+            tab={accountTab}
+            onTabChange={onAccountTab}
+            onClose={onCloseAccount}
+            returnFocusRef={avatarRef}
+            account={account}
+            profile={{
+              pool: profilePool, selectedId: profileId, saveStatus: profileStatus, onChoose: chooseProfile, onSignOut: signOut, signingOut,
+            }}
+            teams={{ userId: profileUser.id, onOpenTeam, onCreateTeam }}
+            appearance={{ theme, onChooseTheme }}
+          />
         </Suspense>
       )}
     </header>

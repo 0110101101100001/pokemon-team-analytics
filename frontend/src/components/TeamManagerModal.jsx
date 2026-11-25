@@ -1,9 +1,8 @@
 import { memo, useCallback, useEffect, useId, useRef, useState } from 'react';
 import { BookOpen, Download, Loader2, Save, Trash2, TriangleAlert, X } from 'lucide-react';
 import { supabase } from '../services/supabase';
-import { SAVED_TEAM_COLUMNS, fetchSavedTeams } from '../services/userData';
-import { thumbnailSpriteUrl } from '../services/api';
-import { formatSlug } from '../utils/filters';
+import { SAVED_TEAM_COLUMNS, deleteSavedTeam, fetchSavedTeams } from '../services/userData';
+import TeamSprites from './team/TeamSprites';
 
 const TABLE = 'teams';
 const MAX_TEAM_SIZE = 6;
@@ -21,22 +20,6 @@ const describeError = (error) =>
 
 const ICON_BUTTON_CLASS =
   'rounded-sketch p-2 text-umber/75 transition-colors hover:bg-umber/10 hover:text-umber focus:outline-none focus-visible:ring-2 focus-visible:ring-paint-cobalt disabled:cursor-wait disabled:opacity-60';
-
-const TeamSprites = memo(function TeamSprites({ pokemons }) {
-  return (
-    <ul className="flex -space-x-1.5">
-      {pokemons.map((pokemon) => (
-        <li
-          key={pokemon.id}
-          title={formatSlug(pokemon.name)}
-          className="h-9 w-9 rounded-full border border-umber/25 bg-paper shadow-sm"
-        >
-          <img src={thumbnailSpriteUrl(pokemon.id)} alt={formatSlug(pokemon.name)} width={36} height={36} loading="lazy" decoding="async" className="h-full w-full object-contain" />
-        </li>
-      ))}
-    </ul>
-  );
-});
 
 const SavedTeamRow = memo(function SavedTeamRow({ team, onLoad, onDelete }) {
   const [confirming, setConfirming] = useState(false);
@@ -79,7 +62,7 @@ const SavedTeamRow = memo(function SavedTeamRow({ team, onLoad, onDelete }) {
               type="button"
               onClick={handleDelete}
               disabled={deleting}
-              className="inline-flex items-center gap-1.5 rounded-sketch bg-vermilion px-3 py-1.5 text-xs font-semibold text-paper transition-colors hover:bg-vermilion-deep focus:outline-none focus-visible:ring-2 focus-visible:ring-paint-cobalt disabled:cursor-wait disabled:opacity-70"
+              className="inline-flex items-center gap-1.5 rounded-sketch bg-danger px-3 py-1.5 text-xs font-semibold text-paper transition-colors hover:bg-danger/85 focus:outline-none focus-visible:ring-2 focus-visible:ring-paint-cobalt disabled:cursor-wait disabled:opacity-70"
             >
               {deleting && <Loader2 className="h-3.5 w-3.5 animate-spin" aria-hidden="true" />}
               Apagar
@@ -176,8 +159,9 @@ export default function TeamManagerModal({ open, onClose, session, team = [], on
 
   const handleDelete = useCallback(async (id) => {
     setError(null);
-    const { error: deleteError } = await supabase.from(TABLE).delete().eq('id', id);
-    if (deleteError) {
+    try {
+      await deleteSavedTeam(id);
+    } catch (deleteError) {
       setError(describeError(deleteError));
       return false;
     }

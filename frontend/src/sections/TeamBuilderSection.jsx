@@ -11,7 +11,8 @@ import TeamSlots from '../components/team/TeamSlots';
 import TeamSuggestions from '../components/team/TeamSuggestions';
 import TeamManagerModal from '../components/TeamManagerModal';
 import TeamTypeTable from '../components/TeamTypeTable';
-import { createBattleSet, normalizeBattleSet } from '../utils/stats';
+import { createBattleSet } from '../utils/stats';
+import { fromStoredTeam } from '../utils/savedTeams';
 import { TEAM_SIZE, speciesOf, teamSlotFor } from '../utils/teamScore';
 
 const PANELS = [
@@ -49,11 +50,7 @@ export default function TeamBuilderSection({ team, onTeamChange, pool, session, 
   }, [onTeamChange]);
 
   const loadTeam = useCallback((stored) => {
-    const byId = new Map(pool.map((pokemon) => [pokemon.id, pokemon]));
-    onTeamChange(stored.slice(0, TEAM_SIZE).map((pokemon) => ({
-      ...(byId.get(pokemon.id) ?? pokemon),
-      set: normalizeBattleSet(pokemon.set),
-    })));
+    onTeamChange(fromStoredTeam(stored, pool));
     setSelectedId(null);
   }, [pool, onTeamChange]);
 

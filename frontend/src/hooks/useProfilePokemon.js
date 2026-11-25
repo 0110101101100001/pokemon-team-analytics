@@ -18,10 +18,12 @@ function forgetOldChoices() {
  * O Pokémon do perfil. Só a conta escolhe: o visitante fica sempre com o padrão. A escolha vive na linha da conta
  * em user_profiles, criada com o padrão na primeira visita. A escolha aparece na hora; a gravação espera 400ms de calma (cliques seguidos viram
  * uma gravação só), as gravações saem uma de cada vez e, se a última falhar, o avatar volta ao último valor salvo.
- * Devolve [id, escolher]; o id é null enquanto a conta carrega, para não mostrar o Pokémon de outra pessoa.
+ * Devolve [id, escolher, status]; o id é null enquanto a conta carrega, para não mostrar o Pokémon de outra pessoa.
+ * `status` acompanha a última escolha: 'idle', 'saving', 'saved' ou 'error'.
  */
 export function useProfilePokemon(userId, onSaveError) {
   const [account, setAccount] = useState(null); // { userId, id }: o que a tela mostra para a conta
+  const [status, setStatus] = useState('idle');
   const saved = useRef(null); // { userId, id }: o último valor confirmado pelo banco
   const timer = useRef(0);
   const queue = useRef(Promise.resolve());
@@ -37,6 +39,7 @@ export function useProfilePokemon(userId, onSaveError) {
     ticket.current += 1;
     saved.current = null;
     setAccount(null);
+    setStatus('idle');
     if (!userId) return undefined;
 
     let active = true;
@@ -72,12 +75,15 @@ export function useProfilePokemon(userId, onSaveError) {
     if (!userId || !isProfilePokemonId(id)) return;
 
     setAccount({ userId, id });
+    setStatus('saving');
     clearTimeout(timer.current);
     const mine = ++ticket.current;
     timer.current = setTimeout(() => {
       queue.current = queue.current.then(() => saveProfilePokemon(userId, id).then(
         () => {
-          if (currentUser.current === userId) saved.current = { userId, id };
+          if (currentUser.current !== userId) return;
+          saved.current = { userId, id };
+          if (mine === ticket.current) setStatus('saved');
         },
         (error) => {
           console.warn('Avatar não salvo:', error);
@@ -85,6 +91,7 @@ export function useProfilePokemon(userId, onSaveError) {
           if (mine !== ticket.current) return;
           const previous = saved.current?.userId === userId ? saved.current.id : DEFAULT_PROFILE_POKEMON;
           setAccount((current) => (current?.userId === userId ? { userId, id: previous } : current));
+          setStatus('error');
           onSaveErrorRef.current?.('Não foi possível salvar seu ícone. Voltamos ao anterior.');
         },
       ));
@@ -92,5 +99,5 @@ export function useProfilePokemon(userId, onSaveError) {
   }, [userId]);
 
   const id = userId ? (account?.userId === userId ? account.id : null) : DEFAULT_PROFILE_POKEMON;
-  return [id, choose];
+  return [id, choose, status];
 }
