@@ -2,18 +2,19 @@ import { supabase } from './supabase';
 import { withPersistentCache } from './persistentCache';
 import { groupTrainers, toTeam } from '../utils/trainers';
 
-// Leitura pública (RLS pokemon_trainers_public_read): vai direto ao Supabase, sem o backend no Render.
-const TABLE = 'PokemonTrainers';
+// Leitura pública pela view pokemon_trainers (nomes em snake_case; security_invoker, vale o RLS
+// pokemon_trainers_public_read da tabela PokemonTrainers): vai direto ao Supabase, sem o backend no Render.
+const TABLE = 'pokemon_trainers';
 const CARD_COLUMNS = [
-  'Card_ID', 'Generation', 'Region', 'Games_Label', 'Games_JSON', 'Battle_Stage', 'Role', 'Order', 'Location', 'Badge_Name',
-  'Trainer_Name', 'Trainer_Slug', 'Team_Variant', 'Specialty_Type', 'Battle_Gimmick', 'Ace_Pokemon_Slug',
-  'Avg_Level', 'Team_Size', 'Multi_Battle',
+  'card_id', 'generation', 'region', 'games_label', 'games_json', 'battle_stage', 'role', 'order', 'location', 'badge_name',
+  'trainer_name', 'trainer_slug', 'team_variant', 'specialty_type', 'battle_gimmick', 'ace_pokemon_slug',
+  'avg_level', 'team_size', 'multi_battle',
 ];
 const LIST_COLUMNS = CARD_COLUMNS.join(', ');
-const FULL_COLUMNS = [...CARD_COLUMNS, 'Team_JSON'].join(', ');
+const FULL_COLUMNS = [...CARD_COLUMNS, 'team_json'].join(', ');
 const DAY_MS = 24 * 60 * 60 * 1000;
 // Subir a versão descarta a lista guardada no navegador (ex.: coluna nova).
-const LIST_CACHE_KEY = 'supabase:PokemonTrainers:list:v1';
+const LIST_CACHE_KEY = 'supabase:pokemon_trainers:list:v1';
 
 async function selectRows(columns, filter = (query) => query) {
   const { data, error } = await filter(supabase.from(TABLE).select(columns));
@@ -34,7 +35,7 @@ function once(load) {
 }
 
 /**
- * Todos os treinadores, agrupados, sem os times (Team_JSON é quase metade do peso da tabela).
+ * Todos os treinadores, agrupados, sem os times (team_json é quase metade do peso da tabela).
  * Uma consulta por dia: a lista fica no IndexedDB por 24 h.
  */
 export const fetchTrainers = once(() =>
@@ -45,12 +46,12 @@ export const fetchTrainersWithTeams = once(() => selectRows(FULL_COLUMNS).then(g
 
 const teamRequests = new Map();
 
-/** Times das batalhas pedidas: Map Card_ID → membros. Uma consulta por treinador por sessão. */
+/** Times das batalhas pedidas: Map card_id → membros. Uma consulta por treinador por sessão. */
 export function fetchTrainerTeams(battleIds) {
   const key = [...battleIds].sort().join('|');
   if (!teamRequests.has(key)) {
-    const request = selectRows('Card_ID, Team_JSON', (query) => query.in('Card_ID', battleIds))
-      .then((rows) => new Map(rows.map((row) => [row.Card_ID, toTeam(row.Team_JSON)])))
+    const request = selectRows('card_id, team_json', (query) => query.in('card_id', battleIds))
+      .then((rows) => new Map(rows.map((row) => [row.card_id, toTeam(row.team_json)])))
       .catch((error) => {
         teamRequests.delete(key);
         throw error;

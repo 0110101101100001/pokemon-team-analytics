@@ -5,25 +5,25 @@ import {
 } from './trainers';
 
 const row = (fields) => ({
-  Card_ID: `${fields.Trainer_Slug}-${fields.Generation}-${fields.Role}`,
-  Generation: 1,
-  Region: 'Kanto',
-  Games_Label: 'Red / Blue',
-  Battle_Stage: 'Main Story',
-  Role: 'Gym Leader',
-  Order: 1,
-  Specialty_Type: 'Poison',
-  Battle_Gimmick: 'None',
-  Team_JSON: [{ slug: 'koffing', pokemon: 'Koffing', level: 37, moves: ['Smog'], is_ace: false }],
+  card_id: `${fields.trainer_slug}-${fields.generation}-${fields.role}`,
+  generation: 1,
+  region: 'Kanto',
+  games_label: 'Red / Blue',
+  battle_stage: 'Main Story',
+  role: 'Gym Leader',
+  order: 1,
+  specialty_type: 'Poison',
+  battle_gimmick: 'None',
+  team_json: [{ slug: 'koffing', pokemon: 'Koffing', level: 37, moves: ['Smog'], is_ace: false }],
   ...fields,
 });
 
 const ROWS = [
-  row({ Trainer_Slug: 'koga', Trainer_Name: 'Koga', Order: 5 }),
-  row({ Trainer_Slug: 'koga', Trainer_Name: 'Koga', Generation: 2, Region: 'Johto', Games_Label: 'Gold / Silver', Role: 'Elite Four', Order: 2 }),
-  row({ Trainer_Slug: 'brock', Trainer_Name: 'Brock', Specialty_Type: 'Rock' }),
-  row({ Trainer_Slug: 'lance', Trainer_Name: 'Lance', Generation: 2, Region: 'Johto', Role: 'Champion', Specialty_Type: 'Dragon' }),
-  row({ Trainer_Slug: 'blue', Trainer_Name: 'Blue', Role: 'Champion', Specialty_Type: 'Multi-type', Team_Variant: 'Squirtle' }),
+  row({ trainer_slug: 'koga', trainer_name: 'Koga', order: 5 }),
+  row({ trainer_slug: 'koga', trainer_name: 'Koga', generation: 2, region: 'Johto', games_label: 'Gold / Silver', role: 'Elite Four', order: 2 }),
+  row({ trainer_slug: 'brock', trainer_name: 'Brock', specialty_type: 'Rock' }),
+  row({ trainer_slug: 'lance', trainer_name: 'Lance', generation: 2, region: 'Johto', role: 'Champion', specialty_type: 'Dragon' }),
+  row({ trainer_slug: 'blue', trainer_name: 'Blue', role: 'Champion', specialty_type: 'Multi-type', team_variant: 'Squirtle' }),
 ];
 
 const trainers = groupTrainers(ROWS);
@@ -79,7 +79,7 @@ describe('detalhes', () => {
     expect(createNameMatcher('  ')(bySlug('brock'))).toBe(true);
   });
 
-  it('monta o sprite do Showdown com o Trainer_Slug sem alterações', () => {
+  it('monta o sprite do Showdown com o trainer_slug sem alterações', () => {
     expect(trainerSpriteUrl('arven-s')).toBe('https://play.pokemonshowdown.com/sprites/trainers/arven-s.png');
     expect(trainerSpriteUrl('nemona-s')).toBe('https://play.pokemonshowdown.com/sprites/trainers/nemona-s.png');
   });
@@ -87,19 +87,19 @@ describe('detalhes', () => {
   it('rotula a batalha com a etapa, sem o jogo nem a variante do time', () => {
     expect(battleLabel(bySlug('blue').battles[0])).toBe('batalha');
     const [steven] = groupTrainers([
-      row({ Trainer_Slug: 'steven', Trainer_Name: 'Steven', Games_Label: 'Emerald', Role: 'Former Champion', Battle_Stage: 'Post-Game' }),
+      row({ trainer_slug: 'steven', trainer_name: 'Steven', games_label: 'Emerald', role: 'Former Champion', battle_stage: 'Post-Game' }),
     ]);
     expect(battleLabel(steven.battles[0])).toBe('pós-jogo');
   });
 
   it('marca a batalha em dupla', () => {
     const [wally] = groupTrainers([
-      row({ Trainer_Slug: 'wally', Trainer_Name: 'Wally', Games_Label: 'Omega Ruby / Alpha Sapphire', Role: 'Rival', Battle_Stage: 'Post-Game', Multi_Battle: true }),
+      row({ trainer_slug: 'wally', trainer_name: 'Wally', games_label: 'Omega Ruby / Alpha Sapphire', role: 'Rival', battle_stage: 'Post-Game', multi_battle: true }),
     ]);
     expect(battleLabel(wally.battles[0])).toBe('batalha em dupla · pós-jogo');
     const [gladion] = groupTrainers([1, 4].map((order) => row({
-      Trainer_Slug: 'gladion', Trainer_Name: 'Gladion', Games_Label: 'Sun / Moon', Role: 'Rival', Order: order,
-      Card_ID: `gladion-${order}`, Multi_Battle: order === 4,
+      trainer_slug: 'gladion', trainer_name: 'Gladion', games_label: 'Sun / Moon', role: 'Rival', order: order,
+      card_id: `gladion-${order}`, multi_battle: order === 4,
     })));
     expect(gladion.battles.map(battleLabel)).toEqual(['1ª batalha', '4ª batalha em dupla']);
   });
@@ -129,12 +129,12 @@ describe('time do treinador na calculadora', () => {
 
 describe('variantes do time', () => {
   const variantRow = (variant, fields = {}) => row({
-    Trainer_Slug: 'gary', Trainer_Name: 'Gary', Role: 'Rival', Team_Variant: variant,
-    Card_ID: `gary-${fields.Location ?? 'route-22'}-${variant}`, Location: 'Route 22', ...fields,
+    trainer_slug: 'gary', trainer_name: 'Gary', role: 'Rival', team_variant: variant,
+    card_id: `gary-${fields.location ?? 'route-22'}-${variant}`, location: 'Route 22', ...fields,
   });
   const [gary] = groupTrainers(['Bulbasaur', 'Charmander', 'Squirtle'].flatMap((variant) => [
     variantRow(variant),
-    variantRow(variant, { Location: 'Indigo Plateau', Order: 2 }),
+    variantRow(variant, { location: 'Indigo Plateau', order: 2 }),
   ]));
 
   it('conta cada confronto uma vez, não uma por variante', () => {
@@ -161,12 +161,12 @@ describe('variantes do time', () => {
   it('não mistura variantes de batalhas diferentes nem mostra seletor sem variante', () => {
     const [blue] = groupTrainers([
       ...['Bulbasaur', 'Squirtle'].map((variant) => row({
-        Card_ID: `rb-${variant}`, Trainer_Slug: 'blue', Trainer_Name: 'Blue', Role: 'Rival', Team_Variant: variant, Location: 'Route 22',
+        card_id: `rb-${variant}`, trainer_slug: 'blue', trainer_name: 'Blue', role: 'Rival', team_variant: variant, location: 'Route 22',
       })),
       ...['Flareon', 'Jolteon'].map((variant) => row({
-        Card_ID: `y-${variant}`, Trainer_Slug: 'blue', Trainer_Name: 'Blue', Role: 'Rival', Team_Variant: variant, Location: 'Silph Co.', Games_Label: 'Yellow',
+        card_id: `y-${variant}`, trainer_slug: 'blue', trainer_name: 'Blue', role: 'Rival', team_variant: variant, location: 'Silph Co.', games_label: 'Yellow',
       })),
-      row({ Card_ID: 'y-lab', Trainer_Slug: 'blue', Trainer_Name: 'Blue', Role: 'Rival', Location: 'Route 22', Games_Label: 'Yellow', Order: 2 }),
+      row({ card_id: 'y-lab', trainer_slug: 'blue', trainer_name: 'Blue', role: 'Rival', location: 'Route 22', games_label: 'Yellow', order: 2 }),
     ]);
     const tabs = battleTabsOf(blue.battles);
     expect(tabs.map((tab) => [tab.label, hasTeamVariants(tab) ? tab.variants.map((battle) => battle.teamVariant) : []])).toEqual([
@@ -178,7 +178,7 @@ describe('variantes do time', () => {
 
   it('separa pelo local confrontos com o mesmo rótulo', () => {
     const [arven] = groupTrainers(['Asado Desert', 'Casseroya Lake'].map((location) => row({
-      Card_ID: location, Trainer_Slug: 'arven', Trainer_Name: 'Arven', Generation: 9, Games_Label: 'Scarlet / Violet', Role: 'Rival', Location: location,
+      card_id: location, trainer_slug: 'arven', trainer_name: 'Arven', generation: 9, games_label: 'Scarlet / Violet', role: 'Rival', location: location,
     })));
     expect(battleTabsOf(arven.battles).map((tab) => tab.label)).toEqual([
       'batalha · Asado Desert',
@@ -188,8 +188,8 @@ describe('variantes do time', () => {
 
   it('separa pela ordem revanches no mesmo lugar', () => {
     const [barry] = groupTrainers([1, 2].map((order) => row({
-      Card_ID: `rematch-${order}`, Trainer_Slug: 'barry', Trainer_Name: 'Barry', Generation: 4, Games_Label: 'Diamond / Pearl',
-      Battle_Stage: 'Rematch', Role: 'Rival', Location: 'Fight Area', Order: order,
+      card_id: `rematch-${order}`, trainer_slug: 'barry', trainer_name: 'Barry', generation: 4, games_label: 'Diamond / Pearl',
+      battle_stage: 'Rematch', role: 'Rival', location: 'Fight Area', order: order,
     })));
     expect(battleTabsOf(barry.battles).map((tab) => tab.label)).toEqual(['revanche · 1ª', 'revanche · 2ª']);
   });
@@ -201,18 +201,18 @@ describe('jogos na ficha do treinador', () => {
     expect(gameLabelsOf(bySlug('koga').battles)).toEqual(['Red / Blue', 'Gold / Silver']);
   });
 
-  it('separa os jogos do Games_JSON, sem repetir, em ordem de lançamento', () => {
+  it('separa os jogos do games_json, sem repetir, em ordem de lançamento', () => {
     const [cheren] = groupTrainers([
-      row({ Card_ID: 'b2w2', Trainer_Slug: 'cheren', Trainer_Name: 'Cheren', Generation: 5, Games_Label: 'Black 2 / White 2', Games_JSON: ['Black 2', 'White 2'] }),
-      row({ Card_ID: 'bw', Trainer_Slug: 'cheren', Trainer_Name: 'Cheren', Generation: 5, Games_Label: 'Black / White', Games_JSON: ['Black', 'White'], Role: 'Rival' }),
-      row({ Card_ID: 'w', Trainer_Slug: 'cheren', Trainer_Name: 'Cheren', Generation: 5, Games_Label: 'White', Games_JSON: ['White'], Role: 'Rival', Order: 2 }),
+      row({ card_id: 'b2w2', trainer_slug: 'cheren', trainer_name: 'Cheren', generation: 5, games_label: 'Black 2 / White 2', games_json: ['Black 2', 'White 2'] }),
+      row({ card_id: 'bw', trainer_slug: 'cheren', trainer_name: 'Cheren', generation: 5, games_label: 'Black / White', games_json: ['Black', 'White'], role: 'Rival' }),
+      row({ card_id: 'w', trainer_slug: 'cheren', trainer_name: 'Cheren', generation: 5, games_label: 'White', games_json: ['White'], role: 'Rival', order: 2 }),
     ]);
     expect(gameListOf(cheren.battles)).toEqual(['Black', 'White', 'Black 2', 'White 2']);
   });
 
   it('marca o Challenge Mode na aba, sem repetir o jogo', () => {
     const [cheren] = groupTrainers(['Black 2 / White 2', 'Black 2 / White 2 – Challenge Mode'].map((label) => row({
-      Card_ID: label, Trainer_Slug: 'cheren', Trainer_Name: 'Cheren', Generation: 5, Games_Label: label, Games_JSON: ['Black 2', 'White 2'],
+      card_id: label, trainer_slug: 'cheren', trainer_name: 'Cheren', generation: 5, games_label: label, games_json: ['Black 2', 'White 2'],
     })));
     expect(battleTabsOf(cheren.battles).map((tab) => tab.label)).toEqual(['batalha', 'Challenge Mode']);
   });
@@ -220,8 +220,8 @@ describe('jogos na ficha do treinador', () => {
 
 describe('ordem das batalhas na ficha', () => {
   const marnieRow = (id, stage, role, order) => row({
-    Card_ID: id, Trainer_Slug: 'marnie', Trainer_Name: 'Marnie', Generation: 8, Region: 'Galar',
-    Games_Label: 'Sword / Shield', Battle_Stage: stage, Role: role, Order: order,
+    card_id: id, trainer_slug: 'marnie', trainer_name: 'Marnie', generation: 8, region: 'Galar',
+    games_label: 'Sword / Shield', battle_stage: stage, role: role, order: order,
   });
   const [marnie] = groupTrainers([
     marnieRow('first', 'Main Story', 'Rival', 1),
@@ -250,25 +250,25 @@ describe('batalhas na calculadora', () => {
 
   it('junta as variantes de inicial em uma batalha e começa pela primeira', () => {
     const groups = groupsOf(starters.map((variant) => row({
-      Card_ID: variant, Trainer_Slug: 'blue', Trainer_Name: 'Blue', Role: 'Champion', Location: 'Indigo Plateau', Team_Variant: variant,
+      card_id: variant, trainer_slug: 'blue', trainer_name: 'Blue', role: 'Champion', location: 'Indigo Plateau', team_variant: variant,
     })));
     expect(summary(groups)).toEqual([['Red / Blue · História · Indigo Plateau · Campeão', ['Bulbasaur', 'Charmander', 'Squirtle']]]);
   });
 
   it('ordena por geração, etapa (história, revanche, pós-jogo) e ordem', () => {
-    const rival = (fields) => row({ Trainer_Slug: 'silver', Trainer_Name: 'Silver', Role: 'Rival', Generation: 4, Games_Label: 'HeartGold / SoulSilver', ...fields });
+    const rival = (fields) => row({ trainer_slug: 'silver', trainer_name: 'Silver', role: 'Rival', generation: 4, games_label: 'HeartGold / SoulSilver', ...fields });
     const groups = groupsOf([
-      rival({ Card_ID: 'pos', Battle_Stage: 'Post-Game', Order: 1, Location: 'Mt. Silver' }),
-      rival({ Card_ID: 'rev', Battle_Stage: 'Rematch', Order: 7, Location: 'Indigo Plateau' }),
-      rival({ Card_ID: 'den', Order: 7, Location: "Dragon's Den" }),
-      rival({ Card_ID: 'gsc', Generation: 2, Games_Label: 'Gold / Silver / Crystal', Order: 1, Location: 'Cherrygrove City' }),
+      rival({ card_id: 'pos', battle_stage: 'Post-Game', order: 1, location: 'Mt. Silver' }),
+      rival({ card_id: 'rev', battle_stage: 'Rematch', order: 7, location: 'Indigo Plateau' }),
+      rival({ card_id: 'den', order: 7, location: "Dragon's Den" }),
+      rival({ card_id: 'gsc', generation: 2, games_label: 'Gold / Silver / Crystal', order: 1, location: 'Cherrygrove City' }),
     ]);
     expect(groups.map((group) => group.variants[0].id)).toEqual(['gsc', 'den', 'rev', 'pos']);
   });
 
   it('filtra pelo jogo e tira o jogo do rótulo', () => {
     const blue = (games, location, order) => row({
-      Card_ID: `${games}-${order}`, Trainer_Slug: 'blue', Trainer_Name: 'Blue', Role: 'Rival', Games_Label: games, Location: location, Order: order,
+      card_id: `${games}-${order}`, trainer_slug: 'blue', trainer_name: 'Blue', role: 'Rival', games_label: games, location: location, order: order,
     });
     const [trainer] = groupTrainers([blue('Red / Blue', 'Cerulean City', 3), blue('Yellow', 'Route 22', 2), blue('Red / Blue', 'Route 22', 2)]);
     expect(gameLabelsOf(trainer.battles)).toEqual(['Red / Blue', 'Yellow']);
@@ -286,8 +286,8 @@ describe('batalhas na calculadora', () => {
 
   it('separa batalhas de mesmo rótulo só com o que as distingue', () => {
     const pwt = (variant, order) => row({
-      Card_ID: variant, Trainer_Slug: 'misty', Trainer_Name: 'Misty', Generation: 5, Games_Label: 'Black 2 / White 2',
-      Battle_Stage: 'Post-Game', Order: order, Location: 'Pokémon World Tournament', Team_Variant: variant,
+      card_id: variant, trainer_slug: 'misty', trainer_name: 'Misty', generation: 5, games_label: 'Black 2 / White 2',
+      battle_stage: 'Post-Game', order: order, location: 'Pokémon World Tournament', team_variant: variant,
     });
     expect(summary(groupsOf([pwt('Kanto Leaders', 1), pwt('World Leaders', 2)]))).toEqual([
       ['Black 2 / White 2 · Pós-jogo · Pokémon World Tournament · Líder de Ginásio · Kanto Leaders', []],
@@ -295,8 +295,8 @@ describe('batalhas na calculadora', () => {
     ]);
 
     const cup = (stage, order) => row({
-      Card_ID: `${stage}-${order}`, Trainer_Slug: 'marnie', Trainer_Name: 'Marnie', Generation: 8, Games_Label: 'Sword / Shield',
-      Battle_Stage: stage, Order: order, Role: 'Champion Cup', Location: 'Champion Cup',
+      card_id: `${stage}-${order}`, trainer_slug: 'marnie', trainer_name: 'Marnie', generation: 8, games_label: 'Sword / Shield',
+      battle_stage: stage, order: order, role: 'Champion Cup', location: 'Champion Cup',
     });
     expect(summary(groupsOf([cup('Main Story', 3), cup('Rematch', 2)]))).toEqual([
       ['Sword / Shield · História · Champion Cup · Copa dos Campeões', []],
@@ -305,11 +305,11 @@ describe('batalhas na calculadora', () => {
   });
 
   it('diz que é revanche mesmo quando é a única batalha ou o local é outro', () => {
-    const brock = (fields) => row({ Trainer_Slug: 'brock', Trainer_Name: 'Brock', Games_Label: 'HeartGold / SoulSilver', ...fields });
-    const rematch = brock({ Card_ID: 'rev', Battle_Stage: 'Rematch', Location: 'Fighting Dojo' });
+    const brock = (fields) => row({ trainer_slug: 'brock', trainer_name: 'Brock', games_label: 'HeartGold / SoulSilver', ...fields });
+    const rematch = brock({ card_id: 'rev', battle_stage: 'Rematch', location: 'Fighting Dojo' });
     const labels = (rows) => battleGroupsOf(groupTrainers(rows)[0], 'HeartGold / SoulSilver').map((group) => group.label);
     expect(labels([rematch])).toEqual(['Revanche · Fighting Dojo · Líder de Ginásio']);
-    expect(labels([brock({ Card_ID: 'gym', Location: 'Pewter Gym' }), rematch])[1]).toMatch(/^Revanche/);
+    expect(labels([brock({ card_id: 'gym', location: 'Pewter Gym' }), rematch])[1]).toMatch(/^Revanche/);
   });
 });
 
@@ -328,11 +328,11 @@ describe('regionsOf', () => {
 
 describe('ordem dos cards', () => {
   const kanto = groupTrainers([
-    row({ Trainer_Slug: 'giovanni', Trainer_Name: 'Giovanni', Role: 'Team Rocket', Order: 1, Location: 'Rocket Hideout' }),
-    row({ Trainer_Slug: 'giovanni', Trainer_Name: 'Giovanni', Role: 'Gym Leader', Order: 3, Location: 'Viridian City' }),
-    row({ Trainer_Slug: 'brock', Trainer_Name: 'Brock', Order: 1 }),
-    row({ Trainer_Slug: 'blaine', Trainer_Name: 'Blaine', Order: 7 }),
-    row({ Trainer_Slug: 'lorelei', Trainer_Name: 'Lorelei', Role: 'Elite Four', Order: 1 }),
+    row({ trainer_slug: 'giovanni', trainer_name: 'Giovanni', role: 'Team Rocket', order: 1, location: 'Rocket Hideout' }),
+    row({ trainer_slug: 'giovanni', trainer_name: 'Giovanni', role: 'Gym Leader', order: 3, location: 'Viridian City' }),
+    row({ trainer_slug: 'brock', trainer_name: 'Brock', order: 1 }),
+    row({ trainer_slug: 'blaine', trainer_name: 'Blaine', order: 7 }),
+    row({ trainer_slug: 'lorelei', trainer_name: 'Lorelei', role: 'Elite Four', order: 1 }),
   ]).map((trainer) => trainer.slug);
 
   it('põe o líder de ginásio que também é vilão logo depois dos líderes comuns', () => {
@@ -341,24 +341,24 @@ describe('ordem dos cards', () => {
 
   it('separa as equipes vilãs, com o chefe antes dos subordinados', () => {
     const hoenn = groupTrainers([
-      row({ Trainer_Slug: 'shelly', Trainer_Name: 'Shelly', Generation: 3, Role: 'Team Aqua' }),
-      row({ Trainer_Slug: 'archie-gen6', Trainer_Name: 'Archie', Generation: 3, Role: 'Team Aqua' }),
-      row({ Trainer_Slug: 'courtney', Trainer_Name: 'Courtney', Generation: 3, Role: 'Team Magma' }),
-      row({ Trainer_Slug: 'maxie-gen6', Trainer_Name: 'Maxie', Generation: 3, Role: 'Team Magma' }),
-      row({ Trainer_Slug: 'novo', Trainer_Name: 'Aaa', Generation: 3, Role: 'Papel Novo' }),
+      row({ trainer_slug: 'shelly', trainer_name: 'Shelly', generation: 3, role: 'Team Aqua' }),
+      row({ trainer_slug: 'archie-gen6', trainer_name: 'Archie', generation: 3, role: 'Team Aqua' }),
+      row({ trainer_slug: 'courtney', trainer_name: 'Courtney', generation: 3, role: 'Team Magma' }),
+      row({ trainer_slug: 'maxie-gen6', trainer_name: 'Maxie', generation: 3, role: 'Team Magma' }),
+      row({ trainer_slug: 'novo', trainer_name: 'Aaa', generation: 3, role: 'Papel Novo' }),
     ]).map((trainer) => trainer.slug);
     expect(hoenn).toEqual(['maxie-gen6', 'courtney', 'archie-gen6', 'shelly', 'novo']);
   });
 
   it('ordena as facções de Hisui', () => {
     const hisui = ['Miss Fortunes', 'Ginkgo Guild', 'Galaxy Team', 'Pearl Clan', 'Diamond Clan']
-      .map((role, index) => row({ Trainer_Slug: `t${index}`, Trainer_Name: role, Generation: 8, Role: role }));
+      .map((role, index) => row({ trainer_slug: `t${index}`, trainer_name: role, generation: 8, role: role }));
     expect(groupTrainers(hisui).map((trainer) => trainer.name))
       .toEqual(['Diamond Clan', 'Pearl Clan', 'Galaxy Team', 'Ginkgo Guild', 'Miss Fortunes']);
   });
 
   it('ordena as variantes de time por fase, não pelo alfabeto', () => {
-    const variants = (names) => groupTrainers(names.map((name) => row({ Trainer_Slug: 'x', Trainer_Name: 'X', Team_Variant: name, Card_ID: name })))[0]
+    const variants = (names) => groupTrainers(names.map((name) => row({ trainer_slug: 'x', trainer_name: 'X', team_variant: name, card_id: name })))[0]
       .battles.map((battle) => battle.teamVariant);
     expect(variants(['Subsequent clears', 'Fourth clear', 'Second clear', 'First clear', 'Third clear']))
       .toEqual(['First clear', 'Second clear', 'Third clear', 'Fourth clear', 'Subsequent clears']);
@@ -373,11 +373,11 @@ describe('unknownTrainerValues', () => {
 
   it('lista por coluna o que o front não conhece', () => {
     const rows = [
-      row({ Trainer_Slug: 'a', Region: 'Orre', Role: 'Cipher', Games_Label: 'Colosseum', Battle_Gimmick: 'Shadow' }),
-      row({ Trainer_Slug: 'b', Region: 'Orre', Battle_Stage: 'Epilogue' }),
+      row({ trainer_slug: 'a', region: 'Orre', role: 'Cipher', games_label: 'Colosseum', battle_gimmick: 'Shadow' }),
+      row({ trainer_slug: 'b', region: 'Orre', battle_stage: 'Epilogue' }),
     ];
     expect(unknownTrainerValues(rows)).toEqual({
-      Region: ['Orre'], Role: ['Cipher'], Battle_Gimmick: ['Shadow'], Battle_Stage: ['Epilogue'], Games_JSON: ['Colosseum'],
+      region: ['Orre'], role: ['Cipher'], battle_gimmick: ['Shadow'], battle_stage: ['Epilogue'], games_json: ['Colosseum'],
     });
   });
 });

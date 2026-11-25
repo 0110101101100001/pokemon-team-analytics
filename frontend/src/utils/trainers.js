@@ -1,7 +1,7 @@
 import { createBattleSet } from './stats';
 
 // Treinadores da tabela PokemonTrainers: cada linha é uma batalha (jogo, papel, revanche, time por inicial);
-// as linhas do mesmo Trainer_Slug viram um treinador só, com as batalhas como variantes.
+// as linhas do mesmo trainer_slug viram um treinador só, com as batalhas como variantes.
 
 // Região → geração em que estreou, na ordem de lançamento (Hisui vem depois de Galar; Kitakami é DLC de Paldea).
 const REGION_GENERATION = {
@@ -101,35 +101,35 @@ export const MIXED_TYPE = 'mixed';
 export const roleLabel = (role) => ROLES[role]?.label ?? role;
 const roleRank = (role) => ROLES[role]?.rank ?? UNKNOWN_ROLE_RANK;
 
-// Trainer_Slug já é o nome do arquivo no Showdown (ex.: arven-s).
+// trainer_slug já é o nome do arquivo no Showdown (ex.: arven-s).
 export const trainerSpriteUrl = (slug) => `https://play.pokemonshowdown.com/sprites/trainers/${slug}.png`;
 
 function toBattle(row) {
-  const specialty = row.Specialty_Type;
+  const specialty = row.specialty_type;
   return {
-    id: row.Card_ID,
-    generation: row.Generation,
-    region: row.Region,
-    games: row.Games_Label,
-    gameList: row.Games_JSON?.length ? row.Games_JSON : row.Games_Label.split(' / '),
-    stage: row.Battle_Stage ? STAGES[row.Battle_Stage] ?? UNKNOWN_STAGE : STAGES['Main Story'],
-    role: row.Role,
-    order: row.Order,
-    location: row.Location,
-    badge: row.Badge_Name,
-    teamVariant: row.Team_Variant,
-    multiBattle: Boolean(row.Multi_Battle),
+    id: row.card_id,
+    generation: row.generation,
+    region: row.region,
+    games: row.games_label,
+    gameList: row.games_json?.length ? row.games_json : row.games_label.split(' / '),
+    stage: row.battle_stage ? STAGES[row.battle_stage] ?? UNKNOWN_STAGE : STAGES['Main Story'],
+    role: row.role,
+    order: row.order,
+    location: row.location,
+    badge: row.badge_name,
+    teamVariant: row.team_variant,
+    multiBattle: Boolean(row.multi_battle),
     type: !specialty || specialty === 'Multi-type' ? MIXED_TYPE : specialty.toLowerCase(),
-    gimmick: GIMMICKS[row.Battle_Gimmick] ?? null,
-    aceSlug: row.Ace_Pokemon_Slug,
-    avgLevel: row.Avg_Level,
-    teamSize: row.Team_Size ?? row.Team_JSON?.length ?? null,
-    // A lista da Liga vem sem Team_JSON (ver services/trainers.js): o time chega ao abrir o treinador.
-    team: row.Team_JSON ? toTeam(row.Team_JSON) : null,
+    gimmick: GIMMICKS[row.battle_gimmick] ?? null,
+    aceSlug: row.ace_pokemon_slug,
+    avgLevel: row.avg_level,
+    teamSize: row.team_size ?? row.team_json?.length ?? null,
+    // A lista da Liga vem sem team_json (ver services/trainers.js): o time chega ao abrir o treinador.
+    team: row.team_json ? toTeam(row.team_json) : null,
   };
 }
 
-/** Membros do time a partir do Team_JSON de uma batalha. */
+/** Membros do time a partir do team_json de uma batalha. */
 export const toTeam = (teamJson) => (teamJson ?? []).map((member) => ({
   slug: member.slug,
   name: member.pokemon,
@@ -150,7 +150,7 @@ const byBattleOrder = (a, b) =>
 
 const unique = (values) => [...new Set(values)];
 
-// O mesmo confronto com times diferentes conforme o inicial do jogador: Games_Label, etapa e ordem iguais, menos a
+// O mesmo confronto com times diferentes conforme o inicial do jogador: games_label, etapa e ordem iguais, menos a
 // variante do time. Papel e local também entram: na tabela, as cinco batalhas da Arven dividem a mesma ordem.
 export const battleKey = (battle) => [battle.games, battle.stage.rank, battle.role, battle.order, battle.location].join('|');
 
@@ -206,9 +206,9 @@ const byPlacement = ([a, first], [b, other]) =>
 export function groupTrainers(rows) {
   const bySlug = new Map();
   for (const row of rows) {
-    const trainer = bySlug.get(row.Trainer_Slug) ?? { slug: row.Trainer_Slug, name: row.Trainer_Name, battles: [] };
+    const trainer = bySlug.get(row.trainer_slug) ?? { slug: row.trainer_slug, name: row.trainer_name, battles: [] };
     trainer.battles.push(toBattle(row));
-    bySlug.set(row.Trainer_Slug, trainer);
+    bySlug.set(row.trainer_slug, trainer);
   }
 
   return [...bySlug.values()]
@@ -232,7 +232,7 @@ export function groupTrainers(rows) {
     .map(([trainer]) => trainer);
 }
 
-/** Jogos individuais das batalhas (Games_JSON: "Black", "White"…), sem repetir, em ordem de lançamento. */
+/** Jogos individuais das batalhas (games_json: "Black", "White"…), sem repetir, em ordem de lançamento. */
 export function gameListOf(battles) {
   const games = new Set(battles.flatMap((battle) => battle.gameList));
   return [...games].sort((a, b) => gameRank(a) - gameRank(b) || a.localeCompare(b));
@@ -339,7 +339,7 @@ function disambiguate(groups, extra) {
 /**
  * Batalhas do treinador para a calculadora: um grupo por jogo, etapa, ordem, papel e local, com as linhas
  * de times diferentes (inicial do jogador) como variantes. Ordem: geração, etapa (história → revanche → pós-jogo), ordem.
- * Com `game` (um Games_Label), só as batalhas desse jogo, e o rótulo deixa de repetir o jogo.
+ * Com `game` (um games_label), só as batalhas desse jogo, e o rótulo deixa de repetir o jogo.
  */
 export function battleGroupsOf(trainer, game = null) {
   const groups = groupByBattle(game ? trainer.battles.filter((battle) => battle.games === game) : trainer.battles)
@@ -388,10 +388,10 @@ export function trainerMemberSet(member, summaryOf) {
 
 // Colunas com valores fixos que o front precisa conhecer para posicionar o card; nulo vale como o padrão.
 const KNOWN_VALUES = {
-  Region: (value) => Object.hasOwn(REGION_GENERATION, value),
-  Role: (value) => Object.hasOwn(ROLES, value),
-  Battle_Stage: (value) => value == null || Object.hasOwn(STAGES, value),
-  Battle_Gimmick: (value) => value == null || value === 'None' || Object.hasOwn(GIMMICKS, value),
+  region: (value) => Object.hasOwn(REGION_GENERATION, value),
+  role: (value) => Object.hasOwn(ROLES, value),
+  battle_stage: (value) => value == null || Object.hasOwn(STAGES, value),
+  battle_gimmick: (value) => value == null || value === 'None' || Object.hasOwn(GIMMICKS, value),
 };
 
 /**
@@ -406,7 +406,7 @@ export function unknownTrainerValues(rows) {
       if (!isKnown(row[column])) note(column, row[column]);
     }
     for (const game of toBattle(row).gameList) {
-      if (!GAME_ORDER.includes(game)) note('Games_JSON', game);
+      if (!GAME_ORDER.includes(game)) note('games_json', game);
     }
   }
   return Object.fromEntries(Object.entries(unknown).map(([column, values]) => [column, [...values].sort()]));

@@ -22,10 +22,10 @@ const CALCULATOR = SECTIONS.find((section) => section.id === 'damageCalculator')
 const TRAINER_SEGMENT = 'treinador';
 export const CALCULATOR_HREF = sectionHref(CALCULATOR);
 
-/** Calculadora com o time de uma batalha da Liga no lado do oponente (`#/calculadora/treinador/<Card_ID>`). */
+/** Calculadora com o time de uma batalha da Liga no lado do oponente (`#/calculadora/treinador/<card_id>`). */
 export const calculatorTrainerHref = (battleId) => `${CALCULATOR_HREF}/${TRAINER_SEGMENT}/${encodeURIComponent(battleId)}`;
 
-/** Card_ID pedido no endereço da calculadora, ou null. */
+/** card_id pedido no endereço da calculadora, ou null. */
 export function trainerBattleFromHash(hash = window.location.hash) {
   const [section, segment, id] = parseHash(hash).segments;
   if (section !== CALCULATOR.path || segment !== TRAINER_SEGMENT || !id) return null;
@@ -34,5 +34,5 @@ export function trainerBattleFromHash(hash = window.location.hash) {
 
 const TRAINERS = SECTIONS.find((section) => section.id === 'trainers');
 
-/** Ficha de um treinador na Liga (`#/treinadores/<Trainer_Slug>`). */
+/** Ficha de um treinador na Liga (`#/treinadores/<trainer_slug>`). */
 export const trainerHref = (slug) => formatHash([TRAINERS.path, slug]);

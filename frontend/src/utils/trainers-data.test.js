@@ -6,16 +6,16 @@ import { unknownTrainerValues } from './trainers';
 // Roda no CI com os secrets SUPABASE_URL e SUPABASE_ANON_KEY e é pulado sem eles.
 const url = process.env.SUPABASE_URL;
 const key = process.env.SUPABASE_ANON_KEY;
-const COLUMNS = 'Card_ID,Region,Role,Battle_Stage,Battle_Gimmick,Games_Label,Games_JSON';
+const COLUMNS = 'card_id,region,role,battle_stage,battle_gimmick,games_label,games_json';
 const PAGE_SIZE = 1000;
 
 async function fetchAllRows() {
   const rows = [];
   for (let from = 0; ; from += PAGE_SIZE) {
-    const response = await fetch(`${url}/rest/v1/PokemonTrainers?select=${COLUMNS}&order=Card_ID`, {
+    const response = await fetch(`${url}/rest/v1/pokemon_trainers?select=${COLUMNS}&order=card_id`, {
       headers: { apikey: key, Authorization: `Bearer ${key}`, Range: `${from}-${from + PAGE_SIZE - 1}` },
     });
-    if (!response.ok) throw new Error(`PokemonTrainers: ${response.status} ${await response.text()}`);
+    if (!response.ok) throw new Error(`pokemon_trainers: ${response.status} ${await response.text()}`);
     const page = await response.json();
     rows.push(...page);
     if (page.length < PAGE_SIZE) return rows;
