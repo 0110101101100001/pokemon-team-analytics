@@ -387,7 +387,7 @@
   /*
     Papel do header, de baixo para cima: a nuvem larga de tom, as fibras (0,08 a 0,12, já no SVG) e o grão em
     multiply. O grão só escurece, então o texto claro ganha contraste. Os ladrilhos têm períodos diferentes.
-    `--header-solid` é o tom médio do resultado: o fundo da busca e dos botões, que não levam textura.
+    `--header-solid` é o tom médio do resultado: o fundo dos botões, que não levam textura, e o do autopreenchimento.
   */
   .header-paper {
     --header-paper: url('./assets/header/paper-tone.webp');
@@ -426,8 +426,8 @@
   }
 
   /*
-    Duas pinceladas secas, presas à faixa abaixo da logo e do menu. Cada uma acaba onde começa o fundo liso da busca,
-    que as cortaria em reto: a esquerda sob o recorte, a direita sob os selects (a linha de baixo, até lg).
+    Duas pinceladas secas, presas à faixa abaixo da logo e do menu, fora do texto da busca:
+    a esquerda sob o recorte, a direita sob os selects (a linha de baixo, até lg).
   */
   .header-brush {
     position: absolute;

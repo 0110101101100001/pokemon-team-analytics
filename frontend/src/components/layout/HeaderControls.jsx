@@ -1,12 +1,14 @@
 import { Search } from 'lucide-react';
 import { BrushUnderline, InkMarker } from '../InkDecor';
 
-// Campo de papel: só o sublinhado a tinta, sem caixa. No foco o sublinhado engrossa e pega o pistache.
+// Campo de papel, comum à busca e aos selects: fundo transparente e só o sublinhado a tinta, sem caixa.
+// No foco o sublinhado engrossa e pega o pistache.
 export const FIELD_CLASS =
-  'h-9 sm:h-10 w-full rounded-none border-0 border-b-[1.5px] border-page/50 text-paper [color-scheme:dark] transition-[border-color,border-width] hover:border-page/85 focus:outline-none focus:border-b-[2.5px] focus:border-paint-pistachio';
-export const SELECT_CLASS = `${FIELD_CLASS} appearance-none bg-transparent pl-1 pr-6 sm:pr-7 font-reading text-sm font-medium cursor-pointer`;
-// A busca tem fundo liso, no tom médio do papel com textura: nada dela passa atrás do que se digita.
-export const TEXT_INPUT_BASE = `${FIELD_CLASS} bg-[var(--header-solid)] pl-7 font-reading text-[15px] placeholder:italic placeholder:text-page/90`;
+  'h-9 sm:h-10 w-full rounded-none border-0 border-b-[1.5px] border-page/50 bg-transparent text-paper [color-scheme:dark] transition-[border-color,border-width] hover:border-page/85 focus:outline-none focus:border-b-[2.5px] focus:border-paint-pistachio';
+export const SELECT_CLASS = `${FIELD_CLASS} appearance-none pl-1 pr-6 sm:pr-7 font-reading text-sm font-medium cursor-pointer`;
+// O autopreenchimento do navegador pinta o fundo de claro: uma sombra interna no tom médio do header o cobre.
+const AUTOFILL_CLASS = 'autofill:shadow-[inset_0_0_0_1000px_var(--header-solid)] autofill:[-webkit-text-fill-color:theme(colors.paper.DEFAULT)] autofill:[caret-color:theme(colors.paper.DEFAULT)]';
+export const TEXT_INPUT_BASE = `${FIELD_CLASS} ${AUTOFILL_CLASS} pl-7 font-reading text-[15px] placeholder:italic placeholder:text-page/90`;
 // Botão do header: retângulo de contorno, como um carimbo. O fundo é opaco para os respingos não passarem atrás do texto.
 export const HEADER_BUTTON_CLASS =
   'relative h-9 sm:h-10 inline-flex items-center justify-center gap-2 rounded-[3px] border-[1.5px] border-page/55 bg-[var(--header-solid)] px-3 font-reading text-sm font-medium text-page transition-colors cursor-pointer hover:border-page hover:bg-[#5e4739] focus:outline-none focus-visible:ring-2 focus-visible:ring-paint-pistachio/70';
