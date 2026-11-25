@@ -17,6 +17,7 @@ import { formatHash } from "./navigation/hashRoute";
 import { usePokedexFilters } from "./hooks/usePokedexFilters";
 import { useScrollCollapsed } from "./hooks/useScrollCollapsed";
 import { useUserCollections } from "./hooks/useUserCollections";
+import { useTheme } from "./theme/useTheme";
 import {
   fetchEggGroupIndex, fetchPokemonList, fetchSpeciesList, fetchTypeIndex,
 } from "./services/api";
@@ -52,6 +53,8 @@ export default function App() {
   const [eggGroupNames, setEggGroupNames] = useState([]);
   const [hasSmogonDataMap, setHasSmogonDataMap] = useState({});
   const [session, setSession] = useState(null);
+  // A sessão inicial chega pelo primeiro evento de login (INITIAL_SESSION); até lá o tema não é tocado.
+  const [authReady, setAuthReady] = useState(false);
   const [authOpen, setAuthOpen] = useState(false);
   const [aboutOpen, setAboutOpen] = useState(false);
   const [team, setTeam] = useState([]);
@@ -151,6 +154,12 @@ export default function App() {
   }, []);
   const dismissToast = useCallback(() => setToast(null), []);
   const notifyProfileError = useCallback((message) => notify(message, { tone: "info" }), [notify]);
+  const notifyThemeError = useCallback(() => notify("Não foi possível salvar o tema", { tone: "info" }), [notify]);
+  const [theme, chooseTheme] = useTheme(session?.user?.id ?? null, authReady, notifyThemeError);
+  const handleAuthChange = useCallback((nextSession) => {
+    setSession(nextSession);
+    setAuthReady(true);
+  }, []);
 
   // O botão da ficha alterna: a entrada da grade entra no time com um set vazio (como pelo Team Builder) ou,
   // se a espécie já está no time, sai dele. Um aviso confirma o que aconteceu.
@@ -259,7 +268,7 @@ export default function App() {
   return (
     <HeaderContext.Provider value={headerContext}>
       <div className="relative min-h-screen">
-        <AuthModal open={authOpen} onClose={closeAuth} onAuthChange={setSession} />
+        <AuthModal open={authOpen} onClose={closeAuth} onAuthChange={handleAuthChange} />
         {aboutOpen && (
           <Suspense fallback={null}>
             <AboutModal onClose={closeAbout} />
@@ -268,6 +277,8 @@ export default function App() {
 
         <AppHeader activeId={section.id} collapsed={collapsed} toolbarRef={setToolbarSlot} profilePool={pokemonList} profileUser={session?.user} onProfileError={notifyProfileError}
           onLogin={openAuth}
+          theme={theme}
+          onChooseTheme={chooseTheme}
           accountAction={<AuthButton session={session} onOpen={openAuth} />}
         >
           <AboutButton onClick={openAbout} />

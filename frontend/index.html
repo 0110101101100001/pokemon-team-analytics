@@ -4,7 +4,27 @@
     <meta charset="UTF-8" />
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <meta name="theme-color" content="#78614E" />
+    <meta name="theme-color" content="#7a5f4e" />
+    <!--
+      Tema antes da primeira pintura: sem isto a página piscaria no Smeargle até o JS carregar.
+      Ids e cores do header repetem src/theme (themes.js e themes.css); o teste themes.test.js confere.
+    -->
+    <script>
+      (function () {
+        var THEMES = ['smeargle', 'wailord', 'empoleon', 'groudon', 'zoroark', 'chandelure'];
+        var HEADERS = { smeargle: '#7a5f4e', wailord: '#4d78b2', empoleon: '#223256', groudon: '#2a1915', zoroark: '#222028', chandelure: '#1d1823' };
+        var theme = 'smeargle';
+        try {
+          var saved = window.localStorage.getItem('smearglepedia-theme');
+          if (THEMES.indexOf(saved) !== -1) theme = saved;
+        } catch (error) {
+          // Sem armazenamento (modo privado, bloqueio): fica o padrão.
+        }
+        document.documentElement.dataset.theme = theme;
+        var meta = document.querySelector('meta[name="theme-color"]');
+        if (meta) meta.setAttribute('content', HEADERS[theme]);
+      })();
+    </script>
     <meta
       name="description"
       content="Pokédex Competitiva - Estatísticas de uso da Smogon e dados oficiais da PokeAPI"
