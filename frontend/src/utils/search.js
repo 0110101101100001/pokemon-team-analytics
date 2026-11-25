@@ -3,7 +3,7 @@ export const SEARCH_RANK = { exact: 0, prefix: 1, contains: 2, fuzzy: 3 };
 
 const FUZZY_THRESHOLD = 0.3;
 // A sugestão do "Quis dizer" aceita um erro maior que o dos resultados.
-const SUGGEST_THRESHOLD = 0.5;
+const SUGGEST_THRESHOLD = 0.4;
 const MIN_FUZZY_LENGTH = 3;
 
 const DEX_QUERY = /^(?:#|n[º°o]\.?\s*)?(\d+)$/i;

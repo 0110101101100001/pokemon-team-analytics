@@ -96,6 +96,7 @@ describe('suggestName', () => {
     const all = new Set(LIST.map((p) => p.name));
     expect(suggestName(index, 'charizrdd', all)).toBe('charizard');
     expect(suggestName(index, 'xyzw', all)).toBeNull();
+    expect(suggestName(index, 'zzqx', all)).toBeNull();
     expect(suggestName(index, '25', all)).toBeNull();
   });
 
