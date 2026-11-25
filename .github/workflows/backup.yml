@@ -1,7 +1,7 @@
 name: Backup semanal do banco de dados
 
-# Dump de PokemonTrainers e smogon_stats em backups/, com commit só quando os dados mudam.
-# Como restaurar: ver "Backup e restauração" no README.
+# Cópia de PokemonTrainers e smogon_stats em backups/, pela API REST com a chave service_role,
+# com commit só quando os dados mudam. Como restaurar: ver "Backup e restauração" no README.
 on:
   schedule:
     - cron: '0 6 * * 1'
@@ -17,44 +17,20 @@ concurrency:
 jobs:
   dump:
     runs-on: ubuntu-latest
-    timeout-minutes: 15
+    timeout-minutes: 10
     steps:
       - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
 
-      # O pg_dump precisa ser da mesma versão do servidor (Postgres 17) ou mais nova.
-      - name: Instalar o cliente do Postgres 17
-        run: |
-          sudo install -d /usr/share/postgresql-common/pgdg
-          sudo curl -fsSo /usr/share/postgresql-common/pgdg/apt.postgresql.org.asc https://www.postgresql.org/media/keys/ACCC4CF8.asc
-          echo "deb [signed-by=/usr/share/postgresql-common/pgdg/apt.postgresql.org.asc] https://apt.postgresql.org/pub/repos/apt $(lsb_release -cs)-pgdg main" \
-            | sudo tee /etc/apt/sources.list.d/pgdg.list > /dev/null
-          sudo apt-get update -qq
-          sudo apt-get install -y -qq postgresql-client-17
-          echo "/usr/lib/postgresql/17/bin" >> "$GITHUB_PATH"
-
-      # SUPABASE_DB_URL: connection string do Session pooler (porta 5432). Os runners do GitHub não têm IPv6,
-      # que a conexão direta do Supabase exige, e o Transaction pooler (6543) não serve para o pg_dump.
-      - name: Gerar os dumps
+      - name: Exportar as tabelas
         env:
-          SUPABASE_DB_URL: ${{ secrets.SUPABASE_DB_URL }}
-        run: |
-          if [ -z "$SUPABASE_DB_URL" ]; then
-            echo "::error::O secret SUPABASE_DB_URL não está definido no repositório."
-            exit 1
-          fi
-          mkdir -p backups
-          # Sem --restrict-key, o pg_dump grava uma chave aleatória a cada execução e todo dump sairia diferente.
-          for table in '"PokemonTrainers"' smogon_stats; do
-            file=$(echo "$table" | tr -d '"')
-            pg_dump "$SUPABASE_DB_URL" --table="public.$table" --no-owner --no-privileges --restrict-key=smearglepedia \
-              | gzip -n -9 > "backups/$file.sql.gz"
-          done
-          # Ordenado pela primeira coluna (o id do card): a mesma tabela gera sempre o mesmo arquivo.
-          psql "$SUPABASE_DB_URL" -v ON_ERROR_STOP=1 \
-            -c "\copy (select * from public.\"PokemonTrainers\" order by 1) to 'backups/PokemonTrainers.csv' with (format csv, header)"
-          ls -la backups
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_KEY: ${{ secrets.SUPABASE_KEY }}
+        run: node scripts/backup-supabase.mjs backups
 
-      # gzip -n não grava data nem nome no arquivo: sem mudança nos dados, o .gz sai idêntico e não há commit.
+      # O script grava sempre os mesmos bytes para os mesmos dados: sem mudança, não há commit.
       - name: Commit se houver diferença
         run: |
           git add backups
@@ -64,5 +40,5 @@ jobs:
           fi
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git commit -m "chore(backup): dump semanal do banco de dados [skip ci]"
+          git commit -m "chore(backup): cópia semanal do banco de dados [skip ci]"
           git push

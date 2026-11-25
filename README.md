@@ -113,7 +113,7 @@ No plano gratuito o Render suspende o serviço após 15 minutos sem tráfego, e 
 - frontend: `npm run lint`, `npm test` e `npm run build`;
 - backend: `ruff check .` e `pytest` (Supabase falso em memória, sem rede).
 
-O `npm test` inclui `trainers-data.test.js`, que lê a tabela `PokemonTrainers` e falha se aparecer uma região, papel, etapa, mecânica ou jogo que o frontend não conhece. Ele lê com a chave anon, como o site, e usa os secrets `SUPABASE_URL` e `SUPABASE_ANON_KEY` (a mesma `VITE_SUPABASE_ANON_KEY` do Netlify). A `SUPABASE_KEY` do keep-alive é a service role, que não tem permissão na `PokemonTrainers`. Sem os secrets, o teste é pulado (pull requests de forks, por exemplo). Para rodar localmente:
+O `npm test` inclui `trainers-data.test.js`, que lê a tabela `PokemonTrainers` e falha se aparecer uma região, papel, etapa, mecânica ou jogo que o frontend não conhece. Ele lê com a chave anon, como o site, e usa os secrets `SUPABASE_URL` e `SUPABASE_ANON_KEY` (a mesma `VITE_SUPABASE_ANON_KEY` do Netlify). A `SUPABASE_KEY` é a service role, usada só pelo backup: nas tabelas do site ela só lê. Sem os secrets, o teste é pulado (pull requests de forks, por exemplo). Para rodar localmente:
 
 ```bash
 cd frontend
@@ -135,7 +135,7 @@ ruff check . && pytest
 | `keep-alive.yml` | a cada 10 minutos | `GET /health` no Render, para o serviço não dormir | nenhum |
 | `smogon-sync.yml` | dia 2, 06:00 | `POST /api/admin/sync-smogon` e espera até todos os tiers estarem no mês anterior | `SUPABASE_JWT_SECRET` |
 | `supabase-keepalive.yml` | todo dia, 09:00 | lê uma linha da `PokemonTrainers` com a chave anon, para o projeto gratuito não pausar | `SUPABASE_URL`, `SUPABASE_ANON_KEY` |
-| `backup.yml` | segunda, 06:00 | dump de `PokemonTrainers` e `smogon_stats` em `backups/`, com commit só quando os dados mudam | `SUPABASE_DB_URL` |
+| `backup.yml` | segunda, 06:00 | cópia de `PokemonTrainers` e `smogon_stats` em `backups/` pela API REST, com commit só quando os dados mudam | `SUPABASE_URL`, `SUPABASE_KEY` |
 | `trainer-data-check.yml` | segunda, 12:00 | o mesmo teste de dados da `PokemonTrainers`, porque a tabela muda direto no Supabase, sem push | `SUPABASE_URL`, `SUPABASE_ANON_KEY` |
 | `keep-active.yml` | dia 1, 05:00 | commit vazio na `main`, para o GitHub não desativar os agendamentos | nenhum |
 
@@ -145,22 +145,23 @@ O GitHub desativa workflows agendados após 60 dias sem atividade no repositóri
 
 ### Backup e restauração
 
-O `backup.yml` grava em `backups/`:
+O `backup.yml` lê as tabelas pela API REST com a chave service_role (os secrets `SUPABASE_URL` e `SUPABASE_KEY`, os mesmos já usados no repositório) e grava em `backups/`:
 
-- `PokemonTrainers.sql.gz` e `smogon_stats.sql.gz`: `pg_dump` de cada tabela (estrutura, índices e dados, sem dono nem grants);
+- `PokemonTrainers.json.gz` e `smogon_stats.json.gz`: todas as linhas e colunas, uma linha por registro, em ordem fixa;
 - `PokemonTrainers.csv`: a mesma tabela em CSV, para conferir no navegador ou em uma planilha.
 
-O secret `SUPABASE_DB_URL` é a connection string do **Session pooler** (Supabase > Connect > Session pooler, porta 5432), no formato `postgresql://postgres.<project-ref>:<senha>@aws-0-<região>.pooler.supabase.com:5432/postgres`. A conexão direta exige IPv6, que os runners do GitHub não têm, e o Transaction pooler (6543) não funciona com o `pg_dump`.
+O backup leva os dados, não a estrutura: tabela, índices, RLS e grants ficam nas migrações de `supabase/migrations/`. A service_role só tem leitura na `PokemonTrainers` (migração `grant_select_pokemon_trainers_to_service_role`).
 
-Para restaurar uma tabela (com `psql` 17.6 ou mais novo, por causa do `\restrict` que o `pg_dump` grava no arquivo):
+Para restaurar uma tabela (upsert pela chave primária; linhas que não estão no backup não são apagadas):
 
 ```bash
-# Substitui a tabela inteira: o dump recria a tabela, então apague a atual antes (ou renomeie, para comparar).
-psql "$SUPABASE_DB_URL" -c 'alter table public."PokemonTrainers" rename to "PokemonTrainers_old";'
-gunzip -c backups/PokemonTrainers.sql.gz | psql "$SUPABASE_DB_URL" -v ON_ERROR_STOP=1
+# Na PokemonTrainers, a service_role precisa de escrita durante a restauração:
+#   grant insert, update on public."PokemonTrainers" to service_role;   (e revoke depois)
+SUPABASE_URL=https://<project-ref>.supabase.co SUPABASE_KEY=<service_role> \
+  node scripts/restore-supabase.mjs PokemonTrainers backups/PokemonTrainers.json.gz
 ```
 
-Depois de restaurar, refaça as políticas de RLS e os grants da tabela com as migrações de `supabase/migrations/` (o dump não os leva). Para voltar uma versão anterior, pegue o arquivo no histórico do git (`git log -- backups/`).
+Para voltar uma versão anterior, pegue o arquivo no histórico do git (`git log -- backups/`).
 
 ## Dados da Smogon
 
