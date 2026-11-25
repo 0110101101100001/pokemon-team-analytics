@@ -1,10 +1,11 @@
 import { memo, useCallback, useLayoutEffect, useMemo, useRef, useState, useSyncExternalStore } from 'react';
-import { measureElement, useWindowVirtualizer } from '@tanstack/react-virtual';
+import { measureElement } from '@tanstack/react-virtual';
 import PokemonCard from './PokemonCard';
 import JumpIndex from './JumpIndex';
 import { COMPARE_LIMIT } from '../utils/compare';
 import { GENERATIONS, formatSlug } from '../utils/filters';
 import EmptyState from './EmptyState';
+import { useWindowRows } from '../hooks/useWindowRows';
 
 // Os breakpoints do Tailwind (sm, md, lg, xl): de 1 a 5 colunas.
 const COLUMN_QUERIES = [['(min-width: 1280px)', 5], ['(min-width: 1024px)', 4], ['(min-width: 768px)', 3], ['(min-width: 640px)', 2]];
@@ -13,6 +14,8 @@ const PRIORITY_CARDS = 10;
 // Altura reservada para o header fixo quando o salto leva a uma linha (o antigo scroll-mt-40).
 const HEADER_OFFSET = 160;
 const OVERSCAN_ROWS = 3;
+// No salto pelo índice, quantas telas antes do alvo a rolagem passa a ser suave.
+const SMOOTH_SCREENS = 2;
 
 function readColumns() {
   if (typeof window === 'undefined' || !window.matchMedia) return 1;
@@ -98,53 +101,84 @@ function PokemonGrid({
     [starts],
   );
 
-  const virtualizer = useWindowVirtualizer({
+  // Opções estáveis: a lib refaz as medidas de todas as linhas quando getItemKey muda de referência.
+  const getItemKey = useCallback((row) => pokemonList[row * columns]?.name ?? row, [pokemonList, columns]);
+  const estimateSize = useCallback(() => rowHeightRef.current, []);
+  // Ao montar uma linha, a lib a mede com getBoundingClientRect, que força o layout da página inteira a cada
+  // linha nova e trava a rolagem no celular. Na montagem vale a altura já conhecida; o ResizeObserver
+  // entrega a medida real logo depois do layout, sem forçá-lo.
+  const measureRow = useCallback((element, entry, instance) => {
+    if (!entry) {
+      const key = instance.options.getItemKey(instance.indexFromElement(element));
+      return instance.itemSizeCache.get(key) ?? rowHeightRef.current;
+    }
+    const height = measureElement(element, entry, instance);
+    if (height > 0) rowHeightRef.current = height;
+    return height;
+  }, []);
+
+  const virtualizer = useWindowRows({
     count: rowCount,
-    estimateSize: () => rowHeightRef.current,
+    estimateSize,
     overscan: OVERSCAN_ROWS,
     scrollMargin,
     scrollPaddingStart: HEADER_OFFSET,
-    getItemKey: (row) => pokemonList[row * columns]?.name ?? row,
-    measureElement: (element, entry, instance) => {
-      const height = measureElement(element, entry, instance);
-      if (height > 0) rowHeightRef.current = height;
-      return height;
-    },
+    getItemKey,
+    measureElement: measureRow,
     onChange: (instance) => {
       if (instance.range) anchorRef.current = instance.range.startIndex * columns;
     },
   });
 
+  // Durante o salto, a correção de rolagem da lib (linhas medidas acima da tela) interromperia a rolagem suave;
+  // a posição é acertada no fim, de uma vez.
+  const jumpingRef = useRef(false);
+  virtualizer.shouldAdjustScrollPositionOnItemSizeChange = (item, _delta, instance) =>
+    !jumpingRef.current && item.start < instance.getScrollOffset() + instance.scrollAdjustments;
+
   const lastColumns = useRef(columns);
   useLayoutEffect(() => {
     if (lastColumns.current === columns) return;
     lastColumns.current = columns;
-    if (window.scrollY > scrollMargin) virtualizer.scrollToIndex(Math.floor(anchorRef.current / columns), { align: 'start' });
+    if (window.scrollY > scrollMargin) {
+      virtualizer.scrollToIndex(Math.floor(anchorRef.current / columns), { align: 'start' });
+    }
   }, [columns, scrollMargin, virtualizer]);
 
   // Salto pelo índice: rola até a linha do card e, quando a rolagem termina, acerta a posição (as linhas
-  // medidas no caminho podem ter outra altura) e põe o foco no card.
+  // medidas no caminho podem ter outra altura) e põe o foco no card. Longe do alvo (no celular, a Pokédex tem
+  // centenas de milhares de pixels), pula direto para perto dele e só as últimas telas rolam suave.
   const jumpTo = useCallback((index) => {
     const row = Math.floor(index / columns);
     const [top] = virtualizer.getOffsetForIndex(row, 'start') ?? [0];
     const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
     const settle = () => {
+      jumpingRef.current = false;
       virtualizer.scrollToIndex(row, { align: 'start' });
-      requestAnimationFrame(() => {
-        listRef.current?.querySelector(`[data-card-index="${index}"] button`)?.focus({ preventScroll: true });
-      });
+      // A linha do card só é montada depois que a grade reage à rolagem: tenta por alguns quadros.
+      let frames = 0;
+      const focusCard = () => {
+        const button = listRef.current?.querySelector(`[data-card-index="${index}"] button`);
+        if (button) button.focus({ preventScroll: true });
+        else if ((frames += 1) < 30) requestAnimationFrame(focusCard);
+      };
+      requestAnimationFrame(focusCard);
     };
     if (reduceMotion || Math.abs(window.scrollY - top) < 2) {
-      window.scrollTo({ top });
+      window.scrollTo({ top, behavior: 'instant' });
       settle();
       return;
     }
+    const smoothSpan = SMOOTH_SCREENS * window.innerHeight;
+    const distance = top - window.scrollY;
+    if (Math.abs(distance) > smoothSpan) window.scrollTo({ top: top - Math.sign(distance) * smoothSpan, behavior: 'instant' });
     const fallback = setTimeout(done, 1200);
     function done() {
       clearTimeout(fallback);
       window.removeEventListener('scrollend', done);
       settle();
     }
+    jumpingRef.current = true;
     window.addEventListener('scrollend', done, { once: true });
     window.scrollTo({ top, behavior: 'smooth' });
   }, [columns, virtualizer]);
@@ -159,7 +193,7 @@ function PokemonGrid({
         <EmptyState className="py-24" title="nenhum Pokémon encontrado" hint={emptyHint(suggestion)} />
       ) : (
         // Só as linhas perto da tela ficam montadas; o contêiner tem a altura da grade inteira.
-        <div ref={listRef} className="relative" style={{ height: virtualizer.getTotalSize() }}>
+        <div ref={listRef} className="relative [overflow-anchor:none]" style={{ height: virtualizer.getTotalSize() }}>
           {virtualizer.getVirtualItems().map((row) => {
             const first = row.index * columns;
             return (
