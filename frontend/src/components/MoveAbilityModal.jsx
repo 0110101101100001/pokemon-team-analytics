@@ -101,7 +101,7 @@ function HeldBySection({ groups }) {
                 <li key={name} className="flex items-center gap-1 rounded-[2px] border-[1.5px] border-ink/50 bg-paper py-0.5 pl-0.5 pr-2">
                   <img src={thumbnailSpriteUrl(id)} alt="" width={24} height={24} loading="lazy" decoding="async" className="h-6 w-6 object-contain" />
                   <span className="font-reading text-sm font-medium text-ink">{formatSlug(name)}</span>
-                  <span className="font-mono text-[11px] font-bold tabular-nums text-[#56643A]">{rarity}%</span>
+                  <span className="font-mono text-[11px] font-bold tabular-nums text-accent-text">{rarity}%</span>
                 </li>
               ))}
             </ul>
@@ -204,7 +204,7 @@ function MoveAbilityModal({ kind, name, onClose }) {
   // Portal: fica fora do drawer, que tem rolagem própria e cantos recortados.
   return createPortal(
     <div
-      className="fixed inset-0 z-[70] flex items-center justify-center bg-ink/60 p-4 animate-fade-in motion-reduce:animate-none md:bg-ink/45"
+      className="fixed inset-0 z-[70] flex items-center justify-center bg-scrim p-4 animate-fade-in motion-reduce:animate-none md:bg-scrim/80"
       onMouseDown={(e) => e.target === e.currentTarget && onClose()}
     >
       <div
@@ -214,7 +214,7 @@ function MoveAbilityModal({ kind, name, onClose }) {
         className="paper-card relative flex max-h-[85vh] w-full max-w-lg flex-col shadow-panel animate-bubble-pop motion-reduce:animate-none"
       >
         <header className="flex items-start gap-3 border-b-[1.5px] border-ink px-6 pb-4 pt-5">
-          <span className="mt-0.5 flex h-11 w-11 shrink-0 items-center justify-center rounded-full border-[1.5px] border-ink bg-paper-2 text-ink shadow-[2px_2px_0_#4A463E]">
+          <span className="mt-0.5 flex h-11 w-11 shrink-0 items-center justify-center rounded-full border-[1.5px] border-ink bg-paper-2 text-ink shadow-[2px_2px_0_var(--shadow-hard)]">
             {state.info?.sprite ? (
               <img src={state.info.sprite} alt="" width={30} height={30} className="h-[30px] w-[30px] object-contain [image-rendering:pixelated]" />
             ) : (

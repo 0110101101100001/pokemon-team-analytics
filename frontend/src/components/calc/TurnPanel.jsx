@@ -8,7 +8,7 @@ const SELECT = 'paper-field h-9 min-w-0 cursor-pointer px-2 text-[13px]';
 // Ícone e cor de cada tipo de linha do registro (utils/turn.js).
 const KINDS = {
   damage: [Swords, 'text-vermilion-deep', 'dano'],
-  heal: [HeartPulse, 'text-olive-deep', 'cura'],
+  heal: [HeartPulse, 'text-olive-ink', 'cura'],
   status: [Sparkles, 'text-paint-magenta', 'efeito'],
   field: [CloudSun, 'text-paint-cobalt', 'campo'],
   faint: [X, 'text-vermilion-deep', 'desmaio'],
@@ -19,7 +19,7 @@ const KINDS = {
 function LineText({ text }) {
   return text.split(/([−+]\d+ PS)/).map((part, index) => {
     if (!/^[−+]\d+ PS$/.test(part)) return part;
-    const tone = part.startsWith('+') ? 'text-olive-deep' : 'text-vermilion-deep';
+    const tone = part.startsWith('+') ? 'text-olive-ink' : 'text-vermilion-deep';
     return <span key={index} className={`font-mono text-[12px] font-bold tabular-nums ${tone}`}>{part}</span>;
   });
 }

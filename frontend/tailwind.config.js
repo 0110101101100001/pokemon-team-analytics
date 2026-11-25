@@ -1,3 +1,6 @@
+// Cor de tema com suporte ao modificador de opacidade (bg-ink/60): mistura o token com transparente.
+const token = (name) => `color-mix(in srgb, var(--${name}) calc(<alpha-value> * 100%), transparent)`;
+
 /** @type {import('tailwindcss').Config} */
 export default {
   content: [
@@ -7,43 +10,60 @@ export default {
   theme: {
     extend: {
       colors: {
-        // Os mesmos valores dos tokens de index.css (:root), para as classes utilitárias.
-        page: '#F7F3EE',
-        paper: { DEFAULT: '#F2EAD9', 2: '#E6D9BE' },
-        ink: { DEFAULT: '#1C1A17', soft: '#4A463E' },
-        umber: '#78614E',
-        sepia: '#5C4033',
-        brown: '#785132',
-        olive: { DEFAULT: '#829B72', deep: '#5B7856', ink: '#3D5438' },
-        vermilion: { DEFAULT: '#B8402A', deep: '#8A3B27' },
-        ochre: { DEFAULT: '#B98428', deep: '#6B4A10' },
+        /*
+          Todas as cores do site vêm dos tokens de tema (src/theme/themes.css). Os nomes antigos continuam valendo
+          e apontam para o papel que tinham: page = fundo, paper = superfície, umber = rótulos, vermilion = seleção.
+          O `/60` das classes funciona pelo color-mix com transparente.
+        */
+        page: token('bg'),
+        paper: { DEFAULT: token('surface'), 2: token('surface-2') },
+        ink: { DEFAULT: token('ink'), soft: token('ink-soft') },
+        umber: token('muted'),
+        sepia: token('ink-soft'),
+        brown: token('muted'),
+        olive: { DEFAULT: token('accent'), deep: token('accent-fill'), ink: token('accent-text') },
+        vermilion: { DEFAULT: token('accent-text'), deep: token('danger') },
+        ochre: { DEFAULT: token('secondary-icon'), deep: token('secondary-text') },
+        // Papéis novos, para o código novo.
+        bg: token('bg'),
+        surface: { DEFAULT: token('surface'), 2: token('surface-2') },
+        line: { DEFAULT: token('border'), strong: token('border-strong') },
+        muted: token('muted'),
+        accent: { DEFAULT: token('accent'), fill: token('accent-fill'), text: token('accent-text'), on: token('on-accent') },
+        secondary: { DEFAULT: token('secondary'), icon: token('secondary-icon'), text: token('secondary-text') },
+        danger: token('danger'),
+        smogon: token('smogon'),
+        scrim: token('scrim'),
+        header: { DEFAULT: token('header'), ink: token('header-ink'), solid: token('header-solid'), underline: token('header-underline') },
+        // Texto sobre cores fixas (tipos, fraquezas), que não mudam com o tema.
+        fixed: { light: token('fixed-light'), dark: token('fixed-dark') },
         smeargle: {
-          bg: '#F2EAD9',            // creme quente / papel pergaminho
-          surface: '#F5F0E6',       // creme ligeiramente mais escuro
-          card: '#F2EAD9',          // creme nos cards (não branco puro)
-          border: '#5C4033',        // marrom sépia / terra
-          borderDim: '#D9CEC2',     // borda mais suave
-          text: '#1C1A17',          // castanho escuro / carvão
-          textDim: '#785132',       // marrom clássico do Smeargle
-          accent: '#5C4033',        // marrom escuro siena
-          accentBright: '#829b72',  // verde oliva/sage suave (ação, tags)
-          glow: 'rgba(130, 155, 114, 0.15)',
-          olive: '#829b72',         // verde oliva/sage
-          cream: '#F2EAD9',
+          bg: token('bg'),
+          surface: token('surface'),
+          card: token('surface'),
+          border: token('ink-soft'),
+          borderDim: token('border'),
+          text: token('ink'),
+          textDim: token('muted'),
+          accent: token('ink-soft'),
+          accentBright: token('accent'),
+          glow: 'color-mix(in srgb, var(--accent) 15%, transparent)',
+          olive: token('accent'),
+          cream: token('surface'),
           ink: {
-            brown: '#785132',       // marrom clássico
-            darkBrown: '#5C4033',
-            green: '#829b72',       // verde oliva/sage
-            darkGreen: '#6E8B6E',
+            brown: token('muted'),
+            darkBrown: token('ink-soft'),
+            green: token('accent'),
+            darkGreen: token('accent-text'),
           },
         },
         // Tubos de tinta do ateliê: realces de foco, selos e estados ativos.
         paint: {
-          olive: '#829b72',
-          pistachio: '#A4C294',
-          cobalt: '#4F6D8A',
-          magenta: '#9E3D64',
-          ochre: '#B98428',
+          olive: token('accent'),
+          pistachio: token('header-underline'),
+          cobalt: token('focus'),
+          magenta: token('magenta'),
+          ochre: token('secondary-icon'),
         },
         pokemon: {
           normal: '#A8A878',
@@ -85,12 +105,13 @@ export default {
         'sketch': '4px',
       },
       boxShadow: {
-        'card': '3px 3px 0 rgba(28, 26, 23, 0.14)',
-        'card-hover': '4px 5px 0 rgba(28, 26, 23, 0.2)',
-        'panel': '5px 5px 0 #4A463E',
-        'hard': '3px 3px 0 #1C1A17',
-        'hard-hover': '2px 2px 0 #1C1A17',
-        'ink': '0 0 0 1px #1C1A17, 3px 3px 0 #1C1A17',
+        // Sombra dura do papel impresso, na cor de sombra do tema (--shadow-hard).
+        'card': '3px 3px 0 color-mix(in srgb, var(--shadow-base) 14%, transparent)',
+        'card-hover': '4px 5px 0 color-mix(in srgb, var(--shadow-base) 20%, transparent)',
+        'panel': '5px 5px 0 var(--shadow-hard)',
+        'hard': '3px 3px 0 var(--shadow-hard)',
+        'hard-hover': '2px 2px 0 var(--shadow-hard)',
+        'ink': '0 0 0 1px var(--ink), 3px 3px 0 var(--shadow-hard)',
       },
       animation: {
         'fade-in': 'fadeIn 0.25s ease-out',
@@ -106,8 +127,8 @@ export default {
       },
       keyframes: {
         inkFlash: {
-          '0%, 35%': { boxShadow: '0 0 0 3px rgba(185, 132, 40, 0.55)', backgroundColor: 'rgba(185, 132, 40, 0.22)' },
-          '100%': { boxShadow: '0 0 0 3px rgba(185, 132, 40, 0)' },
+          '0%, 35%': { boxShadow: '0 0 0 3px color-mix(in srgb, var(--secondary-icon) 55%, transparent)', backgroundColor: 'color-mix(in srgb, var(--secondary-icon) 22%, transparent)' },
+          '100%': { boxShadow: '0 0 0 3px transparent' },
         },
         fadeIn: {
           '0%': { opacity: '0' },

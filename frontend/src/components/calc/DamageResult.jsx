@@ -52,7 +52,7 @@ function DamageResult({ entry, hint }) {
 
           {/* Barra de HP do alvo: o trecho escuro cai sempre; o listrado depende do fator aleatório. */}
           <div className="hp-brush relative mt-3 h-4 overflow-hidden bg-smeargle-olive/60" role="img" aria-label={`O alvo perde de ${damagePercent(min, hp)}% a ${damagePercent(max, hp)}% do HP`}>
-            <span className="absolute inset-y-0 right-0 bg-vermilion/35 [background-image:repeating-linear-gradient(135deg,transparent_0_4px,rgba(138,59,39,0.45)_4px_7px)]" style={{ width: share(max, hp) }} />
+            <span className="absolute inset-y-0 right-0 bg-vermilion/35 [background-image:repeating-linear-gradient(135deg,transparent_0_4px,color-mix(in_srgb,var(--danger)_45%,transparent)_4px_7px)]" style={{ width: share(max, hp) }} />
             <span className="absolute inset-y-0 right-0 bg-vermilion-deep" style={{ width: share(min, hp) }} />
           </div>
 

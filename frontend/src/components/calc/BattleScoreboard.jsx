@@ -28,7 +28,7 @@ export function HpTrack({ current, max, preview, className = 'h-3' }) {
       {preview && maxHit > 0 && (
         <>
           <span
-            className="absolute inset-y-0 bg-vermilion/30 [background-image:repeating-linear-gradient(135deg,transparent_0_4px,rgba(138,59,39,0.5)_4px_7px)]"
+            className="absolute inset-y-0 bg-vermilion/30 [background-image:repeating-linear-gradient(135deg,transparent_0_4px,color-mix(in_srgb,var(--danger)_50%,transparent)_4px_7px)]"
             style={{ left: pct(current - maxHit, max), width: pct(maxHit, max) }}
           />
           <span className="absolute inset-y-0 bg-vermilion-deep/80" style={{ left: pct(current - minHit, max), width: pct(minHit, max) }} />

@@ -96,11 +96,11 @@ const TABS = [
 
 const EFFECTIVENESS_ROWS = {
   weak: [
-    { key: 'quadruple', multiplier: '4×', label: 'Fraqueza extrema', tone: 'bg-[#780000] text-paper' },
-    { key: 'double', multiplier: '2×', label: 'Fraqueza', tone: 'bg-[#A23C3C] text-paper' },
+    { key: 'quadruple', multiplier: '4×', label: 'Fraqueza extrema', tone: 'bg-[#780000] text-fixed-light' },
+    { key: 'double', multiplier: '2×', label: 'Fraqueza', tone: 'bg-[#A23C3C] text-fixed-light' },
   ],
   resist: [
-    { key: 'half', multiplier: '½×', label: 'Resistência', tone: 'bg-olive-deep text-paper' },
+    { key: 'half', multiplier: '½×', label: 'Resistência', tone: 'bg-olive-deep text-accent-on' },
     { key: 'quarter', multiplier: '¼×', label: 'Resistência dupla', tone: 'bg-olive-ink text-paper' },
     { key: 'immune', multiplier: '0×', label: 'Imunidade', tone: 'bg-ink text-paper' },
   ],
@@ -293,7 +293,7 @@ function CompareToggleButton({ name, compared, onToggle }) {
       aria-label={selected ? `Tirar ${label} da comparação` : `Comparar ${label}`}
       title={full ? `A comparação já tem ${COMPARE_LIMIT} Pokémon: tire um para incluir este` : undefined}
       className={`${ROUND_BUTTON} px-3 text-xs font-bold disabled:cursor-default ${
-        selected ? 'border-paint-cobalt bg-paint-cobalt/15 text-[#2F4458] hover:bg-paint-cobalt/25' : `${ROUND_IDLE} disabled:opacity-50`
+        selected ? 'border-paint-cobalt bg-paint-cobalt/15 text-accent-text hover:bg-paint-cobalt/25' : `${ROUND_IDLE} disabled:opacity-50`
       }`}
     >
       <BumpIcon bumps={bumps} icon={Scale} />
@@ -313,7 +313,7 @@ function TabStroke({ active }) {
       }`}
     >
       <path
-        fill="#829b72"
+        style={{ fill: 'var(--accent)' }}
         d="M2 6.1C14 3.3 27 2.5 41 3.1c13 .6 24 1.8 38 1.2 13-.6 25-2.3 38-1.5 1.7.1 2 2.4.3 2.9-12 3.5-25 3.2-38 3.5-14 .3-27-1-41-.7-12 .3-23 1.7-35 1.2C.9 9.6.3 6.5 2 6.1z"
       />
     </svg>
@@ -343,7 +343,7 @@ const SectionCard = memo(function SectionCard({ icon: Icon, title, action, class
     <section className={`${SHEET} space-y-3 p-4 sm:p-5 ${className}`}>
       <header className="flex flex-wrap items-center justify-between gap-2">
         <h3 className="flex items-center gap-2 font-serif text-base font-bold tracking-tight text-ink">
-          {Icon && <Icon className="h-4 w-4 text-olive" aria-hidden="true" />}
+          {Icon && <Icon className="h-4 w-4 text-olive-ink" aria-hidden="true" />}
           {title}
         </h3>
         {action}
@@ -406,7 +406,7 @@ const SpreadCard = memo(function SpreadCard({ index, nature, evs, pct }) {
           Build {index + 1}
           <span className="ml-1 font-normal text-[10px] text-umber">({pct.toFixed(1)}%)</span>
         </span>
-        <span className="px-2 py-0.5 rounded bg-olive/15 text-olive-deep text-[10px] font-mono">{nature}</span>
+        <span className="px-2 py-0.5 rounded bg-olive/15 text-olive-ink text-[10px] font-mono">{nature}</span>
       </div>
       <p className="text-[11px] font-mono text-umber bg-page p-1.5 rounded">
         {hp} HP / {atk} Atk / {def} Def / {spa} SpA / {spd} SpD / {spe} Spe
@@ -654,10 +654,10 @@ export default function PokemonDrawer({
         */}
         <div className="flex flex-wrap items-center gap-x-3 gap-y-2 px-4 pt-3 pb-3 sm:flex-nowrap sm:gap-4 sm:px-5 sm:pt-4">
           <div
-            className="relative flex h-20 w-20 shrink-0 items-center justify-center rounded-full border-[1.5px] border-ink bg-paper shadow-[3px_3px_0_#4A463E] sm:h-24 sm:w-24"
+            className="relative flex h-20 w-20 shrink-0 items-center justify-center rounded-full border-[1.5px] border-ink bg-paper shadow-hard sm:h-24 sm:w-24"
           >
             {shiny && (
-              <Sparkles className="absolute -top-1 -right-1 w-5 h-5 text-[#C9A66B] md:drop-shadow-sm" aria-hidden="true" />
+              <Sparkles className="absolute -top-1 -right-1 w-5 h-5 text-secondary-icon md:drop-shadow-sm" aria-hidden="true" />
             )}
             <div className="w-16 h-16 sm:w-20 sm:h-20">
               <HeroSprite key={`${detail.id}-${shiny}`} sources={heroSources} alt={displayName} />
@@ -669,7 +669,7 @@ export default function PokemonDrawer({
               {formatDexNumber(species?.id ?? detail.id)}
               <span aria-hidden="true">·</span>
               {isAlternateForm ? 'Forma alternativa' : 'Pokédex'}
-              {shiny && <span className="rounded border border-paint-ochre/50 bg-[#FBF1DC] px-1.5 text-ochre-deep">Shiny</span>}
+              {shiny && <span className="rounded border border-paint-ochre/50 bg-secondary-icon/15 px-1.5 text-ochre-deep">Shiny</span>}
             </p>
             <h2
               title={displayName}
@@ -708,7 +708,7 @@ export default function PokemonDrawer({
               aria-pressed={shiny}
               title={shiny ? 'Ver cor normal' : 'Ver versão shiny'}
               className={`${ROUND_BUTTON} px-3 text-xs font-bold ${
-                shiny ? 'border-paint-ochre bg-[#FBF1DC] text-ochre-deep shadow-[2px_2px_0_rgba(185,132,40,0.3)]' : ROUND_IDLE
+                shiny ? 'border-paint-ochre bg-secondary-icon/15 text-ochre-deep shadow-[2px_2px_0_color-mix(in_srgb,var(--secondary-icon)_30%,transparent)]' : ROUND_IDLE
               }`}
             >
               <Sparkles className="w-4 h-4" aria-hidden="true" />
@@ -743,7 +743,7 @@ export default function PokemonDrawer({
                   active ? 'text-ink' : 'text-brown/80 hover:text-ink'
                 }`}
               >
-                <Icon className={`hidden h-3.5 w-3.5 sm:block ${active ? 'text-olive' : ''}`} aria-hidden="true" />
+                <Icon className={`hidden h-3.5 w-3.5 sm:block ${active ? 'text-olive-ink' : ''}`} aria-hidden="true" />
                 {label}
                 <TabStroke active={active} />
               </button>
@@ -780,7 +780,7 @@ export default function PokemonDrawer({
               <SectionCard
                 icon={Cpu}
                 title="Status Base"
-                action={<span className="rounded-[3px] border border-ink/60 bg-olive px-2.5 py-1 font-mono text-[11px] font-bold tabular-nums text-paper shadow-[2px_2px_0_rgba(28,26,23,0.2)]">Total {totalStat}</span>}
+                action={<span className="rounded-[3px] border border-ink/60 bg-olive-deep px-2.5 py-1 font-mono text-[11px] font-bold tabular-nums text-accent-on shadow-[2px_2px_0_color-mix(in_srgb,var(--shadow-base)_20%,transparent)]">Total {totalStat}</span>}
               >
                 <div className="space-y-2">
                   {baseStats.map((stat) => <StatBar key={stat.name} {...stat} />)}
@@ -887,7 +887,7 @@ export default function PokemonDrawer({
                 <div className="p-4 rounded-[4px] border border-ink/12 bg-paper">
                   <div className="mb-2 flex items-center justify-between">
                     <span className={LABEL}>Taxa de uso no tier</span>
-                    <span className="font-serif text-2xl font-black tabular-nums text-olive-deep">{smogon.usage_percent?.toFixed(2)}%</span>
+                    <span className="font-serif text-2xl font-black tabular-nums text-olive-ink">{smogon.usage_percent?.toFixed(2)}%</span>
                   </div>
                   <div className="brush-bar-track">
                     <div className="brush-bar bg-olive" style={{ width: `max(${Math.min(smogon.usage_percent ?? 0, 100)}%, 6px)` }} />
@@ -905,7 +905,7 @@ export default function PokemonDrawer({
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div className="space-y-2">
                     <h4 className="flex items-center gap-2 font-reading text-sm font-bold text-ink">
-                      <Cpu className="w-4 h-4 text-olive" aria-hidden="true" /> Spreads EV
+                      <Cpu className="w-4 h-4 text-olive-ink" aria-hidden="true" /> Spreads EV
                     </h4>
                     {spreads.length > 0 ? (
                       spreads.map(({ key, ...spread }, index) => <SpreadCard key={key} index={index} {...spread} />)
@@ -1067,7 +1067,7 @@ export default function PokemonDrawer({
                             <button
                               type="button"
                               onClick={() => openMove(move.name)}
-                              className="rounded text-left text-xs font-bold capitalize text-ink underline decoration-dotted decoration-umber/50 underline-offset-4 cursor-pointer hover:text-olive-deep hover:decoration-olive-deep focus:outline-none focus-visible:ring-2 focus-visible:ring-paint-cobalt"
+                              className="rounded text-left text-xs font-bold capitalize text-ink underline decoration-dotted decoration-umber/50 underline-offset-4 cursor-pointer hover:text-olive-ink hover:decoration-olive-deep focus:outline-none focus-visible:ring-2 focus-visible:ring-paint-cobalt"
                             >
                               {move.name.replace(/-/g, ' ')}
                             </button>

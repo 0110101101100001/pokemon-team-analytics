@@ -16,7 +16,7 @@ function CompareTray({ names, entryByName, onRemove, onOpen }) {
   return (
     <aside
       aria-label="Pokémon para comparar"
-      className="paper-card fixed bottom-4 left-[4.25rem] z-30 flex max-w-[calc(100vw-5.25rem)] items-center gap-2 p-2 shadow-[3px_3px_0_#4A463E] animate-fade-in motion-reduce:animate-none sm:bottom-6 sm:left-[5.25rem] sm:max-w-[calc(100vw-6.5rem)]"
+      className="paper-card fixed bottom-4 left-[4.25rem] z-30 flex max-w-[calc(100vw-5.25rem)] items-center gap-2 p-2 shadow-hard animate-fade-in motion-reduce:animate-none sm:bottom-6 sm:left-[5.25rem] sm:max-w-[calc(100vw-6.5rem)]"
     >
       <ul className="flex min-w-0 gap-1">
         {entries.map((entry) => (

@@ -36,13 +36,13 @@ function SwapPanel({ members, slotIndex, ctx, before, onSwap, onClose }) {
 
   return (
     <>
-      <div className="fixed inset-0 z-40 bg-ink/30 sm:hidden" aria-hidden="true" />
+      <div className="fixed inset-0 z-40 bg-scrim/60 sm:hidden" aria-hidden="true" />
       <div
         ref={panelRef}
         role="dialog"
         aria-modal="false"
         aria-label={`Trocar ${name}`}
-        className="fixed inset-x-0 bottom-0 z-50 flex max-h-[85vh] flex-col rounded-t-sketch border border-ink/25 bg-paper shadow-[0_-12px_32px_-12px_rgba(28,26,23,0.45)] sm:absolute sm:inset-x-0 sm:bottom-auto sm:top-full sm:z-30 sm:mt-2 sm:max-h-[28rem] sm:rounded-sketch sm:shadow-[3px_3px_0_#4A463E]"
+        className="fixed inset-x-0 bottom-0 z-50 flex max-h-[85vh] flex-col rounded-t-sketch border border-ink/25 bg-paper shadow-[0_-12px_32px_-12px_color-mix(in_srgb,var(--shadow-base)_45%,transparent)] sm:absolute sm:inset-x-0 sm:bottom-auto sm:top-full sm:z-30 sm:mt-2 sm:max-h-[28rem] sm:rounded-sketch sm:shadow-hard"
       >
         {/* Seta do popover apontando para o sprite (só no desktop). */}
         <span

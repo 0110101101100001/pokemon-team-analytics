@@ -14,7 +14,7 @@ import { ROLE_LABELS } from '../../utils/teamRoles';
 
 // Anéis da grade do teste do meta: cores da paleta (oliva, ocre, terracota) e um vinho escuro para "sem resposta".
 const STATUS = {
-  none: { label: 'sem resposta', ring: 'ring-[#7A1F2B]', dot: 'bg-[#7A1F2B]' },
+  none: { label: 'sem resposta', ring: 'ring-danger', dot: 'bg-danger' },
   weak: { label: 'fraca', ring: 'ring-vermilion', dot: 'bg-vermilion' },
   ok: { label: 'ok', ring: 'ring-ochre', dot: 'bg-ochre' },
   solid: { label: 'sólida', ring: 'ring-olive-deep', dot: 'bg-olive-deep' },
@@ -143,7 +143,7 @@ function RoleChecklist({ checklist, coveredBy }) {
             <span className="text-smeargle-textDim">{members.slice(0, 2).map(formatSlug).join(', ')}</span>
           </li>
         ) : (
-          <li key={role} className={`${rolePill} border-dashed border-[#7A1F2B]/55 bg-[#7A1F2B]/[0.06] text-[#7A1F2B]`}>
+          <li key={role} className={`${rolePill} border-dashed border-danger/55 bg-danger/[0.06] text-danger`}>
             <span className="text-[10px] uppercase tracking-wider opacity-80">falta</span>
             <span className={roleName}>{ROLE_LABELS[role]}</span>
           </li>

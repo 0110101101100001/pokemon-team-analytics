@@ -72,7 +72,7 @@ function SketchPlanForm({ plan, onChange, seed, pool, onRun, running, disabled }
               onClick={() => onChange({ archetype: option.key })}
               className={`cursor-pointer rounded-[3px] border px-3 py-1.5 text-xs font-semibold transition-[background-color,border-color,box-shadow] focus:outline-none focus-visible:ring-2 focus-visible:ring-paint-cobalt ${
                 plan.archetype === option.key
-                  ? 'border-vermilion bg-vermilion text-paper shadow-[2px_2px_0_rgba(28,26,23,0.25)]'
+                  ? 'border-vermilion bg-vermilion text-paper shadow-[2px_2px_0_color-mix(in_srgb,var(--shadow-base)_25%,transparent)]'
                   : 'border-ink/20 bg-paper text-smeargle-text hover:border-ink/45'
               }`}
             >

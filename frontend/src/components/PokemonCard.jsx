@@ -6,7 +6,7 @@ import { thumbnailSpriteUrl } from '../services/api';
 
 /** Selo dos Pokémon com estatísticas de uso na Smogon; a legenda fica no cabeçalho da Pokédex. */
 export function SmogonSeal() {
-  return <span className="type-stamp shrink-0 font-bold text-ochre-deep">Smogon</span>;
+  return <span className="type-stamp shrink-0 font-bold text-smogon">Smogon</span>;
 }
 
 // Mancha atrás do sprite: a tinta do tipo diluída no papel, numa cor sólida (sem gradiente). Uma por tipo.
@@ -14,7 +14,7 @@ const blotStyles = new Map();
 function blotStyleFor(type) {
   let style = blotStyles.get(type);
   if (!style) {
-    style = { backgroundColor: `color-mix(in srgb, ${(TYPE_INK[type] ?? TYPE_INK.normal).border} 30%, #F2EAD9)` };
+    style = { backgroundColor: `color-mix(in srgb, ${(TYPE_INK[type] ?? TYPE_INK.normal).border} 30%, var(--surface))` };
     blotStyles.set(type, style);
   }
   return style;

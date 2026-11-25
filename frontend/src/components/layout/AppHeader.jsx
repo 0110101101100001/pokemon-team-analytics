@@ -74,7 +74,7 @@ function AppHeader({ activeId, collapsed, toolbarRef, profilePool, profileUser, 
   const closePicker = useCallback(() => setPickerOpen(false), []);
 
   return (
-    <header className="header-paper sticky top-0 z-40 bg-umber text-page">
+    <header className="header-paper sticky top-0 z-40 bg-header text-header-ink">
       <div aria-hidden="true" className="header-texture pointer-events-none absolute inset-0 -z-10" />
       {/* Respingos no creme da logo, só nas bordas livres: nunca atrás da logo, de texto ou da busca. Somem no celular. */}
       <div aria-hidden="true" className="pointer-events-none absolute inset-0 -z-10 hidden overflow-hidden md:block">

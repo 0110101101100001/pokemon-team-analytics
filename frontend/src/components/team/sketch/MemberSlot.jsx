@@ -20,7 +20,7 @@ function MemberMenu({ member, onToggleLock, onSwap, onClose }) {
 
   const item = 'flex w-full cursor-pointer items-center gap-2 rounded-sketch px-2.5 py-1.5 text-left text-xs font-semibold text-smeargle-text hover:bg-olive/15 focus:outline-none focus-visible:ring-2 focus-visible:ring-paint-cobalt disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:bg-transparent';
   return (
-    <div ref={ref} role="menu" aria-label={`Ações para ${formatSlug(member.pokemon.name)}`} className="absolute left-1/2 top-full z-20 mt-1 w-40 -translate-x-1/2 rounded-[4px] border border-ink/20 bg-paper p-1 shadow-[3px_3px_0_#4A463E]">
+    <div ref={ref} role="menu" aria-label={`Ações para ${formatSlug(member.pokemon.name)}`} className="absolute left-1/2 top-full z-20 mt-1 w-40 -translate-x-1/2 rounded-[4px] border border-ink/20 bg-paper p-1 shadow-hard">
       <button type="button" role="menuitem" onClick={onToggleLock} className={item}>
         {member.locked ? <LockOpen className="h-3.5 w-3.5" aria-hidden="true" /> : <Lock className="h-3.5 w-3.5" aria-hidden="true" />}
         {member.locked ? 'Destravar' : 'Fixar'}

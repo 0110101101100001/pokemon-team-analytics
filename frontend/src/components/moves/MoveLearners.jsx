@@ -18,10 +18,10 @@ const formatDexNumber = (number) => (number ? `#${String(number).padStart(4, '0'
 const GAME_LABEL = new Map(GAMES.map((game) => [game.id, game.label]));
 const gameLabel = (slug) => GAME_LABEL.get(slug) ?? formatSlug(slug);
 
-// Uma cor por método, todas com contraste de pelo menos 4,8:1 no papel do card e no hover.
+// Uma cor por método, todas tokens de texto do tema (contraste ≥4,5 medido em themes.test.js).
 const METHOD_COLOR = {
   level: 'text-olive-ink',
-  machine: 'text-[#3B5470]',
+  machine: 'text-ink',
   egg: 'text-ochre-deep',
   tutor: 'text-paint-magenta',
   other: 'text-sepia',

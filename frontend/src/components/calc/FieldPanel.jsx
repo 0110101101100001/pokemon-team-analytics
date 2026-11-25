@@ -171,17 +171,17 @@ function FieldPanel({ field, battleField, rawWeather, autoWeather, autoTerrain, 
       </div>
 
       {weatherSuppressor ? (
-        <p className="font-hand text-base leading-tight text-olive-deep">
+        <p className="font-hand text-base leading-tight text-olive-ink">
           sem clima: {formatSlug(weatherSuppressor)} anula qualquer clima em campo
         </p>
       ) : autoWeather && (!field.weather || PRIMAL_WEATHERS.has(autoWeather.value)) && (
-        <p className="font-hand text-base leading-tight text-olive-deep">
+        <p className="font-hand text-base leading-tight text-olive-ink">
           clima em campo: {weatherLabel(autoWeather.value)}, trazido por {formatSlug(autoWeather.ability)}
           {field.weather && field.weather !== 'none' && field.weather !== autoWeather.value ? ' (clima primal: não pode ser trocado)' : ''}
         </p>
       )}
       {autoTerrain && !field.terrain && (
-        <p className="font-hand text-base leading-tight text-olive-deep">
+        <p className="font-hand text-base leading-tight text-olive-ink">
           terreno em campo: {terrainLabel(autoTerrain.value)}, trazido por {formatSlug(autoTerrain.ability)}
         </p>
       )}

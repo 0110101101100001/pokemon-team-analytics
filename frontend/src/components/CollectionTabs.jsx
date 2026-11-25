@@ -40,7 +40,7 @@ function CollectionTabsComponent({ view, onChange, counts, onClearHistory, error
               <Icon className="h-3.5 w-3.5" aria-hidden="true" />
               {label}
               {counts[key] > 0 && <span className="font-mono text-[11px] tabular-nums text-ink-soft">{counts[key]}</span>}
-              <BrushUnderline color="#B8402A" active={selected} className="inset-x-2 -bottom-1 h-[5px] w-[calc(100%-1rem)]" />
+              <BrushUnderline color="var(--accent)" active={selected} className="inset-x-2 -bottom-1 h-[5px] w-[calc(100%-1rem)]" />
             </button>
           );
         })}

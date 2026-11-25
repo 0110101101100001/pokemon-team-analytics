@@ -148,7 +148,7 @@ export default function CompareModal({ names, entryByName, pool, onAdd, onRemove
 
   return createPortal(
     <div
-      className="fixed inset-0 z-[45] flex items-center justify-center bg-ink/60 p-4 animate-fade-in motion-reduce:animate-none md:bg-ink/45 sm:p-6"
+      className="fixed inset-0 z-[45] flex items-center justify-center bg-scrim p-4 animate-fade-in motion-reduce:animate-none md:bg-scrim/80 sm:p-6"
       onMouseDown={(e) => e.target === e.currentTarget && onClose()}
     >
       <div

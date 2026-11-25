@@ -16,7 +16,7 @@ function MobileTurnBar({ fighters, sides, picks, trapped, onPass }) {
   };
 
   return (
-    <div data-turn-bar className="fixed inset-x-0 bottom-0 z-30 border-t-[1.5px] border-ink bg-paper px-4 pb-[calc(0.5rem+env(safe-area-inset-bottom))] pt-2 shadow-[0_-3px_0_rgba(28,26,23,0.12)] lg:hidden">
+    <div data-turn-bar className="fixed inset-x-0 bottom-0 z-30 border-t-[1.5px] border-ink bg-paper px-4 pb-[calc(0.5rem+env(safe-area-inset-bottom))] pt-2 shadow-[0_-3px_0_color-mix(in_srgb,var(--shadow-base)_12%,transparent)] lg:hidden">
       <div className="grid grid-cols-2 gap-3">
         {fighters.map((fighter, index) => (
           <div key={index} className="min-w-0">

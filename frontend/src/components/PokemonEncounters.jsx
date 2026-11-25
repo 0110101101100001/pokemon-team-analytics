@@ -5,10 +5,10 @@ import { groupEncountersByVersion } from '../utils/encounters';
 
 const RARITY_STYLES = {
   guaranteed: 'bg-ink text-page border-ink',
-  common: 'bg-olive/15 text-olive-deep border-olive/30',
-  uncommon: 'bg-[#C9A66B]/20 text-umber border-[#C9A66B]/40',
-  rare: 'bg-[#C15454]/10 text-[#9A3F3F] border-[#C15454]/25',
-  'very-rare': 'bg-[#780000]/10 text-[#780000] border-[#780000]/25',
+  common: 'bg-olive/15 text-olive-ink border-olive/30',
+  uncommon: 'bg-secondary-icon/20 text-umber border-secondary-icon/40',
+  rare: 'bg-danger/10 text-danger border-danger/25',
+  'very-rare': 'bg-danger/20 font-bold text-danger border-danger/50',
 };
 
 const EncounterLocation = memo(function EncounterLocation({ location }) {
@@ -101,11 +101,11 @@ function PokemonEncounters({ pokemonId }) {
     <div className="paper-card paper-card-quiet space-y-3 p-4 sm:p-5">
       <div className="flex items-center justify-between gap-2">
         <div className="flex items-center gap-2">
-          <MapPin className="h-4 w-4 text-olive" aria-hidden="true" />
+          <MapPin className="h-4 w-4 text-olive-ink" aria-hidden="true" />
           <h3 className="font-serif text-base font-bold tracking-tight text-ink">Rotas de Encontro</h3>
         </div>
         {status === 'ready' && groups.length > 0 && (
-          <span className="rounded-[3px] border border-ink/60 bg-olive px-2.5 py-1 text-[10px] font-bold text-paper shadow-[2px_2px_0_rgba(28,26,23,0.2)]">
+          <span className="rounded-[3px] border border-ink/60 bg-olive-deep px-2.5 py-1 text-[10px] font-bold text-accent-on shadow-[2px_2px_0_color-mix(in_srgb,var(--shadow-base)_20%,transparent)]">
             {groups.length} {groups.length === 1 ? 'jogo' : 'jogos'}
           </span>
         )}

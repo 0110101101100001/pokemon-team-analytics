@@ -141,7 +141,7 @@ function SpeedTierTable({ tier, pokemonName, pokemonId, baseSpeed, ownSpreads, e
     <section className="space-y-3 rounded-[4px] border border-ink/12 bg-paper p-4">
       <header className="space-y-1">
         <h4 className="flex items-center gap-2 font-reading text-sm font-bold text-ink">
-          <Gauge className="h-4 w-4 text-olive" aria-hidden="true" /> Velocidade no meta
+          <Gauge className="h-4 w-4 text-olive-ink" aria-hidden="true" /> Velocidade no meta
         </h4>
         <p className="font-reading text-[13px] italic text-ink-soft">
           Os {SPEED_TIER_SIZE} mais usados do tier, cada um com o spread mais popular e sem Tailwind

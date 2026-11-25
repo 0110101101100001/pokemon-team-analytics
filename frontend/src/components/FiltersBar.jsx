@@ -66,7 +66,7 @@ const SuggestInput = memo(function SuggestInput({ id, label, placeholder, loadOp
 
   return (
     <label className="relative block w-full min-w-0">
-      <Search className="pointer-events-none absolute left-1 top-1/2 -translate-y-1/2 w-4 h-4 text-page/85" aria-hidden="true" />
+      <Search className="pointer-events-none absolute left-1 top-1/2 -translate-y-1/2 w-4 h-4 text-header-ink/85" aria-hidden="true" />
       <input
         type="text"
         list={id}
@@ -82,7 +82,7 @@ const SuggestInput = memo(function SuggestInput({ id, label, placeholder, loadOp
       />
       {loading && (
         <Loader2
-          className="pointer-events-none absolute right-1 top-1/2 -translate-y-1/2 w-4 h-4 animate-spin text-page/85"
+          className="pointer-events-none absolute right-1 top-1/2 -translate-y-1/2 w-4 h-4 animate-spin text-header-ink/85"
           aria-label="carregando sugestões"
         />
       )}
@@ -133,7 +133,7 @@ function FiltersBar({
       <div className="flex items-center gap-1.5 sm:gap-2 lg:contents">
         <HeaderSegmented label="Recorte da Pokédex" options={SCOPES} value={scope} onChange={onScopeChange} className="shrink-0" />
         <label className="relative w-full min-w-0 lg:flex-1">
-          <Search className="absolute left-1 top-1/2 -translate-y-1/2 w-4 h-4 text-page/85" aria-hidden="true" />
+          <Search className="absolute left-1 top-1/2 -translate-y-1/2 w-4 h-4 text-header-ink/85" aria-hidden="true" />
           <input
             type="search"
             className={TEXT_INPUT_CLASS}
@@ -182,7 +182,7 @@ function FiltersBar({
             {advancedCount}
           </span>
         )}
-        <BrushUnderline color="#A4C294" active={advancedOpen} className="inset-x-3 bottom-1 h-[4px] w-[calc(100%-1.5rem)]" />
+        <BrushUnderline color="var(--header-underline)" active={advancedOpen} className="inset-x-3 bottom-1 h-[4px] w-[calc(100%-1.5rem)]" />
       </button>
       </div>
     </div>
@@ -209,7 +209,7 @@ function AdvancedFiltersComponent({ eggGroups, onAddFilter }) {
   const addMove = useCallback((slug) => onAddFilter(createFilter('move', slug)), [onAddFilter]);
 
   return (
-    <div id="advanced-filters" className="mt-1.5 border-t border-page/15 pt-1.5">
+    <div id="advanced-filters" className="mt-1.5 border-t border-header-ink/15 pt-1.5">
       <div className="grid grid-cols-1 gap-1.5 sm:grid-cols-3 sm:gap-2">
         <SuggestInput
           id="ability-options"
@@ -250,7 +250,7 @@ function AdvancedFiltersComponent({ eggGroups, onAddFilter }) {
         </button>
       </div>
 
-      <p className="mt-2 px-1 pb-0.5 font-hand text-base leading-tight text-page/90">
+      <p className="mt-2 px-1 pb-0.5 font-hand text-base leading-tight text-header-ink/90">
         gerações, regiões e raridades se somam dentro do grupo (ou); os demais filtros precisam ser todos atendidos (e).
       </p>
     </div>
@@ -259,7 +259,7 @@ function AdvancedFiltersComponent({ eggGroups, onAddFilter }) {
 
 const FILTER_STATUS_ICON = {
   loading: <Loader2 className="w-3 h-3 animate-spin text-umber" aria-label="carregando" />,
-  error: <TriangleAlert className="w-3 h-3 text-[#C15454]" aria-label="falha ao carregar; filtro ignorado" />,
+  error: <TriangleAlert className="w-3 h-3 text-danger" aria-label="falha ao carregar; filtro ignorado" />,
 };
 
 function ActiveFiltersComponent({ activeFilters, filterStatus, onRemoveFilter }) {
@@ -277,7 +277,7 @@ function ActiveFiltersComponent({ activeFilters, filterStatus, onRemoveFilter })
             key={key}
             title={failed ? 'Não foi possível carregar este filtro; está sendo ignorado.' : undefined}
             className={`flex items-center gap-1.5 rounded-[2px] border-[1.5px] py-0.5 pl-2.5 pr-0.5 font-reading text-sm ${
-              failed ? 'border-[#C15454]/60 text-[#9A3F3F]' : 'border-ink/70 text-ink'
+              failed ? 'border-danger/60 text-danger' : 'border-ink/70 text-ink'
             }`}
           >
             {FILTER_STATUS_ICON[status]}

@@ -5,7 +5,7 @@ import { itemSpriteUrl } from '../services/api';
 import { fetchSmogonSets, formatStatSpread, toShowdownText } from '../utils/smogonSets';
 
 const FIELD = 'h-9 cursor-pointer rounded-[3px] border-[1.5px] border-ink bg-paper px-3 font-reading text-sm font-medium text-ink';
-const LINK = 'rounded text-left font-semibold text-ink underline decoration-dotted decoration-umber/50 underline-offset-4 cursor-pointer hover:text-olive-deep hover:decoration-olive-deep focus:outline-none focus-visible:ring-2 focus-visible:ring-paint-cobalt';
+const LINK = 'rounded text-left font-semibold text-ink underline decoration-dotted decoration-umber/50 underline-offset-4 cursor-pointer hover:text-olive-ink hover:decoration-olive-deep focus:outline-none focus-visible:ring-2 focus-visible:ring-paint-cobalt';
 const COPY_FEEDBACK_MS = 1800;
 
 /** Alternativas de um campo separadas por "/"; cada uma abre o modal de detalhes se `onSelect` existir. */

@@ -73,7 +73,7 @@ function ProfilePicker({ initial, pool, selectedId, onChoose, onClose }) {
 
   return createPortal(
     <div
-      className="fixed inset-0 z-[70] flex items-center justify-center bg-ink/60 p-3 animate-fade-in motion-reduce:animate-none md:bg-ink/45"
+      className="fixed inset-0 z-[70] flex items-center justify-center bg-scrim p-3 animate-fade-in motion-reduce:animate-none md:bg-scrim/80"
       onMouseDown={(event) => event.target === event.currentTarget && onClose()}
     >
       <div

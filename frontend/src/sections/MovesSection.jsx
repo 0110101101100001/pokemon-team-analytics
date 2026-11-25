@@ -45,7 +45,7 @@ function KindTabs({ value, onChange }) {
             }`}
           >
             {kind.label}
-            <BrushUnderline color="#B8402A" active={selected} className="inset-x-2 -bottom-1 h-[5px] w-[calc(100%-1rem)]" />
+            <BrushUnderline color="var(--accent)" active={selected} className="inset-x-2 -bottom-1 h-[5px] w-[calc(100%-1rem)]" />
           </button>
         );
       })}

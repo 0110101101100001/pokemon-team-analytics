@@ -7,7 +7,7 @@ import { STAT_LABELS } from '../../utils/stats';
 import EmptyState from '../EmptyState';
 
 const LABEL = 'block text-[10px] font-semibold uppercase text-umber';
-const LINK = 'cursor-pointer rounded-[2px] text-left font-semibold underline decoration-umber/35 decoration-dashed underline-offset-4 transition-colors hover:text-olive-deep hover:decoration-olive-deep focus:outline-none focus-visible:ring-2 focus-visible:ring-paint-cobalt';
+const LINK = 'cursor-pointer rounded-[2px] text-left font-semibold underline decoration-umber/35 decoration-dashed underline-offset-4 transition-colors hover:text-olive-ink hover:decoration-olive-deep focus:outline-none focus-visible:ring-2 focus-visible:ring-paint-cobalt';
 
 const signed = (value) => (value > 0 ? `+${value}` : value < 0 ? `−${Math.abs(value)}` : '0');
 const diffTone = (value) => (value > 0 ? 'text-olive-ink' : value < 0 ? 'text-vermilion-deep' : 'text-umber');

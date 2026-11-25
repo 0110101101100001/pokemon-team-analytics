@@ -140,7 +140,7 @@ function CombatantPanel({ caption, title, pickerPlaceholder, side, battle, forms
                   <PokemonTypeBadge key={type} type={type} className={side.tera && side.tera !== 'stellar' ? 'line-through opacity-50' : ''} />
                 ))}
                 {side.tera && (
-                  <span className="inline-flex items-center gap-1 rounded-[3px] border border-[#BFA2F2]/70 bg-[#BFA2F2]/20 py-0.5 pl-1.5 pr-2 text-[10px] font-bold uppercase tracking-wider text-[#5B3F8C]">
+                  <span className="inline-flex items-center gap-1 rounded-[3px] border border-[#BFA2F2]/70 bg-[#BFA2F2]/20 py-0.5 pl-1.5 pr-2 text-[10px] font-bold uppercase tracking-wider text-paint-magenta">
                     <Gem className="h-3 w-3" aria-hidden="true" />
                     Tera {formatSlug(side.tera)}
                   </span>
@@ -148,7 +148,7 @@ function CombatantPanel({ caption, title, pickerPlaceholder, side, battle, forms
                 {AIRBORNE_LABELS[airborne] && (
                   <span
                     title="No ar: imune a golpes Ground e fora dos efeitos de terreno e Spikes"
-                    className="inline-flex items-center gap-1 rounded-[3px] border border-[#8FB8C9]/70 bg-[#8FB8C9]/20 py-0.5 pl-1.5 pr-2 text-[10px] font-bold uppercase tracking-wider text-[#2F5C6E]"
+                    className="inline-flex items-center gap-1 rounded-[3px] border border-[#8FB8C9]/70 bg-[#8FB8C9]/20 py-0.5 pl-1.5 pr-2 text-[10px] font-bold uppercase tracking-wider text-ink-soft"
                   >
                     <Feather className="h-3 w-3" aria-hidden="true" />
                     No ar · {AIRBORNE_LABELS[airborne]}

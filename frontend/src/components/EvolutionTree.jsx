@@ -30,7 +30,8 @@ const BADGE_ICONS = {
   special: Sparkles,
 };
 
-const INK = '#785132';
+// Tinta das setas: um token de tema, aplicado por `style` (o atributo stroke não lê variáveis CSS).
+const INK = 'var(--muted)';
 const NODE_W = 88;
 const ROW_H = 108;
 const GAP = 184;
@@ -77,9 +78,9 @@ const defaultVarietyOf = (species) => species?.varieties?.find((v) => v.is_defau
 const SpeciesNode = memo(function SpeciesNode({ node, current, onSelect }) {
   const regional = Boolean(node.regionLabel);
   const ring = current
-    ? 'border-olive shadow-[0_0_0_4px_rgba(130,155,114,0.18)]'
+    ? 'border-olive shadow-[0_0_0_4px_color-mix(in_srgb,var(--accent)_18%,transparent)]'
     : regional
-      ? 'border-dashed border-olive-deep/70 shadow-[0_0_0_3px_rgba(164,194,148,0.25)]'
+      ? 'border-dashed border-olive-deep/70 shadow-[0_0_0_3px_color-mix(in_srgb,var(--accent)_25%,transparent)]'
       : 'border-brown/35 shadow-2xs';
 
   const name = formatSpeciesName(node.id);
@@ -101,7 +102,7 @@ const SpeciesNode = memo(function SpeciesNode({ node, current, onSelect }) {
     >
       <div
         className={`relative flex items-center justify-center rounded-[3px] bg-paper border-2 transition-[box-shadow,transform] ${ring} ${
-          interactive ? 'group-hover:-translate-x-px group-hover:-translate-y-px group-hover:border-ink group-hover:shadow-[2px_2px_0_#4A463E] motion-reduce:group-hover:translate-x-0 motion-reduce:group-hover:translate-y-0' : ''
+          interactive ? 'group-hover:-translate-x-px group-hover:-translate-y-px group-hover:border-ink group-hover:shadow-[2px_2px_0_var(--shadow-hard)] motion-reduce:group-hover:translate-x-0 motion-reduce:group-hover:translate-y-0' : ''
         }`}
         style={{ width: SPRITE_R * 2, height: SPRITE_R * 2 }}
       >
@@ -211,7 +212,7 @@ function EvolutionTree({ chain, currentSpecies, currentForm, currentFormId, onSe
         style={{
           width,
           height,
-          backgroundImage: 'radial-gradient(rgba(120, 81, 50, 0.14) 1px, transparent 1px)',
+          backgroundImage: 'radial-gradient(var(--dot) 1px, transparent 1px)',
           backgroundSize: '12px 12px',
         }}
       >
@@ -234,18 +235,18 @@ function EvolutionTree({ chain, currentSpecies, currentForm, currentFormId, onSe
         >
           <defs>
             <marker id={markerId} viewBox="0 0 10 10" refX="8" refY="5" markerWidth="8" markerHeight="8" orient="auto">
-              <path d="M 1.5 1.5 L 8 5 L 1.5 8.5" fill="none" stroke={INK} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+              <path d="M 1.5 1.5 L 8 5 L 1.5 8.5" fill="none" style={{ stroke: INK }} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
             </marker>
           </defs>
           {layout.edges.map((edge) => {
             const { d, start } = edgePath(nodeById.get(edge.from), nodeById.get(edge.to));
             return (
               <g key={`${edge.from}-${edge.to}`} opacity={edge.outOfLine ? 0.25 : 0.85}>
-                <circle cx={start.x} cy={start.y} r="2.2" fill={INK} />
+                <circle cx={start.x} cy={start.y} r="2.2" style={{ fill: INK }} />
                 <path
                   d={d}
                   fill="none"
-                  stroke={INK}
+                  style={{ stroke: INK }}
                   strokeWidth="1.5"
                   strokeDasharray="3 6"
                   strokeLinecap="round"

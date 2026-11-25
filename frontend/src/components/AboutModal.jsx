@@ -51,7 +51,7 @@ function CreditList({ title, entries }) {
         <ul className="divide-y divide-ink-soft/10 rounded-sketch border border-ink-soft/10 bg-page/50">
           {entries.map(({ name, role, url }) => (
             <li key={name} className="flex flex-wrap items-baseline justify-between gap-x-3 px-3 py-2">
-              <ExternalAnchor href={url} className="font-semibold text-ink underline decoration-dotted decoration-umber/50 underline-offset-4 hover:text-olive-deep">
+              <ExternalAnchor href={url} className="font-semibold text-ink underline decoration-dotted decoration-umber/50 underline-offset-4 hover:text-olive-ink">
                 {name}
               </ExternalAnchor>
               <span className="text-xs text-umber">{role}</span>
@@ -70,7 +70,7 @@ function AboutModal({ onClose }) {
 
   return createPortal(
     <div
-      className="fixed inset-0 z-[70] flex items-center justify-center bg-ink/60 p-4 animate-fade-in motion-reduce:animate-none md:bg-ink/45"
+      className="fixed inset-0 z-[70] flex items-center justify-center bg-scrim p-4 animate-fade-in motion-reduce:animate-none md:bg-scrim/80"
       onMouseDown={(e) => e.target === e.currentTarget && onClose()}
     >
       <div
@@ -83,7 +83,7 @@ function AboutModal({ onClose }) {
           <div className="min-w-0 flex-1">
             <p className="font-hand text-lg leading-none text-umber">sobre a Smearglepedia</p>
             <h2 id={titleId} className="mt-0.5 font-serif text-2xl font-black tracking-tight text-ink">
-              Smeargle<span className="text-olive-deep">pedia</span>
+              Smeargle<span className="text-olive-ink">pedia</span>
             </h2>
           </div>
           <button

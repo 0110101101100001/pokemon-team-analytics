@@ -129,7 +129,7 @@ function CollectionPicks({ collections, entryByName, takenSpecies, disabled, onP
               {count > 0 && (
                 <span className="font-mono text-[11px] tabular-nums text-ink-soft">{count}</span>
               )}
-              <BrushUnderline color="#B8402A" active={selected} className="inset-x-2 -bottom-0.5 h-[5px] w-[calc(100%-1rem)]" />
+              <BrushUnderline color="var(--accent)" active={selected} className="inset-x-2 -bottom-0.5 h-[5px] w-[calc(100%-1rem)]" />
             </button>
           );
         })}

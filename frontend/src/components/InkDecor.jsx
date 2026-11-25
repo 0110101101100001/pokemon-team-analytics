@@ -1,19 +1,21 @@
 import { memo } from 'react';
 
 /** Mancha de pincel decorativa. Posicione com `className` (absolute + coordenadas). */
-export const InkSplatter = memo(function InkSplatter({ className = '', color = '#829b72' }) {
+// As cores chegam como tokens (var(--...)): por isso vão em `style`, porque o atributo fill não lê variáveis CSS.
+export const InkSplatter = memo(function InkSplatter({ className = '', color = 'var(--splat-accent)' }) {
   return (
     // overflow-anchor: none: uma mancha presa ao fim da página não pode servir de âncora de rolagem,
     // senão a página rola para acompanhá-la cada vez que a grade cresce.
     <svg aria-hidden="true" viewBox="0 0 200 200" className={`pointer-events-none select-none [overflow-anchor:none] ${className}`}>
+      <g style={{ fill: color }}>
       <path
-        fill={color}
         d="M98 22c22-8 48 2 60 22s30 28 20 52-22 46-50 54-54 2-70-14S26 106 28 80s12-44 38-50 24 0 32-8z"
       />
-      <circle cx="172" cy="38" r="7" fill={color} />
-      <circle cx="28" cy="162" r="5" fill={color} />
-      <circle cx="184" cy="150" r="3" fill={color} />
-      <circle cx="60" cy="18" r="2.5" fill={color} />
+      <circle cx="172" cy="38" r="7" />
+      <circle cx="28" cy="162" r="5" />
+      <circle cx="184" cy="150" r="3" />
+      <circle cx="60" cy="18" r="2.5" />
+      </g>
     </svg>
   );
 });
@@ -41,7 +43,7 @@ export const InkRule = memo(function InkRule({ className = '', wash }) {
       <svg viewBox="0 0 1000 12" preserveAspectRatio="none" className="block h-2.5 min-w-0 flex-1 overflow-visible">
         {wash && (
           <path
-            fill={wash}
+            style={{ fill: wash }}
             opacity="0.35"
             d="M10 9c120-6 260-8 400-6 150 2 300 5 440 2 60-1 110 0 140 2 6 3 2 8-6 9-140 4-300 2-450 3-160 1-320 3-480 0-30 0-50-6-44-10z"
           />
@@ -61,20 +63,20 @@ export const InkRule = memo(function InkRule({ className = '', wash }) {
  * Pincelada de tinta atrás de um título. O pai precisa de `relative isolate`;
  * a mancha cobre a metade de baixo do texto, como uma passada de pincel carregado.
  */
-export const BrushHighlight = memo(function BrushHighlight({ color = '#A4C294', className = '' }) {
+export const BrushHighlight = memo(function BrushHighlight({ color = 'var(--accent)', className = '' }) {
   return (
     <svg
       aria-hidden="true"
       viewBox="0 0 300 40"
       preserveAspectRatio="none"
-      className={`pointer-events-none absolute -inset-x-2 bottom-0 -z-10 h-[58%] w-[calc(100%+1rem)] ${className}`}
+      className={`pointer-events-none absolute -inset-x-2 bottom-0 -z-10 h-[58%] w-[calc(100%+1rem)] opacity-[var(--decor-opacity)] ${className}`}
     >
       <path
-        fill={color}
+        style={{ fill: color }}
         opacity="0.5"
         d="M6 14c32-7 71-9 112-7 37 2 70 6 108 3 26-2 46-4 66-1 6 1 8 9 3 12-22 9-49 7-77 10-37 4-71 1-107 3-33 2-62 7-95 6-11 0-19-5-20-13-1-7 4-11 10-13z"
       />
-      <path fill={color} opacity="0.35" d="M20 26c50-5 115 0 170-3 32-2 62-3 92-1 4 3-1 8-6 9-61 4-134 3-201 5-26 1-56-2-55-10z" />
+      <path style={{ fill: color }} opacity="0.35" d="M20 26c50-5 115 0 170-3 32-2 62-3 92-1 4 3-1 8-6 9-61 4-134 3-201 5-26 1-56-2-55-10z" />
     </svg>
   );
 });
@@ -90,12 +92,12 @@ const SPECKLES = [
  * Respingo de tinta clara, translúcido, para dar personalidade a um fundo escuro sem competir com o conteúdo.
  * Posicione com `className` (absolute + coordenadas + tamanho); `variant` escolhe uma das três formas.
  */
-export const PaintSpeckle = memo(function PaintSpeckle({ className = '', color = '#F2EAD9', variant = 0 }) {
+export const PaintSpeckle = memo(function PaintSpeckle({ className = '', color = 'var(--header-ink)', variant = 0 }) {
   const { main, dots } = SPECKLES[variant % SPECKLES.length];
   return (
     <svg aria-hidden="true" viewBox="0 0 100 100" className={`pointer-events-none select-none ${className}`}>
-      <path fill={color} fillOpacity="0.5" stroke={color} strokeOpacity="0.7" strokeWidth="0.8" d={main} />
-      <path fill={color} opacity="0.6" d={dots} />
+      <path style={{ fill: color, stroke: color }} fillOpacity="0.5" strokeOpacity="0.7" strokeWidth="0.8" d={main} />
+      <path style={{ fill: color }} opacity="0.6" d={dots} />
     </svg>
   );
 });
@@ -104,7 +106,7 @@ export const PaintSpeckle = memo(function PaintSpeckle({ className = '', color =
  * Pincelada de seleção: um traço curto que cresce da esquerda para a direita sob o item ativo
  * (abas, recortes, coleções), no lugar do fundo preenchido. Posicione com `className`.
  */
-export const BrushUnderline = memo(function BrushUnderline({ color, active, className = '' }) {
+export const BrushUnderline = memo(function BrushUnderline({ color = 'var(--accent)', active, className = '' }) {
   return (
     <svg
       aria-hidden="true"
@@ -115,7 +117,7 @@ export const BrushUnderline = memo(function BrushUnderline({ color, active, clas
       } ${className}`}
     >
       <path
-        fill={color}
+        style={{ fill: color }}
         d="M2 6.1C14 3.3 27 2.5 41 3.1c13 .6 24 1.8 38 1.2 13-.6 25-2.3 38-1.5 1.7.1 2 2.4.3 2.9-12 3.5-25 3.2-38 3.5-14 .3-27-1-41-.7-12 .3-23 1.7-35 1.2C.9 9.6.3 6.5 2 6.1z"
       />
     </svg>

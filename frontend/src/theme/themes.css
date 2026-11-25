@@ -1,0 +1,217 @@
+/*
+  Temas do site. Cada tema define só a paleta base e os derivados de contraste; o resto sai daqui por color-mix.
+  O seletor vale para :root e para qualquer elemento com data-theme (as prévias da tela Aparência usam isso):
+  os derivados ficam no mesmo seletor para serem recalculados com a paleta do elemento, não herdados prontos.
+  Sem atributo, vale o Smeargle. A lista de ids também está em src/theme/themes.js e no script de index.html;
+  o teste themes.test.js confere que as três batem e mede o contraste de cada paleta.
+*/
+
+:root,
+[data-theme='smeargle'] {
+  color-scheme: light;
+  --bg: #f6f0e2;
+  --surface: #fffaf0;
+  --border: #c9b08a;
+  --ink: #3b2e25;
+  --accent: #4f8a32;
+  --secondary: #7a5f4e;
+  --header: #7a5f4e;
+  --accent-fill: #4c8430;
+  --on-accent: #ffffff;
+  --hover-mix: #000000; /* o hover do botão se afasta da cor do texto dele */
+  --accent-text: #45792c;
+  --secondary-icon: #7a5f4e;
+  --header-ink: #fffaf0;
+  --header-underline: #b8d898;
+  /* Só o Smeargle tem a nuvem de tom no papel do header; os outros temas usam a cor lisa com as fibras. */
+  --header-tone: url('../assets/header/paper-tone.webp');
+  --shadow-base: var(--ink);
+  --shadow-alpha: 85%;
+  --decor-opacity: 1;
+  --wash-strong: 22%;
+  --wash-soft: 12%;
+  --chip-edge: transparent;
+}
+
+[data-theme='wailord'] {
+  color-scheme: light;
+  --bg: #eef4fa;
+  --surface: #fffdf6;
+  --border: #b4c8de;
+  --ink: #1d2f45;
+  --accent: #2f5f99;
+  --secondary: #b08c4a;
+  --header: #4d78b2;
+  --accent-fill: #2f5f99;
+  --on-accent: #ffffff;
+  --hover-mix: #000000; /* o hover do botão se afasta da cor do texto dele */
+  --accent-text: #2f5f99;
+  --secondary-icon: #a98647;
+  --header-ink: #ffffff;
+  --header-underline: #f8e8c8;
+  --header-tone: none;
+  --shadow-base: var(--ink);
+  --shadow-alpha: 80%;
+  --decor-opacity: 1;
+  --wash-strong: 22%;
+  --wash-soft: 12%;
+  --chip-edge: transparent;
+}
+
+[data-theme='empoleon'] {
+  color-scheme: light;
+  --bg: #f4f6fa;
+  --surface: #ffffff;
+  --border: #b8c2d6;
+  --ink: #172744;
+  --accent: #2a4a85;
+  --secondary: #a87b14;
+  --header: #223256;
+  --accent-fill: #2a4a85;
+  --on-accent: #ffffff;
+  --hover-mix: #000000; /* o hover do botão se afasta da cor do texto dele */
+  --accent-text: #2a4a85;
+  --secondary-icon: #a87b14;
+  --header-ink: #ffffff;
+  --header-underline: #e0bb58;
+  --header-tone: none;
+  --shadow-base: var(--ink);
+  --shadow-alpha: 80%;
+  --decor-opacity: 1;
+  --wash-strong: 22%;
+  --wash-soft: 12%;
+  --chip-edge: transparent;
+}
+
+[data-theme='groudon'] {
+  color-scheme: dark;
+  --bg: #1a1210;
+  --surface: #2f1d18;
+  --border: #55322a;
+  --ink: #f2e8e3;
+  --accent: #e0553a;
+  --secondary: #f0a640;
+  --header: #2a1915;
+  --accent-fill: #e0553a;
+  --on-accent: #1a1210;
+  --hover-mix: #ffffff; /* o hover do botão se afasta da cor do texto dele */
+  --accent-text: #e25f45;
+  --secondary-icon: #f0a640;
+  --header-ink: var(--ink);
+  --header-underline: var(--accent-text);
+  --header-tone: none;
+  --shadow-base: #000000;
+  --shadow-alpha: 70%;
+  /* Decoração mais contida no escuro: aguadas e pinceladas claras demais apagariam o texto. */
+  --decor-opacity: 0.45;
+  --wash-strong: 9%;
+  --wash-soft: 5%;
+  --chip-edge: color-mix(in srgb, var(--ink) 24%, transparent);
+}
+
+[data-theme='zoroark'] {
+  color-scheme: dark;
+  --bg: #17161b;
+  --surface: #2a2830;
+  --border: #45424f;
+  --ink: #ecebef;
+  --accent: #d6455a;
+  --secondary: #3fc0c4;
+  --header: #222028;
+  --accent-fill: #d43d53;
+  --on-accent: #ffffff;
+  --hover-mix: #000000; /* o hover do botão se afasta da cor do texto dele */
+  --accent-text: #df6d7d;
+  --secondary-icon: #3fc0c4;
+  --header-ink: var(--ink);
+  --header-underline: var(--accent-text);
+  --header-tone: none;
+  --shadow-base: #000000;
+  --shadow-alpha: 70%;
+  /* Decoração mais contida no escuro: aguadas e pinceladas claras demais apagariam o texto. */
+  --decor-opacity: 0.45;
+  --wash-strong: 9%;
+  --wash-soft: 5%;
+  --chip-edge: color-mix(in srgb, var(--ink) 24%, transparent);
+}
+
+[data-theme='chandelure'] {
+  color-scheme: dark;
+  --bg: #141118;
+  --surface: #241e2c;
+  --border: #3e3450;
+  --ink: #efeaf5;
+  --accent: #b98cf0;
+  --secondary: #e8c35a;
+  --header: #1d1823;
+  --accent-fill: #b98cf0;
+  --on-accent: #141118;
+  --hover-mix: #ffffff; /* o hover do botão se afasta da cor do texto dele */
+  --accent-text: #b98cf0;
+  --secondary-icon: #e8c35a;
+  --header-ink: var(--ink);
+  --header-underline: var(--accent-text);
+  --header-tone: none;
+  --shadow-base: #000000;
+  --shadow-alpha: 70%;
+  /* Decoração mais contida no escuro: aguadas e pinceladas claras demais apagariam o texto. */
+  --decor-opacity: 0.45;
+  --wash-strong: 9%;
+  --wash-soft: 5%;
+  --chip-edge: color-mix(in srgb, var(--ink) 24%, transparent);
+}
+
+/*
+  Derivados, iguais para todos os temas. Textos derivados têm contraste medido no teste (≥4,5 sobre bg e surface);
+  bordas fortes, ≥3. As cores com matiz fixo (erro, magenta) se misturam à tinta do tema: escurecem nos temas
+  claros e clareiam nos escuros, sem trocar de matiz.
+*/
+:root,
+[data-theme] {
+  --surface-2: color-mix(in srgb, var(--surface) 72%, var(--border)); /* áreas agrupadas */
+  --ink-soft: color-mix(in srgb, var(--ink) 80%, var(--bg)); /* texto secundário */
+  --muted: color-mix(in srgb, var(--ink) 72%, var(--secondary)); /* rótulos e anotações */
+  --secondary-text: color-mix(in srgb, var(--secondary) 55%, var(--ink)); /* texto no tom do secondary */
+  --border-strong: color-mix(in srgb, var(--border) 40%, var(--ink)); /* borda de campo, ≥3:1 com o fundo */
+  --focus: var(--accent-text);
+  --danger: color-mix(in srgb, #b3261e 55%, var(--ink));
+  --magenta: color-mix(in srgb, #9e3d64 58%, var(--ink));
+  --smogon: color-mix(in srgb, #b98428 60%, var(--ink)); /* selo Smogon: o mesmo ocre em todos os temas */
+  --accent-fill-hover: color-mix(in srgb, var(--accent-fill) 86%, var(--hover-mix));
+  /* Sombra dura do papel impresso: a tinta (ou preto, nos escuros) com transparência. */
+  --shadow-hard: color-mix(in srgb, var(--shadow-base) var(--shadow-alpha), transparent);
+  --scrim: color-mix(in srgb, var(--shadow-base) 55%, transparent);
+  /* Header: fundo dos botões e das pinceladas, sempre um pouco mais escuro que o papel do header. */
+  --header-solid: color-mix(in srgb, var(--header) 88%, #000000);
+  /* Decoração do fundo: pontilhado, aguadas e manchas, com pouca opacidade. */
+  --dot: color-mix(in srgb, var(--secondary) 13%, transparent);
+  --splat-accent: color-mix(in srgb, var(--accent) 16%, var(--bg));
+  --splat-secondary: color-mix(in srgb, var(--secondary) 18%, var(--bg));
+  /* Texto sobre as cores fixas (tipos, fraquezas): não muda com o tema. */
+  --fixed-light: #f2ead9;
+  --fixed-dark: #1c1a17;
+}
+
+/*
+  Troca de tema: só cor, no máximo 200 ms. A classe fica no <html> apenas durante a troca (theme.js),
+  para não atrasar hovers e animações no resto do tempo.
+*/
+html.theme-switching,
+html.theme-switching *,
+html.theme-switching *::before,
+html.theme-switching *::after {
+  transition:
+    color 180ms ease-out,
+    background-color 180ms ease-out,
+    border-color 180ms ease-out,
+    fill 180ms ease-out !important;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html.theme-switching,
+  html.theme-switching *,
+  html.theme-switching *::before,
+  html.theme-switching *::after {
+    transition: none !important;
+  }
+}

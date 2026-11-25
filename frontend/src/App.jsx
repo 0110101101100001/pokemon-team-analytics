@@ -274,12 +274,12 @@ export default function App() {
         </AppHeader>
 
         <main className="relative max-w-[1700px] mx-auto px-4 sm:px-6 lg:px-8 pt-6 sm:pt-10 pb-16">
-          {/* Manchas de tinta sólida nas margens, nas cores das manchas dos cards (grama, fogo, elétrico, água, voador). */}
-          <InkSplatter className="hidden md:block absolute -left-24 top-[22rem] w-44 h-44 -rotate-12" color="#D0D2BA" />
-          <InkSplatter className="hidden md:block absolute -right-16 top-[max(14rem,38%)] w-32 h-32 rotate-45" color="#E0C2AE" />
-          <InkSplatter className="hidden md:block absolute -left-14 top-[max(34rem,62%)] w-24 h-24 rotate-[100deg]" color="#E9D9B3" />
-          <InkSplatter className="hidden md:block absolute right-0 top-[max(28rem,72%)] w-28 h-28 rotate-[160deg]" color="#CAD1CE" />
-          <InkSplatter className="hidden md:block absolute -right-10 top-[max(38rem,92%)] w-20 h-20 -rotate-[30deg]" color="#D3C5CF" />
+          {/* Manchas de tinta nas margens, no accent e no secondary do tema, com pouca opacidade. */}
+          <InkSplatter className="hidden md:block absolute -left-24 top-[22rem] w-44 h-44 -rotate-12" color="var(--splat-accent)" />
+          <InkSplatter className="hidden md:block absolute -right-16 top-[max(14rem,38%)] w-32 h-32 rotate-45" color="var(--splat-secondary)" />
+          <InkSplatter className="hidden md:block absolute -left-14 top-[max(34rem,62%)] w-24 h-24 rotate-[100deg]" color="var(--splat-secondary)" />
+          <InkSplatter className="hidden md:block absolute right-0 top-[max(28rem,72%)] w-28 h-28 rotate-[160deg]" color="var(--splat-accent)" />
+          <InkSplatter className="hidden md:block absolute -right-10 top-[max(38rem,92%)] w-20 h-20 -rotate-[30deg]" color="var(--splat-secondary)" />
 
           <div key={section.id} className="relative animate-section-in motion-reduce:animate-none">
             <Suspense fallback={<SectionFallback />}>{renderSection()}</Suspense>

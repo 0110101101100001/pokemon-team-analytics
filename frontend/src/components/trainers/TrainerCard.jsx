@@ -6,7 +6,7 @@ import { MIXED_TYPE, roleLabel } from '../../utils/trainers';
 const MIXED_INK = '#8A704A';
 
 export const blotColor = (type) =>
-  `color-mix(in srgb, ${TYPE_INK[type]?.border ?? MIXED_INK} 30%, #F2EAD9)`;
+  `color-mix(in srgb, ${TYPE_INK[type]?.border ?? MIXED_INK} 30%, var(--surface))`;
 
 export function SpecialtyStamp({ type }) {
   if (type !== MIXED_TYPE) return <PokemonTypeBadge type={type} />;
