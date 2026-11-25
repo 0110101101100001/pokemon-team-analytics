@@ -1,4 +1,5 @@
 import { supabase } from './supabase';
+import { withPersistentCache } from './persistentCache';
 
 // Leituras públicas (RLS smogon_stats_public_read): vão direto ao Supabase,
 // sem depender do backend no Render estar acordado.
@@ -9,6 +10,10 @@ const STATS_COLUMNS =
 
 // Tiers considerados para o selo "Smogon" da grade; tiers sem dados são ignorados.
 const BADGE_TIERS = ['gen9ou', 'gen9ubers', 'gen9uu', 'gen9ru', 'gen9nu', 'gen9pu', 'gen9lc', 'gen9doublesou'];
+
+// Os dados mudam uma vez por mês (smogon-sync.yml): as respostas ficam no IndexedDB por 24 h.
+const DAY_MS = 24 * 60 * 60 * 1000;
+const cached = (key, load) => withPersistentCache(`supabase:${TABLE}:${key}`, DAY_MS, load);
 
 /** Guarda a promessa por chave durante a sessão; uma falha não fica em cache. */
 function memoize(load) {
@@ -58,14 +63,14 @@ async function rowsAtLatest(tier, columns) {
  * no mês mais recente.
  * Uma consulta por tier por sessão.
  */
-export const fetchSmogonMeta = memoize((tier) =>
-  rowsAtLatest(tier, 'name, usage_percent, teammates, checks_and_counters, moves, items, abilities, spreads'));
+export const fetchSmogonMeta = memoize((tier) => cached(`meta:${tier}`, () =>
+  rowsAtLatest(tier, 'name, usage_percent, teammates, checks_and_counters, moves, items, abilities, spreads')));
 
 // Uma folga sobre os 50 da tabela de velocidades: alguns nomes da Smogon não estão na Pokédex.
 const TOP_USAGE_LIMIT = 60;
 
 /** Os mais usados de um tier no mês mais recente, do mais ao menos usado, com spreads e itens. */
-export const fetchTopUsage = memoize(async (tier) => {
+export const fetchTopUsage = memoize((tier) => cached(`top:${tier}`, async () => {
   const date = await latestDate(tier);
   if (!date) return [];
   const { data, error } = await supabase
@@ -77,12 +82,12 @@ export const fetchTopUsage = memoize(async (tier) => {
     .limit(TOP_USAGE_LIMIT);
   if (error) throw error;
   return data;
-});
+}));
 
-const smogonNames = memoize(async () => {
+const smogonNames = memoize(() => cached('names', async () => {
   const perTier = await Promise.all(BADGE_TIERS.map((tier) => rowsAtLatest(tier, 'name')));
   return [...new Set(perTier.flat().map((row) => row.name))].sort();
-});
+}));
 
 /** Nomes (formato Smogon) de todos os Pokémon com estatísticas em pelo menos um tier. */
 export const fetchSmogonNames = () => smogonNames('all');
@@ -92,6 +97,20 @@ export const fetchSmogonNames = () => smogonNames('all');
  * `name` é o nome exato na Smogon ("Urshifu-Rapid-Strike"), vindo de `resolveSmogonName`.
  */
 export async function fetchSmogonStats(name, tier = 'gen9ou', { date, signal } = {}) {
+  const data = await cached(`stats:${tier}:${name.toLowerCase()}:${date ?? 'latest'}`, () => queryStats(name, tier, { date, signal }));
+  return data && {
+    ...data,
+    abilities: data.abilities ?? {},
+    items: data.items ?? {},
+    moves: data.moves ?? {},
+    spreads: data.spreads ?? {},
+    tera_types: data.tera_types ?? {},
+    teammates: data.teammates ?? {},
+    checks_and_counters: data.checks_and_counters ?? [],
+  };
+}
+
+async function queryStats(name, tier, { date, signal }) {
   let query = supabase
     .from(TABLE)
     .select(STATS_COLUMNS)
@@ -106,14 +125,5 @@ export async function fetchSmogonStats(name, tier = 'gen9ou', { date, signal } =
     if (signal?.aborted) throw new DOMException('Aborted', 'AbortError');
     throw new Error(`Erro ao buscar estatísticas do Smogon (${error.message})`);
   }
-  return data && {
-    ...data,
-    abilities: data.abilities ?? {},
-    items: data.items ?? {},
-    moves: data.moves ?? {},
-    spreads: data.spreads ?? {},
-    tera_types: data.tera_types ?? {},
-    teammates: data.teammates ?? {},
-    checks_and_counters: data.checks_and_counters ?? [],
-  };
+  return data;
 }

@@ -1,7 +1,7 @@
 import { memo, useCallback, useDeferredValue, useEffect, useMemo, useState } from 'react';
 import { Loader2, Search, TriangleAlert } from 'lucide-react';
 import { MemberShortcut, SelectField, SourcePanel } from './SourcePanel';
-import { fetchTrainers } from '../../services/trainers';
+import { fetchTrainersWithTeams } from '../../services/trainers';
 import { loadBattleData, moveSummaryOf } from '../../utils/battleData';
 import { formatSlug } from '../../utils/filters';
 import { battleGroupsOf, battleKey, createNameMatcher, gameLabelsOf, hasTeamVariants, resolveTrainerPokemon, stageName, trainerMemberSet } from '../../utils/trainers';
@@ -134,7 +134,7 @@ function TrainerTeamPicker({ pool, activeMember, initialBattleId = null, onPick 
   const load = () => {
     if (state.status !== 'idle' && state.status !== 'error') return;
     setState((current) => ({ ...current, status: 'loading' }));
-    Promise.all([fetchTrainers(), loadBattleData()])
+    Promise.all([fetchTrainersWithTeams(), loadBattleData()])
       .then(([trainers, battleData]) => {
         setState({ status: 'ready', trainers, battleData });
         const preset = initialBattleId && selectionForBattle(trainers, initialBattleId);

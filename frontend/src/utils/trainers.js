@@ -123,15 +123,20 @@ function toBattle(row) {
     gimmick: GIMMICKS[row.Battle_Gimmick] ?? null,
     aceSlug: row.Ace_Pokemon_Slug,
     avgLevel: row.Avg_Level,
-    team: (row.Team_JSON ?? []).map((member) => ({
-      slug: member.slug,
-      name: member.pokemon,
-      level: member.level,
-      moves: member.moves ?? [],
-      isAce: Boolean(member.is_ace),
-    })),
+    teamSize: row.Team_Size ?? row.Team_JSON?.length ?? null,
+    // A lista da Liga vem sem Team_JSON (ver services/trainers.js): o time chega ao abrir o treinador.
+    team: row.Team_JSON ? toTeam(row.Team_JSON) : null,
   };
 }
+
+/** Membros do time a partir do Team_JSON de uma batalha. */
+export const toTeam = (teamJson) => (teamJson ?? []).map((member) => ({
+  slug: member.slug,
+  name: member.pokemon,
+  level: member.level,
+  moves: member.moves ?? [],
+  isAce: Boolean(member.is_ace),
+}));
 
 // Jogo a jogo (lançamento); dentro do jogo, etapa e depois a ordem na história, sem olhar o papel:
 // a Copa dos Campeões da Marnie vem depois das duas batalhas de rival.

@@ -43,10 +43,10 @@ function run(mode, action) {
 }
 
 /** O JSON salvo para a URL, ou undefined se não houver, estiver vencido ou o IndexedDB falhar. */
-export async function readCached(url) {
+export async function readCached(url, maxAgeMs = MAX_AGE_MS) {
   const entry = await run('readonly', (store) => store.get(url));
   if (!entry) return undefined;
-  if (Date.now() - entry.savedAt > MAX_AGE_MS) {
+  if (Date.now() - entry.savedAt > maxAgeMs) {
     run('readwrite', (store) => store.delete(url));
     return undefined;
   }
@@ -55,4 +55,16 @@ export async function readCached(url) {
 
 export function writeCached(url, data) {
   run('readwrite', (store) => store.put({ savedAt: Date.now(), data }, url));
+}
+
+/**
+ * `load()` com o resultado guardado por `maxAgeMs` sob `key`. Uma falha não é guardada.
+ * Para dados do Supabase que mudam pouco (treinadores, estatísticas mensais da Smogon).
+ */
+export async function withPersistentCache(key, maxAgeMs, load) {
+  const stored = await readCached(key, maxAgeMs);
+  if (stored !== undefined) return stored;
+  const data = await load();
+  writeCached(key, data);
+  return data;
 }
