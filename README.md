@@ -134,7 +134,7 @@ ruff check . && pytest
 |---|---|---|---|
 | `keep-alive.yml` | a cada 10 minutos | `GET /health` no Render, para o serviço não dormir | nenhum |
 | `smogon-sync.yml` | dia 2, 06:00 | `POST /api/admin/sync-smogon` e espera até todos os tiers estarem no mês anterior | `SUPABASE_JWT_SECRET` |
-| `supabase-keepalive.yml` | de 3 em 3 dias, 09:00 | consulta a tabela `smogon_stats` no Supabase | `SUPABASE_URL`, `SUPABASE_KEY` |
+| `supabase-keepalive.yml` | todo dia, 09:00 | lê uma linha da `PokemonTrainers` com a chave anon, para o projeto gratuito não pausar | `SUPABASE_URL`, `SUPABASE_ANON_KEY` |
 | `backup.yml` | segunda, 06:00 | dump de `PokemonTrainers` e `smogon_stats` em `backups/`, com commit só quando os dados mudam | `SUPABASE_DB_URL` |
 | `trainer-data-check.yml` | segunda, 12:00 | o mesmo teste de dados da `PokemonTrainers`, porque a tabela muda direto no Supabase, sem push | `SUPABASE_URL`, `SUPABASE_ANON_KEY` |
 | `keep-active.yml` | dia 1, 05:00 | commit vazio na `main`, para o GitHub não desativar os agendamentos | nenhum |

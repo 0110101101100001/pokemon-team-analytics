@@ -1,9 +1,13 @@
 name: Supabase keep-alive
 
+# O plano gratuito pausa o projeto após uma semana sem atividade. Uma leitura diária de uma linha
+# da PokemonTrainers com a chave anon (a mesma do site) basta para mantê-lo ativo.
 on:
   schedule:
-    - cron: '0 9 */3 * *'
+    - cron: '0 9 * * *'
   workflow_dispatch:
+
+permissions: {}
 
 jobs:
   ping:
@@ -17,4 +21,5 @@ jobs:
       - run: node scripts/supabase-keepalive.mjs
         env:
           SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
-          SUPABASE_KEY: ${{ secrets.SUPABASE_KEY }}
+          SUPABASE_KEY: ${{ secrets.SUPABASE_ANON_KEY }}
+          SUPABASE_PING_TABLE: PokemonTrainers
