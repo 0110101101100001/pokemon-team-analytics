@@ -76,18 +76,20 @@ const ThemeCard = memo(function ThemeCard({ theme, checked, onChoose, cardRef })
 });
 
 const NEXT_KEYS = { ArrowRight: 1, ArrowDown: 1, ArrowLeft: -1, ArrowUp: -1 };
+// As setas seguem a ordem da tela: os claros, depois os escuros.
+const ORDERED = THEME_GROUPS.flatMap((group) => THEMES.filter((candidate) => candidate.group === group.id));
 
-/** "Tema do site": um radiogroup com os dois grupos; as setas andam pelos seis temas e já escolhem. */
+/** "Tema do site": um radiogroup com os dois grupos; as setas andam pelos doze temas e já escolhem. */
 function AppearancePanel({ theme, onChooseTheme }) {
   const cards = useRef(new Map());
 
   const handleKeyDown = (event) => {
     const step = NEXT_KEYS[event.key];
-    const index = THEMES.findIndex((candidate) => candidate.id === theme);
+    const index = ORDERED.findIndex((candidate) => candidate.id === theme);
     let next = null;
-    if (step) next = THEMES[(index + step + THEMES.length) % THEMES.length];
-    else if (event.key === 'Home') next = THEMES[0];
-    else if (event.key === 'End') next = THEMES.at(-1);
+    if (step) next = ORDERED[(index + step + ORDERED.length) % ORDERED.length];
+    else if (event.key === 'Home') next = ORDERED[0];
+    else if (event.key === 'End') next = ORDERED.at(-1);
     if (!next) return;
     event.preventDefault();
     onChooseTheme(next.id);
@@ -102,7 +104,7 @@ function AppearancePanel({ theme, onChooseTheme }) {
         {THEME_GROUPS.map((group) => (
           <div key={group.id} role="group" aria-labelledby={`grupo-${group.id}`}>
             <h4 id={`grupo-${group.id}`} className="mb-2 text-sm font-semibold italic text-umber">{group.label}</h4>
-            <div className="grid grid-cols-1 gap-3 min-[480px]:grid-cols-2 lg:grid-cols-3">
+            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
               {THEMES.filter((candidate) => candidate.group === group.id).map((candidate) => (
                 <ThemeCard
                   key={candidate.id}

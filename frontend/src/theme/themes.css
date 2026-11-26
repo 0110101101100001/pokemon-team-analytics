@@ -6,6 +6,11 @@
   o teste themes.test.js confere que as três batem e mede o contraste de cada paleta.
 */
 
+/* Só alguns temas definem o fio dos tipos claros; nos outros ele não pode vir herdado do <html> (prévias). */
+:where([data-theme]) {
+  --chip-edge-pale: initial;
+}
+
 :root,
 [data-theme='smeargle'] {
   color-scheme: light;
@@ -159,6 +164,173 @@
   --wash-strong: 9%;
   --wash-soft: 5%;
   --chip-edge: color-mix(in srgb, var(--ink) 24%, transparent);
+}
+
+/* Os seis temas da segunda leva (tabela do brief, contraste já conferido). */
+[data-theme='serperior'] {
+  color-scheme: light;
+  --bg: #f3f7ee;
+  --surface: #fffdf6;
+  --border: #b9cfa9;
+  --ink: #1f3322;
+  --accent: #2f6b39;
+  --secondary: #9a7614; /* só para ícones, coração e sublinhados: nunca em texto */
+  --header: #2f6b39;
+  --accent-fill: #2f6b39;
+  --on-accent: #ffffff;
+  --hover-mix: #000000; /* o hover do botão se afasta da cor do texto dele */
+  --accent-text: #2f6b39;
+  --secondary-icon: #9a7614;
+  --header-ink: #fffdf6;
+  --header-underline: var(--accent); /* o sublinhado do item ativo do header, como pede o brief */
+  --header-tone: none;
+  --shadow-base: var(--ink);
+  --shadow-alpha: 80%;
+  --decor-opacity: 1;
+  --wash-strong: 22%;
+  --wash-soft: 12%;
+  --chip-edge: transparent;
+  /* Electric e Ice ficam abaixo de 3:1 na superfície clara: só eles ganham um fio (≥3:1). */
+  --chip-edge-pale: color-mix(in srgb, var(--ink) 55%, var(--surface));
+}
+
+[data-theme='pikachu'] {
+  color-scheme: light;
+  --bg: #fffbea;
+  --surface: #ffffff;
+  --border: #dcbd4e;
+  --ink: #2b2414;
+  --accent: #b8321f;
+  --secondary: #2b2414; /* só para ícones, coração e sublinhados: nunca em texto */
+  --header: #f4d445;
+  --accent-fill: #b8321f;
+  --on-accent: #ffffff;
+  --hover-mix: #000000; /* o hover do botão se afasta da cor do texto dele */
+  --accent-text: #b8321f;
+  --secondary-icon: #2b2414;
+  --header-ink: #2b2414;
+  --header-underline: var(--accent); /* o sublinhado do item ativo do header, como pede o brief */
+  --header-tone: none;
+  /* Header claro: o grão do papel em multiply sujaria o amarelo e o rosa; fica bem mais fraco. */
+  --header-grain: 0.06;
+  --shadow-base: var(--ink);
+  --shadow-alpha: 80%;
+  --decor-opacity: 1;
+  --wash-strong: 22%;
+  --wash-soft: 12%;
+  --chip-edge: transparent;
+  /* Electric e Ice ficam abaixo de 3:1 na superfície clara: só eles ganham um fio (≥3:1). */
+  --chip-edge-pale: color-mix(in srgb, var(--ink) 55%, var(--surface));
+}
+
+[data-theme='sylveon'] {
+  color-scheme: light;
+  --bg: #fbf6f8;
+  --surface: #ffffff;
+  --border: #e3b2c6;
+  --ink: #3a2430;
+  --accent: #b8436f;
+  --secondary: #2a63a8; /* só para ícones, coração e sublinhados: nunca em texto */
+  --header: #f3c6d6;
+  --accent-fill: #b8436f;
+  --on-accent: #ffffff;
+  --hover-mix: #000000; /* o hover do botão se afasta da cor do texto dele */
+  --accent-text: #b8436f;
+  --secondary-icon: #2a63a8;
+  --header-ink: #3a2430;
+  --header-underline: var(--accent); /* o sublinhado do item ativo do header, como pede o brief */
+  --header-tone: none;
+  /* Header claro: o grão do papel em multiply sujaria o amarelo e o rosa; fica bem mais fraco. */
+  --header-grain: 0.06;
+  --shadow-base: var(--ink);
+  --shadow-alpha: 80%;
+  --decor-opacity: 1;
+  --wash-strong: 22%;
+  --wash-soft: 12%;
+  --chip-edge: transparent;
+  /* Electric e Ice ficam abaixo de 3:1 na superfície clara: só eles ganham um fio (≥3:1). */
+  --chip-edge-pale: color-mix(in srgb, var(--ink) 55%, var(--surface));
+}
+
+[data-theme='haxorus'] {
+  color-scheme: dark;
+  --bg: #17160f;
+  --surface: #2b291f;
+  --border: #4a4630;
+  --ink: #efecdd;
+  --accent: #d4c24a;
+  --secondary: #d0443a; /* só para ícones, coração e sublinhados: nunca em texto */
+  --header: #221f14;
+  --accent-fill: #d4c24a;
+  --on-accent: #17160f;
+  --hover-mix: #ffffff; /* o hover do botão se afasta da cor do texto dele */
+  --accent-text: #d4c24a;
+  --secondary-icon: #d0443a;
+  --header-ink: #efecdd;
+  --header-underline: var(--accent); /* o sublinhado do item ativo do header, como pede o brief */
+  --header-tone: none;
+  --shadow-base: #000000;
+  --shadow-alpha: 70%;
+  /* Decoração mais contida no escuro: aguadas e pinceladas claras demais apagariam o texto. */
+  --decor-opacity: 0.45;
+  --wash-strong: 9%;
+  --wash-soft: 5%;
+  /* Fio opaco de 3:1 com a superfície (os tipos escuros somem no fundo). */
+  --chip-edge: color-mix(in srgb, var(--ink) 40%, var(--surface));
+}
+
+[data-theme='heracross'] {
+  color-scheme: dark;
+  --bg: #121828;
+  --surface: #1f2a43;
+  --border: #34466b;
+  --ink: #e8edf7;
+  --accent: #6f9ae8;
+  --secondary: #f0c94a; /* só para ícones, coração e sublinhados: nunca em texto */
+  --header: #1a2238;
+  --accent-fill: #6f9ae8;
+  --on-accent: #121828;
+  --hover-mix: #ffffff; /* o hover do botão se afasta da cor do texto dele */
+  --accent-text: #6f9ae8;
+  --secondary-icon: #f0c94a;
+  --header-ink: #e8edf7;
+  --header-underline: var(--accent); /* o sublinhado do item ativo do header, como pede o brief */
+  --header-tone: none;
+  --shadow-base: #000000;
+  --shadow-alpha: 70%;
+  /* Decoração mais contida no escuro: aguadas e pinceladas claras demais apagariam o texto. */
+  --decor-opacity: 0.45;
+  --wash-strong: 9%;
+  --wash-soft: 5%;
+  /* Fio opaco de 3:1 com a superfície (os tipos escuros somem no fundo). */
+  --chip-edge: color-mix(in srgb, var(--ink) 40%, var(--surface));
+}
+
+[data-theme='darkrai'] {
+  color-scheme: dark;
+  --bg: #1a1224;
+  --surface: #2d2040;
+  --border: #4a3866;
+  --ink: #eee9f5;
+  --accent: #4fd3e6;
+  --secondary: #e0506a; /* só para ícones, coração e sublinhados: nunca em texto */
+  --header: #231a2f;
+  --accent-fill: #4fd3e6;
+  --on-accent: #1a1224;
+  --hover-mix: #ffffff; /* o hover do botão se afasta da cor do texto dele */
+  --accent-text: #4fd3e6;
+  --secondary-icon: #e0506a;
+  --header-ink: #eee9f5;
+  --header-underline: var(--accent); /* o sublinhado do item ativo do header, como pede o brief */
+  --header-tone: none;
+  --shadow-base: #000000;
+  --shadow-alpha: 70%;
+  /* Decoração mais contida no escuro: aguadas e pinceladas claras demais apagariam o texto. */
+  --decor-opacity: 0.45;
+  --wash-strong: 9%;
+  --wash-soft: 5%;
+  /* Fio opaco de 3:1 com a superfície (os tipos escuros somem no fundo). */
+  --chip-edge: color-mix(in srgb, var(--ink) 40%, var(--surface));
 }
 
 /*

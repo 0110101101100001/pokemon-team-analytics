@@ -1,16 +1,33 @@
 /*
-  Os seis temas: id, nome e descrição para a tela Aparência. As cores moram em themes.css (a fonte única);
-  a lista de ids se repete no script do <head> de index.html, que roda antes de qualquer módulo.
+  Os doze temas, num objeto só: id, nome, grupo (claro ou escuro), descrição e os arquivos de logo em public/.
+  As cores moram em themes.css (a fonte única); a lista de ids se repete no script do <head> de index.html,
+  que roda antes de qualquer módulo. O nome do arquivo de logo é a fonte da verdade: o Darkrai usa os de
+  "darkraishiny". As completas de 372 × 96 saem de design/logos pelo scripts/build-logos.mjs.
 */
 export const DEFAULT_THEME = 'smeargle';
 
+// Tamanhos exibidos das logos (os mesmos em todos os temas); a reduzida é um arquivo 3x.
+export const LOGO_SIZE = { width: 372, height: 96 };
+export const REDUCED_LOGO_SIZE = { width: 300, height: 64 };
+
+const logos = (file) => ({
+  logo: { src: `/logo-${file}.png`, src2x: `/logo-${file}@2x.png`, ...LOGO_SIZE },
+  reducedLogo: { src: `/logo-reduzida-${file}.png`, ...REDUCED_LOGO_SIZE },
+});
+
 export const THEMES = [
-  { id: 'smeargle', name: 'Smeargle', group: 'light', description: 'Creme, boina marrom e ponta de tinta verde' },
-  { id: 'wailord', name: 'Wailord', group: 'light', description: 'Azul-oceano com barriga creme' },
-  { id: 'empoleon', name: 'Empoleon', group: 'light', description: 'Azul-marinho, branco e tridente dourado' },
-  { id: 'groudon', name: 'Groudon', group: 'dark', description: 'Vermelho-magma, linhas pretas e brilho de lava' },
-  { id: 'zoroark', name: 'Zoroark', group: 'dark', description: 'Pelagem grafite, juba carmim e olho turquesa' },
-  { id: 'chandelure', name: 'Chandelure', group: 'dark', description: 'Vidro escuro, chama roxa e dourado' },
+  { id: 'smeargle', name: 'Smeargle', group: 'light', description: 'Creme, boina marrom e ponta de tinta verde', ...logos('smeargle') },
+  { id: 'wailord', name: 'Wailord', group: 'light', description: 'Azul-oceano com barriga creme', ...logos('wailord') },
+  { id: 'empoleon', name: 'Empoleon', group: 'light', description: 'Azul-marinho, branco e tridente dourado', ...logos('empoleon') },
+  { id: 'groudon', name: 'Groudon', group: 'dark', description: 'Vermelho-magma, linhas pretas e brilho de lava', ...logos('groudon') },
+  { id: 'zoroark', name: 'Zoroark', group: 'dark', description: 'Pelagem grafite, juba carmim e olho turquesa', ...logos('zoroark') },
+  { id: 'chandelure', name: 'Chandelure', group: 'dark', description: 'Vidro escuro, chama roxa e dourado', ...logos('chandelure') },
+  { id: 'serperior', name: 'Serperior', group: 'light', description: 'Verde-folha, creme e gola dourada', ...logos('serperior') },
+  { id: 'pikachu', name: 'Pikachu', group: 'light', description: 'Amarelo elétrico, preto e bochecha vermelha', ...logos('pikachu') },
+  { id: 'sylveon', name: 'Sylveon', group: 'light', description: 'Branco, rosa e laço azul', ...logos('sylveon') },
+  { id: 'haxorus', name: 'Haxorus', group: 'dark', description: 'Armadura preta, corpo dourado-oliva e presas vermelhas', ...logos('haxorus') },
+  { id: 'heracross', name: 'Heracross', group: 'dark', description: 'Azul-besouro escuro e olhos amarelos', ...logos('heracross') },
+  { id: 'darkrai', name: 'Darkrai Shiny', group: 'dark', description: 'Roxo profundo, olho ciano e colar vermelho', ...logos('darkraishiny') },
 ];
 
 export const THEME_IDS = THEMES.map((theme) => theme.id);
@@ -22,20 +39,7 @@ export const THEME_GROUPS = [
 
 export const isThemeId = (value) => THEME_IDS.includes(value);
 
-/*
-  Logos do header por tema (arquivos em public/; o teste themes-logos.test.js confere existência, tamanho e alfa).
-  - logo: a completa, do topo. 372 × 96 na tela, com a versão 2x. As dos outros temas saem de design/logos
-    pelo scripts/build-logos.mjs, no mesmo recorte da do Smeargle.
-  - reducedLogo: a do header recolhido (e do celular): emblema + "Smearglepedia", 300 × 64 na tela, arquivo 3x.
-    Feitas para o fundo do header de cada tema: nunca sobre fundo claro ou var(--surface).
-*/
-export const LOGO_SIZE = { width: 372, height: 96 };
-export const REDUCED_LOGO_SIZE = { width: 300, height: 64 };
-
-export const THEME_LOGOS = Object.fromEntries(THEME_IDS.map((id) => [id, {
-  logo: { src: `/logo-${id}.png`, src2x: `/logo-${id}@2x.png`, ...LOGO_SIZE },
-  reducedLogo: { src: `/logo-reduzida-${id}.png`, ...REDUCED_LOGO_SIZE },
-}]));
+export const THEME_LOGOS = Object.fromEntries(THEMES.map(({ id, logo, reducedLogo }) => [id, { logo, reducedLogo }]));
 
 export const logosFor = (theme) => THEME_LOGOS[theme] ?? THEME_LOGOS[DEFAULT_THEME];
 

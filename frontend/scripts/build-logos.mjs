@@ -1,13 +1,19 @@
-// Logos do header por tema: a partir das artes grandes (design/logos/logo-<id>.png, 3120 × 1080, com margem
-// transparente) gera public/logo-<id>.png (372 × 96) e public/logo-<id>@2x.png (744 × 192), recortadas no mesmo
+// Logos do header por tema: a partir das artes grandes (design/logos/logo-<arquivo>.png, 3120 × 1080, com margem
+// transparente) gera public/logo-<arquivo>.png (372 × 96) e @2x (744 × 192), recortadas no mesmo
 // retângulo da logo do Smeargle, para todas terem a mesma proporção e caberem na mesma caixa do header.
 // O Smeargle não é gerado: public/logo-smeargle*.png são os arquivos que o site já usava.
 // Uso: npm run build:logos (na pasta frontend).
 import sharp from 'sharp';
+import { readdirSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 
 const ROOT = fileURLToPath(new URL('..', import.meta.url));
-const THEMES = ['wailord', 'empoleon', 'groudon', 'zoroark', 'chandelure'];
+// Toda arte em design/logos, menos a do Smeargle. O nome do arquivo é o que o mapa de themes.js usa
+// (o Darkrai Shiny é "darkraishiny").
+const THEMES = readdirSync(`${ROOT}design/logos`)
+  .map((file) => file.match(/^logo-([a-z]+)\.png$/)?.[1])
+  .filter((name) => name && name !== 'smeargle')
+  .sort();
 // Caixa da arte dentro da tela de 3120 × 1080 (a mesma em todos os temas; medida pelo canal alfa).
 const CROP = { left: 22, top: 176, width: 3054, height: 789 };
 const SIZES = [

@@ -114,6 +114,17 @@ describe('temas', () => {
     for (const id of THEME_IDS) expect(inline[id], id).toBe(paletteOf(id).header.toLowerCase());
   });
 
+  // Fios dos chips de tipo, onde o tema define um opaco: ≥3:1 com a superfície (contorno de elemento, não texto).
+  it.each(THEME_IDS)('fios opacos dos chips de tipo de %s têm 3:1 com a superfície', (id) => {
+    const palette = paletteOf(id);
+    for (const token of ['chip-edge', 'chip-edge-pale']) {
+      if (!palette[token] || palette[token] === 'initial') continue;
+      const edge = resolve(`var(--${token})`, palette);
+      if (edge[3] < 1) continue;
+      expect(contrast(edge, resolve('var(--surface)', palette)), `${id}: ${token}`).toBeGreaterThanOrEqual(3);
+    }
+  });
+
   describe.each(THEME_IDS)('%s', (id) => {
     const palette = paletteOf(id);
     it.each(PAIRS)('%s sobre %s ≥ %s', (fg, bg, min) => {

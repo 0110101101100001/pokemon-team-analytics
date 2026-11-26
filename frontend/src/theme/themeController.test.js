@@ -33,7 +33,7 @@ function setup({ stored, saved = {}, saveError = null } = {}) {
 
 describe('readStoredTheme', () => {
   it('id inválido no localStorage cai para smeargle', () => {
-    expect(readStoredTheme(fakeStorage({ [THEME_STORAGE_KEY]: 'pikachu' }))).toBe('smeargle');
+    expect(readStoredTheme(fakeStorage({ [THEME_STORAGE_KEY]: 'mewtwo' }))).toBe('smeargle');
     expect(readStoredTheme(fakeStorage({ [THEME_STORAGE_KEY]: '' }))).toBe('smeargle');
     expect(readStoredTheme(fakeStorage())).toBe('smeargle');
   });
@@ -128,7 +128,7 @@ describe('createThemeController', () => {
   it('id inválido na escolha é recusado', async () => {
     const { controller, api } = setup();
     await controller.restore('a');
-    await expect(controller.choose('pikachu')).resolves.toBe(false);
+    await expect(controller.choose('mewtwo')).resolves.toBe(false);
     expect(api.save).not.toHaveBeenCalled();
   });
 

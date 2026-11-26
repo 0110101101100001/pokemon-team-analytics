@@ -25,13 +25,13 @@ describe.each(THEME_IDS)('logos do tema %s', (id) => {
   const { logo, reducedLogo } = THEME_LOGOS[id];
 
   it('logo completa: 1x de 372 × 96 e 2x de 744 × 192, com alfa', () => {
-    expect(logo.src).toBe(`/logo-${id}.png`);
+    expect(logo.src).toMatch(/^\/logo-[a-z]+\.png$/);
     expect(pngInfo(logo.src), logo.src).toEqual({ png: true, ...LOGO_SIZE, alpha: true });
     expect(pngInfo(logo.src2x), logo.src2x).toEqual({ png: true, width: LOGO_SIZE.width * 2, height: LOGO_SIZE.height * 2, alpha: true });
   });
 
   it('logo reduzida: logo-reduzida-<id>.png com alfa e proporção 300:64 (±1%)', () => {
-    expect(reducedLogo.src).toBe(`/logo-reduzida-${id}.png`);
+    expect(reducedLogo.src).toMatch(/^\/logo-reduzida-[a-z]+\.png$/);
     const info = pngInfo(reducedLogo.src);
     expect(info, reducedLogo.src).not.toBeNull();
     expect(info.png && info.alpha).toBe(true);
