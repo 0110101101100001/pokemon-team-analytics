@@ -12,7 +12,7 @@ function SectionTabs({ activeId, compact = false, className = '' }) {
     <nav aria-label="Seções" className={`flex justify-center ${className}`}>
       <ul className="header-menu-stroke grid w-full grid-cols-7 gap-0.5 sm:flex sm:w-auto sm:items-center sm:gap-1 xl:gap-0.5 min-[1536px]:gap-1">
         {SECTIONS.map((section) => {
-          const { id, label, shortLabel, icon: Icon, pigment } = section;
+          const { id, label, shortLabel, icon: Icon } = section;
           const active = id === activeId;
           return (
             <li key={id} className="min-w-0">
@@ -23,10 +23,10 @@ function SectionTabs({ activeId, compact = false, className = '' }) {
                   active ? 'font-semibold text-header-ink' : 'font-medium text-header-ink hover:underline hover:decoration-header-ink/50 hover:underline-offset-[6px]'
                 }`}
               >
-                <Icon className="h-4 w-4 shrink-0" style={active ? { color: pigment } : undefined} aria-hidden="true" />
+                <Icon className="h-4 w-4 shrink-0" style={active ? { color: 'var(--header-underline)' } : undefined} aria-hidden="true" />
                 <span className={`truncate text-[10px] leading-none sm:text-[13px] lg:hidden ${compact ? 'sr-only' : ''}`}>{shortLabel}</span>
                 <span className="hidden whitespace-nowrap text-[15px] leading-none lg:inline">{label}</span>
-                <BrushUnderline color={pigment} active={active} className="inset-x-3 bottom-0.5 h-[4px] w-[calc(100%-1.5rem)]" />
+                <BrushUnderline color="var(--header-underline)" active={active} className="inset-x-3 bottom-0.5 h-[4px] w-[calc(100%-1.5rem)]" />
               </a>
             </li>
           );
