@@ -175,7 +175,7 @@ function AppHeader({
             returnFocusRef={avatarRef}
             account={account}
             profile={{
-              pool: profilePool, selectedId: profileId, saveStatus: profileStatus, onChoose: chooseProfile, onSignOut: signOut, signingOut,
+              userId: profileUser.id, pool: profilePool, selectedId: profileId, saveStatus: profileStatus, onChoose: chooseProfile, onSignOut: signOut, signingOut,
             }}
             teams={{ userId: profileUser.id, onOpenTeam, onCreateTeam }}
             appearance={{ theme, onChooseTheme }}

@@ -18,6 +18,9 @@ import MobileTurnBar from '../components/calc/MobileTurnBar';
 import { PHAZE_MOVES, PIVOT_MOVES, trapReason } from '../utils/switching';
 import { simulateTurn } from '../utils/turn';
 import { fetchMoveSummary } from '../services/api';
+import { useAppActions } from '../components/builds/appActions';
+import { setFromBuild } from '../utils/builds';
+import { normalizeBattleSet } from '../utils/stats';
 import { PRIMAL_WEATHERS, TERRAIN_ABILITIES, WEATHER_ABILITIES, WEATHER_SUPPRESSORS } from '../data/battleModifiers';
 import { activeItem, airborneBy, battleTypeOf, calcSpeed, calculateDamage, describeKnockout, isCalculable, withWeatherType } from '../utils/damage';
 import { fieldAtTurn, withTimers } from '../utils/durations';
@@ -160,7 +163,13 @@ function resultHint(sides) {
   return 'Nenhum dos golpes escolhidos causa dano (são todos de status).';
 }
 
-export default function DamageCalculatorSection({ pool, team, session, onLogin }) {
+// A entrada da Pokédex da build: o nome exato ou, para espécies que só existem com forma ("aegislash"), a primeira forma.
+function entryForBuild(pool, slug) {
+  return pool.find((entry) => entry.name === slug) ?? pool.find((entry) => entry.name.startsWith(`${slug}-`)) ?? null;
+}
+
+export default function DamageCalculatorSection({ pool, team, session, onLogin, pendingBuild = null, onBuildLoaded }) {
+  const { notify } = useAppActions();
   const [sides, setSides] = useState(() => [createSide(), createSide()]);
   const [field, setField] = useState(createField);
   const [selected, setSelected] = useState({ side: 0, slot: 0 });
@@ -267,6 +276,31 @@ export default function DamageCalculatorSection({ pool, team, session, onLogin }
     pickTurnMove(index, null);
     restoreTerrain();
   }, [bringReserve, pickTurnMove, restoreTerrain]);
+
+  // Build aberta em "Minhas builds": vai para o lado "Seu Pokémon" com os golpes buscados na PokéAPI.
+  // Cada build (pelo id) é montada uma vez; avisar o App só depois, senão a limpeza cancelaria a busca dos golpes.
+  const loadedBuild = useRef(null);
+  const mounted = useRef(true);
+  useEffect(() => () => { mounted.current = false; }, []);
+  useEffect(() => {
+    if (!pendingBuild || pool.length === 0 || loadedBuild.current === pendingBuild.id) return;
+    loadedBuild.current = pendingBuild.id;
+    const { build } = pendingBuild;
+    const { speciesSlug, moveSlugs, set } = setFromBuild(build);
+    const entry = entryForBuild(pool, speciesSlug);
+    if (!entry) {
+      notify(`Não encontrei ${build.species} na Pokédex.`, { tone: 'info' });
+      onBuildLoaded?.();
+      return;
+    }
+    Promise.all(moveSlugs.map((slug) => fetchMoveSummary(slug).catch(() => null))).then((moves) => {
+      onBuildLoaded?.();
+      if (!mounted.current) return;
+      pickPokemon(0, entry, normalizeBattleSet({ ...set, moves }));
+      const missing = moveSlugs.length - moves.filter(Boolean).length;
+      notify(missing ? `Build carregada; ${missing} golpe(s) não reconhecido(s).` : 'Build carregada na calculadora', { tone: missing ? 'info' : 'success' });
+    });
+  }, [pendingBuild, pool, pickPokemon, notify, onBuildLoaded]);
 
   const patchField = useCallback((changes) => setField((current) => ({ ...current, ...changes })), []);
   const patchFieldSide = useCallback((index, changes) => {

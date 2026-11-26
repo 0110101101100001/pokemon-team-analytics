@@ -16,6 +16,8 @@ import { useHashOverlay, useHashRoute } from "./hooks/useHashPath";
 import { formatHash, navigateHash } from "./navigation/hashRoute";
 import { isAccountTab } from "./components/account/accountTabs";
 import { fromStoredTeam } from "./utils/savedTeams";
+import { AppActionsContext } from "./components/builds/appActions";
+import { isFutureBuild } from "./utils/builds";
 import { usePokedexFilters } from "./hooks/usePokedexFilters";
 import { useScrollCollapsed } from "./hooks/useScrollCollapsed";
 import { useUserCollections } from "./hooks/useUserCollections";
@@ -65,6 +67,8 @@ export default function App() {
   const [compared, setCompared] = useState([]);
   const [compareOpen, setCompareOpen] = useState(false);
   const [toast, setToast] = useState(null);
+  // Build escolhida em "Minhas builds" que a calculadora ainda vai montar ({ id, build }).
+  const [pendingBuild, setPendingBuild] = useState(null);
   // A lista atual para o callback de comparação, que fica estável: os cards da grade não re-renderizam a cada toque.
   const comparedRef = useRef(compared);
   comparedRef.current = compared;
@@ -177,6 +181,16 @@ export default function App() {
     setToast({ id: Date.now(), message, tone, action });
   }, []);
   const dismissToast = useCallback(() => setToast(null), []);
+  // Abre a build na calculadora, no lugar da entrada das configurações (voltar não reabre o modal).
+  const openBuildInCalculator = useCallback((build) => {
+    if (isFutureBuild(build)) {
+      notify("Esta build foi salva por uma versão mais nova do site. Recarregue a página para abri-la.", { tone: "info" });
+      return;
+    }
+    setPendingBuild({ id: Date.now(), build });
+    navigateHash("#/calculadora", { replace: true });
+  }, [notify]);
+  const clearPendingBuild = useCallback(() => setPendingBuild(null), []);
   const notifyProfileError = useCallback((message) => notify(message, { tone: "info" }), [notify]);
   const notifyThemeError = useCallback(() => notify("Não foi possível salvar o tema", { tone: "info" }), [notify]);
   const [theme, chooseTheme] = useTheme(session?.user?.id ?? null, authReady, notifyThemeError);
@@ -238,6 +252,10 @@ export default function App() {
   const closeAuth = useCallback(() => setAuthOpen(false), []);
   const openAbout = useCallback(() => setAboutOpen(true), []);
   const closeAbout = useCallback(() => setAboutOpen(false), []);
+  const appActions = useMemo(
+    () => ({ session, openLogin: openAuth, notify, openBuildInCalculator }),
+    [session, openAuth, notify, openBuildInCalculator],
+  );
 
   if (loading) {
     return (
@@ -269,7 +287,16 @@ export default function App() {
           />
         );
       case "damageCalculator":
-        return <DamageCalculatorSection pool={pokemonList} team={team} session={session} onLogin={openAuth} />;
+        return (
+          <DamageCalculatorSection
+            pool={pokemonList}
+            team={team}
+            session={session}
+            onLogin={openAuth}
+            pendingBuild={pendingBuild}
+            onBuildLoaded={clearPendingBuild}
+          />
+        );
       default:
         return (
           <PokedexSection
@@ -290,6 +317,7 @@ export default function App() {
   };
 
   return (
+    <AppActionsContext.Provider value={appActions}>
     <HeaderContext.Provider value={headerContext}>
       <div className="relative min-h-screen">
         <AuthModal open={authOpen} onClose={closeAuth} onAuthChange={handleAuthChange} />
@@ -364,5 +392,6 @@ export default function App() {
         )}
       </div>
     </HeaderContext.Provider>
+    </AppActionsContext.Provider>
   );
 }

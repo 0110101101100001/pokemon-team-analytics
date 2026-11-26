@@ -3,6 +3,8 @@ import { Check, ClipboardCopy, Loader2, Package, TriangleAlert } from 'lucide-re
 import PokemonTypeBadge from './PokemonTypeBadge';
 import { itemSpriteUrl } from '../services/api';
 import { fetchSmogonSets, formatStatSpread, toShowdownText } from '../utils/smogonSets';
+import SaveBuildButton from './builds/SaveBuildButton';
+import { parseShowdown } from '../utils/builds';
 
 const FIELD = 'h-9 cursor-pointer rounded-[3px] border-[1.5px] border-ink bg-paper px-3 font-reading text-sm font-medium text-ink';
 const LINK = 'rounded text-left font-semibold text-ink underline decoration-dotted decoration-umber/50 underline-offset-4 cursor-pointer hover:text-olive-ink hover:decoration-olive-deep focus:outline-none focus-visible:ring-2 focus-visible:ring-paint-cobalt';
@@ -62,6 +64,8 @@ const BuildCard = memo(function BuildCard({ pokemonName, set, onOpenItem, onOpen
   }, [pokemonName, set]);
 
   const CopyIcon = copyState === 'copied' ? Check : copyState === 'failed' ? TriangleAlert : ClipboardCopy;
+  // A build salva fica com a primeira opção de cada campo, a mesma que o botão Showdown copia.
+  const getBuild = useCallback(() => parseShowdown(toShowdownText(pokemonName, set))[0]?.build ?? null, [pokemonName, set]);
 
   return (
     <article className="flex flex-col gap-3 rounded-[4px] border border-ink/10 bg-paper/80 p-3.5">
@@ -114,6 +118,10 @@ const BuildCard = memo(function BuildCard({ pokemonName, set, onOpenItem, onOpen
           </li>
         ))}
       </ol>
+
+      <div className="flex justify-end">
+        <SaveBuildButton getBuild={getBuild} />
+      </div>
     </article>
   );
 });

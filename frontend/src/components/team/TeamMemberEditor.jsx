@@ -7,6 +7,8 @@ import { fetchItemNames, fetchMoveSummary, officialSpriteUrl } from '../../servi
 import { formatSlug } from '../../utils/filters';
 import { TERA_TYPES, clampLevel } from '../../utils/stats';
 import { usePokemonBattleData } from '../../hooks/usePokemonBattleData';
+import SaveBuildButton from '../builds/SaveBuildButton';
+import { buildFromSet, speciesName } from '../../utils/builds';
 
 const DAMAGE_CLASS_LABELS = { physical: 'Físico', special: 'Especial', status: 'Status' };
 const MOVE_SLOTS = [0, 1, 2, 3];
@@ -54,6 +56,12 @@ function TeamMemberEditor({ member, onChange }) {
     }
     fetchMoveSummary(slug).then((summary) => summary && place(summary));
   }, [id, onChange]);
+
+  // Sem habilidade escolhida vale a primeira da espécie, a mesma que o campo mostra.
+  const getBuild = useCallback(
+    () => buildFromSet(speciesName(name), set, { ability: set.ability || battle.abilities[0] || '' }),
+    [name, set, battle.abilities],
+  );
 
   return (
     <section className="paper-card p-4 pt-5 sm:p-5 sm:pt-6" aria-label={`Set de ${formatSlug(name)}`}>
@@ -143,6 +151,9 @@ function TeamMemberEditor({ member, onChange }) {
         </div>
 
         <StatSpreadEditor baseStats={battle.baseStats} set={set} onChange={patch} />
+      </div>
+      <div className="mt-4 flex justify-end border-t border-sepia/25 pt-3">
+        <SaveBuildButton getBuild={getBuild} />
       </div>
     </section>
   );

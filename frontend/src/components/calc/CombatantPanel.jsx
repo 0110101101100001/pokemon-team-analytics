@@ -13,6 +13,8 @@ import { BOOST_STAGES } from '../../utils/damage';
 import { hpRatio, toggleDynamax } from '../../utils/dynamax';
 import { formatSlug } from '../../utils/filters';
 import { MAX_EV_TOTAL, STAT_LABELS, calcStats, clampLevel, evTotal } from '../../utils/stats';
+import SaveBuildButton from '../builds/SaveBuildButton';
+import { buildFromSet, speciesName } from '../../utils/builds';
 
 const SELECT = 'paper-field h-9 min-w-0 cursor-pointer px-2 text-[13px]';
 const MAX_STAGE = BOOST_STAGES[0];
@@ -96,6 +98,13 @@ function CombatantPanel({ caption, title, pickerPlaceholder, side, battle, forms
   const { pokemon, set, boosts } = side;
 
   const patchSet = useCallback((changes) => onChange({ set: { ...set, ...changes } }), [set, onChange]);
+  // Na calculadora item, habilidade, Tera e golpes moram no lado; o set guarda nível, natureza, EVs e IVs.
+  const getBuild = useCallback(() => buildFromSet(speciesName(pokemon.name), set, {
+    item: side.item,
+    ability,
+    teraType: side.tera || set.teraType || null,
+    moves: side.moves.map((slot) => slot.move),
+  }), [pokemon, set, side.item, side.tera, side.moves, ability]);
   const stats = useMemo(() => (battle.baseStats ? calcStats(battle.baseStats, set) : null), [battle.baseStats, set]);
 
   const boosted = BOOST_KEYS.some((key) => boosts[key] !== 0);
@@ -322,6 +331,10 @@ function CombatantPanel({ caption, title, pickerPlaceholder, side, battle, forms
               <StatSpreadEditor baseStats={battle.baseStats} set={set} onChange={patchSet} />
             </div>
           </details>
+
+          <div className="flex justify-end">
+            <SaveBuildButton getBuild={getBuild} />
+          </div>
         </div>
       )}
     </section>
