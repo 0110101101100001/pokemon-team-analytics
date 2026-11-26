@@ -6,7 +6,6 @@ import PokemonTypeBadge from '../PokemonTypeBadge';
 import { fetchPokemonDetail } from '../../services/api';
 import { formatSlug } from '../../utils/filters';
 import { searchProfiles } from '../../utils/profileSearch';
-import MyBuilds from '../builds/MyBuilds';
 
 const PAGE_SIZE = 18;
 const MISSING = <span aria-hidden="true" className="font-serif text-2xl font-black text-umber">?</span>;
@@ -57,11 +56,10 @@ const Option = memo(function Option({ entry, selected, onChoose }) {
 });
 
 /**
- * Perfil da conta: o Pokémon do ícone (busca e grade paginada de 18), nome e e-mail só para leitura, o botão Sair
- * e, embaixo, Minhas builds.
+ * Perfil da conta: o Pokémon do ícone (busca e grade paginada de 18), nome e e-mail só para leitura e o botão Sair.
  * A escolha vale na hora, inclusive no avatar do header; a gravação é do useProfilePokemon.
  */
-function ProfilePanel({ account, userId, pool, selectedId, saveStatus, onChoose, onSignOut, signingOut }) {
+function ProfilePanel({ account, pool, selectedId, saveStatus, onChoose, onSignOut, signingOut }) {
   const species = useMemo(() => pool.filter((entry) => !entry.isForm), [pool]);
   const [query, setQuery] = useState('');
   // Abre na página de quem está escolhido.
@@ -148,8 +146,6 @@ function ProfilePanel({ account, userId, pool, selectedId, saveStatus, onChoose,
           <ChevronRight className="h-5 w-5" aria-hidden="true" />
         </button>
       </div>
-
-      <MyBuilds userId={userId} pool={pool} />
     </div>
   );
 }

@@ -1,13 +1,14 @@
 import { useCallback, useEffect, useId, useRef } from 'react';
 import { createPortal } from 'react-dom';
-import { Palette, Swords, UserRound, X } from 'lucide-react';
+import { BookMarked, Palette, Swords, UserRound, X } from 'lucide-react';
 import ProfilePanel from '../profile/ProfilePanel';
 import SavedTeamsPanel from './SavedTeamsPanel';
+import MyBuilds from '../builds/MyBuilds';
 import AppearancePanel from './AppearancePanel';
 import { useModalBehavior } from '../../hooks/useModalBehavior';
 import { ACCOUNT_TABS } from './accountTabs';
 
-const TAB_ICONS = { perfil: UserRound, times: Swords, aparencia: Palette };
+const TAB_ICONS = { perfil: UserRound, times: Swords, builds: BookMarked, aparencia: Palette };
 
 const FOCUSABLE = 'a[href], button:not([disabled]), input:not([disabled]), select:not([disabled]), textarea, [tabindex]:not([tabindex="-1"])';
 
@@ -28,7 +29,7 @@ function trapFocus(event, container) {
 }
 
 /**
- * Configurações da conta: Perfil, Times salvos e Aparência. Navegação lateral no desktop e abas no topo no celular.
+ * Configurações da conta: Perfil, Times salvos, Builds salvas e Aparência. Navegação lateral no desktop e abas no topo no celular.
  * A aba aberta mora no endereço (App), então o link `?conta=aparencia` abre direto nela. Ao fechar, o foco volta
  * ao avatar do header (`returnFocusRef`).
  */
@@ -94,7 +95,7 @@ export default function AccountSettings({
               onKeyDown={handleTabKeys}
               className="flex md:flex-col"
             >
-              {ACCOUNT_TABS.map(({ id, label }) => {
+              {ACCOUNT_TABS.map(({ id, label, short }) => {
                 const selected = id === tab;
                 const Icon = TAB_ICONS[id];
                 return (
@@ -113,7 +114,8 @@ export default function AccountSettings({
                     }`}
                   >
                     <Icon className="h-4 w-4 shrink-0" aria-hidden="true" />
-                    <span className="truncate">{label}</span>
+                    <span className="truncate md:hidden">{short ?? label}</span>
+                    <span className="hidden truncate md:inline">{label}</span>
                     <span
                       aria-hidden="true"
                       className={`absolute bg-accent transition-opacity max-md:inset-x-3 max-md:bottom-0 max-md:h-[3px] md:inset-y-2 md:left-0 md:w-[3px] ${selected ? 'opacity-100' : 'opacity-0'}`}
@@ -132,6 +134,7 @@ export default function AccountSettings({
           >
             {tab === 'perfil' && <ProfilePanel account={account} {...profile} />}
             {tab === 'times' && <SavedTeamsPanel {...teams} />}
+            {tab === 'builds' && <MyBuilds userId={profile.userId} pool={profile.pool} />}
             {tab === 'aparencia' && <AppearancePanel {...appearance} />}
           </div>
         </div>

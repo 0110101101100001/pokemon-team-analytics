@@ -247,7 +247,7 @@ function ImportForm({ userId, onImported, onClose }) {
 }
 
 /**
- * Minhas builds (aba Perfil): busca por nome ou Pokémon, filtro por espécie, 50 por vez com "Carregar mais".
+ * Builds salvas (aba própria das configurações): busca por nome ou Pokémon, filtro por espécie, 50 por vez com "Carregar mais".
  * `pool` (a grade da Pokédex) dá o número de cada espécie para o sprite.
  */
 function MyBuilds({ userId, pool }) {
@@ -305,9 +305,9 @@ function MyBuilds({ userId, pool }) {
   const filtering = Boolean(search.trim() || species);
 
   return (
-    <section aria-labelledby={`${ids}-titulo`} className="mt-6 border-t border-ink/15 pt-5">
+    <section aria-labelledby={`${ids}-titulo`}>
       <div className="flex flex-wrap items-center gap-2">
-        <h3 id={`${ids}-titulo`} className="mr-auto font-serif text-lg font-bold text-ink">Minhas builds</h3>
+        <h3 id={`${ids}-titulo`} className="mr-auto font-serif text-lg font-bold text-ink">Builds salvas</h3>
         <button type="button" onClick={() => setImporting((open) => !open)} aria-expanded={importing} className="btn-outline !min-h-9 !py-1 text-sm">
           <FileInput className="h-4 w-4" aria-hidden="true" />
           Importar do Showdown
