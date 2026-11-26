@@ -15,6 +15,7 @@ import { useHashOverlay, useHashRoute } from '../hooks/useHashPath';
 import { formatHash } from '../navigation/hashRoute';
 import { trainerHref } from '../navigation/sections';
 import { formatSlug } from '../utils/filters';
+import { usePreferences } from '../preferences/usePreferences';
 import EmptyState from '../components/EmptyState';
 import {
   FILTER_GROUPS, MIXED_TYPE, REGIONS, createNameMatcher, gamesOf, matchingBattles, regionGeneration, regionsOf, roleLabel, rolesOf,
@@ -58,7 +59,18 @@ export default function TrainersSection({ entryByName, onSelectPokemon }) {
   const debouncedQuery = useDebouncedValue(query, query ? SEARCH_DEBOUNCE_MS : 0);
   const [filters, setFilters] = useState(EMPTY_FILTERS);
 
-  const selects = useMemo(() => filterSelects(gamesOf(trainers), rolesOf(trainers)), [trainers]);
+  const games = useMemo(() => gamesOf(trainers), [trainers]);
+  const selects = useMemo(() => filterSelects(games, rolesOf(trainers)), [games, trainers]);
+
+  // O jogo padrão da conta (Configurações → Preferências) entra como filtro uma vez, quando a lista chega.
+  const { values: preferences } = usePreferences();
+  const preferredGameApplied = useRef(false);
+  useEffect(() => {
+    const game = preferences.default_league_game;
+    if (preferredGameApplied.current || !game || !games.includes(game)) return;
+    preferredGameApplied.current = true;
+    setFilters((current) => (current.game.includes(game) ? current : { ...current, game: [...current.game, game] }));
+  }, [games, preferences.default_league_game]);
   const labels = useMemo(() => Object.fromEntries(selects.map(({ group, options }) => [
     group,
     new Map(options.map(({ value, label }) => [value, label])),

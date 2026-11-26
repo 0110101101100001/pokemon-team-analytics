@@ -37,6 +37,8 @@ export default {
         header: { DEFAULT: token('header'), ink: token('header-ink'), solid: token('header-solid'), underline: token('header-underline') },
         // Texto sobre cores fixas (tipos, fraquezas), que não mudam com o tema.
         fixed: { light: token('fixed-light'), dark: token('fixed-dark') },
+        // Barra de PS: verde acima de 50%, amarela até 20%, vermelha abaixo (não muda com o tema).
+        hp: { high: token('hp-high'), mid: token('hp-mid'), low: token('hp-low') },
         smeargle: {
           bg: token('bg'),
           surface: token('surface'),

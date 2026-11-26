@@ -1,4 +1,4 @@
-// Como um Pokémon aprende um golpe, a partir de data/move-learners/<golpe>.json (scripts/build-move-learners.mjs).
+// Como um Pokémon aprende um golpe, a partir de public/data/move-learners/<golpe>.json (scripts/build-move-learners.mjs).
 // A aba Golpes não tem filtro de jogo: os métodos somam todos os jogos.
 
 export const LEARN_METHODS = [

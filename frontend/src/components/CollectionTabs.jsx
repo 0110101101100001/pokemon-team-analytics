@@ -1,6 +1,5 @@
 import { memo } from 'react';
 import { BookOpen, Heart, History, Loader2, LogIn, Trash2, TriangleAlert } from 'lucide-react';
-import { BrushUnderline } from './InkDecor';
 
 export const COLLECTIONS = {
   all: { label: 'Todos', icon: BookOpen },
@@ -19,11 +18,14 @@ const NOTICES = {
   },
 };
 
-/** Seletor entre a Pokédex completa, os favoritos e o histórico do usuário. */
+/**
+ * Seletor entre a Pokédex completa, os favoritos e o histórico do usuário: pílulas compactas, na linha do contador.
+ * Mesma troca de coleção de antes (o estado vive em usePokedexFilters); só o desenho mudou.
+ */
 function CollectionTabsComponent({ view, onChange, counts, onClearHistory, error }) {
   return (
-    <div className="flex flex-wrap items-center gap-x-3 gap-y-2">
-      <div role="tablist" aria-label="Coleções" className="inline-flex gap-1 border-b-[1.5px] border-ink/70">
+    <div className="flex flex-wrap items-center justify-end gap-x-2 gap-y-1.5">
+      <div role="tablist" aria-label="Coleções" className="inline-flex flex-wrap gap-1.5">
         {Object.entries(COLLECTIONS).map(([key, { label, icon: Icon }]) => {
           const selected = view === key;
           return (
@@ -33,14 +35,17 @@ function CollectionTabsComponent({ view, onChange, counts, onClearHistory, error
               role="tab"
               aria-selected={selected}
               onClick={() => onChange(key)}
-              className={`relative inline-flex h-9 cursor-pointer items-center gap-1.5 rounded-[2px] px-3 font-reading text-[15px] transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-paint-cobalt ${
-                selected ? 'font-semibold text-ink' : 'text-ink-soft hover:text-ink'
+              className={`inline-flex h-8 cursor-pointer items-center gap-1.5 rounded-full border-[1.5px] px-3 font-reading text-sm transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-paint-cobalt focus-visible:ring-offset-2 focus-visible:ring-offset-page ${
+                selected
+                  ? 'border-accent-text bg-accent/15 font-semibold text-ink'
+                  : 'border-line-strong/60 text-ink-soft hover:border-ink hover:text-ink'
               }`}
             >
               <Icon className="h-3.5 w-3.5" aria-hidden="true" />
               {label}
-              {counts[key] > 0 && <span className="font-mono text-[11px] tabular-nums text-ink-soft">{counts[key]}</span>}
-              <BrushUnderline color="var(--accent)" active={selected} className="inset-x-2 -bottom-1 h-[5px] w-[calc(100%-1rem)]" />
+              {counts[key] > 0 && (
+                <span className="font-mono text-[11px] tabular-nums text-ink-soft">{counts[key]}</span>
+              )}
             </button>
           );
         })}
@@ -50,7 +55,7 @@ function CollectionTabsComponent({ view, onChange, counts, onClearHistory, error
         <button
           type="button"
           onClick={onClearHistory}
-          className="inline-flex h-8 cursor-pointer items-center gap-1.5 rounded-[2px] px-2.5 font-reading text-sm font-medium text-vermilion-deep transition-colors hover:bg-vermilion-deep/10 focus:outline-none focus-visible:ring-2 focus-visible:ring-paint-cobalt"
+          className="inline-flex h-8 cursor-pointer items-center gap-1.5 rounded-full px-2.5 font-reading text-sm font-medium text-vermilion-deep transition-colors hover:bg-vermilion-deep/10 focus:outline-none focus-visible:ring-2 focus-visible:ring-paint-cobalt"
         >
           <Trash2 className="h-3.5 w-3.5" aria-hidden="true" />
           Limpar histórico

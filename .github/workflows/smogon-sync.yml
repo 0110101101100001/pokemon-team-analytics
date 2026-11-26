@@ -23,9 +23,9 @@ jobs:
       - name: Acordar o backend
         run: curl -fsS --retry 5 --retry-delay 15 --max-time 90 -o /dev/null "$API_URL/health"
 
-      # O endpoint valida um JWT HS256 assinado com o JWT secret do Supabase.
-      # O token gerado aqui dura 5 minutos e não inclui a claim `role`, por isso
-      # não dá acesso ao banco de dados se for exposto.
+      # O endpoint só aceita um JWT HS256 assinado com o JWT secret do Supabase e com role `smogon-sync`
+      # (tokens de usuário recebem 403). O token dura 5 minutos e esse papel não existe no Postgres,
+      # por isso não dá acesso ao banco de dados se for exposto.
       - name: Disparar a sincronização
         env:
           SUPABASE_JWT_SECRET: ${{ secrets.SUPABASE_JWT_SECRET }}
@@ -42,7 +42,7 @@ jobs:
               return base64.urlsafe_b64encode(raw).rstrip(b"=").decode()
 
           header = b64url(json.dumps({"alg": "HS256", "typ": "JWT"}).encode())
-          claims = b64url(json.dumps({"sub": "github-actions-smogon-sync", "exp": int(time.time()) + 300}).encode())
+          claims = b64url(json.dumps({"sub": "github-actions-smogon-sync", "role": "smogon-sync", "exp": int(time.time()) + 300}).encode())
           signing_input = f"{header}.{claims}"
           signature = hmac.new(
               os.environ["SUPABASE_JWT_SECRET"].encode(), signing_input.encode(), hashlib.sha256

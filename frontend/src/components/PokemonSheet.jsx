@@ -1,7 +1,9 @@
-import { Suspense, lazy, useRef } from 'react';
+import { Suspense, lazy, useEffect, useRef } from 'react';
 import SmeargleLoader from './SmeargleLoader';
 import { useModalBehavior } from '../hooks/useModalBehavior';
 import { formatSlug } from '../utils/filters';
+import { preloadHeroSprite } from '../services/sprites';
+import { preferencesStore } from '../preferences/usePreferences';
 
 export const loadPokemonDrawer = () => import('./PokemonDrawer');
 const PokemonDrawer = lazy(loadPokemonDrawer);
@@ -14,6 +16,15 @@ function DrawerFallback() {
 export default function PokemonSheet({ pokemonName, onClose, ...drawerProps }) {
   const dialogRef = useRef(null);
   useModalBehavior(onClose, dialogRef);
+
+  // O sprite começa a baixar já na abertura, junto com o código da ficha e os dados da PokéAPI, em vez de esperar
+  // os dois. O número vem da grade; o estilo e o shiny, das preferências (os mesmos que a ficha vai usar).
+  const { gridEntries } = drawerProps;
+  useEffect(() => {
+    const id = gridEntries?.get(pokemonName)?.id;
+    const { shiny_sprites: shiny, sprite_style: style } = preferencesStore.getState().values;
+    preloadHeroSprite(id, { shiny, style });
+  }, [pokemonName, gridEntries]);
 
   return (
     <div

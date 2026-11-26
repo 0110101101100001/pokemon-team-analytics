@@ -1,4 +1,4 @@
-// Gera frontend/src/data/move-learners/<golpe>.json: como cada Pokémon aprende o golpe, somando todos os jogos.
+// Gera frontend/public/data/move-learners/<golpe>.json: como cada Pokémon aprende o golpe, somando todos os jogos.
 // A lista de quem aprende vem de /move/{golpe} na PokéAPI, que não traz o método; o método só existe por Pokémon
 // (/pokemon/{id}.moves), o que daria mais de mil requisições no navegador. Os CSVs oficiais trazem tudo de uma vez.
 //
@@ -13,7 +13,7 @@ import { mkdir, rm, writeFile } from 'node:fs/promises';
 import { fileURLToPath } from 'node:url';
 
 const CSV_BASE = 'https://raw.githubusercontent.com/PokeAPI/pokeapi/master/data/v2/csv';
-const OUTPUT_DIR = fileURLToPath(new URL('../frontend/src/data/move-learners/', import.meta.url));
+const OUTPUT_DIR = fileURLToPath(new URL('../frontend/public/data/move-learners/', import.meta.url));
 
 // pokemon_move_methods.csv
 const LEVEL_UP = '1';

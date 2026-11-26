@@ -3,6 +3,7 @@ import { HIDDEN_ITEM_CATEGORIES } from '../data/itemCategories';
 import { readCached, writeCached } from './persistentCache';
 import { evolutionsByItem } from '../utils/itemData';
 import { movePowerOf } from '../utils/movePower';
+import { SPRITES_BASE, spriteCdnUrl } from './sprites';
 
 export { movePowerOf };
 
@@ -165,8 +166,10 @@ export async function fetchTeamRecommendation(team, tier = 'gen9ou', limit = 5) 
   return response.json();
 }
 
+export { SPRITES_BASE, spriteCdnUrl };
+
 export function officialSpriteUrl(nameOrId) {
-  return `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/${nameOrId}.png`;
+  return `${SPRITES_BASE}/pokemon/other/official-artwork/${nameOrId}.png`;
 }
 
 /**
@@ -174,11 +177,11 @@ export function officialSpriteUrl(nameOrId) {
  * A geração V só tem sprites até o nº 649.
  */
 export function animatedSpriteUrl(id, { shiny = false } = {}) {
-  return `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/versions/generation-v/black-white/animated/${shiny ? 'shiny/' : ''}${id}.gif`;
+  return `${SPRITES_BASE}/pokemon/versions/generation-v/black-white/animated/${shiny ? 'shiny/' : ''}${id}.gif`;
 }
 
 export function thumbnailSpriteUrl(nameOrId) {
-  return `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/${nameOrId}.png`;
+  return `${SPRITES_BASE}/pokemon/${nameOrId}.png`;
 }
 
 export const TIERS = [
@@ -369,7 +372,7 @@ const moveSlug = (slug) => (slug.startsWith('hidden-power-') ? 'hidden-power' : 
 
 /** Ícone de um item a partir do nome de exibição ("Heavy-Duty Boots"). */
 export const itemSpriteUrl = (name) =>
-  `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/items/${itemSlug(toPokeApiSlug(name))}.png`;
+  `${SPRITES_BASE}/items/${itemSlug(toPokeApiSlug(name))}.png`;
 
 /** Dados de um item prontos para exibição. Rejeita se o item não existir na PokéAPI. */
 export async function fetchItemInfo(slug) {
@@ -381,7 +384,7 @@ export async function fetchItemInfo(slug) {
     description: pickLocalized(data.flavor_text_entries, 'text'),
     shortEffect: pickLocalized(data.effect_entries, 'short_effect'),
     effect: pickLocalized(data.effect_entries, 'effect'),
-    sprite: data.sprites?.default ?? null,
+    sprite: spriteCdnUrl(data.sprites?.default) ?? null,
     category: data.category?.name ?? null,
     heldBy: groupHeldBy(data.held_by_pokemon ?? []),
     evolutions: await evolutionsByItem(data.name),

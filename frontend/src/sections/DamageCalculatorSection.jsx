@@ -21,6 +21,10 @@ import { fetchMoveSummary } from '../services/api';
 import { useAppActions } from '../components/builds/appActions';
 import { setFromBuild } from '../utils/builds';
 import { normalizeBattleSet } from '../utils/stats';
+import { preferencesStore } from '../preferences/usePreferences';
+
+// Lido na hora de escolher: mudar a preferência não mexe nos Pokémon que já estão na calculadora.
+const defaultLevel = () => preferencesStore.getState().values.default_level;
 import { PRIMAL_WEATHERS, TERRAIN_ABILITIES, WEATHER_ABILITIES, WEATHER_SUPPRESSORS } from '../data/battleModifiers';
 import { activeItem, airborneBy, battleTypeOf, calcSpeed, calculateDamage, describeKnockout, isCalculable, withWeatherType } from '../utils/damage';
 import { fieldAtTurn, withTimers } from '../utils/durations';
@@ -245,7 +249,7 @@ export default function DamageCalculatorSection({ pool, team, session, onLogin, 
     restoreTerrain();
   }, [pickTurnMove, restoreTerrain]);
   const addReserve = useCallback((index, pokemon) => {
-    const reserve = sideFromPokemon(pokemon);
+    const reserve = sideFromPokemon(pokemon, null, { level: defaultLevel() });
     setSides((current) => current.map((side, i) => (
       i === index && side.bench.length < MAX_RESERVES ? { ...side, bench: [...side.bench, reserve] } : side
     )));
@@ -268,7 +272,7 @@ export default function DamageCalculatorSection({ pool, team, session, onLogin, 
         }
       }
     }
-    const picked = team ? sideFromTeam(team) : sideFromPokemon(pokemon, set);
+    const picked = team ? sideFromTeam(team) : sideFromPokemon(pokemon, set, { level: defaultLevel() });
     setSides((current) => current.map((side, i) => {
       if (i !== index) return side;
       return team ? picked : { ...picked, bench: side.bench };

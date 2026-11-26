@@ -13,6 +13,18 @@
   [headers.values]
     Cache-Control = "public, max-age=31536000, immutable"
 
+# Dados de public/data: as URLs levam ?v=<hash do conteúdo> (vite.config.js), então também podem ser imutáveis
+[[headers]]
+  for = "/data/*"
+  [headers.values]
+    Cache-Control = "public, max-age=31536000, immutable"
+
+# Logos dos temas (nome fixo, sem hash): uma semana de cache, revalidando em segundo plano depois disso
+[[headers]]
+  for = "/logo-*"
+  [headers.values]
+    Cache-Control = "public, max-age=604800, stale-while-revalidate=604800"
+
 # index.html sempre revalidado, para os deploys novos aparecerem de imediato
 [[headers]]
   for = "/index.html"
@@ -25,6 +37,15 @@
     X-Content-Type-Options = "nosniff"
     X-Frame-Options = "DENY"
     Referrer-Policy = "strict-origin-when-cross-origin"
+    Cross-Origin-Opener-Policy = "same-origin"
+    # O site não usa câmera, microfone, localização, pagamento nem sensores: nenhuma página (nem iframe) pode pedir.
+    Permissions-Policy = "camera=(), microphone=(), geolocation=(), payment=(), usb=(), serial=(), bluetooth=(), magnetometer=(), gyroscope=(), accelerometer=(), browsing-topics=()"
+    # Content-Security-Policy: só roda script do próprio site, mais o script de tema do <head> do index.html,
+    # liberado pelo hash (o teste src/security/csp.test.js confere que o hash bate com o script).
+    # connect-src: Supabase (login e tabelas), PokéAPI e o backend no Render. img-src/media-src: sprites e cries
+    # (jsDelivr e raw.githubusercontent.com) e os treinadores do Showdown. style-src precisa de 'unsafe-inline'
+    # pelos estilos que o React e o Tailwind aplicam direto nos elementos.
+    Content-Security-Policy = "default-src 'self'; script-src 'self' 'sha256-+5NeEpFM2sPN66CmqxziHfzoOAF/5QXLYKozeTSl80U='; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https://cdn.jsdelivr.net https://raw.githubusercontent.com https://play.pokemonshowdown.com; media-src 'self' https://cdn.jsdelivr.net https://raw.githubusercontent.com; font-src 'self'; connect-src 'self' https://vuuvajofidpkjneasvlx.supabase.co https://pokeapi.co https://pokemon-team-analytics.onrender.com; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'none'; upgrade-insecure-requests"
 
 # Fallback de SPA
 [[redirects]]

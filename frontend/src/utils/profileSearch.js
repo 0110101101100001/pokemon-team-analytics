@@ -13,3 +13,15 @@ export function searchProfiles(species, query) {
   }
   return species.filter((entry) => normalize(entry.species).includes(term));
 }
+
+/**
+ * Recorte da grade do Perfil depois da busca: só uma geração (`generation` null = todas) e, com `favoritesFirst`,
+ * as espécies favoritas na frente (na ordem da Pokédex), seguidas das outras.
+ * `favorites` é um Set de nomes; vale o nome da espécie ou da variedade.
+ */
+export function arrangeProfiles(species, { generation = null, favorites = null, favoritesFirst = false } = {}) {
+  const inGeneration = generation ? species.filter((entry) => entry.generation === generation) : species;
+  if (!favoritesFirst || !favorites?.size) return inGeneration;
+  const isFavorite = (entry) => favorites.has(entry.name) || favorites.has(entry.species);
+  return [...inGeneration.filter(isFavorite), ...inGeneration.filter((entry) => !isFavorite(entry))];
+}

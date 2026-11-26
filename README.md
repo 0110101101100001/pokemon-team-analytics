@@ -11,12 +11,12 @@ Pokédex com dados competitivos da Smogon, fichas de campo e um team builder.
 | Camada | Tecnologia | Hospedagem |
 |---|---|---|
 | Frontend | SPA em React 18 + Vite + Tailwind | Netlify |
-| Backend | FastAPI (Python 3.11) | Render |
+| Backend | FastAPI (Python 3.13) | Render |
 | Banco de dados e autenticação | Supabase (Postgres + Auth) | Supabase |
 | Dados de Pokémon | PokéAPI, consultada direto pelo navegador | — |
 | Dados competitivos | Estatísticas mensais da Smogon, importadas para a tabela `smogon_stats` | — |
 
-O frontend busca na PokéAPI os dados de espécies, golpes e habilidades, e no backend as estatísticas da Smogon. O login e os times salvos usam o Supabase direto, com a chave anon. O frontend monta o cliente só com `@supabase/auth-js` e `@supabase/postgrest-js` (`services/supabase.js`), sem o `supabase-js` completo: storage, realtime e functions não são usados e deixavam o pacote inicial cerca de 100 KB maior. O backend valida o JWT do Supabase nas rotas protegidas e é o único que usa a service role.
+O frontend busca na PokéAPI os dados de espécies, golpes e habilidades, e no backend as estatísticas da Smogon. O login e os times salvos usam o Supabase direto, com a chave anon. O frontend monta o cliente só com `@supabase/auth-js` e `@supabase/postgrest-js` (`services/supabase.js`), sem o `supabase-js` completo: storage, realtime e functions não são usados e deixavam o pacote inicial cerca de 100 KB maior. O backend valida o JWT do Supabase nas rotas protegidas (só sessões de usuário, com `aud`/`role` = `authenticated`; HS256 ou as chaves novas pelo JWKS) e é o único que usa a service role. A sincronização aceita só o token do workflow, com `role` = `smogon-sync`.
 
 ## Funcionalidades
 
@@ -51,7 +51,7 @@ O frontend busca na PokéAPI os dados de espécies, golpes e habilidades, e no b
 
 ## Rodando localmente
 
-Pré-requisitos: Docker (ou Python 3.11), Node 22 e um projeto Supabase.
+Pré-requisitos: Docker (ou Python 3.13, a versão de `backend/.python-version`), Node 22 e um projeto Supabase.
 
 ```bash
 # Backend em http://localhost:8000 (documentação em /docs)
@@ -111,7 +111,7 @@ No plano gratuito o Render suspende o serviço após 15 minutos sem tráfego, e 
 `ci.yml` roda em push na `main` e na `futuras-atualizacoes` e em todo pull request:
 
 - frontend: `npm run lint`, `npm test` e `npm run build`;
-- backend: `ruff check .` e `pytest` (Supabase falso em memória, sem rede).
+- backend: `ruff check .`, `pytest` (Supabase falso em memória, sem rede) e `pip-audit` nas dependências.
 
 O `npm test` inclui `trainers-data.test.js`, que lê a tabela `PokemonTrainers` e falha se aparecer uma região, papel, etapa, mecânica ou jogo que o frontend não conhece. Ele lê com a chave anon, como o site, e usa os secrets `SUPABASE_URL` e `SUPABASE_ANON_KEY` (a mesma `VITE_SUPABASE_ANON_KEY` do Netlify). A `SUPABASE_KEY` é a service role, usada só pelo backup: nas tabelas do site ela só lê. Sem os secrets, o teste é pulado (pull requests de forks, por exemplo). Para rodar localmente:
 
@@ -211,8 +211,9 @@ frontend/
     services/        PokéAPI (com cache no IndexedDB), backend e Supabase
     utils/           filtros, tabela de tipos, atributos (EVs/IVs/natureza), cálculo de dano
 scripts/
-  build-machines.mjs       gera frontend/src/data/machines.json a partir dos CSVs da PokéAPI
-  build-move-learners.mjs  gera frontend/src/data/move-learners/ (como cada Pokémon aprende cada golpe) dos CSVs da PokéAPI
+  build-machines.mjs       gera frontend/src/data/machines.json e public/data/machine-learners/ (quem aprende por TM, por jogo e golpe)
+  build-move-learners.mjs  gera frontend/public/data/move-learners/ (como cada Pokémon aprende cada golpe) dos CSVs da PokéAPI
+  build-smogon-sets.mjs    divide frontend/src/data/gen9.json em public/data/smogon-sets/ (um arquivo por Pokémon + índice)
   backup-supabase.mjs      cópia das tabelas em backups/ (usado pelo backup.yml); restore-supabase.mjs restaura
   build-pokedex-index.mjs  gera frontend/src/data/pokedex-index.json (variedades, espécies, tipos, grupos de ovos)
   build-battle-data.mjs    gera frontend/src/data/battle-data.json (atributos base e golpes, para o esboço)

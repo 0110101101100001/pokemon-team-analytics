@@ -11,9 +11,12 @@ import PokemonBuilds from './PokemonBuilds';
 import FavoriteButton from './FavoriteButton';
 import { capitalize } from '../utils/typeColors';
 import {
-  fetchEvolutionChain, fetchMove, fetchPokemonDetail, fetchPokemonSpecies, fetchTypeData, movePowerOf, officialSpriteUrl,
+  fetchEvolutionChain, fetchMove, fetchPokemonDetail, fetchPokemonSpecies, fetchTypeData, movePowerOf,
 } from '../services/api';
 import { fetchSmogonNames, fetchSmogonStats } from '../services/smogonMeta';
+import { usePreferences } from '../preferences/usePreferences';
+import { heroSpriteSources, isPixelSprite, preloadHeroSprite } from '../services/sprites';
+import { FORMAT_STATS_TIER } from '../preferences/preferences';
 import { resolveSmogonName } from '../utils/smogon';
 import SmeargleLoader from './SmeargleLoader';
 import SpeedTierTable from './SpeedTierTable';
@@ -30,7 +33,6 @@ import { BrushHighlight } from './InkDecor';
 
 /* ---------------------------------------------------------------- dados estáticos */
 
-const SPRITES_BASE = 'https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon';
 
 const STAT_META = {
   hp: { label: 'HP', color: '#829b72' },
@@ -144,19 +146,6 @@ function formatFormName(formName) {
 const getCleanPokemonName = (name) => (name ? name.toLowerCase().trim() : '');
 
 const formatDexNumber = (id) => `#${String(id ?? 0).padStart(4, '0')}`;
-
-function spriteSources(detail, shiny) {
-  const other = detail.sprites?.other ?? {};
-  const variant = shiny ? 'shiny/' : '';
-  const animated = shiny ? other.showdown?.front_shiny : other.showdown?.front_default;
-  const artwork = shiny ? other['official-artwork']?.front_shiny : other['official-artwork']?.front_default;
-  return [
-    animated ?? `${SPRITES_BASE}/other/showdown/${variant}${detail.id}.gif`,
-    artwork ?? `${SPRITES_BASE}/other/official-artwork/${variant}${detail.id}.png`,
-    shiny ? detail.sprites?.front_shiny : detail.sprites?.front_default,
-    officialSpriteUrl(detail.id),
-  ].filter(Boolean);
-}
 
 function resolveVersionGroup(moves, gen) {
   const available = new Set(moves.flatMap((m) => m.version_group_details.map((v) => v.version_group.name)));
@@ -320,10 +309,15 @@ function TabStroke({ active }) {
   );
 }
 
-const HeroSprite = memo(function HeroSprite({ sources, alt }) {
+// A imagem principal do modal passa na frente das miniaturas da grade que ficaram atrás dele. Minúsculo e por
+// espalhamento, como em PokemonCard: o React 18 só repassa o atributo ao DOM assim.
+const HIGH_PRIORITY = { fetchpriority: 'high' };
+
+const HeroSprite = memo(function HeroSprite({ sources, alt, onLoad }) {
   const [index, setIndex] = useState(0);
   const src = sources[Math.min(index, sources.length - 1)];
-  const animated = src.endsWith('.gif');
+  // Pixel art (2D e os animados) cresce sem borrar; a arte oficial fica lisa.
+  const pixel = isPixelSprite(src);
 
   return (
     <img
@@ -332,8 +326,10 @@ const HeroSprite = memo(function HeroSprite({ sources, alt }) {
       width={80}
       height={80}
       decoding="async"
+      {...HIGH_PRIORITY}
+      onLoad={onLoad}
       onError={() => setIndex((i) => (i + 1 < sources.length ? i + 1 : i))}
-      className={`relative h-full w-full object-contain ${animated ? '[image-rendering:pixelated] scale-[1.35]' : ''}`}
+      className={`relative h-full w-full object-contain ${pixel ? '[image-rendering:pixelated] scale-[1.35]' : ''}`}
     />
   );
 });
@@ -429,13 +425,14 @@ export default function PokemonDrawer({
   const [typeEffectiveness, setTypeEffectiveness] = useState(null);
   const [loading, setLoading] = useState(true);
 
-  const [shiny, setShiny] = useState(false);
+  const { values: preferences } = usePreferences();
+  const [shiny, setShiny] = useState(preferences.shiny_sprites);
   const [activeTab, setActiveTab] = useState('overview');
 
   const [smogon, setSmogon] = useState(null);
   const [smogonLoading, setSmogonLoading] = useState(false);
   const [smogonError, setSmogonError] = useState(false);
-  const [selectedSmogonTier, setSelectedSmogonTier] = useState('gen9ou');
+  const [selectedSmogonTier, setSelectedSmogonTier] = useState(FORMAT_STATS_TIER[preferences.default_format] ?? 'gen9ou');
 
   const [moveset, setMoveset] = useState([]);
   const [movesetLoading, setMovesetLoading] = useState(false);
@@ -586,6 +583,21 @@ export default function PokemonDrawer({
 
   const toggleShiny = useCallback(() => setShiny((s) => !s), []);
 
+  // A outra cor (shiny ou normal) fica pronta antes do clique no botão Shiny:
+  // - com prioridade baixa, quando o sprite atual termina de carregar e o navegador fica livre;
+  // - com prioridade alta, assim que o ponteiro chega no botão ou ele recebe foco (no celular, no toque).
+  // Uma vez por URL (preloadHeroSprite); quem nunca abre uma ficha não baixa nada.
+  const detailId = detail?.id;
+  const preloadOtherColor = useCallback((priority) => {
+    if (detailId) preloadHeroSprite(detailId, { shiny: !shiny, style: preferences.sprite_style, priority });
+  }, [detailId, shiny, preferences.sprite_style]);
+  const preloadOtherColorSoon = useCallback(() => {
+    const run = () => preloadOtherColor('low');
+    if (typeof window.requestIdleCallback === 'function') window.requestIdleCallback(run, { timeout: 2000 });
+    else setTimeout(run, 300);
+  }, [preloadOtherColor]);
+  const preloadOtherColorNow = useCallback(() => preloadOtherColor('high'), [preloadOtherColor]);
+
   const openAbility = useCallback((name) => setInfoEntry({ kind: 'ability', name }), []);
   const openMove = useCallback((name) => setInfoEntry({ kind: 'move', name }), []);
   const openItem = useCallback((name) => setInfoEntry({ kind: 'item', name }), []);
@@ -608,7 +620,10 @@ export default function PokemonDrawer({
       .sort((a, b) => (a.level ?? Infinity) - (b.level ?? Infinity) || a.name.localeCompare(b.name));
   }, [moveset, activeLearnMethod, movesetSearch]);
 
-  const heroSources = useMemo(() => (detail ? spriteSources(detail, shiny) : []), [detail, shiny]);
+  const heroSources = useMemo(
+    () => (detail ? heroSpriteSources(detail, { shiny, style: preferences.sprite_style }) : []),
+    [detail, shiny, preferences.sprite_style],
+  );
 
   const spreads = useMemo(() => topSpreads(smogon?.spreads, 2), [smogon]);
 
@@ -660,7 +675,7 @@ export default function PokemonDrawer({
               <Sparkles className="absolute -top-1 -right-1 w-5 h-5 text-secondary-icon md:drop-shadow-sm" aria-hidden="true" />
             )}
             <div className="w-16 h-16 sm:w-20 sm:h-20">
-              <HeroSprite key={`${detail.id}-${shiny}`} sources={heroSources} alt={displayName} />
+              <HeroSprite key={`${detail.id}-${shiny}-${preferences.sprite_style}`} sources={heroSources} alt={displayName} onLoad={preloadOtherColorSoon} />
             </div>
           </div>
 
@@ -705,6 +720,9 @@ export default function PokemonDrawer({
             <button
               type="button"
               onClick={toggleShiny}
+              onPointerEnter={preloadOtherColorNow}
+              onPointerDown={preloadOtherColorNow}
+              onFocus={preloadOtherColorNow}
               aria-pressed={shiny}
               title={shiny ? 'Ver cor normal' : 'Ver versão shiny'}
               className={`${ROUND_BUTTON} px-3 text-xs font-bold ${

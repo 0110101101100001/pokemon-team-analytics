@@ -9,6 +9,13 @@
 /* Só alguns temas definem o fio dos tipos claros; nos outros ele não pode vir herdado do <html> (prévias). */
 :where([data-theme]) {
   --chip-edge-pale: initial;
+  /* Opcionais, que só alguns temas definem (os outros usam o valor de reserva de quem os lê):
+     --sprite-blot: a base da mancha atrás do sprite nos cards (reserva: --surface);
+     --header-accent-text: texto pequeno no tom de destaque do header (reserva: --header-underline). */
+  --sprite-blot: initial;
+  --header-accent-text: initial;
+  /* --header-placeholder-tone: placeholder da busca, quando os 90% do texto do header não chegam a 4,5:1. */
+  --header-placeholder-tone: initial;
 }
 
 :root,
@@ -61,6 +68,8 @@
   --wash-strong: 22%;
   --wash-soft: 12%;
   --chip-edge: transparent;
+  /* Branco sobre o azul do header fica no limite (4,5:1): o placeholder usa a cor cheia e se distingue pelo itálico. */
+  --header-placeholder-tone: var(--header-ink);
 }
 
 [data-theme='empoleon'] {
@@ -333,6 +342,134 @@
   --chip-edge: color-mix(in srgb, var(--ink) 40%, var(--surface));
 }
 
+[data-theme='aggron'] {
+  color-scheme: dark;
+  --bg: #121315;
+  --surface: #24272b;
+  --border: #43484f;
+  --ink: #eceef0;
+  --accent: #5fa0e6;
+  --secondary: #c6ccd3; /* só para ícones, coração e sublinhados: nunca em texto */
+  --header: #1c1e21;
+  --accent-fill: #5fa0e6;
+  --on-accent: #121315;
+  --hover-mix: #ffffff; /* o hover do botão se afasta da cor do texto dele */
+  --accent-text: #5fa0e6;
+  --secondary-icon: #c6ccd3;
+  --header-ink: #eceef0;
+  --header-underline: #5fa0e6;
+  --header-tone: none;
+  --sprite-blot: #33373d;
+  --shadow-base: #000000;
+  --shadow-alpha: 70%;
+  /* Decoração mais contida no escuro: aguadas e pinceladas claras demais apagariam o texto. */
+  --decor-opacity: 0.45;
+  --wash-strong: 9%;
+  --wash-soft: 5%;
+  /* Fio opaco de 3:1 com a superfície (os tipos escuros somem no fundo). */
+  --chip-edge: color-mix(in srgb, var(--ink) 40%, var(--surface));
+  /* Water mais claro, para não se confundir com o azul de destaque do tema (texto na cor do fundo, ≥4,5:1). */
+  --type-water: #4f86c9;
+  --type-water-text: #121315;
+}
+
+[data-theme='ninetales-shiny'] {
+  color-scheme: dark;
+  --bg: #17161e;
+  --surface: #2a2834;
+  --border: #4a4758;
+  --ink: #f0eff5;
+  --accent: #9cc3f0;
+  --secondary: #e0506a; /* só para ícones, coração e sublinhados: nunca em texto */
+  --header: #22212b;
+  --accent-fill: #9cc3f0;
+  --on-accent: #17161e;
+  --hover-mix: #ffffff; /* o hover do botão se afasta da cor do texto dele */
+  --accent-text: #9cc3f0;
+  --secondary-icon: #e0506a;
+  --header-ink: #f0eff5;
+  --header-underline: #9cc3f0;
+  --header-tone: none;
+  --sprite-blot: #3a3848;
+  --shadow-base: #000000;
+  --shadow-alpha: 70%;
+  /* Decoração mais contida no escuro: aguadas e pinceladas claras demais apagariam o texto. */
+  --decor-opacity: 0.45;
+  --wash-strong: 9%;
+  --wash-soft: 5%;
+  /* Fio opaco de 3:1 com a superfície (os tipos escuros somem no fundo). */
+  --chip-edge: color-mix(in srgb, var(--ink) 40%, var(--surface));
+  /* Flying lilás, para não se confundir com o azul-gelo de destaque do tema (texto na cor do fundo, ≥4,5:1). */
+  --type-flying: #c4b4ec;
+  --type-flying-text: #17161e;
+}
+
+[data-theme='staraptor'] {
+  color-scheme: light;
+  --bg: #f4f4f2;
+  --surface: #ffffff;
+  --border: #c9c9cc;
+  --ink: #222226;
+  --accent: #b8501f;
+  --secondary: #c23a3a; /* só para ícones, coração e sublinhados: nunca em texto */
+  --header: #4a4a52;
+  --accent-fill: #b8501f;
+  --on-accent: #ffffff;
+  --hover-mix: #000000; /* o hover do botão se afasta da cor do texto dele */
+  --accent-text: #b8501f;
+  --secondary-icon: #c23a3a;
+  --header-ink: #f7f7f5;
+  /* O laranja só tem 3,9:1 sobre o cinza do header: vale no sublinhado do item ativo e na logo, nunca em texto. */
+  --header-underline: #f29a3a;
+  --header-accent-text: var(--header-ink);
+  --header-tone: none;
+  --sprite-blot: #ececea;
+  --shadow-base: var(--ink);
+  --shadow-alpha: 80%;
+  --decor-opacity: 1;
+  --wash-strong: 22%;
+  --wash-soft: 12%;
+  --chip-edge: transparent;
+  /* Electric e Ice ficam abaixo de 3:1 na superfície clara: só eles ganham um fio (≥3:1). */
+  --chip-edge-pale: color-mix(in srgb, var(--ink) 55%, var(--surface));
+  /* Fire mais fechado, para não se confundir com o laranja de destaque do tema (texto branco, ≥4,5:1). */
+  --type-fire: #a83a1f;
+  --type-fire-text: #ffffff;
+}
+
+[data-theme='maushold'] {
+  color-scheme: light;
+  --bg: #fbf8f6;
+  --surface: #ffffff;
+  --border: #ddd3cf;
+  --ink: #3a3234;
+  --accent: #b9475f;
+  --secondary: #6b6b72; /* só para ícones, coração e sublinhados: nunca em texto */
+  --header: #e9e2df;
+  --accent-fill: #b9475f;
+  --on-accent: #ffffff;
+  --hover-mix: #000000; /* o hover do botão se afasta da cor do texto dele */
+  --accent-text: #b9475f;
+  --secondary-icon: #6b6b72;
+  --header-ink: #3a3234;
+  --header-underline: #b9475f;
+  --header-tone: none;
+  /* Header claro: o grão do papel em multiply sujaria o tom de areia; fica bem mais fraco. */
+  --header-grain: 0.06;
+  --sprite-blot: #f6e6ea;
+  --shadow-base: var(--ink);
+  --shadow-alpha: 80%;
+  --decor-opacity: 1;
+  --wash-strong: 22%;
+  --wash-soft: 12%;
+  --chip-edge: transparent;
+  /* Electric e Ice ficam abaixo de 3:1 na superfície clara: só eles ganham um fio (≥3:1). */
+  --chip-edge-pale: color-mix(in srgb, var(--ink) 55%, var(--surface));
+  /* Fairy roxo, para não se confundir com o rosa de destaque do tema (texto branco, ≥4,5:1). */
+  --type-fairy: #8f4a9c;
+  --type-fairy-text: #ffffff;
+}
+
 /*
   Derivados, iguais para todos os temas. Textos derivados têm contraste medido no teste (≥4,5 sobre bg e surface);
   bordas fortes, ≥3. As cores com matiz fixo (erro, magenta) se misturam à tinta do tema: escurecem nos temas
@@ -355,6 +492,8 @@
   --scrim: color-mix(in srgb, var(--shadow-base) 55%, transparent);
   /* Header: fundo dos botões e das pinceladas, sempre um pouco mais escuro que o papel do header. */
   --header-solid: color-mix(in srgb, var(--header) 88%, #000000);
+  /* Placeholder da busca do header (o campo é transparente, então o fundo é o --header): ≥4,5:1, medido no teste. */
+  --header-placeholder: var(--header-placeholder-tone, color-mix(in srgb, var(--header-ink) 90%, var(--header)));
   /* Decoração do fundo: pontilhado, aguadas e manchas, com pouca opacidade. */
   --dot: color-mix(in srgb, var(--secondary) 13%, transparent);
   --splat-accent: color-mix(in srgb, var(--accent) 16%, var(--bg));
@@ -362,6 +501,10 @@
   /* Texto sobre as cores fixas (tipos, fraquezas): não muda com o tema. */
   --fixed-light: #f2ead9;
   --fixed-dark: #1c1a17;
+  /* Barra de PS da calculadora: verde, amarelo e vermelho dos jogos, iguais em todos os temas. */
+  --hp-high: #3fb950;
+  --hp-mid: #e8b923;
+  --hp-low: #e0442f;
 }
 
 /*

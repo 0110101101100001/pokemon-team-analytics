@@ -67,9 +67,10 @@ export const createSide = () => ({
  * Lado montado a partir de um Pokémon do Team Builder: traz o set, o item, a habilidade, o Tera e os golpes.
  * O Tera do set já entra ativo, como no fim do turno em que o Pokémon terastaliza.
  */
-export function sideFromPokemon(pokemon, set = null) {
+export function sideFromPokemon(pokemon, set = null, { level = null } = {}) {
   const side = createSide();
-  if (!set) return { ...side, pokemon };
+  // Sem set (escolhido à mão), entra com o nível padrão da conta (Configurações → Preferências), se houver.
+  if (!set) return { ...side, pokemon, set: level ? { ...side.set, level } : side.set };
   return {
     ...side,
     pokemon,

@@ -1,16 +1,16 @@
 import { memo, useCallback, useEffect, useRef, useState } from 'react';
 import { Check, ClipboardCopy, Loader2 } from 'lucide-react';
 import { resolveSmogonName } from '../../utils/smogon';
-import { loadAllSets } from '../../utils/smogonSets';
+import { loadSmogonSetNames } from '../../utils/smogonSets';
 import { teamToShowdown } from '../../utils/showdownExport';
 
 const FEEDBACK_MS = 2000;
 const LABELS = { idle: 'Copiar para o Showdown', working: 'Copiando...', done: 'Copiado!', error: 'Não foi possível copiar' };
 
-// Nome da espécie como a Smogon (e o Showdown) o escrevem, a partir das chaves de gen9.json.
+// Nome da espécie como a Smogon (e o Showdown) o escrevem, a partir do índice de builds.
 async function smogonNameResolver() {
   try {
-    const names = Object.keys(await loadAllSets());
+    const names = await loadSmogonSetNames();
     return (member) => resolveSmogonName(member, names) ?? undefined;
   } catch {
     return () => undefined;

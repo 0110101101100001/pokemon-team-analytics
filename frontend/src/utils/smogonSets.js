@@ -1,4 +1,6 @@
 import { buildSmogonNameIndex, resolveSmogonName } from './smogon';
+import { smogonSetFile } from './smogonSetFile';
+import { fetchStaticJson } from '../services/staticData';
 
 // Ordem de preferência dos formatos; os que não estiverem aqui vão para o fim, em ordem alfabética.
 const TIER_LABELS = {
@@ -64,7 +66,10 @@ function normalizeSet(name, raw) {
 
 let request = null;
 
-/** O arquivo tem ~1 MB: é baixado à parte, uma vez, quando a aba Builds ou o esboço precisam dele. */
+/**
+ * Todas as builds (gen9.json, ~1 MB), baixadas à parte e uma vez: só o esboço de times precisa delas,
+ * porque percorre o meta inteiro. Quem olha um Pokémon usa fetchSmogonSets, que baixa só o arquivo dele.
+ */
 export function loadAllSets() {
   request ??= import('../data/gen9.json').then((module) => module.default).catch((error) => {
     request = null;
@@ -73,18 +78,26 @@ export function loadAllSets() {
   return request;
 }
 
+/** Nomes (como a Smogon escreve) dos Pokémon com builds: o índice de public/data/smogon-sets, poucos KB. */
+export async function loadSmogonSetNames() {
+  const names = await fetchStaticJson('smogon-sets/index.json');
+  if (!names) throw new Error('Índice de builds indisponível');
+  return names;
+}
+
 /**
  * Builds da Smogon para uma variedade { name, species, isForm }, agrupadas por formato:
  * [{ tier, label, sets }], já na ordem de exibição. Lista vazia se a variedade não tem builds;
  * uma forma nunca recebe as builds da espécie base.
  */
 export async function fetchSmogonSets(variety) {
-  const all = await loadAllSets();
-  const smogonName = resolveSmogonName(variety, Object.keys(all));
+  const smogonName = resolveSmogonName(variety, await loadSmogonSetNames());
   if (!smogonName) return { smogonName: null, tiers: [] };
+  const byTier = await fetchStaticJson(`smogon-sets/${smogonSetFile(smogonName)}.json`);
+  if (!byTier) throw new Error(`Builds de ${smogonName} indisponíveis`);
 
   const rank = (tier) => (TIER_ORDER.includes(tier) ? TIER_ORDER.indexOf(tier) : TIER_ORDER.length);
-  const tiers = Object.entries(all[smogonName])
+  const tiers = Object.entries(byTier)
     .sort(([a], [b]) => rank(a) - rank(b) || a.localeCompare(b))
     .map(([tier, sets]) => ({
       tier,
@@ -94,9 +107,9 @@ export async function fetchSmogonSets(variety) {
   return { smogonName, tiers };
 }
 
-/** Ids das entradas da grade que têm pelo menos uma build no arquivo local. */
+/** Ids das entradas da grade que têm pelo menos uma build. */
 export async function fetchPokemonIdsWithBuilds(entries) {
-  const index = buildSmogonNameIndex(entries, Object.keys(await loadAllSets()));
+  const index = buildSmogonNameIndex(entries, await loadSmogonSetNames());
   return new Set(entries.filter((entry) => index.has(entry.name)).map((entry) => entry.id));
 }
 

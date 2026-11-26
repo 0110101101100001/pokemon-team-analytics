@@ -1,8 +1,8 @@
 import { describe, expect, it } from 'vitest';
-import absorb from '../data/move-learners/absorb.json';
-import earthquake from '../data/move-learners/earthquake.json';
-import curse from '../data/move-learners/curse.json';
-import aerialAce from '../data/move-learners/aerial-ace.json';
+import absorb from '../../public/data/move-learners/absorb.json';
+import earthquake from '../../public/data/move-learners/earthquake.json';
+import curse from '../../public/data/move-learners/curse.json';
+import aerialAce from '../../public/data/move-learners/aerial-ace.json';
 import { learnBadges, learnsBy } from './learnMethods';
 
 const texts = (entry) => learnBadges(entry, (slug) => `jogo ${slug}`).map((badge) => badge.text);

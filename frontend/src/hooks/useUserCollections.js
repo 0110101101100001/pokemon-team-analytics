@@ -88,5 +88,9 @@ export function useUserCollections(session) {
 
   const favoriteSet = useMemo(() => new Set(favorites), [favorites]);
 
-  return { status, error, favorites, favoriteSet, history, toggleFavorite, recordView, clearHistory };
+  // Objeto estável entre renderizações: o header (memo) recebe a coleção inteira para as Configurações da conta.
+  return useMemo(
+    () => ({ status, error, favorites, favoriteSet, history, toggleFavorite, recordView, clearHistory }),
+    [status, error, favorites, favoriteSet, history, toggleFavorite, recordView, clearHistory],
+  );
 }

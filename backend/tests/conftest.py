@@ -12,6 +12,7 @@ os.environ.setdefault("SUPABASE_JWT_SECRET", "test-jwt-secret-with-at-least-32-b
 from fastapi.testclient import TestClient  # noqa: E402
 
 from app import main  # noqa: E402
+from app.core import rate_limit  # noqa: E402
 from app.routers import pokemon_stats  # noqa: E402
 from app.services import tier_model  # noqa: E402
 from tests.fake_supabase import FakeSupabase, stats_row  # noqa: E402
@@ -33,6 +34,8 @@ def fake_db(monkeypatch):
     monkeypatch.setattr(pokemon_stats, "_supabase", db)
     monkeypatch.setitem(pokemon_stats._names_cache, "value", None)
     monkeypatch.setattr(tier_model, "_cache", {})
+    rate_limit.recommend_limiter.reset()
+    rate_limit.public_limiter.reset()
     return db
 
 
@@ -41,11 +44,17 @@ def client(fake_db):
     return TestClient(main.app)
 
 
+def make_token(**claims):
+    payload = {"sub": "test", "exp": int(time.time()) + 60, **claims}
+    payload = {key: value for key, value in payload.items() if value is not None}
+    return jwt.encode(payload, os.environ["SUPABASE_JWT_SECRET"], algorithm="HS256")
+
+
+def bearer(token):
+    return {"Authorization": f"Bearer {token}"}
+
+
 @pytest.fixture
 def auth_header():
-    token = jwt.encode(
-        {"sub": "test", "exp": int(time.time()) + 60},
-        os.environ["SUPABASE_JWT_SECRET"],
-        algorithm="HS256",
-    )
-    return {"Authorization": f"Bearer {token}"}
+    """Sessão de usuário como o Supabase Auth emite (aud e role = authenticated)."""
+    return bearer(make_token(aud="authenticated", role="authenticated"))

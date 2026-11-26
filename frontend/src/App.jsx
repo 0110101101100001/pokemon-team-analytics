@@ -11,17 +11,19 @@ import PokemonSheet, { loadPokemonDrawer } from "./components/PokemonSheet";
 import { HeaderContext } from "./components/layout/headerContext";
 import { InkSplatter } from "./components/InkDecor";
 import PokedexSection from "./sections/PokedexSection";
-import { sectionFromPath } from "./navigation/sections";
+import { DEFAULT_SECTION, sectionFromPath } from "./navigation/sections";
 import { useHashOverlay, useHashRoute } from "./hooks/useHashPath";
-import { formatHash, navigateHash } from "./navigation/hashRoute";
+import { formatHash, navigateHash, parseHash } from "./navigation/hashRoute";
 import { isAccountTab } from "./components/account/accountTabs";
 import { fromStoredTeam } from "./utils/savedTeams";
 import { AppActionsContext } from "./components/builds/appActions";
 import { isFutureBuild } from "./utils/builds";
 import { usePokedexFilters } from "./hooks/usePokedexFilters";
+import { usePokedexView } from "./hooks/usePokedexView";
 import { useScrollCollapsed } from "./hooks/useScrollCollapsed";
 import { useUserCollections } from "./hooks/useUserCollections";
 import { useTheme } from "./theme/useTheme";
+import { usePreferences, usePreferencesSession } from "./preferences/usePreferences";
 import {
   fetchEggGroupIndex, fetchPokemonList, fetchSpeciesList, fetchTypeIndex,
 } from "./services/api";
@@ -78,6 +80,8 @@ export default function App() {
 
   const route = useHashRoute();
   const section = sectionFromPath(route.segments[0]);
+  // Página inicial da conta: só quando o site abriu sem seção no endereço, e uma vez por carregamento.
+  const openedWithoutSection = useRef(!parseHash(window.location.hash).segments[0]);
   // A ficha aberta mora no endereço (`?pokemon=garchomp`): o link abre a ficha e o botão voltar a fecha.
   const selectedPokemon = route.params.get(POKEMON_PARAM);
   const sheet = useHashOverlay(Boolean(selectedPokemon));
@@ -87,6 +91,8 @@ export default function App() {
   const collections = useUserCollections(session);
   const { toggleFavorite, recordView } = collections;
   const pokedex = usePokedexFilters(pokemonList);
+  // Ordenação e Grade/Lista: valem em Todos, Favoritos e Histórico e vão para a URL da Pokédex (?sort=&view=).
+  const pokedexView = usePokedexView(route, section.id === "pokedex");
   const collapsed = useScrollCollapsed();
 
   const markSmogonData = useCallback((name) => {
@@ -194,6 +200,18 @@ export default function App() {
   const notifyProfileError = useCallback((message) => notify(message, { tone: "info" }), [notify]);
   const notifyThemeError = useCallback(() => notify("Não foi possível salvar o tema", { tone: "info" }), [notify]);
   const [theme, chooseTheme] = useTheme(session?.user?.id ?? null, authReady, notifyThemeError);
+  const notifyPreferenceError = useCallback(() => notify("Não foi possível salvar a preferência", { tone: "info" }), [notify]);
+  usePreferencesSession(session?.user?.id ?? null, authReady, notifyPreferenceError);
+  const preferences = usePreferences();
+  useEffect(() => {
+    if (preferences.status !== "ready" || !openedWithoutSection.current) return;
+    openedWithoutSection.current = false;
+    const home = preferences.values.home_section;
+    // Se a pessoa já navegou enquanto as preferências carregavam, a escolha dela vale.
+    if (home !== DEFAULT_SECTION.path && !parseHash(window.location.hash).segments[0]) {
+      navigateHash(formatHash([home], parseHash(window.location.hash).params), { replace: true });
+    }
+  }, [preferences.status, preferences.values.home_section]);
   const handleAuthChange = useCallback((nextSession) => {
     setSession(nextSession);
     setAuthReady(true);
@@ -306,6 +324,7 @@ export default function App() {
             collections={collections}
             selectedName={selectedPokemon}
             hasSmogonDataMap={hasSmogonDataMap}
+            pokedexView={pokedexView}
             onSelect={handleSelect}
             onToggleFavorite={handleToggleFavorite}
             comparedSet={comparedSet}
@@ -320,7 +339,7 @@ export default function App() {
     <AppActionsContext.Provider value={appActions}>
     <HeaderContext.Provider value={headerContext}>
       <div className="relative min-h-screen">
-        <AuthModal open={authOpen} onClose={closeAuth} onAuthChange={handleAuthChange} />
+        <AuthModal open={authOpen} onClose={closeAuth} onAuthChange={handleAuthChange} onRequestOpen={openAuth} />
         {aboutOpen && (
           <Suspense fallback={null}>
             <AboutModal onClose={closeAbout} />
@@ -337,6 +356,7 @@ export default function App() {
           onCloseAccount={closeAccount}
           onOpenTeam={openSavedTeam}
           onCreateTeam={createTeam}
+          collections={collections}
           accountAction={<AuthButton session={session} onOpen={openAuth} />}
         >
           <AboutButton onClick={openAbout} />

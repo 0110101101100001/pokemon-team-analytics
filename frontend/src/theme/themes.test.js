@@ -33,6 +33,12 @@ function resolve(value, palette, depth = 0) {
   const text = value.trim();
   if (text === 'transparent') return [0, 0, 0, 0];
   if (/^#[0-9a-f]{6}$/i.test(text)) return [...hexToRgb(text), 1];
+  // var(--x, reserva): vale a variável se o tema a define (e não como `initial`); senão, a reserva.
+  const withFallback = text.match(/^var\(--([\w-]+),\s*(.+)\)$/);
+  if (withFallback) {
+    const own = palette[withFallback[1]];
+    return resolve(own && own !== 'initial' ? own : withFallback[2], palette, depth + 1);
+  }
   const variable = text.match(/^var\(--([\w-]+)\)$/);
   if (variable) {
     const next = palette[variable[1]];
@@ -95,6 +101,7 @@ const PAIRS = [
   ['ink', 'surface-2', 4.5],
   ['border-strong', 'bg', 3],
   ['header-ink', 'header-solid', 4.5],
+  ['header-placeholder', 'header', 4.5],
   ['on-accent', 'accent-fill-hover', 4.5],
 ];
 
@@ -110,7 +117,7 @@ describe('temas', () => {
   it('a cor do theme-color no script do <head> é o --header de cada tema', () => {
     const headers = html.match(/var HEADERS = \{([^}]+)\}/);
     expect(headers, 'mapa HEADERS no <head>').not.toBeNull();
-    const inline = Object.fromEntries([...headers[1].matchAll(/([\w-]+):\s*'(#[0-9a-f]{6})'/gi)].map((m) => [m[1], m[2].toLowerCase()]));
+    const inline = Object.fromEntries([...headers[1].matchAll(/'?([\w-]+)'?:\s*'(#[0-9a-f]{6})'/gi)].map((m) => [m[1], m[2].toLowerCase()]));
     for (const id of THEME_IDS) expect(inline[id], id).toBe(paletteOf(id).header.toLowerCase());
   });
 

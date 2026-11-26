@@ -2,8 +2,11 @@ import { Suspense, lazy, memo, useCallback, useMemo, useRef, useState, useSyncEx
 import SectionTabs from './SectionTabs';
 import { InkEdge, PaintSpeckle } from '../InkDecor';
 import ProfileAvatar from '../profile/ProfileAvatar';
+import AccountMenu from './AccountMenu';
+import { useMeasureHeader } from './headerHeight';
 import { useProfilePokemon } from '../../hooks/useProfilePokemon';
 import { profileAccount } from '../../utils/profileAccount';
+import { usePreferences } from '../../preferences/usePreferences';
 import { DEFAULT_SECTION, sectionHref } from '../../navigation/sections';
 import { supabase } from '../../services/supabase';
 import { DEFAULT_THEME, THEME_LOGOS, logosFor } from '../../theme/themes';
@@ -104,13 +107,15 @@ function BrandMark({ collapsed }) {
  */
 function AppHeader({
   activeId, collapsed, toolbarRef, profilePool, profileUser, onProfileError, onLogin, accountAction, children,
-  accountTab, onOpenAccount, onAccountTab, onCloseAccount, onOpenTeam, onCreateTeam, theme, onChooseTheme,
+  accountTab, onOpenAccount, onAccountTab, onCloseAccount, onOpenTeam, onCreateTeam, theme, onChooseTheme, collections,
 }) {
   const [profileId, chooseProfile, profileStatus] = useProfilePokemon(profileUser?.id ?? null, onProfileError);
-  const account = useMemo(() => profileAccount(profileUser), [profileUser]);
+  const { values: preferences } = usePreferences();
+  const account = useMemo(() => profileAccount(profileUser, preferences.display_name), [profileUser, preferences.display_name]);
   const avatarRef = useRef(null);
+  const headerRef = useRef(null);
+  useMeasureHeader(headerRef);
   const [signingOut, setSigningOut] = useState(false);
-  const openAccount = useCallback(() => onOpenAccount('perfil'), [onOpenAccount]);
 
   const signOut = useCallback(async () => {
     setSigningOut(true);
@@ -120,7 +125,7 @@ function AppHeader({
   }, [onCloseAccount]);
 
   return (
-    <header className="header-paper sticky top-0 z-40 bg-header text-header-ink">
+    <header ref={headerRef} className="header-paper sticky top-0 z-40 bg-header text-header-ink">
       <div aria-hidden="true" className="header-texture pointer-events-none absolute inset-0 -z-10" />
       {/* Respingos no creme da logo, só nas bordas livres: nunca atrás da logo, de texto ou da busca. Somem no celular. */}
       <div aria-hidden="true" className="pointer-events-none absolute inset-0 -z-10 hidden overflow-hidden md:block">
@@ -143,15 +148,28 @@ function AppHeader({
           <SectionTabs activeId={activeId} compact={collapsed} className="order-3 w-full xl:order-2 xl:w-auto xl:flex-1" />
 
           <div className="order-2 ml-auto flex shrink-0 items-center justify-end gap-1 sm:gap-2 xl:order-3 xl:ml-0 xl:w-[261px] xl:gap-1.5 min-[1700px]:gap-2">
-            <ProfileAvatar
-              id={profileId}
-              account={account}
-              signedIn={Boolean(profileUser)}
-              compact={collapsed}
-              onOpen={profileUser ? openAccount : onLogin}
-              action={accountAction}
-              buttonRef={avatarRef}
-            />
+            {/* Logado: só o avatar, que abre o menu da conta. Visitante: o cartão com o convite e o botão Entrar. */}
+            {profileUser ? (
+              <AccountMenu
+                profileId={profileId}
+                account={account}
+                compact={collapsed}
+                onOpenAccount={onOpenAccount}
+                onSignOut={signOut}
+                signingOut={signingOut}
+                buttonRef={avatarRef}
+              />
+            ) : (
+              <ProfileAvatar
+                id={profileId}
+                account={account}
+                signedIn={false}
+                compact={collapsed}
+                onOpen={onLogin}
+                action={accountAction}
+                buttonRef={avatarRef}
+              />
+            )}
             {children}
           </div>
         </div>
@@ -179,6 +197,7 @@ function AppHeader({
             }}
             teams={{ userId: profileUser.id, onOpenTeam, onCreateTeam }}
             appearance={{ theme, onChooseTheme }}
+            collections={collections}
           />
         </Suspense>
       )}

@@ -8,7 +8,7 @@ export const FIELD_CLASS =
 export const SELECT_CLASS = `${FIELD_CLASS} appearance-none pl-1 pr-6 sm:pr-7 font-reading text-sm font-medium cursor-pointer`;
 // O autopreenchimento do navegador pinta o fundo de claro: uma sombra interna no tom médio do header o cobre.
 const AUTOFILL_CLASS = 'autofill:shadow-[inset_0_0_0_1000px_var(--header-solid)] autofill:[-webkit-text-fill-color:var(--header-ink)] autofill:[caret-color:var(--header-ink)]';
-export const TEXT_INPUT_BASE = `${FIELD_CLASS} ${AUTOFILL_CLASS} pl-7 font-reading text-[15px] placeholder:italic placeholder:text-header-ink/90`;
+export const TEXT_INPUT_BASE = `${FIELD_CLASS} ${AUTOFILL_CLASS} pl-7 font-reading text-[15px] placeholder:italic placeholder:text-[color:var(--header-placeholder)]`;
 // Botão do header: retângulo de contorno, como um carimbo. O fundo é opaco para os respingos não passarem atrás do texto.
 export const HEADER_BUTTON_CLASS =
   'relative h-9 sm:h-10 inline-flex items-center justify-center gap-2 rounded-[3px] border-[1.5px] border-header-ink/55 bg-header-solid px-3 font-reading text-sm font-medium text-header-ink transition-colors cursor-pointer hover:border-header-ink hover:bg-[color-mix(in_srgb,var(--header-solid)_82%,#000)] focus:outline-none focus-visible:ring-2 focus-visible:ring-paint-pistachio/70';

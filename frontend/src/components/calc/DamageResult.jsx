@@ -1,6 +1,7 @@
 import { memo } from 'react';
 import { damagePercent } from '../../utils/damage';
 import { formatSlug } from '../../utils/filters';
+import { barTone } from './BattleScoreboard';
 
 const effectLabel = (multiplier) => {
   if (multiplier > 1) return `super efetivo ×${multiplier}`;
@@ -51,7 +52,7 @@ function DamageResult({ entry, hint }) {
           </p>
 
           {/* Barra de HP do alvo: o trecho escuro cai sempre; o listrado depende do fator aleatório. */}
-          <div className="hp-brush relative mt-3 h-4 overflow-hidden bg-smeargle-olive/60" role="img" aria-label={`O alvo perde de ${damagePercent(min, hp)}% a ${damagePercent(max, hp)}% do HP`}>
+          <div className={`hp-brush relative mt-3 h-4 overflow-hidden ${barTone(1 - max / hp)}`} role="img" aria-label={`O alvo perde de ${damagePercent(min, hp)}% a ${damagePercent(max, hp)}% do HP`}>
             <span className="absolute inset-y-0 right-0 bg-vermilion/35 [background-image:repeating-linear-gradient(135deg,transparent_0_4px,color-mix(in_srgb,var(--danger)_45%,transparent)_4px_7px)]" style={{ width: share(max, hp) }} />
             <span className="absolute inset-y-0 right-0 bg-vermilion-deep" style={{ width: share(min, hp) }} />
           </div>

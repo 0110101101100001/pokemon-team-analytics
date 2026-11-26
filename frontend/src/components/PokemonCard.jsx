@@ -10,11 +10,12 @@ export function SmogonSeal() {
 }
 
 // Mancha atrás do sprite: a tinta do tipo diluída no papel, numa cor sólida (sem gradiente). Uma por tipo.
+// A base é --sprite-blot quando o tema define (Aggron, Ninetales Shiny, Staraptor, Maushold); nos outros, a superfície.
 const blotStyles = new Map();
 function blotStyleFor(type) {
   let style = blotStyles.get(type);
   if (!style) {
-    style = { backgroundColor: `color-mix(in srgb, ${(TYPE_INK[type] ?? TYPE_INK.normal).border} 30%, var(--surface))` };
+    style = { backgroundColor: `color-mix(in srgb, ${(TYPE_INK[type] ?? TYPE_INK.normal).border} 30%, var(--sprite-blot, var(--surface)))` };
     blotStyles.set(type, style);
   }
   return style;
@@ -76,20 +77,23 @@ function PokemonCard({
         onClick={() => onSelect(pokemon)}
         aria-pressed={isSelected}
         aria-label={`Abrir a ficha de ${name}`}
-        className="absolute inset-0 z-10 cursor-pointer rounded-[4px] focus:outline-none focus-visible:ring-2 focus-visible:ring-paint-cobalt focus-visible:ring-offset-2 focus-visible:ring-offset-page"
+        // O foco por teclado aparece como contorno do card inteiro (.print-card:has(> button:focus-visible), index.css).
+        className="absolute inset-0 z-10 cursor-pointer rounded-[4px] focus:outline-none"
       />
 
-      <div className="flex h-8 items-center justify-between gap-2">
-        <span className="font-mono text-xs font-bold tracking-wider text-ink tabular-nums">
+      {/* Linha de cima com 40px: as áreas de toque dos botões (40 × 40) entram sem mudar a altura do card. */}
+      <div className="-mx-1.5 -mt-1.5 flex h-10 items-center justify-between gap-1 pl-1.5">
+        {/* Sem quebra: com o selo e os dois botões de 40px, a linha fica justa nos cards mais estreitos. */}
+        <span className="whitespace-nowrap font-mono text-xs font-bold text-ink tabular-nums">
           Nº {String(number).padStart(4, '0')}
         </span>
-        <div className="flex items-center gap-1">
+        <div className="flex items-center">
           {hasSmogonData && <SmogonSeal />}
           {onToggleCompare && (
             <CompareCardButton className="relative z-20" name={pokemon} label={name} active={isCompared} full={compareFull} onToggle={onToggleCompare} />
           )}
           {onToggleFavorite && (
-            <FavoriteButton className="relative z-20 -mr-1.5" name={pokemon} label={name} active={isFavorite} onToggle={onToggleFavorite} />
+            <FavoriteButton className="relative z-20" name={pokemon} label={name} active={isFavorite} onToggle={onToggleFavorite} />
           )}
         </div>
       </div>

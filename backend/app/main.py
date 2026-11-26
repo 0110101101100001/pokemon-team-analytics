@@ -1,3 +1,6 @@
+import logging
+import threading
+
 from fastapi import FastAPI, Depends, HTTPException, BackgroundTasks
 from fastapi.middleware.cors import CORSMiddleware
 from supabase import create_client, Client
@@ -8,11 +11,14 @@ from app.core.config import (
     SUPABASE_SERVICE_ROLE_KEY,
     SUPABASE_URL,
 )
-from app.core.security import verify_supabase_token
+from app.core.rate_limit import limit_recommend
+from app.core.security import verify_sync_token
 from app.schemas.recommendation import RecommendRequest, RecommendResponse
 from app.scrapers.update_smogon import run_sync
 from app.services.recommendation_service import build_recommendation
 from app.routers.pokemon_stats import router as pokemon_stats_router
+
+logger = logging.getLogger(__name__)
 
 app = FastAPI(
     title="Pokemon Team Analytics API",
@@ -44,7 +50,7 @@ async def health():
 @app.post(
     "/api/recommend",
     response_model=RecommendResponse,
-    dependencies=[Depends(verify_supabase_token)],
+    dependencies=[Depends(limit_recommend)],
     tags=["Recommendation"],
 )
 async def recommend(request: RecommendRequest):
@@ -54,13 +60,28 @@ async def recommend(request: RecommendRequest):
         raise HTTPException(status_code=404, detail=str(exc))
     except HTTPException:
         raise
-    except Exception as exc:
-        raise HTTPException(status_code=500, detail=f"Erro inesperado: {exc}")
+    except Exception:
+        # O detalhe fica no log do servidor; o cliente não recebe mensagens internas (caminhos, SQL, chaves).
+        logger.exception("Falha inesperada em /api/recommend")
+        raise HTTPException(status_code=500, detail="Erro inesperado ao gerar a recomendação.")
+
+
+# Uma sincronização por vez: outra chamada durante a execução recebe 409 em vez de abrir um segundo scraper.
+_sync_lock = threading.Lock()
+
+
+def _run_sync_locked() -> None:
+    try:
+        run_sync()
+    except Exception:
+        logger.exception("Falha na sincronização da Smogon")
+    finally:
+        _sync_lock.release()
 
 
 @app.post(
     "/api/admin/sync-smogon",
-    dependencies=[Depends(verify_supabase_token)],
+    dependencies=[Depends(verify_sync_token)],
     tags=["Admin"],
 )
 async def sync_smogon(background_tasks: BackgroundTasks):
@@ -69,9 +90,11 @@ async def sync_smogon(background_tasks: BackgroundTasks):
     Executa o scraper de movesets/estatísticas da Smogon em segundo plano e
     grava os resultados na tabela ``smogon_stats`` (upsert por ``name, tier, date_month``).
 
-    Requer autenticação via JWT do Supabase (mesma dependência usada em /api/recommend).
+    Requer o token do workflow smogon-sync.yml (role ``smogon-sync``); tokens de usuário recebem 403.
     """
-    background_tasks.add_task(run_sync)
+    if not _sync_lock.acquire(blocking=False):
+        raise HTTPException(status_code=409, detail="Já existe uma sincronização em andamento.")
+    background_tasks.add_task(_run_sync_locked)
     return {
         "status": "accepted",
         "message": "Sincronização da Smogon iniciada em segundo plano.",

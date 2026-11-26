@@ -1,11 +1,14 @@
-fastapi>=0.110.0
-uvicorn>=0.30.0
-python-dotenv>=1.0.0
-pyjwt>=2.15.1
-supabase>=2.10.0
-websockets>=14.0
-requests>=2.31.0
-pandas>=2.2.0
-numpy>=1.26.0
-httpx>=0.25.0
-scikit-learn>=1.4.0
+# Versões fixas: o build do Render, o Docker e o CI instalam exatamente o que foi testado.
+# Para atualizar: troque a versão aqui, rode os testes, e o pip-audit do CI confere vulnerabilidades conhecidas.
+fastapi==0.162.0
+uvicorn==0.54.0
+python-dotenv==1.2.4
+# [crypto] traz o cryptography, usado para validar tokens ES256/RS256 (chaves de assinatura novas do Supabase).
+pyjwt[crypto]==2.15.1
+supabase==2.34.1
+websockets==15.0.1
+requests==2.34.2
+pandas==3.1.1
+numpy==2.5.4
+httpx==0.28.1
+scikit-learn==1.9.1

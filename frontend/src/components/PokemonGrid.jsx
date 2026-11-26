@@ -1,19 +1,24 @@
 import { memo, useCallback, useLayoutEffect, useMemo, useRef, useState, useSyncExternalStore } from 'react';
 import { measureElement } from '@tanstack/react-virtual';
 import PokemonCard from './PokemonCard';
-import JumpIndex from './JumpIndex';
+import PokemonListRow, { LIST_ROW_HEIGHT } from './PokemonListRow';
+import GenerationBar, { GENERATION_BAR_HEIGHT } from './GenerationBar';
 import { COMPARE_LIMIT } from '../utils/compare';
-import { GENERATIONS, formatSlug } from '../utils/filters';
+import { formatSlug } from '../utils/filters';
+import { statsOf } from '../utils/pokedexView';
 import EmptyState from './EmptyState';
 import { useWindowRows } from '../hooks/useWindowRows';
+import { getHeaderHeight, useHeaderHeight } from './layout/headerHeight';
 
 // Os breakpoints do Tailwind (sm, md, lg, xl): de 1 a 5 colunas.
 const COLUMN_QUERIES = [['(min-width: 1280px)', 5], ['(min-width: 1024px)', 4], ['(min-width: 768px)', 3], ['(min-width: 640px)', 2]];
 // Os primeiros cards aparecem logo na abertura: os sprites deles não esperam o lazy loading.
 const PRIORITY_CARDS = 10;
-// Altura reservada para o header fixo quando o salto leva a uma linha (o antigo scroll-mt-40).
-const HEADER_OFFSET = 160;
+// Folga entre o header (e a barra de gerações, quando aparece) e a linha de destino de um salto.
+const JUMP_GAP = 8;
 const OVERSCAN_ROWS = 3;
+// Altura estimada de uma linha ainda não medida: o card da grade ou a linha da lista.
+const ESTIMATE = { grid: 340, list: LIST_ROW_HEIGHT };
 // No salto pelo índice, quantas telas antes do alvo a rolagem passa a ser suave.
 const SMOOTH_SCREENS = 2;
 
@@ -49,7 +54,7 @@ function useDocumentOffset(ref) {
 }
 
 /**
- * Posição do primeiro Pokémon de cada geração na lista, para o índice de saltos.
+ * Posição do primeiro Pokémon de cada geração na lista, para a barra de gerações.
  * Só faz sentido na ordem nacional: se as espécies não vierem em ordem de geração
  * (Pokédex regional, coleções, busca por relevância), devolve null. As formas ficam junto da espécie e não contam.
  */
@@ -66,7 +71,15 @@ function generationStarts(list) {
   return starts.length > 1 ? starts : null;
 }
 
-const REGION_OF = Object.fromEntries(GENERATIONS.map(({ value, label }) => [value, label.split(' · ')[1]]));
+/** Geração do card `index`: a do último começo de geração antes dele (as formas ficam com a espécie). */
+function generationAt(starts, index) {
+  let generation = starts[0].generation;
+  for (const start of starts) {
+    if (start.index > index) break;
+    generation = start.generation;
+  }
+  return generation;
+}
 
 function emptyHint(suggestion) {
   if (suggestion) return `Quis dizer: ${formatSlug(suggestion)}?`;
@@ -83,23 +96,37 @@ function PokemonGrid({
   comparedSet,
   onToggleCompare,
   suggestion = null,
+  view = 'grid',
+  showGenerations = false,
+  baseStats = null,
 }) {
   const compareFull = (comparedSet?.size ?? 0) >= COMPARE_LIMIT;
-  const columns = useGridColumns();
+  const gridColumns = useGridColumns();
+  const list = view === 'list';
+  const columns = list ? 1 : gridColumns;
   const listRef = useRef(null);
   const scrollMargin = useDocumentOffset(listRef);
   // Altura medida de uma linha: estimativa das que ainda não foram montadas, para o salto cair no lugar certo.
-  const rowHeightRef = useRef(340);
+  // (Grade e Lista remontam a grade: a seção usa o modo como chave.)
+  const rowHeightRef = useRef(ESTIMATE[view] ?? ESTIMATE.grid);
   // Primeiro card visível, para manter a posição quando o número de colunas muda (rotação, janela redimensionada).
   const anchorRef = useRef(0);
 
   const total = pokemonList.length;
   const rowCount = Math.ceil(total / columns);
-  const starts = useMemo(() => generationStarts(pokemonList), [pokemonList]);
-  const jumpItems = useMemo(
-    () => starts?.map(({ generation, index }) => ({ key: index, generation, region: REGION_OF[generation] })),
-    [starts],
-  );
+  const starts = useMemo(() => (showGenerations ? generationStarts(pokemonList) : null), [showGenerations, pokemonList]);
+  const barHeight = starts ? GENERATION_BAR_HEIGHT : 0;
+  // O destino de um salto para logo abaixo do header e da barra de gerações (as alturas mudam ao recolher).
+  const scrollPaddingStart = useHeaderHeight() + barHeight + JUMP_GAP;
+
+  // Geração do primeiro card logo abaixo do header e da barra: vem do próprio virtualizador, que já é avisado a cada
+  // rolagem (a grade é virtualizada, então não há marcadores montados para um IntersectionObserver observar).
+  // O estado só muda quando a geração muda.
+  const [currentGeneration, setCurrentGeneration] = useState(1);
+  const startsRef = useRef(starts);
+  startsRef.current = starts;
+  const barHeightRef = useRef(barHeight);
+  barHeightRef.current = barHeight;
 
   // Opções estáveis: a lib refaz as medidas de todas as linhas quando getItemKey muda de referência.
   const getItemKey = useCallback((row) => pokemonList[row * columns]?.name ?? row, [pokemonList, columns]);
@@ -122,11 +149,16 @@ function PokemonGrid({
     estimateSize,
     overscan: OVERSCAN_ROWS,
     scrollMargin,
-    scrollPaddingStart: HEADER_OFFSET,
+    scrollPaddingStart,
     getItemKey,
     measureElement: measureRow,
     onChange: (instance) => {
       if (instance.range) anchorRef.current = instance.range.startIndex * columns;
+      const currentStarts = startsRef.current;
+      if (!currentStarts) return;
+      const offset = (instance.scrollOffset ?? 0) + getHeaderHeight() + barHeightRef.current + JUMP_GAP + 2;
+      const row = instance.getVirtualItemForOffset(offset)?.index ?? 0;
+      setCurrentGeneration(generationAt(currentStarts, row * columns));
     },
   });
 
@@ -187,7 +219,7 @@ function PokemonGrid({
 
   return (
     <section className="w-full">
-      {jumpItems && <JumpIndex label="Ir para a geração" items={jumpItems} onJump={jumpTo} />}
+      {starts && <GenerationBar starts={starts} current={currentGeneration} onJump={jumpTo} />}
 
       {total === 0 ? (
         <EmptyState className="py-24" title="nenhum Pokémon encontrado" hint={emptyHint(suggestion)} />
@@ -201,10 +233,28 @@ function PokemonGrid({
                 key={row.key}
                 ref={virtualizer.measureElement}
                 data-index={row.index}
-                className="absolute inset-x-0 top-0 grid gap-4 pb-4 lg:gap-5 lg:pb-5"
+                className={`absolute inset-x-0 top-0 grid ${list ? 'pb-2' : 'gap-4 pb-4 lg:gap-5 lg:pb-5'}`}
                 style={{ gridTemplateColumns, transform: `translateY(${row.start - scrollMargin}px)` }}
               >
-                {pokemonList.slice(first, first + columns).map(({ name, id, number, types }, offset) => (
+                {pokemonList.slice(first, first + columns).map(({ name, id, number, types }, offset) => (list ? (
+                  <PokemonListRow
+                    key={name}
+                    index={first + offset}
+                    pokemon={name}
+                    id={id}
+                    number={number}
+                    types={types}
+                    stats={statsOf(baseStats, id)}
+                    isSelected={selectedName === name}
+                    hasSmogonData={!!hasSmogonDataMap[name]}
+                    isFavorite={favorites?.has(name) ?? false}
+                    onSelect={onSelect}
+                    onToggleFavorite={onToggleFavorite}
+                    isCompared={comparedSet?.has(name) ?? false}
+                    compareFull={compareFull}
+                    onToggleCompare={onToggleCompare}
+                  />
+                ) : (
                   <PokemonCard
                     key={name}
                     index={first + offset}
@@ -222,7 +272,7 @@ function PokemonGrid({
                     compareFull={compareFull}
                     onToggleCompare={onToggleCompare}
                   />
-                ))}
+                )))}
               </div>
             );
           })}

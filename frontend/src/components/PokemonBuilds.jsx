@@ -3,6 +3,8 @@ import { Check, ClipboardCopy, Loader2, Package, TriangleAlert } from 'lucide-re
 import PokemonTypeBadge from './PokemonTypeBadge';
 import { itemSpriteUrl } from '../services/api';
 import { fetchSmogonSets, formatStatSpread, toShowdownText } from '../utils/smogonSets';
+import { usePreferences } from '../preferences/usePreferences';
+import { FORMAT_BUILD_TIERS } from '../preferences/preferences';
 import SaveBuildButton from './builds/SaveBuildButton';
 import { parseShowdown } from '../utils/builds';
 
@@ -133,6 +135,7 @@ const BuildCard = memo(function BuildCard({ pokemonName, set, onOpenItem, onOpen
 function PokemonBuilds({ variety, pokemonLabel, onOpenItem, onOpenAbility, onOpenMove }) {
   const [state, setState] = useState({ status: 'loading', data: null });
   const [tier, setTier] = useState(null);
+  const { values: preferences } = usePreferences();
   const { name, species, isForm } = variety;
 
   useEffect(() => {
@@ -168,7 +171,11 @@ function PokemonBuilds({ variety, pokemonLabel, onOpenItem, onOpenAbility, onOpe
     );
   }
 
-  const current = tiers.find((entry) => entry.tier === tier) ?? tiers[0];
+  // Sem escolha na ficha, abre no formato preferido da conta (Configurações → Preferências), se houver builds nele.
+  const preferred = FORMAT_BUILD_TIERS[preferences.default_format]
+    ?.map((key) => tiers.find((entry) => entry.tier === key))
+    .find(Boolean);
+  const current = tiers.find((entry) => entry.tier === tier) ?? preferred ?? tiers[0];
 
   return (
     <div className="space-y-3">

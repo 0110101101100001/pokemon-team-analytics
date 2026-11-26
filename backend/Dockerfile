@@ -1,4 +1,4 @@
-FROM python:3.11-slim
+FROM python:3.13-slim
 
 WORKDIR /app
 
@@ -16,8 +16,12 @@ COPY requirements.txt .
 RUN pip install --no-cache-dir --upgrade pip \
     && pip install --no-cache-dir -r requirements.txt
 
-# Código da aplicação
+# Código da aplicação (o .dockerignore deixa de fora .env, venv e testes)
 COPY . .
+
+# Roda sem root: um usuário sem senha nem shell, dono só do que precisa ler.
+RUN useradd --system --no-create-home --shell /usr/sbin/nologin app
+USER app
 
 # Expõe a porta da API
 EXPOSE 8000

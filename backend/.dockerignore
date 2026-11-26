@@ -1,0 +1,13 @@
+# Nada de segredos nem ambiente local dentro da imagem: o .env chega pelo env_file do docker-compose
+# (ou pelas variáveis do Render), nunca pelo COPY.
+.env
+.env.*
+!.env.example
+venv/
+.venv/
+__pycache__/
+**/__pycache__/
+*.py[cod]
+.pytest_cache/
+.ruff_cache/
+tests/

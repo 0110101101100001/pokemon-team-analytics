@@ -9,6 +9,8 @@ import HeaderToolbar, { ToolbarRow } from '../components/layout/HeaderToolbar';
 import SectionHeading from '../components/layout/SectionHeading';
 import { useHeaderCollapsed } from '../components/layout/headerContext';
 import { buildRegionalEntries, useRegionalDex } from '../hooks/useRegionalDex';
+import { useBaseStats, viewNeedsStats } from '../hooks/usePokedexView';
+import { sortEntries } from '../utils/pokedexView';
 
 const REGIONAL_NOTICES = {
   loading: { icon: Loader2, iconClass: 'animate-spin', text: 'Folheando a Pokédex regional...' },
@@ -28,10 +30,10 @@ function RegionalNotice({ status }) {
 /** Legenda do selo dos cards: sem ela, a falta do selo parece dado faltando. */
 function SmogonLegend() {
   return (
-    <p className="flex max-w-xs items-center gap-2 text-xs leading-snug text-ink-soft">
+    <span className="inline-flex items-center gap-1.5 whitespace-nowrap">
       <SmogonSeal />
-      <span>marca os Pokémon com estatísticas de uso nos tiers da Smogon.</span>
-    </p>
+      marca quem tem estatísticas de uso na Smogon
+    </span>
   );
 }
 
@@ -68,6 +70,7 @@ function PokedexSection({
   collections,
   selectedName,
   hasSmogonDataMap,
+  pokedexView,
   onSelect,
   onToggleFavorite,
   comparedSet,
@@ -94,6 +97,11 @@ function PokedexSection({
   }, [collection, scopedList, collections.favorites, collections.history]);
 
   const filteredList = useMemo(() => applyFilters(baseList), [applyFilters, baseList]);
+
+  // Ordenação e modo valem em todas as coleções. Os atributos base só são baixados quando a ordem ou a Lista pedem.
+  const { sort, view, setSort, setView } = pokedexView;
+  const baseStats = useBaseStats(viewNeedsStats(pokedexView));
+  const sortedList = useMemo(() => sortEntries(filteredList, sort, baseStats), [filteredList, sort, baseStats]);
   const suggestion = useMemo(
     () => (filteredList.length === 0 ? suggestFor(baseList) : null),
     [filteredList, suggestFor, baseList],
@@ -109,9 +117,12 @@ function PokedexSection({
   // Numa coleção sem login, carregando, com falha ou vazia, um aviso ocupa o lugar da grade.
   const collectionBlocked = !regionalPending && collection !== 'all' && (collections.status !== 'ready' || baseList.length === 0);
   const count = regionalPending || collectionBlocked ? 0 : filteredList.length;
+  // A barra de gerações só faz sentido na Pokédex nacional inteira, na ordem dos números.
+  const showGenerations = !isRegional && collection === 'all' && !searchTerm.trim()
+    && pokedex.activeFilters.length === 0 && sort === 'number';
 
   return (
-    <div className="space-y-6 font-reading">
+    <div className="space-y-4 font-reading sm:space-y-5">
       <HeaderToolbar>
         <ToolbarRow>
           <FiltersBar
@@ -125,6 +136,10 @@ function PokedexSection({
             advancedOpen={pokedex.advancedOpen}
             advancedCount={pokedex.advancedCount}
             onToggleAdvanced={pokedex.toggleAdvanced}
+            sort={sort}
+            onSortChange={setSort}
+            view={view}
+            onViewChange={setView}
             compact={collapsed}
           />
         </ToolbarRow>
@@ -133,20 +148,13 @@ function PokedexSection({
 
       <ActiveFilters activeFilters={pokedex.activeFilters} filterStatus={pokedex.filterStatus} onRemoveFilter={pokedex.removeFilter} />
 
-      <div className="flex flex-wrap items-center gap-x-4 gap-y-2">
-        <CollectionTabs
-          view={collection}
-          onChange={pokedex.setCollection}
-          counts={collectionCounts}
-          onClearHistory={collections.clearHistory}
-          error={collections.error}
-        />
-        {isRegional && game.dexes.length > 1 && (
-          <DexAreaTabs dexes={game.dexes} value={dex.slug} onChange={pokedex.selectDex} />
-        )}
-      </div>
+      {isRegional && game.dexes.length > 1 && (
+        <DexAreaTabs dexes={game.dexes} value={dex.slug} onChange={pokedex.selectDex} />
+      )}
 
       <SectionHeading
+        rule={!showGenerations}
+        wideSubtitle
         title={isRegional ? 'Registro Regional' : 'Registro Nacional'}
         subtitle={(
           <>
@@ -158,9 +166,18 @@ function PokedexSection({
                 ? `numeração regional, ${scopedList.length} entradas`
                 : `${speciesCount} espécies e ${pokemonList.length - speciesCount} formas até a 9ª geração`}
             </span>
+            <span className="mt-1.5 block text-brown/80"><SmogonLegend /></span>
           </>
         )}
-        aside={<SmogonLegend />}
+        aside={(
+          <CollectionTabs
+            view={collection}
+            onChange={pokedex.setCollection}
+            counts={collectionCounts}
+            onClearHistory={collections.clearHistory}
+            error={collections.error}
+          />
+        )}
       />
 
       {regionalPending ? (
@@ -169,7 +186,12 @@ function PokedexSection({
         <CollectionNotice view={collection} status={collections.status} isEmpty={baseList.length === 0} onLogin={onLogin} />
       ) : (
         <PokemonGrid
-          pokemonList={filteredList}
+          // Grade e Lista têm alturas de linha diferentes: trocar de modo remonta a grade com as medidas certas.
+          key={view}
+          pokemonList={sortedList}
+          view={view}
+          showGenerations={showGenerations}
+          baseStats={baseStats}
           selectedName={selectedName}
           onSelect={onSelect}
           hasSmogonDataMap={hasSmogonDataMap}

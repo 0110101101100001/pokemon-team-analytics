@@ -51,7 +51,7 @@ function toLearners(list, entryByName, methods) {
 }
 
 // `load(move)` resolve [{ name, id, hidden? }]: por padrão, todos os que aprendem o golpe em algum jogo.
-// Com `withMethods`, o índice do golpe (data/move-learners) é baixado junto, só agora que a lista abriu.
+// Com `withMethods`, o índice do golpe (public/data/move-learners) é baixado junto, só agora que a lista abriu.
 function useMoveLearners(move, load, entryByName, withMethods) {
   const [state, setState] = useState({ move: null, load: null, status: 'loading', list: [], methods: null });
 

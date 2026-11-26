@@ -2,8 +2,9 @@ import { memo } from 'react';
 import StateChips from './StateChips';
 import { thumbnailSpriteUrl } from '../../services/api';
 
-// Cor da barra pela fração de PS: oliva, ocre abaixo da metade, vermelhão abaixo de 1/5.
-export const barTone = (fraction) => (fraction > 0.5 ? 'bg-olive' : fraction > 0.2 ? 'bg-ochre' : 'bg-vermilion');
+// Cor da barra pela fração de PS, como nos jogos e igual em todos os temas: verde, amarela abaixo da metade,
+// vermelha abaixo de 1/5.
+export const barTone = (fraction) => (fraction > 0.5 ? 'bg-hp-high' : fraction > 0.2 ? 'bg-hp-mid' : 'bg-hp-low');
 // "109" quando o golpe tira o mesmo nos 16 resultados (ou derruba); senão "62–73".
 const damageRange = ({ min, max }, current) => {
   const [low, high] = [Math.min(min, current), Math.min(max, current)];

@@ -1,9 +1,10 @@
 import time
 from typing import Dict, Optional
 
-from fastapi import APIRouter, HTTPException, Query, Path
+from fastapi import APIRouter, Depends, HTTPException, Query, Path
 from supabase import Client, create_client
 
+from app.core.rate_limit import limit_public
 from app.core.config import (
     SMOGON_BADGE_TIERS,
     SMOGON_STATS_TABLE,
@@ -13,7 +14,7 @@ from app.core.config import (
 from app.schemas.pokemon_stats import PokemonStatsResponse, SmogonNamesResponse
 from app.services.smogon_repository import latest_date, month_of, month_start, rows_at
 
-router = APIRouter(tags=["Pokemon Stats"])
+router = APIRouter(tags=["Pokemon Stats"], dependencies=[Depends(limit_public)])
 
 _supabase: Client = None  # type: ignore
 

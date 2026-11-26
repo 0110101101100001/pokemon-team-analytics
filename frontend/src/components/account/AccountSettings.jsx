@@ -1,14 +1,30 @@
 import { useCallback, useEffect, useId, useRef } from 'react';
 import { createPortal } from 'react-dom';
-import { BookMarked, Palette, Swords, UserRound, X } from 'lucide-react';
+import {
+  BookMarked, Database, Heart, History, Palette, ShieldCheck, SlidersHorizontal, Swords, UserRound, X,
+} from 'lucide-react';
 import ProfilePanel from '../profile/ProfilePanel';
 import SavedTeamsPanel from './SavedTeamsPanel';
 import MyBuilds from '../builds/MyBuilds';
 import AppearancePanel from './AppearancePanel';
+import PreferencesPanel from './PreferencesPanel';
+import SecurityPanel from './SecurityPanel';
+import DataPanel from './DataPanel';
+import { FavoritesPanel, HistoryPanel } from './CollectionPanels';
 import { useModalBehavior } from '../../hooks/useModalBehavior';
 import { ACCOUNT_TABS } from './accountTabs';
 
-const TAB_ICONS = { perfil: UserRound, times: Swords, builds: BookMarked, aparencia: Palette };
+const TAB_ICONS = {
+  perfil: UserRound,
+  favoritos: Heart,
+  historico: History,
+  times: Swords,
+  builds: BookMarked,
+  preferencias: SlidersHorizontal,
+  aparencia: Palette,
+  seguranca: ShieldCheck,
+  dados: Database,
+};
 
 const FOCUSABLE = 'a[href], button:not([disabled]), input:not([disabled]), select:not([disabled]), textarea, [tabindex]:not([tabindex="-1"])';
 
@@ -29,12 +45,13 @@ function trapFocus(event, container) {
 }
 
 /**
- * Configurações da conta: Perfil, Times salvos, Builds salvas e Aparência. Navegação lateral no desktop e abas no topo no celular.
+ * Configurações da conta: Perfil, Favoritos, Histórico, Times e Builds salvos, Preferências, Aparência, Segurança e
+ * Meus dados. Navegação lateral no desktop; no celular, abas no topo numa faixa que rola na horizontal.
  * A aba aberta mora no endereço (App), então o link `?conta=aparencia` abre direto nela. Ao fechar, o foco volta
  * ao avatar do header (`returnFocusRef`).
  */
 export default function AccountSettings({
-  tab, onTabChange, onClose, returnFocusRef, account, profile, teams, appearance,
+  tab, onTabChange, onClose, returnFocusRef, account, profile, teams, appearance, collections,
 }) {
   const ids = useId();
   const dialogRef = useRef(null);
@@ -57,6 +74,11 @@ export default function AccountSettings({
     onTabChange(next.id);
     tabRefs.current.get(next.id)?.focus();
   }, [tab, onTabChange]);
+
+  // No celular as abas rolam: a escolhida fica visível (inclusive quando o modal abre direto nela pelo endereço).
+  useEffect(() => {
+    tabRefs.current.get(tab)?.scrollIntoView?.({ block: 'nearest', inline: 'nearest' });
+  }, [tab]);
 
   const panelId = `${ids}-painel`;
   const titleId = `${ids}-titulo`;
@@ -88,12 +110,12 @@ export default function AccountSettings({
         </header>
 
         <div className="flex min-h-0 flex-1 flex-col md:flex-row">
-          <nav aria-label="Seções da conta" className="shrink-0 border-b border-ink/15 md:w-56 md:border-b-0 md:border-r md:py-3">
+          <nav aria-label="Seções da conta" className="shrink-0 border-b border-ink/15 md:w-56 md:overflow-y-auto md:border-b-0 md:border-r md:py-3">
             <div
               role="tablist"
               aria-labelledby={titleId}
               onKeyDown={handleTabKeys}
-              className="flex md:flex-col"
+              className="flex overflow-x-auto overscroll-x-contain [scrollbar-width:thin] md:flex-col md:overflow-visible"
             >
               {ACCOUNT_TABS.map(({ id, label, short }) => {
                 const selected = id === tab;
@@ -109,7 +131,7 @@ export default function AccountSettings({
                     aria-controls={panelId}
                     tabIndex={selected ? 0 : -1}
                     onClick={() => onTabChange(id)}
-                    className={`relative flex min-h-11 flex-1 cursor-pointer items-center justify-center gap-2 px-2 text-sm transition-colors md:flex-none md:justify-start md:px-5 md:text-base ${
+                    className={`relative flex min-h-11 shrink-0 cursor-pointer items-center justify-center gap-2 px-3 text-sm transition-colors md:flex-none md:justify-start md:px-5 md:text-base ${
                       selected ? 'font-semibold text-ink' : 'text-ink-soft hover:text-ink'
                     }`}
                   >
@@ -132,10 +154,15 @@ export default function AccountSettings({
             aria-labelledby={`${ids}-aba-${tab}`}
             className="flex min-h-0 flex-1 flex-col overflow-y-auto overscroll-contain p-4 sm:p-5"
           >
-            {tab === 'perfil' && <ProfilePanel account={account} {...profile} />}
+            {tab === 'perfil' && <ProfilePanel account={account} favorites={collections.favorites} {...profile} />}
+            {tab === 'favoritos' && <FavoritesPanel collections={collections} pool={profile.pool} />}
+            {tab === 'historico' && <HistoryPanel collections={collections} pool={profile.pool} />}
             {tab === 'times' && <SavedTeamsPanel {...teams} />}
             {tab === 'builds' && <MyBuilds userId={profile.userId} pool={profile.pool} />}
+            {tab === 'preferencias' && <PreferencesPanel />}
             {tab === 'aparencia' && <AppearancePanel {...appearance} />}
+            {tab === 'seguranca' && <SecurityPanel email={account.email} />}
+            {tab === 'dados' && <DataPanel userId={profile.userId} email={account.email} />}
           </div>
         </div>
       </div>
