@@ -18,7 +18,7 @@ const ITEM_CLASS =
  * os atalhos para as configurações e Sair. Padrão de menu do WAI-ARIA: setas ↑↓ e Home/End andam pelos itens,
  * Esc, clique fora e escolher um item fecham, e o foco volta ao avatar.
  */
-function AccountMenu({ profileId, account, compact, onOpenAccount, onSignOut, signingOut, buttonRef }) {
+function AccountMenu({ profileId, iconStyle, account, compact, onOpenAccount, onSignOut, signingOut, buttonRef }) {
   const [open, setOpen] = useState(false);
   const ids = useId();
   const rootRef = useRef(null);
@@ -107,7 +107,7 @@ function AccountMenu({ profileId, account, compact, onOpenAccount, onSignOut, si
         data-compact={compact ? '' : undefined}
         className="profile-avatar account-avatar account-menu-avatar"
       >
-        <ProfilePhoto id={profileId} initial={account.initial} />
+        <ProfilePhoto id={profileId} initial={account.initial} iconStyle={iconStyle} />
       </button>
 
       {open && (
@@ -120,7 +120,7 @@ function AccountMenu({ profileId, account, compact, onOpenAccount, onSignOut, si
         >
           <div role="none" className="flex items-center gap-2.5 px-2 pb-2 pt-1">
             <span className="profile-avatar !h-9 !w-9 shrink-0" aria-hidden="true">
-              <ProfilePhoto id={profileId} initial={account.initial} />
+              <ProfilePhoto id={profileId} initial={account.initial} iconStyle={iconStyle} />
             </span>
             <span className="min-w-0">
               <span className="block truncate font-serif text-[15px] font-bold text-ink" title={account.name}>{account.name}</span>

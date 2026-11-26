@@ -5,6 +5,7 @@ import ProfilePhoto from './ProfilePhoto';
 import PokemonTypeBadge from '../PokemonTypeBadge';
 import { fetchPokemonDetail } from '../../services/api';
 import { formatSlug } from '../../utils/filters';
+import { PROFILE_ICON_STYLES } from '../../utils/profilePokemon';
 import { arrangeProfiles, searchProfiles } from '../../utils/profileSearch';
 import { SaveStatus } from '../account/settingsUi';
 import { DISPLAY_NAME_MAX, normalizeDisplayName } from '../../preferences/preferences';
@@ -24,6 +25,30 @@ const SAVE_STATUS = {
 };
 
 /** Nome e tipos do escolhido, pela PokéAPI (com cache); até chegar, ou se ela falhar, valem os do índice local. */
+/** Arte oficial ou sprite 2D: o estilo do ícone em todo o site (header, menu da conta e aqui). */
+function IconStylePicker({ value, onChange }) {
+  return (
+    <div role="group" aria-label="Estilo do ícone" className="mt-2 inline-flex overflow-hidden rounded-[3px] border-[1.5px] border-ink/60">
+      {PROFILE_ICON_STYLES.map((option) => {
+        const selected = option.value === value;
+        return (
+          <button
+            key={option.value}
+            type="button"
+            aria-pressed={selected}
+            onClick={() => onChange?.(option.value)}
+            className={`min-h-9 cursor-pointer px-3 font-reading text-sm transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-paint-cobalt ${
+              selected ? 'bg-accent-fill font-semibold text-accent-on' : 'bg-paper text-ink hover:bg-ink/[0.06]'
+            }`}
+          >
+            {option.label}
+          </button>
+        );
+      })}
+    </div>
+  );
+}
+
 function useProfileDetail(id, entry) {
   const [detail, setDetail] = useState(null);
 
@@ -109,7 +134,9 @@ const Option = memo(function Option({ entry, selected, onChoose }) {
  * editável, o e-mail e o botão Sair.
  * A escolha vale na hora, inclusive no avatar do header; a gravação é do useProfilePokemon.
  */
-function ProfilePanel({ account, pool, favorites, selectedId, saveStatus, onChoose, onSignOut, signingOut }) {
+function ProfilePanel({
+  account, pool, favorites, selectedId, saveStatus, onChoose, iconStyle, onChooseIconStyle, onSignOut, signingOut,
+}) {
   const species = useMemo(() => pool.filter((entry) => !entry.isForm), [pool]);
   const [query, setQuery] = useState('');
   const [generation, setGeneration] = useState(null);
@@ -136,7 +163,7 @@ function ProfilePanel({ account, pool, favorites, selectedId, saveStatus, onChoo
     <div className="flex min-h-0 flex-1 flex-col">
       <div className="flex flex-wrap items-center gap-3 border-b border-ink/15 pb-4 sm:gap-4">
         <span className="profile-avatar profile-avatar-preview">
-          <ProfilePhoto id={selectedId} initial={account.initial} />
+          <ProfilePhoto id={selectedId} initial={account.initial} iconStyle={iconStyle} />
         </span>
         <div className="min-w-0 flex-1" aria-live="polite">
           <p className="text-sm italic text-umber">Pokémon do perfil</p>
@@ -144,6 +171,7 @@ function ProfilePanel({ account, pool, favorites, selectedId, saveStatus, onChoo
           <p className="mt-1 flex flex-wrap gap-1">
             {current.types.map((type) => <PokemonTypeBadge key={type} type={type} />)}
           </p>
+          <IconStylePicker value={iconStyle} onChange={onChooseIconStyle} />
           {status && (
             <p className={`mt-1.5 flex items-center gap-1.5 text-sm ${status.className}`}>
               {status.icon}

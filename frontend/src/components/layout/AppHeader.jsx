@@ -109,7 +109,7 @@ function AppHeader({
   activeId, collapsed, toolbarRef, profilePool, profileUser, onProfileError, onLogin, accountAction, children,
   accountTab, onOpenAccount, onAccountTab, onCloseAccount, onOpenTeam, onCreateTeam, theme, onChooseTheme, collections,
 }) {
-  const [profileId, chooseProfile, profileStatus] = useProfilePokemon(profileUser?.id ?? null, onProfileError);
+  const [profileId, chooseProfile, profileStatus, profileIconStyle, chooseIconStyle] = useProfilePokemon(profileUser?.id ?? null, onProfileError);
   const { values: preferences } = usePreferences();
   const account = useMemo(() => profileAccount(profileUser, preferences.display_name), [profileUser, preferences.display_name]);
   const avatarRef = useRef(null);
@@ -152,6 +152,7 @@ function AppHeader({
             {profileUser ? (
               <AccountMenu
                 profileId={profileId}
+                iconStyle={profileIconStyle}
                 account={account}
                 compact={collapsed}
                 onOpenAccount={onOpenAccount}
@@ -193,7 +194,8 @@ function AppHeader({
             returnFocusRef={avatarRef}
             account={account}
             profile={{
-              userId: profileUser.id, pool: profilePool, selectedId: profileId, saveStatus: profileStatus, onChoose: chooseProfile, onSignOut: signOut, signingOut,
+              userId: profileUser.id, pool: profilePool, selectedId: profileId, saveStatus: profileStatus, onChoose: chooseProfile,
+              iconStyle: profileIconStyle, onChooseIconStyle: chooseIconStyle, onSignOut: signOut, signingOut,
             }}
             teams={{ userId: profileUser.id, onOpenTeam, onCreateTeam }}
             appearance={{ theme, onChooseTheme }}
