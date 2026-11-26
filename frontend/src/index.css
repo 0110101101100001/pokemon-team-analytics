@@ -776,9 +776,21 @@
   }
 
   /* Onde logo, menu e botões quase enchem a linha, os botões com rótulo ficam sem ícone. */
-  @media (max-width: 479px), (min-width: 1280px) and (max-width: 1699px) {
+  @media (min-width: 1280px) and (max-width: 1699px) {
     .header-action-icon {
       display: none;
+    }
+  }
+
+  /* No celular estreito o Sobre fica só com o ícone (o nome acessível vem do aria-label), para a logo reduzida caber. */
+  @media (max-width: 479px) {
+    .header-action-label {
+      display: none;
+    }
+
+    .header-paper-button:has(.header-action-label) {
+      width: 36px;
+      padding: 0;
     }
   }
 

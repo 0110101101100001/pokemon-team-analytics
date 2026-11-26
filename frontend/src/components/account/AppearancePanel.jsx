@@ -1,7 +1,7 @@
 import { memo, useRef } from 'react';
 import { Check } from 'lucide-react';
 import PokemonTypeBadge from '../PokemonTypeBadge';
-import { DEFAULT_THEME, THEMES, THEME_GROUPS } from '../../theme/themes';
+import { DEFAULT_THEME, THEMES, THEME_GROUPS, prefetchThemeLogos } from '../../theme/themes';
 
 // A faixa de cores da prévia: os seis papéis da paleta, lidos do próprio tema.
 const SWATCHES = ['bg', 'surface', 'border', 'ink', 'accent', 'secondary'];
@@ -44,6 +44,9 @@ const ThemeCard = memo(function ThemeCard({ theme, checked, onChoose, cardRef })
       tabIndex={checked ? 0 : -1}
       data-theme={theme.id}
       onClick={() => onChoose(theme.id)}
+      // As logos do tema começam a baixar antes do clique: a troca do header sai sem buraco.
+      onMouseEnter={() => prefetchThemeLogos(theme.id)}
+      onFocus={() => prefetchThemeLogos(theme.id)}
       className={`relative flex cursor-pointer flex-col gap-2 rounded-[4px] border-2 bg-surface p-2 text-left text-ink transition-colors ${
         checked ? 'border-accent-text' : 'border-line hover:border-line-strong'
       }`}

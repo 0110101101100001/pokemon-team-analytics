@@ -10,7 +10,7 @@ function AboutButton({ onClick }) {
       className="header-paper-button"
     >
       <Info className="header-action-icon h-4 w-4" aria-hidden="true" />
-      Sobre
+      <span className="header-action-label">Sobre</span>
     </button>
   );
 }
