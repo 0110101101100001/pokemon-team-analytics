@@ -1,15 +1,16 @@
 import { memo, useMemo } from 'react';
 import PokemonTypeBadge from './PokemonTypeBadge';
 import { thumbnailSpriteUrl } from '../services/api';
-import { TYPE_NAMES, effectiveness } from '../utils/typeChart';
+import { TYPE_NAMES, effectiveness } from '../data/typeChart';
 import { formatSlug } from '../utils/filters';
 
+// Fraqueza em vermelho (--danger) e resistência em verde (--good), iguais em todos os temas.
 const MULTIPLIER_STYLE = {
   0: { label: '0', className: 'bg-ink/80 text-paper font-bold' },
-  0.25: { label: '¼', className: 'bg-smeargle-olive/35 text-smeargle-ink-darkGreen font-bold' },
-  0.5: { label: '½', className: 'bg-smeargle-olive/15 text-smeargle-ink-darkGreen font-semibold' },
-  2: { label: '2', className: 'bg-vermilion/15 text-vermilion-deep font-semibold' },
-  4: { label: '4', className: 'bg-vermilion/35 text-vermilion-deep font-bold' },
+  0.25: { label: '¼', className: 'bg-good/30 text-good font-bold' },
+  0.5: { label: '½', className: 'bg-good/15 text-good font-semibold' },
+  2: { label: '2', className: 'bg-danger/15 text-danger font-semibold' },
+  4: { label: '4', className: 'bg-danger/30 text-danger font-bold' },
 };
 
 const CELL = 'h-8 px-1 text-center tabular-nums';
@@ -30,8 +31,8 @@ function buildRows(team) {
 }
 
 const summaryClass = (danger, good) => {
-  if (danger) return 'bg-vermilion/15 text-vermilion-deep font-bold';
-  if (good) return 'text-smeargle-ink-darkGreen font-semibold';
+  if (danger) return 'bg-danger/15 text-danger font-bold';
+  if (good) return 'text-good font-semibold';
   return 'text-smeargle-textDim/80';
 };
 

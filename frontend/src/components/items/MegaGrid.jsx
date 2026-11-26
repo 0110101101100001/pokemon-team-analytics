@@ -10,7 +10,7 @@ const LABEL = 'block text-[10px] font-semibold uppercase text-umber';
 const LINK = 'cursor-pointer rounded-[2px] text-left font-semibold underline decoration-umber/35 decoration-dashed underline-offset-4 transition-colors hover:text-olive-ink hover:decoration-olive-deep focus:outline-none focus-visible:ring-2 focus-visible:ring-paint-cobalt';
 
 const signed = (value) => (value > 0 ? `+${value}` : value < 0 ? `−${Math.abs(value)}` : '0');
-const diffTone = (value) => (value > 0 ? 'text-olive-ink' : value < 0 ? 'text-vermilion-deep' : 'text-umber');
+const diffTone = (value) => (value > 0 ? 'text-good' : value < 0 ? 'text-danger' : 'text-umber');
 
 // Megas novas podem ainda não ter sprite no repositório da PokéAPI: aí entra o da forma base.
 function MegaSprite({ id, baseId }) {
@@ -123,7 +123,7 @@ function MegaCard({ mega, baseEntry, onSelectPokemon, onSelectItem, onSelectAbil
 /** Grade das Megas e Primais: pedra, habilidade, tipos e quanto muda cada atributo em relação à forma base. */
 function MegaGrid({ megas, resolveBase, onSelectPokemon, onSelectItem, onSelectAbility }) {
   if (megas.length === 0) {
-    return <EmptyState title="nenhuma Mega com esses filtros" />;
+    return <EmptyState title="nenhuma Mega com esses filtros" hint="Ajuste a busca ou o tipo." />;
   }
   return (
     <ul className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">

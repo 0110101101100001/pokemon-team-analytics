@@ -4,6 +4,7 @@ import { LearnersRow, LearnersToggle } from '../moves/LearnersToggle';
 import { fetchMachineLearners, hasMachineLearners } from '../../services/machineLearners';
 import { formatSlug } from '../../utils/filters';
 import { CELL, DAMAGE_CLASS_LABELS, HEAD, MOVE_NAME_BUTTON, ROW } from '../moves/moveTableStyles';
+import EmptyState from '../EmptyState';
 
 const learnersPanelId = (code) => `aprendem-${code}`;
 
@@ -56,11 +57,7 @@ function MachineTable({ machines, gameId, gameLabel, openCode, onToggle, onSelec
   const columns = withLearners ? 7 : 6;
 
   if (machines.length === 0) {
-    return (
-      <p className="py-16 text-center font-reading text-sm italic text-smeargle-textDim/80">
-        Nenhum item encontrado. Ajuste a busca ou o tipo.
-      </p>
-    );
+    return <EmptyState title="nenhuma TM com esses filtros" hint="Ajuste a busca, o jogo ou o tipo do golpe." />;
   }
 
   return (

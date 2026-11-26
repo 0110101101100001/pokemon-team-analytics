@@ -32,6 +32,7 @@ export default {
         accent: { DEFAULT: token('accent'), fill: token('accent-fill'), text: token('accent-text'), on: token('on-accent') },
         secondary: { DEFAULT: token('secondary'), icon: token('secondary-icon'), text: token('secondary-text') },
         danger: token('danger'),
+        good: token('good'),
         smogon: token('smogon'),
         scrim: token('scrim'),
         header: { DEFAULT: token('header'), ink: token('header-ink'), solid: token('header-solid'), underline: token('header-underline') },
@@ -39,6 +40,10 @@ export default {
         fixed: { light: token('fixed-light'), dark: token('fixed-dark') },
         // Barra de PS: verde acima de 50%, amarela até 20%, vermelha abaixo (não muda com o tema).
         hp: { high: token('hp-high'), mid: token('hp-mid'), low: token('hp-low') },
+        // Efetividade de tipo (fraquezas e resistências da ficha): as mesmas cores em todos os temas.
+        eff: { weak4: token('eff-weak-4'), weak2: token('eff-weak-2'), resist2: token('eff-resist-2'), resist4: token('eff-resist-4') },
+        // Respostas do teste do meta no esboço: as mesmas quatro cores em todos os temas.
+        status: { none: token('status-none'), weak: token('status-weak'), ok: token('status-ok'), solid: token('status-solid') },
         smeargle: {
           bg: token('bg'),
           surface: token('surface'),

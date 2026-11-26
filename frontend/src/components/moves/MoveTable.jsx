@@ -5,6 +5,7 @@ import ShowMoreButton from '../ShowMoreButton';
 import { useIncrementalList } from '../../hooks/useIncrementalList';
 import { formatSlug } from '../../utils/filters';
 import { CELL, DAMAGE_CLASS_LABELS, HEAD, MOVE_NAME_BUTTON, ROW } from './moveTableStyles';
+import EmptyState from '../EmptyState';
 
 const COLUMN_COUNT = 7;
 // Linhas montadas por lote; as seguintes entram conforme a tabela rola.
@@ -54,11 +55,7 @@ function MoveTable({ moves, openMove, onToggleMove, onSelectMove, entryByName, o
   const batch = useIncrementalList(moves, BATCH_SIZE);
 
   if (moves.length === 0) {
-    return (
-      <p className="py-16 text-center font-reading text-sm italic text-smeargle-textDim/80">
-        Nenhum golpe encontrado. Ajuste a busca, o tipo ou a categoria.
-      </p>
-    );
+    return <EmptyState title="nenhum golpe com esses filtros" hint="Ajuste a busca, o tipo ou a categoria." />;
   }
 
   return (

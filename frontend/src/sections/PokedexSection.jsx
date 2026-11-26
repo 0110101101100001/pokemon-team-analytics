@@ -6,7 +6,7 @@ import FiltersBar, { ActiveFilters, AdvancedFilters } from '../components/Filter
 import PokemonGrid from '../components/PokemonGrid';
 import { SmogonSeal } from '../components/PokemonCard';
 import HeaderToolbar, { ToolbarRow } from '../components/layout/HeaderToolbar';
-import SectionHeading from '../components/layout/SectionHeading';
+import SectionHeading, { ResultCount } from '../components/layout/SectionHeading';
 import { useHeaderCollapsed } from '../components/layout/headerContext';
 import { buildRegionalEntries, useRegionalDex } from '../hooks/useRegionalDex';
 import { useBaseStats, viewNeedsStats } from '../hooks/usePokedexView';
@@ -158,8 +158,7 @@ function PokedexSection({
         title={isRegional ? 'Registro Regional' : 'Registro Nacional'}
         subtitle={(
           <>
-            <span className="font-mono font-semibold tabular-nums text-ink">{count}</span> Pokémon encontrado{count !== 1 ? 's' : ''}
-            {searchTerm && <> para <span className="font-serif italic">“{searchTerm}”</span></>}
+            <ResultCount count={count} singular="Pokémon encontrado" plural="Pokémon encontrados" query={searchTerm} />
             <span className="text-brown/80">
               {' · '}
               {isRegional

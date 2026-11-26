@@ -3,15 +3,14 @@ import AbilityTable from '../components/abilities/AbilityTable';
 import MoveAbilityModal from '../components/MoveAbilityModal';
 import { HeaderSearch, HeaderSelect, OPTION_CLASS } from '../components/layout/HeaderControls';
 import HeaderToolbar, { ToolbarRow } from '../components/layout/HeaderToolbar';
-import SectionHeading, { HEADING_PILL_CLASS } from '../components/layout/SectionHeading';
+import SectionHeading, { HEADING_PILL_CLASS, ResultCount } from '../components/layout/SectionHeading';
 import ABILITY_LIST from '../data/abilities.json';
 import { fetchPokemonList } from '../services/api';
-import { GENERATIONS, formatSlug } from '../utils/filters';
+import { GENERATIONS } from '../utils/filters';
+import { createTextMatcher } from '../utils/textMatch';
 
 // abilities.json (scripts/build-abilities.mjs): [slug, geração, efeito curto em inglês, [[id do Pokémon, oculta]]].
-const ABILITIES = ABILITY_LIST.map(([slug, generation, effect, holders]) => ({
-  slug, generation, effect, holders, label: formatSlug(slug).toLowerCase(),
-}));
+const ABILITIES = ABILITY_LIST.map(([slug, generation, effect, holders]) => ({ slug, generation, effect, holders }));
 const HOLDERS_BY_SLUG = new Map(ABILITIES.map((ability) => [ability.slug, ability.holders]));
 
 // Nome de cada id pelo índice completo da Pokédex: as Megas e outras formas fora da grade também têm habilidade.
@@ -33,7 +32,6 @@ const loadHolders = (slug) => loadNameById().then((nameById) =>
     return name ? [{ name, id, hidden: hidden === 1 }] : [];
   }));
 
-const toSearchTerm = (text) => text.trim().toLowerCase().replace(/-/g, ' ');
 
 export default function AbilitiesSection({ entryByName, onSelectPokemon }) {
   const [query, setQuery] = useState('');
@@ -44,10 +42,10 @@ export default function AbilitiesSection({ entryByName, onSelectPokemon }) {
   const deferredQuery = useDeferredValue(query);
 
   const abilities = useMemo(() => {
-    const term = toSearchTerm(deferredQuery);
+    const matches = createTextMatcher(deferredQuery);
     return ABILITIES.filter((ability) =>
       (!generation || ability.generation === Number(generation)) &&
-      (!term || ability.label.includes(term)));
+      matches(ability.slug));
   }, [generation, deferredQuery]);
 
   const handleQuery = useCallback((e) => setQuery(e.target.value), []);
@@ -72,17 +70,11 @@ export default function AbilitiesSection({ entryByName, onSelectPokemon }) {
 
       <SectionHeading
         title="Habilidades"
-        subtitle={(
-          <>
-            <span className="font-semibold tabular-nums text-ink">{count}</span>{' '}
-            {`habilidade${count !== 1 ? 's' : ''}`}
-            {deferredQuery.trim() && <> para <span className="font-serif italic">“{deferredQuery.trim()}”</span></>}
-          </>
-        )}
+        subtitle={<ResultCount count={count} singular="habilidade" plural="habilidades" query={deferredQuery} />}
         aside={<span className={HEADING_PILL_CLASS}>Toque em “Pokémon” para ver quem tem</span>}
       />
 
-      <p className="font-reading text-sm italic text-brown">* Clique no nome da habilidade para ver mais informações.</p>
+      <p className="font-reading text-sm italic text-brown">* Toque no nome da habilidade para ver mais informações.</p>
 
       <AbilityTable
         abilities={abilities}

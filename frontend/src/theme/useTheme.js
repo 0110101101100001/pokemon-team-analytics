@@ -1,14 +1,8 @@
 import { useCallback, useEffect, useRef, useSyncExternalStore } from 'react';
 import { createThemeController } from './themeController';
 import { fetchUserTheme, saveUserTheme } from '../services/userSettings';
+import { browserStorage } from '../utils/browserStorage';
 
-function browserStorage() {
-  try {
-    return window.localStorage;
-  } catch {
-    return null;
-  }
-}
 
 // A barra do navegador no celular acompanha o header: a cor vem do token já aplicado, sem repetir a paleta aqui.
 function updateThemeColor() {

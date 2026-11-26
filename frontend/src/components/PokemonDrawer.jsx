@@ -1,6 +1,6 @@
 import { memo, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
-  BarChart3, BookOpen, Check, Cpu, Egg, NotebookPen, Ruler, Scale, Search, Shield, Sparkles, Swords, Weight, X,
+  BarChart3, BookOpen, Check, Cpu, Egg, GitBranch, NotebookPen, Ruler, Scale, Search, Shield, Sparkles, Swords, Weight, X,
 } from 'lucide-react';
 import PokemonTypeBadge, { TYPE_INK } from './PokemonTypeBadge';
 import PokemonEncounters from './PokemonEncounters';
@@ -11,7 +11,7 @@ import PokemonBuilds from './PokemonBuilds';
 import FavoriteButton from './FavoriteButton';
 import { capitalize } from '../utils/typeColors';
 import {
-  fetchEvolutionChain, fetchMove, fetchPokemonDetail, fetchPokemonSpecies, fetchTypeData, movePowerOf,
+  fetchEvolutionChain, fetchMove, fetchPokemonDetail, fetchPokemonSpecies, movePowerOf,
 } from '../services/api';
 import { fetchSmogonNames, fetchSmogonStats } from '../services/smogonMeta';
 import { usePreferences } from '../preferences/usePreferences';
@@ -30,6 +30,7 @@ import { DAMAGE_CLASS_LABELS } from './moves/moveTableStyles';
 import { teamSlotFor } from '../utils/teamScore';
 import { COMPARE_LIMIT } from '../utils/compare';
 import { BrushHighlight } from './InkDecor';
+import { defensiveProfile } from '../data/typeChart';
 
 /* ---------------------------------------------------------------- dados estáticos */
 
@@ -98,12 +99,13 @@ const TABS = [
 
 const EFFECTIVENESS_ROWS = {
   weak: [
-    { key: 'quadruple', multiplier: '4×', label: 'Fraqueza extrema', tone: 'bg-[#780000] text-fixed-light' },
-    { key: 'double', multiplier: '2×', label: 'Fraqueza', tone: 'bg-[#A23C3C] text-fixed-light' },
+    { key: 'quadruple', multiplier: '4×', label: 'Fraqueza extrema', tone: 'bg-eff-weak4 text-fixed-light' },
+    { key: 'double', multiplier: '2×', label: 'Fraqueza', tone: 'bg-eff-weak2 text-fixed-light' },
   ],
+  // Cores fixas (--eff-* em themes.css): as do tema mudavam de matiz e a resistência podia sair azul ou roxa.
   resist: [
-    { key: 'half', multiplier: '½×', label: 'Resistência', tone: 'bg-olive-deep text-accent-on' },
-    { key: 'quarter', multiplier: '¼×', label: 'Resistência dupla', tone: 'bg-olive-ink text-paper' },
+    { key: 'half', multiplier: '½×', label: 'Resistência', tone: 'bg-eff-resist2 text-fixed-light' },
+    { key: 'quarter', multiplier: '¼×', label: 'Resistência dupla', tone: 'bg-eff-resist4 text-fixed-light' },
     { key: 'immune', multiplier: '0×', label: 'Imunidade', tone: 'bg-ink text-paper' },
   ],
 };
@@ -169,31 +171,10 @@ function collectLearnset(moves, versionGroup) {
   return learnset;
 }
 
-function calculateTypeEffectiveness(typeDataArray) {
-  const multipliers = {};
-  const apply = (list, factor) => {
-    for (const t of list ?? []) multipliers[t.name] = (multipliers[t.name] ?? 1) * factor;
-  };
-  for (const { damage_relations } of typeDataArray) {
-    apply(damage_relations.no_damage_from, 0);
-    apply(damage_relations.half_damage_from, 0.5);
-    apply(damage_relations.double_damage_from, 2);
-  }
-
-  const grouped = { immune: [], quarter: [], half: [], double: [], quadruple: [] };
-  for (const [type, mult] of Object.entries(multipliers)) {
-    if (mult === 0) grouped.immune.push(type);
-    else if (mult === 0.25) grouped.quarter.push(type);
-    else if (mult === 0.5) grouped.half.push(type);
-    else if (mult === 2) grouped.double.push(type);
-    else if (mult === 4) grouped.quadruple.push(type);
-  }
-  return grouped;
-}
-
-async function fetchTypeEffectiveness(types) {
-  const typeData = await Promise.all(types.map((t) => fetchTypeData(t.type.name)));
-  return calculateTypeEffectiveness(typeData.filter(Boolean));
+// Fraquezas e resistências da forma, pela tabela de tipos do site (data/typeChart.js): sem pedir os tipos à PokéAPI.
+function typeEffectivenessOf(types) {
+  const profile = defensiveProfile(types.map((t) => t.type.name));
+  return { immune: profile.x0, quarter: profile.x025, half: profile.x05, double: profile.x2, quadruple: profile.x4 };
 }
 
 // A Smogon agrupa o que sobra em "Other"; não é uma habilidade, item, golpe nem spread de verdade.
@@ -467,10 +448,8 @@ export default function PokemonDrawer({
         const s = guessedSpecies?.name === d.species?.name
           ? guessedSpecies
           : await fetchPokemonSpecies(d.species?.name ?? cleanName);
-        const [effectiveness, chainData] = await Promise.all([
-          fetchTypeEffectiveness(d.types),
-          s?.evolution_chain?.url ? fetchEvolutionChain(s.evolution_chain.url) : null,
-        ]);
+        const effectiveness = typeEffectivenessOf(d.types);
+        const chainData = s?.evolution_chain?.url ? await fetchEvolutionChain(s.evolution_chain.url) : null;
         if (!active) return;
 
         const varieties = s?.varieties ?? [];
@@ -567,7 +546,7 @@ export default function PokemonDrawer({
     setCurrentFormName(formName);
     try {
       const formDetail = await fetchPokemonDetail(getCleanPokemonName(formName));
-      const effectiveness = await fetchTypeEffectiveness(formDetail.types);
+      const effectiveness = typeEffectivenessOf(formDetail.types);
       if (requestId !== formRequestRef.current) return;
       setDetail(formDetail);
       setTypeEffectiveness(effectiveness);
@@ -805,7 +784,7 @@ export default function PokemonDrawer({
                 </div>
               </SectionCard>
 
-              <SectionCard icon={Egg} title="Habilidades & Morfologia">
+              <SectionCard icon={Sparkles} title="Habilidades & Morfologia">
                 <div className="flex flex-wrap gap-1.5">
                   {detail.abilities.map((a) => (
                     <button
@@ -840,7 +819,7 @@ export default function PokemonDrawer({
             </div>
 
             {species && (
-              <SectionCard icon={NotebookPen} title="Dados da Espécie">
+              <SectionCard icon={Egg} title="Dados da Espécie">
                 <SpeciesFacts
                   species={species}
                   formName={currentFormName}
@@ -869,7 +848,7 @@ export default function PokemonDrawer({
               </SectionCard>
             )}
 
-            <SectionCard title="Árvore Evolutiva">
+            <SectionCard icon={GitBranch} title="Árvore Evolutiva">
               {evolutionChain ? (
                 <EvolutionTree
                   chain={evolutionChain}

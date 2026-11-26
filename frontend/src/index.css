@@ -1153,3 +1153,27 @@
     }
   }
 }
+
+/*
+  Tabela de tipos (página Tipos): células da matriz por categoria (data-value 2, 0.5 ou 0; 1 fica vazio) e o
+  destaque da linha e da coluna sob o mouse ou o foco (data-hl). As cores são tokens de themes.css (--chart-*).
+*/
+@layer components {
+  .type-cell {
+    background-color: var(--surface);
+    transition: background-color 120ms ease-out;
+  }
+  .type-cell[data-value='2'] { background-color: var(--chart-x2-bg); color: var(--chart-x2-text); }
+  .type-cell[data-value='0.5'] { background-color: var(--chart-half-bg); color: var(--chart-half-text); }
+  .type-cell[data-value='0'] { background-color: var(--chart-zero-bg); color: var(--ink); }
+  .type-cell[data-hl='true'] { background-color: var(--chart-hl-bg); }
+  .type-cell[data-hl='true'][data-value='2'] { background-color: var(--chart-x2-bg-hl); }
+  .type-cell[data-hl='true'][data-value='0.5'] { background-color: var(--chart-half-bg-hl); }
+  .type-cell[data-hl='true'][data-value='0'] { background-color: var(--chart-zero-bg-hl); }
+
+  @media (prefers-reduced-motion: reduce) {
+    .type-cell {
+      transition: none;
+    }
+  }
+}

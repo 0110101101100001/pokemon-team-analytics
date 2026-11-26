@@ -1,14 +1,15 @@
 import { memo, useMemo } from 'react';
 import PokemonTypeBadge from '../PokemonTypeBadge';
 import { thumbnailSpriteUrl } from '../../services/api';
-import { TYPE_NAMES, effectiveness } from '../../utils/typeChart';
+import { TYPE_NAMES, effectiveness } from '../../data/typeChart';
 import { formatSlug } from '../../utils/filters';
 import { capitalize } from '../../utils/typeColors';
 
+// Super efetivo em verde (--good) e resistido em vermelho (--danger), iguais em todos os temas.
 const TIERS = {
-  super: { label: '2×', className: 'border-smeargle-olive/50 bg-smeargle-olive/15', badge: 'bg-smeargle-olive text-paper' },
+  super: { label: '2×', className: 'border-good/50 bg-good/15', badge: 'bg-good text-paper' },
   neutral: { label: '1×', className: 'border-umber/15 bg-paper/70', badge: 'bg-umber/15 text-umber' },
-  resisted: { label: '½', className: 'border-vermilion/35 bg-vermilion/10', badge: 'bg-vermilion/80 text-paper' },
+  resisted: { label: '½', className: 'border-danger/35 bg-danger/10', badge: 'bg-danger text-paper' },
   immune: { label: '0', className: 'border-ink/35 bg-ink/10', badge: 'bg-ink/80 text-paper' },
 };
 

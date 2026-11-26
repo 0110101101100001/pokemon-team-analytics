@@ -8,17 +8,16 @@ import { BrushUnderline } from '../components/InkDecor';
 import { DAMAGE_CLASS_LABELS } from '../components/moves/moveTableStyles';
 import { HeaderSearch, HeaderSelect, OPTION_CLASS } from '../components/layout/HeaderControls';
 import HeaderToolbar, { ToolbarRow } from '../components/layout/HeaderToolbar';
-import SectionHeading, { HEADING_PILL_CLASS } from '../components/layout/SectionHeading';
+import SectionHeading, { HEADING_PILL_CLASS, ResultCount } from '../components/layout/SectionHeading';
 import MOVE_LIST from '../data/moves.json';
 import { TYPE_NAMES, movePowerOf } from '../services/api';
 import { formatSlug } from '../utils/filters';
+import { createTextMatcher } from '../utils/textMatch';
 
 // moves.json (scripts/build-moves.mjs): [slug, tipo, categoria, poder, precisão, PP, geração].
 const MOVES = MOVE_LIST.map(([slug, type, damageClass, power, accuracy, pp, generation]) => ({
-  slug, type, damageClass, power: movePowerOf({ name: slug, power }), accuracy, pp, generation, label: formatSlug(slug).toLowerCase(),
+  slug, type, damageClass, power: movePowerOf({ name: slug, power }), accuracy, pp, generation,
 }));
-
-const toSearchTerm = (text) => text.trim().toLowerCase().replace(/-/g, ' ');
 
 // Golpes comuns (os que algum Pokémon aprende) e os especiais, que entram só por Dynamax ou cristal Z.
 const KINDS = [
@@ -67,14 +66,14 @@ export default function MovesSection({ entryByName, onSelectPokemon }) {
   const deferredQuery = useDeferredValue(query);
 
   const moves = useMemo(() => {
-    const term = toSearchTerm(deferredQuery);
+    const matches = createTextMatcher(deferredQuery);
     return MOVES.filter((move) =>
       (!moveType || move.type === moveType) &&
       (!damageClass || move.damageClass === damageClass) &&
-      (!term || move.label.includes(term)));
+      matches(move.slug));
   }, [moveType, damageClass, deferredQuery]);
 
-  const specialFilters = useMemo(() => ({ term: toSearchTerm(deferredQuery), type: moveType }), [deferredQuery, moveType]);
+  const specialFilters = useMemo(() => ({ term: deferredQuery, type: moveType }), [deferredQuery, moveType]);
   const contestMoves = useMemo(
     () => (contest ? filterContestMoves(CONTEST_MOVES, { ...specialFilters, category: contestCategory }) : []),
     [contest, specialFilters, contestCategory],
@@ -123,13 +122,7 @@ export default function MovesSection({ entryByName, onSelectPokemon }) {
 
       <SectionHeading
         title="Movimentos"
-        subtitle={(
-          <>
-            <span className="font-semibold tabular-nums text-ink">{count}</span>{' '}
-            {`golpe${count !== 1 ? 's' : ''}`}
-            {deferredQuery.trim() && <> para <span className="font-serif italic">“{deferredQuery.trim()}”</span></>}
-          </>
-        )}
+        subtitle={<ResultCount count={count} singular="golpe" plural="golpes" query={deferredQuery} />}
         aside={(
           <span className={HEADING_PILL_CLASS}>
             {contest ? 'Toque em “Combos” para ver os encadeamentos' : 'Toque em “Pokémon” para ver quem aprende'}
@@ -140,7 +133,7 @@ export default function MovesSection({ entryByName, onSelectPokemon }) {
       <KindTabs value={kind} onChange={setKind} />
 
       {(kind === 'learnable' || contest) && (
-        <p className="font-reading text-sm italic text-brown">* Clique no nome do golpe para ver mais informações.</p>
+        <p className="font-reading text-sm italic text-brown">* Toque no nome do golpe para ver mais informações.</p>
       )}
 
       {contest && <ContestTable moves={contestMoves} openMove={openMove} onToggleMove={toggleMove} onSelectMove={setDetail} />}

@@ -61,7 +61,7 @@ function BattleSprite({ id, fainted = false }) {
 /** Estágio de um atributo, de −6 a +6: o nome em cima e o contador com menos e mais embaixo. */
 function BoostStepper({ stat, value, onChange }) {
   const label = STAT_LABELS[stat];
-  const tone = value > 0 ? 'border-smeargle-olive bg-smeargle-olive/10 text-smeargle-ink-darkGreen' : value < 0 ? 'border-vermilion/50 bg-vermilion/5 text-vermilion-deep' : 'border-umber/25 bg-paper/80 text-smeargle-text';
+  const tone = value > 0 ? 'border-good/60 bg-good/10 text-good' : value < 0 ? 'border-danger/50 bg-danger/5 text-danger' : 'border-umber/25 bg-paper/80 text-smeargle-text';
   return (
     <div className="min-w-0" role="group" aria-label={`Estágio de ${label}`}>
       <span className="mb-0.5 block text-center text-[10px] font-bold uppercase tracking-wider text-umber">{label}</span>
@@ -165,7 +165,7 @@ function CombatantPanel({ caption, title, pickerPlaceholder, side, battle, forms
                 )}
               </div>
               {speed != null && (
-                <p className={`mt-1 flex items-center gap-1 font-mono text-xs font-bold tabular-nums ${faster ? 'text-smeargle-ink-darkGreen' : 'text-umber'}`}>
+                <p className={`mt-1 flex items-center gap-1 font-mono text-xs font-bold tabular-nums ${faster ? 'text-good' : 'text-umber'}`}>
                   <Wind className="h-3.5 w-3.5" aria-hidden="true" />
                   Spe {speed}
                   {faster && <span className="font-hand text-base font-normal">· age primeiro</span>}

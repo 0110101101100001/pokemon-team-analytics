@@ -1,17 +1,14 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { createProfile, fetchProfilePokemon, saveProfilePokemon } from '../services/userProfile';
 import { DEFAULT_PROFILE_POKEMON, isProfilePokemonId } from '../utils/profilePokemon';
+import { removeStored } from '../utils/browserStorage';
 
 // Chaves de versões anteriores, quando o visitante também escolhia o ícone neste navegador.
 const OLD_KEYS = ['smearglepedia:avatar', 'smearglepedia:profile-pokemon'];
 const SAVE_DELAY_MS = 400;
 
 function forgetOldChoices() {
-  try {
-    OLD_KEYS.forEach((key) => window.localStorage.removeItem(key));
-  } catch {
-    // Sem armazenamento, não há o que limpar.
-  }
+  OLD_KEYS.forEach(removeStored);
 }
 
 /**

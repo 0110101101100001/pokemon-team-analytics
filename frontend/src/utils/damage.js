@@ -1,4 +1,4 @@
-import { effectiveness } from './typeChart';
+import { effectiveness } from '../data/typeChart';
 import {
   BALL_MOVES, BITE_MOVES, GRASSY_HALVED, MOLD_BREAKERS, PRIORITY_BLOCKERS, PULSE_MOVES, RECOIL_MOVES, RESIST_BERRIES,
   SLICING_MOVES, SOUND_MOVES, TYPE_BOOST_ITEMS, UNBREAKABLE_ABILITIES, WIND_MOVES, boostedBySheerForce, isPunch,

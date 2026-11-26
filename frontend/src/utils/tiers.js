@@ -14,6 +14,9 @@ const SINGLES = [
 /** [{ value: 'gen9ou', key: 'ou', label: 'OU' }]: `value` é o tier de smogon_stats; `key`, o de gen9.json. */
 export const SINGLES_TIERS = SINGLES.map(([value, key]) => ({ value, key, label: tierLabel(key) }));
 
+/** Nome do tier para exibir ("gen9ou" → "OU"); um valor desconhecido volta como veio. */
+export const tierLabelOf = (tier) => SINGLES_TIERS.find((option) => option.value === tier)?.label ?? tier;
+
 export const DEFAULT_TIER = 'gen9ou';
 
 const KEY_BY_TIER = new Map(SINGLES);

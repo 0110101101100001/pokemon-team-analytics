@@ -5,7 +5,7 @@ import { buildMeta } from './metaScore';
 import { diversitySpecies } from './sketch';
 import {
   STATUS_RANK, commitMembers, createCardState, evaluateManualSwap, evaluateTeam, fixWorstThreat, pickFix,
-  regenerateCard, swapError, swapOptions, toggleLock, undo, worstThreat,
+  regenerateCard, reseedCard, reseedMembers, swapError, swapOptions, toggleLock, undo, worstThreat,
 } from './sketchEdit';
 import { POOL, ROWS, battleData, byName } from './sketchFixtures';
 import { planSketch, sketchContext } from './sketchPlan';
@@ -149,9 +149,62 @@ describe('regenerateCard', () => {
 
   it('devolve null quando é impossível', () => {
     expect(regenerateCard(cards[0].members.map((member) => ({ ...member, locked: true })), [], ctx)).toBeNull();
-    expect(regenerateCard(unlocked(cards[0]).members, [], ctx)).toBeNull();
     const everyone = sketchContext(plan({ banned: POOL.map((p) => p.name).filter((n) => n !== 'great-tusk') }));
     expect(regenerateCard(cards[0].members, [], everyone)).toBeNull();
+  });
+});
+
+describe('regenerateCard sem fixos', () => {
+  it('recomeça do zero e devolve 6 membros diferentes da composição atual', () => {
+    const { members } = unlocked(cards[0]);
+    const next = regenerateCard(members, [], ctx);
+    expect(next).toHaveLength(6);
+    expect(new Set(next.map((member) => speciesOf(member.pokemon))).size).toBe(6);
+    expect([...names(next)].sort()).not.toEqual([...names(members)].sort());
+  });
+});
+
+describe('reseedMembers', () => {
+  const builder = (name) => ({ ...byName(name), set: { moves: [] } });
+
+  it('troca o rascunho antigo pelo novo e mantém os adicionados, fixados primeiro', () => {
+    const card = cards[0];
+    const members = card.members.map((member, index) => ({ ...member, locked: index === 0 || index === 4 }));
+    const outside = ctx.tierPool.find((entry) => !members.some((member) => speciesOf(member.pokemon) === speciesOf(entry)));
+    const seed = [{ ...outside, set: { moves: [] } }];
+    const next = reseedMembers(members, seed, ctx);
+    expect(next).toHaveLength(6);
+    expect(next.slice(0, seed.length).map((member) => member.pokemon.name)).toEqual(seed.map((pokemon) => pokemon.name));
+    expect(next.slice(0, seed.length).every((member) => member.fromSeed && member.locked)).toBe(true);
+    expect(names(next)).not.toContain('great-tusk');
+    // O adicionado que estava fixado vem logo depois do rascunho.
+    expect(next[seed.length].pokemon.name).toBe(members[4].pokemon.name);
+    expect(new Set(next.map((member) => speciesOf(member.pokemon))).size).toBe(6);
+  });
+
+  it('um adicionado da mesma espécie de alguém do rascunho novo sai, e a busca completa a vaga', () => {
+    const card = cards[0];
+    const taken = card.members.find((member) => !member.fromSeed).pokemon;
+    const next = reseedMembers(card.members, [builder('great-tusk'), { ...taken, set: { moves: [] } }], ctx);
+    expect(next).toHaveLength(6);
+    expect(next.filter((member) => member.pokemon.name === taken.name)).toHaveLength(1);
+    expect(next.slice(0, 2).every((member) => member.fromSeed)).toBe(true);
+    expect(new Set(next.map((member) => speciesOf(member.pokemon))).size).toBe(6);
+  });
+
+  it('com o rascunho vazio, os adicionados ficam e a busca completa o time', () => {
+    const next = reseedMembers(cards[0].members, [], ctx);
+    expect(next).toHaveLength(6);
+    expect(next.every((member) => !member.fromSeed)).toBe(true);
+  });
+
+  it('reseedCard reavalia, mostra o efeito e zera o histórico', () => {
+    const card = cards[0];
+    const next = reseedCard(card, [builder('kingambit')].filter((p) => !names(card.members).includes(p.name)), ctx);
+    expect(next.history).toEqual([]);
+    expect(next.edited).toBe(card.edited);
+    expect(next.lastChange).not.toBeNull();
+    expect(next.evaluation).toEqual(evaluateTeam(next.members, ctx));
   });
 });
 

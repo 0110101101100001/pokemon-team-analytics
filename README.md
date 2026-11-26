@@ -30,11 +30,15 @@ O frontend busca na PokéAPI os dados de espécies, golpes e habilidades, e no b
 - **Modais de habilidades e golpes:** abrem ao clicar na ficha, no painel Smogon ou nas tabelas de movimentos e habilidades.
   - Mostram tipo, categoria, poder, precisão, PP, alvo e o efeito em batalha.
   - Os textos vêm da PokéAPI em pt-BR quando existem e caem para o inglês, com aviso, quando não há tradução. Hoje a PokéAPI tem pouca tradução em português.
-- **Team Builder:** time de até 6 Pokémon.
-  - Sugere candidatos por cobertura de tipos e sinergia no meta da Smogon.
-  - Sugestões: o melhor próximo Pokémon para a vaga seguinte, pelo time atual e pelo meta do OU.
+- **Itens:** itens em grade ou lista (a lista mostra o efeito de cada um), TMs por jogo com quem aprende, Megas e Primais, e Berries.
+- **Tipos** (`#/tipos`): tabela de tipos da geração atual. Matriz 18×18 (linhas = atacante, colunas = defensor) com símbolos além da cor, cabeçalhos fixos, destaque de linha e coluna e navegação por setas; resumo de cada tipo (ataque e defesa) com atalho para a Pokédex filtrada; calculadora de defesa para tipo duplo, com os tipos no endereço (`?t1=fire&t2=flying`). A tabela fica em `frontend/src/data/typeChart.js`, a fonte única usada também pela ficha, pelo Team Builder, pelo esboço e pela calculadora.
+- **Navegação:** do celular em diante, Movimentos, Habilidades, Itens e Tipos ficam no menu "Referência" do header; no celular, a grade de ícones mostra todas as abas.
+- **Team Builder:** time de até 6 Pokémon. As abas da análise ficam em dois grupos: Analisar (cobertura dos golpes e fraquezas) e Montar (sugestões, comparar e esboço).
+  - Sugestões: o melhor próximo Pokémon para a vaga seguinte, por cobertura de tipos, sinergia e pelo meta do OU.
+  - Comparar: na dúvida entre 2 ou 3 Pokémon para uma vaga (nova ou no lugar de alguém), cada candidato entra no time com o set mais usado do tier e passa pelo teste do meta; o lado a lado mostra a nota, as ameaças que ele resolve, piora e deixa sem resposta, as brechas de tipo e as funções.
   - Esboço: monta times inteiros para um plano (tier de singles, estilo como Balance, Chuva ou Trick Room, Pokémon proibidos e limite de tipos repetidos). Cada time cobre as funções do estilo (Hazards, Hazard Control, Pivot…), vem com sets completos (item, habilidade, Tera, EVs e golpes das builds da Smogon) e leva uma nota do teste do meta: cada membro duela com as 20 ameaças mais usadas do tier (com Stealth Rock na entrada, prioridade, a versão boostada pelo setup e a com Tera), a nota premia ter mais de uma resposta sólida e desconta quem carrega o time sozinho ou é 4x fraco a Rock sem Boots. O card explica as duas notas e mostra quem responde a cada ameaça.
   - Esboço editável: cada card aceita fixar membros, trocar um membro vendo antes o efeito de cada opção nas notas (teste do meta, encaixe e ameaças resolvidas ou pioradas), corrigir a pior ameaça com uma troca que não baixa o teste do meta, regenerar o resto mantendo os fixos e desfazer qualquer edição.
+  - O esboço começa do zero com o time vazio (pelos Pokémon mais usados do tier), fica guardado no navegador (plano e cards voltam ao trocar de aba ou recarregar), pode ser salvo em Meus times sem trocar o time do builder e, quando o time do builder muda, é atualizado com o rascunho novo sem perder o resto.
   - Habilidade e Tera no set de cada Pokémon, usados também pela calculadora de dano.
   - Exportação do time para o Pokémon Showdown.
   - Mostra a tabela de fraquezas e cobertura do time.
@@ -219,6 +223,7 @@ scripts/
   build-battle-data.mjs    gera frontend/src/data/battle-data.json (atributos base e golpes, para o esboço)
   build-abilities.mjs      gera frontend/src/data/abilities.json (habilidades, efeito curto e quem tem cada uma)
   build-items.mjs          gera frontend/src/data/items.json (itens com categoria e bolso, para a aba Itens)
+  build-item-effects.mjs   gera frontend/public/data/item-effects.json (efeito de cada item, para a lista da aba Itens)
 supabase/migrations/ políticas e índices das tabelas smogon_stats e PokemonTrainers
 .github/workflows/   CI, keep-alives, sincronização mensal e commit de atividade
 netlify.toml         build e headers do frontend

@@ -4,14 +4,8 @@ import {
   normalizeViewState, paramsWithViewState, readStoredViewState, sortNeedsStats, viewStateFromParams, writeStoredViewState,
 } from '../utils/pokedexView';
 import { fetchStaticJson } from '../services/staticData';
+import { browserStorage } from '../utils/browserStorage';
 
-const browserStorage = () => {
-  try {
-    return window.localStorage;
-  } catch {
-    return null;
-  }
-};
 
 /**
  * Ordenação e modo (Grade/Lista) da Pokédex. Valem para todas as coleções (Todos, Favoritos, Histórico) e ficam:

@@ -8,7 +8,7 @@ const MAX_NAMES = 3;
 
 /** "+9" / "−3" / "0", com a cor do sinal: verde-oliva para ganho, terracota para perda. */
 export function Delta({ label, value, suffix = '' }) {
-  const tone = value > 0 ? 'text-olive-ink' : value < 0 ? 'text-vermilion-deep' : 'text-smeargle-textDim';
+  const tone = value > 0 ? 'text-good' : value < 0 ? 'text-danger' : 'text-smeargle-textDim';
   const sign = value > 0 ? '+' : value < 0 ? '−' : '±';
   return (
     <span className={`whitespace-nowrap font-semibold tabular-nums ${tone}`}>
@@ -37,7 +37,7 @@ function SwapOptionRow({ option, onSwap, actionLabel = 'Trocar' }) {
           <Delta label="Teste do meta" value={delta.gauntlet} />
           <Delta label="Estilo" value={delta.fit} suffix="%" />
         </p>
-        {fixed.length > 0 && <p className="text-olive-ink">Resolve: {names(fixed)}</p>}
+        {fixed.length > 0 && <p className="text-good">Resolve: {names(fixed)}</p>}
         {worsened.length > 0 && <p className="text-vermilion-deep">Piora: {names(worsened)}</p>}
         {(rolesGained.length > 0 || rolesLost.length > 0) && (
           <p className="text-smeargle-textDim">

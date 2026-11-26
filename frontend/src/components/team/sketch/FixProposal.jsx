@@ -18,7 +18,7 @@ function FixProposal({ result, members, onApply, onSeeOptions, onClose }) {
 
   if (!result.option) {
     return (
-      <div role="status" className="flex items-start gap-2 rounded-[4px] border border-vermilion/30 bg-vermilion/5 p-2.5 font-reading text-xs text-smeargle-text">
+      <div role="status" className="flex items-start gap-2 rounded-[4px] border border-danger/30 bg-danger/5 p-2.5 font-reading text-xs text-smeargle-text">
         <Wand2 className="mt-0.5 h-4 w-4 shrink-0 text-vermilion-deep" aria-hidden="true" />
         <div className="flex-1 space-y-1.5">
           <p>{result.reason}</p>

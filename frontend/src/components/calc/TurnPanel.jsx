@@ -19,7 +19,7 @@ const KINDS = {
 function LineText({ text }) {
   return text.split(/([−+]\d+ PS)/).map((part, index) => {
     if (!/^[−+]\d+ PS$/.test(part)) return part;
-    const tone = part.startsWith('+') ? 'text-olive-ink' : 'text-vermilion-deep';
+    const tone = part.startsWith('+') ? 'text-good' : 'text-danger';
     return <span key={index} className={`font-mono text-[12px] font-bold tabular-nums ${tone}`}>{part}</span>;
   });
 }

@@ -3,10 +3,9 @@ import { Search } from 'lucide-react';
 import PokemonTypeBadge from '../PokemonTypeBadge';
 import { thumbnailSpriteUrl } from '../../services/api';
 import { createSearchMatcher, formatSlug } from '../../utils/filters';
+import { speciesOf } from '../../utils/teamScore';
 
 const RESULT_LIMIT = 6;
-
-const speciesOf = (pokemon) => pokemon.species ?? pokemon.name;
 
 /**
  * Busca de Pokémon por nome ou número, com a lista de resultados logo abaixo do campo.

@@ -1,5 +1,6 @@
 import { useCallback, useDeferredValue, useEffect, useMemo, useState } from 'react';
-import { Loader2, TriangleAlert } from 'lucide-react';
+import LoadError from '../components/LoadError';
+import SmeargleLoader from '../components/SmeargleLoader';
 import GameOptions from '../components/GameOptions';
 import MoveAbilityModal from '../components/MoveAbilityModal';
 import ItemGrid from '../components/items/ItemGrid';
@@ -10,12 +11,15 @@ import BERRIES from '../data/berries.json';
 import { BERRY_CATEGORIES, filterBerries } from '../utils/itemData';
 import { HeaderSearch, HeaderSegmented, HeaderSelect, OPTION_CLASS } from '../components/layout/HeaderControls';
 import HeaderToolbar, { ToolbarRow } from '../components/layout/HeaderToolbar';
-import SectionHeading, { HEADING_PILL_CLASS } from '../components/layout/SectionHeading';
+import ViewToggle from '../components/layout/ViewToggle';
+import SectionHeading, { HEADING_PILL_CLASS, ResultCount } from '../components/layout/SectionHeading';
 import { DEFAULT_GAME_ID, GAMES } from '../data/games';
 import { ITEM_GROUPS, OTHER_GROUP, categoryOrder, itemGroupOf } from '../data/itemCategories';
 import MACHINES from '../data/machines.json';
 import { TYPE_NAMES, fetchItemIndex } from '../services/api';
 import { formatSlug } from '../utils/filters';
+import { createTextMatcher } from '../utils/textMatch';
+import { readStored, writeStored } from '../utils/browserStorage';
 import { movePowerOf } from '../utils/movePower';
 import { MEGAS, filterMegas } from '../utils/megas';
 import { resolveTrainerPokemon } from '../utils/trainers';
@@ -26,6 +30,14 @@ const VIEWS = [
   { value: 'megas', label: 'Megas' },
   { value: 'berries', label: 'Berries' },
 ];
+
+// Palavra da contagem no subtítulo, por visão (as TMs também são itens).
+const COUNT_WORDS = {
+  items: { singular: 'item', plural: 'itens' },
+  machines: { singular: 'item', plural: 'itens' },
+  megas: { singular: 'Mega', plural: 'Megas e Primais' },
+  berries: { singular: 'Berry', plural: 'Berries' },
+};
 
 const SEARCH_LABELS = {
   items: ['Pesquisar item por nome', 'Nome do item...'],
@@ -57,8 +69,17 @@ const machinesOf = (gameId) =>
     return { code, move, type, damageClass, power: movePowerOf({ name: move, power }), accuracy };
   });
 
-const toSearchSlug = (text) => text.trim().toLowerCase().replace(/\s+/g, '-');
+// Grade ou Lista dos itens, guardada no navegador para voltar igual na próxima visita.
+const ITEM_LAYOUT_KEY = 'smearglepedia-items-view';
 
+function useItemLayout() {
+  const [layout, setLayout] = useState(() => (readStored(ITEM_LAYOUT_KEY) === 'list' ? 'list' : 'grid'));
+  useEffect(() => writeStored(ITEM_LAYOUT_KEY, layout), [layout]);
+  return [layout, setLayout];
+}
+
+
+// Índice dos itens, baixado na primeira vez que a visão Itens abre; `retry` volta para 'idle' e busca de novo.
 function useItemIndex(enabled) {
   const [state, setState] = useState({ status: 'idle', items: [] });
 
@@ -70,11 +91,13 @@ function useItemIndex(enabled) {
       .catch(() => setState({ status: 'error', items: [] }));
   }, [enabled, state.status]);
 
-  return state;
+  const retry = useCallback(() => setState({ status: 'idle', items: [] }), []);
+  return { ...state, retry };
 }
 
 export default function ItemsSection({ entryByName, onSelectPokemon }) {
   const [view, setView] = useState('items');
+  const [itemLayout, setItemLayout] = useItemLayout();
   const [query, setQuery] = useState('');
   const [group, setGroup] = useState('');
   const [category, setCategory] = useState('');
@@ -105,19 +128,17 @@ export default function ItemsSection({ entryByName, onSelectPokemon }) {
   }, [index.items, group]);
 
   const items = useMemo(() => {
-    const term = toSearchSlug(deferredQuery);
+    const matches = createTextMatcher(deferredQuery);
     return index.items.filter((item) =>
       (!group || item.group === group) &&
       (!category || item.category === category) &&
-      (!term || item.name.includes(term)));
+      matches(item.name));
   }, [index.items, group, category, deferredQuery]);
 
   const gameMachines = useMemo(() => machinesOf(gameId), [gameId]);
   const machines = useMemo(() => {
-    const term = toSearchSlug(deferredQuery);
-    return gameMachines.filter((machine) =>
-      (!moveType || machine.type === moveType) &&
-      (!term || machine.move.includes(term) || machine.code.includes(term)));
+    const matches = createTextMatcher(deferredQuery);
+    return gameMachines.filter((machine) => (!moveType || machine.type === moveType) && matches(machine.move, machine.code));
   }, [gameMachines, moveType, deferredQuery]);
 
   const berries = useMemo(
@@ -167,7 +188,7 @@ export default function ItemsSection({ entryByName, onSelectPokemon }) {
             />
           </div>
           {showingItems ? (
-            <div className="grid grid-cols-2 gap-1.5 sm:gap-2 lg:contents">
+            <div className="grid grid-cols-[minmax(0,1fr)_minmax(0,1fr)_auto] gap-1.5 sm:gap-2 lg:contents">
               <HeaderSelect label="Filtrar por grupo de itens" value={group} onChange={handleGroup} className="lg:w-44 lg:shrink-0">
                 <option value="" className={OPTION_CLASS}>Todos os grupos</option>
                 {groups.map(({ id, label }) => (
@@ -185,6 +206,7 @@ export default function ItemsSection({ entryByName, onSelectPokemon }) {
                 <option value="" className={OPTION_CLASS}>{group ? 'Todas as categorias' : 'Escolha um grupo'}</option>
                 {categories.map((name) => <option key={name} value={name} className={OPTION_CLASS}>{formatSlug(name)}</option>)}
               </HeaderSelect>
+              <ViewToggle value={itemLayout} onChange={setItemLayout} className="w-20 sm:w-auto" />
             </div>
           ) : showingBerries ? (
             <div className="grid grid-cols-2 gap-1.5 sm:gap-2 lg:contents">
@@ -218,15 +240,7 @@ export default function ItemsSection({ entryByName, onSelectPokemon }) {
 
       <SectionHeading
         title="Inventário e Mochila"
-        subtitle={(
-          <>
-            <span className="font-semibold tabular-nums text-ink">{count}</span>{' '}
-            {showingMegas && `Mega${count !== 1 ? 's e Primais' : ''}`}
-            {showingBerries && `Berr${count !== 1 ? 'ies' : 'y'}`}
-            {!showingMegas && !showingBerries && `ite${count !== 1 ? 'ns' : 'm'}`}
-            {deferredQuery.trim() && <> para <span className="font-serif italic">“{deferredQuery.trim()}”</span></>}
-          </>
-        )}
+        subtitle={<ResultCount count={count} {...COUNT_WORDS[view]} query={deferredQuery} />}
         aside={(
           <span className={HEADING_PILL_CLASS}>
             {showingItems && 'Toque num item para ver o efeito'}
@@ -259,17 +273,11 @@ export default function ItemsSection({ entryByName, onSelectPokemon }) {
           onSelectPokemon={onSelectPokemon}
         />
       ) : index.status === 'ready' ? (
-        <ItemGrid items={items} onSelect={selectItem} />
+        <ItemGrid items={items} onSelect={selectItem} view={itemLayout} />
       ) : index.status === 'error' ? (
-        <p role="alert" className="flex items-center justify-center gap-2 py-16 text-sm font-medium text-vermilion-deep">
-          <TriangleAlert className="h-4 w-4 shrink-0" aria-hidden="true" />
-          Não foi possível carregar os itens agora. Tente de novo em instantes.
-        </p>
+        <LoadError message="Não foi possível carregar os itens agora." onRetry={index.retry} />
       ) : (
-        <p className="flex items-center justify-center gap-2 py-16 text-sm font-medium text-umber">
-          <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" />
-          Revirando a mochila...
-        </p>
+        <SmeargleLoader label="Revirando a mochila..." className="py-16" />
       )}
 
       {detail && <MoveAbilityModal kind={detail.kind} name={detail.name} onClose={closeDetail} />}

@@ -1,22 +1,13 @@
 import { memo, useCallback, useEffect, useId, useRef, useState } from 'react';
 import { BookOpen, Download, Loader2, Save, Trash2, TriangleAlert, X } from 'lucide-react';
-import { supabase } from '../services/supabase';
-import { SAVED_TEAM_COLUMNS, deleteSavedTeam, fetchSavedTeams } from '../services/userData';
+import { deleteSavedTeam, fetchSavedTeams, insertSavedTeam } from '../services/userData';
+import { SAVED_TEAM_NAME_MAX, describeSavedTeamError as describeError, toStoredTeam } from '../utils/savedTeams';
+import { TEAM_SIZE } from '../utils/teamScore';
 import TeamSprites from './team/TeamSprites';
 
-const TABLE = 'teams';
-const MAX_TEAM_SIZE = 6;
-const MAX_NAME_LENGTH = 40;
+const MAX_NAME_LENGTH = SAVED_TEAM_NAME_MAX;
 
 const DATE_FORMAT = new Intl.DateTimeFormat('pt-BR', { day: '2-digit', month: 'short', year: 'numeric' });
-
-// `set` (item, natureza, EVs, IVs, golpes) é salvo junto de cada Pokémon; times antigos não o têm.
-const toStoredPokemon = ({ id, name, number, species, types, set }) => ({ id, name, number, species, types, ...(set && { set }) });
-
-const describeError = (error) =>
-  error?.code === '42501' || error?.code === 'PGRST301'
-    ? 'Sessão expirada ou sem permissão. Entre novamente.'
-    : error?.message ?? 'Algo deu errado. Tente novamente.';
 
 const ICON_BUTTON_CLASS =
   'rounded-sketch p-2 text-umber/75 transition-colors hover:bg-umber/10 hover:text-umber focus:outline-none focus-visible:ring-2 focus-visible:ring-paint-cobalt disabled:cursor-wait disabled:opacity-60';
@@ -142,16 +133,14 @@ export default function TeamManagerModal({ open, onClose, session, team = [], on
 
     setSaving(true);
     setError(null);
-    const { data, error: saveError } = await supabase
-      .from(TABLE)
-      .insert({ user_id: userId, name: trimmed, pokemons: team.slice(0, MAX_TEAM_SIZE).map(toStoredPokemon) })
-      .select(SAVED_TEAM_COLUMNS)
-      .single();
-    setSaving(false);
-
-    if (saveError) {
+    let data;
+    try {
+      data = await insertSavedTeam(userId, trimmed, toStoredTeam(team));
+    } catch (saveError) {
       setError(describeError(saveError));
       return;
+    } finally {
+      setSaving(false);
     }
     setTeams((current) => [data, ...current]);
     setName('');
@@ -212,7 +201,7 @@ export default function TeamManagerModal({ open, onClose, session, team = [], on
             <form onSubmit={handleSave} className="mb-4">
               <label htmlFor={`${ids}-name`} className="mb-1.5 block font-hand text-lg leading-none text-umber">
                 Salvar time atual
-                <span className="ml-2 font-sans text-[11px] text-smeargle-textDim/70">{team.length}/{MAX_TEAM_SIZE}</span>
+                <span className="ml-2 font-sans text-[11px] text-smeargle-textDim/70">{team.length}/{TEAM_SIZE}</span>
               </label>
               <div className="flex gap-2">
                 <input
@@ -237,7 +226,7 @@ export default function TeamManagerModal({ open, onClose, session, team = [], on
             </form>
 
             {error && (
-              <p role="alert" className="mb-4 flex items-start gap-2 rounded-sketch border border-vermilion/30 bg-vermilion/10 px-3 py-2 text-xs text-vermilion-deep">
+              <p role="alert" className="mb-4 flex items-start gap-2 rounded-sketch border border-danger/30 bg-danger/10 px-3 py-2 text-xs text-danger">
                 <TriangleAlert className="mt-0.5 h-3.5 w-3.5 shrink-0" aria-hidden="true" />
                 {error}
               </p>

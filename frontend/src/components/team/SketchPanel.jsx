@@ -1,50 +1,45 @@
-import { memo, useCallback, useEffect, useMemo, useState } from 'react';
+import { memo, useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { RefreshCw } from 'lucide-react';
 import SketchCard from './SketchCard';
 import SketchPlanForm from './SketchPlanForm';
 import SmeargleLoader from '../SmeargleLoader';
+import { useSketchData } from '../../hooks/useSketchData';
 import { useSmogonMeta } from '../../hooks/useSmogonMeta';
-import { archetypeByKey, checklistOf } from '../../utils/archetypes';
-import { loadBattleData } from '../../utils/battleData';
-import { commitMembers, createCardState, regenerateCard, toggleLock, undo } from '../../utils/sketchEdit';
+import { insertSavedTeam } from '../../services/userData';
+import { ARCHETYPES, archetypeByKey, checklistOf } from '../../utils/archetypes';
+import { commitMembers, createCardState, regenerateCard, reseedCard, toggleLock, undo } from '../../utils/sketchEdit';
+import { readSketchState, restoreCards, writeSketchState } from '../../utils/sketchStore';
+import { toStoredTeam } from '../../utils/savedTeams';
+import { nextTask } from './sketch/shared';
+import { browserStorage, readStored } from '../../utils/browserStorage';
 import { planSketch, sketchContext } from '../../utils/sketchPlan';
-import { loadAllSets } from '../../utils/smogonSets';
-import { DEFAULT_TIER, SINGLES_TIERS, isSinglesTier } from '../../utils/tiers';
+import { DEFAULT_TIER, isSinglesTier, tierLabelOf } from '../../utils/tiers';
 
 const TIER_STORAGE_KEY = 'smearglepedia:sketch-tier';
-const tierLabelOf = (tier) => SINGLES_TIERS.find((option) => option.value === tier)?.label ?? tier;
 
+
+// Antes o painel guardava só o tier, nesta chave: vale como padrão para quem ainda não tem o plano guardado.
 function storedTier() {
-  try {
-    const tier = window.localStorage.getItem(TIER_STORAGE_KEY);
-    return isSinglesTier(tier) ? tier : DEFAULT_TIER;
-  } catch {
-    return DEFAULT_TIER;
-  }
+  const tier = readStored(TIER_STORAGE_KEY);
+  return isSinglesTier(tier) ? tier : DEFAULT_TIER;
 }
 
-function rememberTier(tier) {
-  try {
-    window.localStorage.setItem(TIER_STORAGE_KEY, tier);
-  } catch {
-    // Sem armazenamento (aba anônima, bloqueio): o tier só vale nesta sessão.
-  }
-}
-
-// Builds da Smogon e dados de batalha: baixados uma vez, quando a aba abre.
-function useSketchData() {
-  const [data, setData] = useState({ status: 'loading', battleData: null, allSets: null });
-  useEffect(() => {
-    let active = true;
-    Promise.all([loadBattleData(), loadAllSets()])
-      .then(([battleData, allSets]) => active && setData({ status: 'ready', battleData, allSets }))
-      .catch(() => active && setData({ status: 'error', battleData: null, allSets: null }));
-    return () => { active = false; };
-  }, []);
-  return data;
-}
+const VALIDATORS = { isTier: isSinglesTier, isArchetype: (key) => ARCHETYPES.some((archetype) => archetype.key === key) };
+const defaultPlan = () => ({ tier: storedTier(), archetype: 'free', banned: [], maxTwoPerType: false });
 
 const teamKey = (team) => team.map((member) => member.id).join('-');
-const nextTask = () => new Promise((resolve) => { setTimeout(resolve, 0); });
+
+/** O que o esboço recebe de um plano do formulário (o rascunho vem à parte, em `seed`). */
+const planInputOf = (plan, { pool, meta, battleData, allSets }) => ({
+  pool,
+  meta,
+  battleData,
+  allSets,
+  tier: plan.tier,
+  archetypeKey: plan.archetype,
+  banned: plan.banned.map((pokemon) => pokemon.name),
+  maxPerType: plan.maxTwoPerType ? 2 : null,
+});
 
 const Message = ({ children }) => (
   <p className="py-6 text-center font-reading text-sm italic text-smeargle-textDim/80">{children}</p>
@@ -54,48 +49,74 @@ const Message = ({ children }) => (
  * Ateliê do esboço: o plano (tier, estilo, restrições) e, ao clicar em "Esboçar", três times completos
  * testados contra o teste do meta. Cada card é editável (fixar, trocar, corrigir, regenerar, desfazer);
  * o estado dos cards vive aqui, e as contas, em utils/sketchEdit.js.
+ * O plano e os cards ficam guardados no navegador (utils/sketchStore.js): trocar de aba ou recarregar não os perde.
+ * Com o rascunho vazio, o esboço começa do zero.
  */
-function SketchPanel({ team, pool, onLoadTeam }) {
-  const [plan, setPlan] = useState(() => ({ tier: storedTier(), archetype: 'free', banned: [], maxTwoPerType: false }));
+function SketchPanel({ team, pool, session, onLoadTeam }) {
+  // Lido uma vez: o plano entra já no primeiro render; os cards, quando os dados do tier chegarem.
+  const [stored] = useState(() => readSketchState(browserStorage(), VALIDATORS));
+  const pendingRestore = useRef(stored?.result ? stored : null);
+  const [plan, setPlan] = useState(() => stored?.plan ?? defaultPlan());
   const [result, setResult] = useState({ status: 'idle' });
   const [cards, setCards] = useState([]);
   const [confirming, setConfirming] = useState(false);
   const [busyCard, setBusyCard] = useState(null);
   const [applying, setApplying] = useState(null);
+  const [reseeding, setReseeding] = useState(false);
+  const [reseedNotice, setReseedNotice] = useState(null);
   const { meta, status: metaStatus, pool: deferredPool } = useSmogonMeta(pool, plan.tier);
   const data = useSketchData();
+  const userId = session?.user?.id ?? null;
 
   const changePlan = useCallback((changes) => {
     setPlan((current) => ({ ...current, ...changes }));
-    if (changes.tier) rememberTier(changes.tier);
   }, []);
 
   const ready = metaStatus === 'ready' && data.status === 'ready';
   const editedCount = cards.filter((card) => card.edited).length;
+  const sources = useMemo(
+    () => ({ pool: deferredPool, meta, battleData: data.battleData, allSets: data.allSets }),
+    [deferredPool, meta, data],
+  );
+
+  // Os cards guardados voltam quando o meta do tier deles estiver pronto (só se o plano ainda for desse tier).
+  useEffect(() => {
+    const saved = pendingRestore.current;
+    if (!saved) return;
+    if (saved.result.plan.tier !== plan.tier) { pendingRestore.current = null; return; }
+    if (!ready) return;
+    pendingRestore.current = null;
+    try {
+      const ctx = sketchContext(planInputOf(saved.result.plan, sources));
+      setCards(restoreCards(saved.cards, ctx));
+      setResult({ status: 'done', ctx, ms: saved.result.ms, plan: saved.result.plan, teamKey: saved.result.teamKey });
+    } catch (error) {
+      console.warn('Esboço guardado inválido:', error);
+    }
+  }, [ready, plan.tier, sources]);
+
+  // Guarda o plano e os cards a cada mudança; enquanto a restauração não roda, não sobrescreve o que está guardado.
+  useEffect(() => {
+    if (pendingRestore.current || result.status === 'running') return;
+    writeSketchState(browserStorage(), { plan, result, cards });
+  }, [plan, result, cards]);
 
   const generate = useCallback(() => {
     if (!ready) return;
     setConfirming(false);
+    setReseedNotice(null);
+    pendingRestore.current = null;
     setResult({ status: 'running' });
     // Um quadro para o loader aparecer antes do cálculo, que roda na thread principal (~100–200 ms).
     requestAnimationFrame(() => setTimeout(() => {
       const started = performance.now();
-      const planInput = {
-        pool: deferredPool,
-        meta,
-        battleData: data.battleData,
-        allSets: data.allSets,
-        tier: plan.tier,
-        archetypeKey: plan.archetype,
-        banned: plan.banned.map((pokemon) => pokemon.name),
-        maxPerType: plan.maxTwoPerType ? 2 : null,
-      };
+      const planInput = planInputOf(plan, sources);
       const variations = planSketch({ seed: team, ...planInput });
       const ctx = sketchContext(planInput);
       setCards(variations.map((variation) => createCardState(variation, ctx)));
       setResult({ status: 'done', ctx, ms: Math.round(performance.now() - started), plan, teamKey: teamKey(team) });
     }, 0));
-  }, [ready, team, deferredPool, meta, data, plan]);
+  }, [ready, team, sources, plan]);
 
   // Gerar de novo descarta as edições: com algum card editado, pede confirmação antes.
   const run = useCallback(() => {
@@ -145,6 +166,35 @@ function SketchPanel({ team, pool, onLoadTeam }) {
     }
   }, [buildTeam, onLoadTeam]);
 
+  // Rascunho mudou no builder: cada card troca os membros do rascunho antigo pelos do novo e mantém o resto.
+  const reseed = useCallback(async () => {
+    setReseeding(true);
+    setReseedNotice(null);
+    await nextTask();
+    try {
+      const updated = cards.map((card) => reseedCard(card, team, result.ctx));
+      const kept = updated.filter(Boolean);
+      const dropped = updated.length - kept.length;
+      setCards(kept);
+      setResult((current) => ({ ...current, teamKey: teamKey(team) }));
+      if (dropped && kept.length) {
+        setReseedNotice(dropped === 1
+          ? '1 esboço não pôde ser completado com o rascunho novo e saiu da lista.'
+          : `${dropped} esboços não puderam ser completados com o rascunho novo e saíram da lista.`);
+      } else if (dropped) {
+        setReseedNotice('Nenhum esboço pôde ser completado com o rascunho novo: esboce de novo.');
+      }
+    } finally {
+      setReseeding(false);
+    }
+  }, [cards, team, result.ctx]);
+
+  // Salva o card como um time da conta, sem mexer no time do builder.
+  const save = useCallback(async (card, name) => {
+    if (!userId) throw new Error('Entre na conta para salvar times.');
+    await insertSavedTeam(userId, name, toStoredTeam(await buildTeam(card)));
+  }, [userId, buildTeam]);
+
   const stale = result.status === 'done' && result.teamKey !== teamKey(team);
   const resultArchetype = useMemo(() => archetypeByKey(result.plan?.archetype), [result.plan]);
   const checklist = useMemo(() => checklistOf(resultArchetype), [resultArchetype]);
@@ -154,7 +204,7 @@ function SketchPanel({ team, pool, onLoadTeam }) {
       <p className="font-reading text-xs italic text-smeargle-textDim/90">
         Monte times inteiros para um plano e melhore cada um: fixe quem fica, troque um membro vendo o efeito nas notas,
         corrija a pior ameaça ou regenere o resto. Cada esboço traz as funções cobertas, os sets completos e uma nota
-        contra as 20 ameaças mais usadas do tier.
+        contra as 20 ameaças mais usadas do tier. Sem ninguém no time, o esboço começa do zero.
       </p>
 
       <SketchPlanForm
@@ -168,7 +218,7 @@ function SketchPanel({ team, pool, onLoadTeam }) {
       />
 
       {confirming && (
-        <div role="alertdialog" aria-label="Descartar edições" className="flex flex-wrap items-center gap-2 rounded-[4px] border border-vermilion/35 bg-vermilion/5 p-3 font-reading text-sm text-smeargle-text">
+        <div role="alertdialog" aria-label="Descartar edições" className="flex flex-wrap items-center gap-2 rounded-[4px] border border-danger/35 bg-danger/5 p-3 font-reading text-sm text-smeargle-text">
           <p className="flex-1">
             Você editou {editedCount === 1 ? '1 esboço' : `${editedCount} esboços`}. Gerar de novo descarta {editedCount === 1 ? 'essa edição' : 'essas edições'}.
           </p>
@@ -191,17 +241,28 @@ function SketchPanel({ team, pool, onLoadTeam }) {
       ) : result.status === 'done' ? (
         cards.length === 0 ? (
           <Message>
-            Nenhum time cumpre o estilo {resultArchetype.label} com estas restrições: tente tirar algum &quot;Não usar&quot; ou mudar o estilo.
+            {reseedNotice ?? <>Nenhum time cumpre o estilo {resultArchetype.label} com estas restrições: tente tirar algum &quot;Não usar&quot; ou mudar o estilo.</>}
           </Message>
         ) : (
           <div className="space-y-2">
             <p className="flex flex-wrap justify-between gap-2 text-[11px] text-smeargle-textDim">
-              <span>
-                {tierLabelOf(result.plan.tier)} · {resultArchetype.label}
-                {stale && <strong className="ml-2 font-semibold text-paint-magenta">O rascunho mudou: esboce de novo.</strong>}
-              </span>
+              <span>{tierLabelOf(result.plan.tier)} · {resultArchetype.label}</span>
               <span>calculado em {result.ms} ms</span>
             </p>
+            {stale && (
+              <div role="status" className="flex flex-wrap items-center gap-2 rounded-[4px] border border-paint-magenta/35 bg-paint-magenta/5 p-3 font-reading text-sm text-smeargle-text">
+                <p className="min-w-0 flex-1">
+                  O time do builder mudou. Atualize os esboços para trocar o rascunho antigo pelo novo e manter o resto.
+                </p>
+                <button type="button" onClick={reseed} disabled={reseeding} className="btn-action !h-9 !px-4 font-reading !text-xs">
+                  <RefreshCw className={`h-3.5 w-3.5 ${reseeding ? 'animate-spin' : ''}`} aria-hidden="true" />
+                  {reseeding ? 'Atualizando…' : 'Atualizar os esboços'}
+                </button>
+              </div>
+            )}
+            {reseedNotice && (
+              <p role="status" className="rounded-[4px] border border-danger/30 bg-danger/5 p-2.5 font-reading text-xs text-smeargle-text">{reseedNotice}</p>
+            )}
             <ol className="grid gap-3">
               {cards.map((card, index) => (
                 <SketchCard
@@ -213,7 +274,10 @@ function SketchPanel({ team, pool, onLoadTeam }) {
                   checklist={checklist}
                   busy={busyCard === index}
                   applying={applying === card}
-                  disabled={applying !== null || stale}
+                  disabled={applying !== null || stale || reseeding}
+                  tierLabel={tierLabelOf(result.plan.tier)}
+                  canSave={Boolean(userId)}
+                  onSave={save}
                   onEdit={edit}
                   onRegenerate={regenerate}
                   onApply={apply}

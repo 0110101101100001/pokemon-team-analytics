@@ -1,4 +1,4 @@
-import { TYPE_NAMES, effectiveness } from './typeChart';
+import { TYPE_NAMES, effectiveness } from '../data/typeChart';
 import { buildMetaProfile, scoreMeta } from './metaScore';
 
 export const TEAM_SIZE = 6;

@@ -285,7 +285,7 @@ export default function AuthModal({ open, onClose, onAuthChange, onRequestOpen }
           )}
 
           {error && (
-            <p role="alert" className="flex items-start gap-2 rounded-sketch border border-vermilion/30 bg-vermilion/10 px-3 py-2 text-xs text-vermilion-deep">
+            <p role="alert" className="flex items-start gap-2 rounded-sketch border border-danger/30 bg-danger/10 px-3 py-2 text-xs text-danger">
               <TriangleAlert className="mt-0.5 h-3.5 w-3.5 shrink-0" aria-hidden="true" />
               {error}
             </p>

@@ -3,32 +3,20 @@ import { ChevronDown, Heart, History, Loader2 } from 'lucide-react';
 import { BrushUnderline } from '../InkDecor';
 import { thumbnailSpriteUrl } from '../../services/api';
 import { formatSlug } from '../../utils/filters';
+import { readStored, writeStored } from '../../utils/browserStorage';
+import { speciesOf } from '../../utils/teamScore';
 
 const SOURCES = [
   { key: 'favorites', label: 'Favoritos', icon: Heart, empty: 'Nenhum favorito ainda. Toque no coração de um card da Pokédex.' },
   { key: 'history', label: 'Vistos recentemente', icon: History, empty: 'Nenhuma ficha visitada ainda. As que você abrir na Pokédex aparecem aqui.' },
 ];
 
-const speciesOf = (pokemon) => pokemon.species ?? pokemon.name;
 
 // Aberto ou fechado fica lembrado neste navegador; sem acesso ao armazenamento, começa aberto.
 const OPEN_KEY = 'smearglepedia:team-collection-picks-open';
 
-const readOpen = () => {
-  try {
-    return window.localStorage.getItem(OPEN_KEY) !== 'false';
-  } catch {
-    return true;
-  }
-};
-
-const saveOpen = (open) => {
-  try {
-    window.localStorage.setItem(OPEN_KEY, String(open));
-  } catch {
-    // Armazenamento bloqueado: a escolha só vale até recarregar a página.
-  }
-};
+const readOpen = () => readStored(OPEN_KEY) !== 'false';
+const saveOpen = (open) => writeStored(OPEN_KEY, String(open));
 
 /** Atalhos para montar o time a partir dos favoritos e das fichas vistas recentemente. */
 function CollectionPicks({ collections, entryByName, takenSpecies, disabled, onPick }) {

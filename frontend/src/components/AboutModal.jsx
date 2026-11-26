@@ -11,9 +11,10 @@ const SUMMARIES = {
   pokedex: 'Dex nacional e regionais, formas, filtros e comparação de até 4 Pokémon. A ficha traz evolução, locais, criação, golpes por geração, uso na Smogon, builds e tabela de velocidade.',
   moves: 'Golpes e quem aprende cada um, com Z, Max, G-Max e Contests.',
   abilities: 'O efeito de cada habilidade e quem pode ter cada uma.',
-  items: 'Itens, TMs por jogo, Megas e Primais, e Berries.',
+  items: 'Itens em grade ou lista com o efeito de cada um, TMs por jogo, Megas e Primais, e Berries.',
+  types: 'Tabela de tipos interativa: a matriz 18×18 de efetividade, o resumo de cada tipo e a calculadora de defesa para tipo duplo.',
   trainers: 'Líderes, Elite 4, campeões, rivais e vilões de Kanto a Paldea, com Hisui e Kitakami. O time de cada batalha abre na calculadora.',
-  teamBuilder: 'Cobertura, fraquezas, sugestões e esboço de times de singles, com nota no teste do meta e exportação para o Showdown.',
+  teamBuilder: 'Cobertura, fraquezas, sugestões, comparação de candidatos para uma vaga e esboço de times de singles (até do zero), com nota no teste do meta e exportação para o Showdown.',
   damageCalculator: 'Dano em batalhas simples pela fórmula da Gen 5+ e simulador de turnos com trocas, clima, terreno, Tera, golpes Z e Dynamax.',
 };
 

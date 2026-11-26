@@ -5,7 +5,7 @@ import { activeItem, applyBoost, isGrounded } from './damage';
 import { baseMaxHp, withoutDynamax } from './dynamax';
 import { formatSlug } from './filters';
 import { changeStages, setWeather, startOnField, statusBlocked } from './moveEffects';
-import { effectiveness } from './typeChart';
+import { effectiveness } from '../data/typeChart';
 
 /*
   Trocas no turno simulado: quem pode sair, o que se perde ao sair e o que acontece ao entrar (hazards e habilidades

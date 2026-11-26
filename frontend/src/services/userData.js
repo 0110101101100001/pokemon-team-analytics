@@ -22,6 +22,20 @@ export async function fetchSavedTeams(userId) {
   return data ?? [];
 }
 
+/**
+ * Salva um time (até 6 Pokémon já no formato da coluna `pokemons`, ver toStoredPokemon) e devolve a linha criada.
+ * O banco limita o nome a 60 caracteres e a conta a 100 times.
+ */
+export async function insertSavedTeam(userId, name, pokemons) {
+  const { data, error } = await supabase
+    .from(TEAMS)
+    .insert({ user_id: userId, name, pokemons })
+    .select(SAVED_TEAM_COLUMNS)
+    .single();
+  if (error) throw error;
+  return data;
+}
+
 /** Apaga um time salvo; a política da tabela só deixa apagar os da própria conta. */
 export async function deleteSavedTeam(id) {
   const { error } = await supabase.from(TEAMS).delete().eq('id', id);

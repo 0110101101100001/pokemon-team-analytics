@@ -1,4 +1,5 @@
 import { createBattleSet } from './stats';
+import { createTextMatcher } from './textMatch';
 
 // Treinadores da tabela PokemonTrainers: cada linha é uma batalha (jogo, papel, revanche, time por inicial);
 // as linhas do mesmo trainer_slug viram um treinador só, com as batalhas como variantes.
@@ -274,12 +275,10 @@ export function matchingBattles(trainer, filters) {
     groups.every((group) => battleValues[group](battle).some((value) => filters[group].includes(value))));
 }
 
-const normalize = (text) => text.normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase();
-
+/** Filtro de treinador pelo nome (busca de utils/textMatch.js). */
 export function createNameMatcher(query) {
-  const term = normalize(query.trim());
-  if (!term) return () => true;
-  return (trainer) => normalize(trainer.name).includes(term);
+  const matches = createTextMatcher(query);
+  return (trainer) => matches(trainer.name);
 }
 
 function sequenceLabel({ sequence, multiBattle }) {

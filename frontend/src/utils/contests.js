@@ -1,5 +1,6 @@
 import CONTEST_DATA from '../data/contest-moves.json';
 import { CONTEST_EFFECT_TEXT, SUPER_CONTEST_EFFECT_TEXT } from '../data/contestEffects';
+import { createTextMatcher } from './textMatch';
 
 // Golpes nos Contests (contest-moves.json, de scripts/build-contest-moves.mjs), já com os textos em português.
 
@@ -25,17 +26,17 @@ export const CONTEST_MOVES = CONTEST_DATA.moves.map(([slug, type, category, effe
   slug,
   type,
   category,
-  label: slug.replace(/-/g, ' '),
   contest: contestEffect(effectId),
   superContest: superEffect(superEffectId),
   combos,
   superCombos,
 }));
 
-/** Filtra por nome, tipo do golpe e categoria do Contest. `term` já vem em minúsculas e sem hífens. */
+/** Filtra por nome (busca de utils/textMatch.js), tipo do golpe e categoria do Contest. */
 export function filterContestMoves(moves, { term, type, category }) {
+  const matches = createTextMatcher(term);
   return moves.filter((move) =>
     (!type || move.type === type)
     && (!category || move.category === category)
-    && (!term || move.label.includes(term)));
+    && matches(move.slug));
 }

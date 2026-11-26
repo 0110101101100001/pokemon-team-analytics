@@ -530,7 +530,7 @@ export default function DamageCalculatorSection({ pool, team, session, onLogin, 
     <div className={`space-y-4 ${fighters.every(Boolean) ? 'pb-32 lg:pb-0' : ''}`}>
       <SectionHeading
         title="Conta de Batalha"
-        subtitle="Simulador de Dano e Proj. de Turno"
+        subtitle="Simulador de dano e projeção de turno"
         aside={<span className={HEADING_PILL_CLASS}>Fórmula da Gen 5+ · batalhas simples</span>}
       />
 

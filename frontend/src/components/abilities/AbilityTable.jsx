@@ -4,6 +4,7 @@ import { LearnersRow, LearnersToggle } from '../moves/LearnersToggle';
 import { useIncrementalList } from '../../hooks/useIncrementalList';
 import { CELL, HEAD, MOVE_NAME_BUTTON, ROW } from '../moves/moveTableStyles';
 import { formatSlug } from '../../utils/filters';
+import EmptyState from '../EmptyState';
 
 const COLUMN_COUNT = 5;
 // Linhas montadas por lote; as seguintes entram conforme a tabela rola.
@@ -65,11 +66,7 @@ function AbilityTable({ abilities, openAbility, onToggleAbility, onSelectAbility
   const batch = useIncrementalList(abilities, BATCH_SIZE);
 
   if (abilities.length === 0) {
-    return (
-      <p className="py-16 text-center font-reading text-sm italic text-smeargle-textDim/80">
-        Nenhuma habilidade encontrada. Ajuste a busca ou a geração.
-      </p>
-    );
+    return <EmptyState title="nenhuma habilidade com esses filtros" hint="Ajuste a busca ou a geração." />;
   }
 
   return (

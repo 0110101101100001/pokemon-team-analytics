@@ -1,4 +1,5 @@
 // Itens de evolução e Berries (scripts/build-item-data.mjs), com os rótulos em português.
+import { createTextMatcher } from './textMatch';
 
 /* ---------------------------------------------------------------- itens de evolução */
 
@@ -61,11 +62,11 @@ export const berryFlavors = (berry) =>
     .filter((flavor) => flavor.value > 0)
     .sort((a, b) => b.value - a.value);
 
-/** Filtra por nome, categoria e tipo do Natural Gift. */
+/** Filtra por nome (busca de utils/textMatch.js), categoria e tipo do Natural Gift. */
 export function filterBerries(berries, { term, category, type }) {
-  const query = term.trim().toLowerCase().replace(/\s+/g, '-');
+  const matches = createTextMatcher(term);
   return berries.filter((berry) =>
     (!category || berry.category === category)
     && (!type || berry.naturalGift.type === type)
-    && (!query || berry.name.includes(query)));
+    && matches(berry.name));
 }

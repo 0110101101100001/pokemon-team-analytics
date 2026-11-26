@@ -484,6 +484,20 @@
   --border-strong: color-mix(in srgb, var(--border) 40%, var(--ink)); /* borda de campo, ≥3:1 com o fundo */
   --focus: var(--accent-text);
   --danger: color-mix(in srgb, #b3261e 55%, var(--ink));
+  /* O par do --danger para o que é bom (resistências, golpes super efetivos): verde em todos os temas. */
+  --good: color-mix(in srgb, #2e7d32 62%, var(--ink));
+  /* Células da Tabela de tipos: fundo suave por categoria (2×, ½, 0) e a versão com a linha/coluna em destaque
+     (o tom do --accent por cima). O texto é verde, vermelho e a tinta, puxados para a tinta do tema para passar
+     de 4,5:1 sobre o fundo tingido (medido no teste). */
+  --chart-x2-text: color-mix(in srgb, #2e7d32 38%, var(--ink));
+  --chart-half-text: color-mix(in srgb, #b3261e 36%, var(--ink));
+  --chart-x2-bg: color-mix(in srgb, var(--good) 15%, var(--surface));
+  --chart-half-bg: color-mix(in srgb, var(--danger) 13%, var(--surface));
+  --chart-zero-bg: color-mix(in srgb, var(--ink) 16%, var(--surface));
+  --chart-hl-bg: color-mix(in srgb, var(--accent) 9%, var(--surface));
+  --chart-x2-bg-hl: color-mix(in srgb, var(--accent) 9%, var(--chart-x2-bg));
+  --chart-half-bg-hl: color-mix(in srgb, var(--accent) 9%, var(--chart-half-bg));
+  --chart-zero-bg-hl: color-mix(in srgb, var(--accent) 9%, var(--chart-zero-bg));
   --magenta: color-mix(in srgb, #9e3d64 58%, var(--ink));
   --smogon: color-mix(in srgb, #b98428 60%, var(--ink)); /* selo Smogon: o mesmo ocre em todos os temas */
   --accent-fill-hover: color-mix(in srgb, var(--accent-fill) 86%, var(--hover-mix));
@@ -505,6 +519,16 @@
   --hp-high: #3fb950;
   --hp-mid: #e8b923;
   --hp-low: #e0442f;
+  /* Efetividade de tipo na ficha (fraquezas e resistências): vermelhos e verdes fixos, com texto --fixed-light. */
+  --eff-weak-4: #780000;
+  --eff-weak-2: #a23c3c;
+  --eff-resist-2: #356b2e;
+  --eff-resist-4: #24521f;
+  /* Teste do meta do esboço (sem resposta, fraca, ok, sólida): vermelho, laranja, amarelo e verde em todos os temas. */
+  --status-none: #c62828;
+  --status-weak: #ef6c00;
+  --status-ok: #e8b923;
+  --status-solid: #2e9d4a;
 }
 
 /*

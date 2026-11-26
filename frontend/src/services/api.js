@@ -41,10 +41,8 @@ function cachedJson(url) {
 
 const idFromUrl = (url) => Number(url.split('/').filter(Boolean).pop());
 
-export const TYPE_NAMES = [
-  'normal', 'fire', 'water', 'grass', 'electric', 'ice', 'fighting', 'poison', 'ground',
-  'flying', 'psychic', 'bug', 'rock', 'ghost', 'dragon', 'dark', 'steel', 'fairy',
-];
+// Os 18 tipos vêm da tabela de tipos (data/typeChart.js), a fonte única; o re-export mantém os imports antigos.
+export { TYPE_NAMES } from '../data/typeChart';
 
 // Variedades, espécies, tipos e grupos de ovos vêm de um índice estático (scripts/build-pokedex-index.mjs):
 // um arquivo de ~80 KB com cache imutável no lugar de mais de 40 requisições à PokéAPI por visita.
@@ -205,9 +203,6 @@ export const fetchMove = (moveUrlOrName) =>
       ? moveUrlOrName
       : `${POKEAPI_BASE}/move/${encodeURIComponent(moveUrlOrName)}`,
   ).catch(() => null);
-
-export const fetchTypeData = (typeName) =>
-  cachedJson(`${POKEAPI_BASE}/type/${encodeURIComponent(typeName)}`).catch(() => null);
 
 // Golpes de vários acertos que a PokéAPI publica sem `meta.min_hits`/`max_hits`.
 const MULTI_HIT_FALLBACK = { 'population-bomb': [1, 10], 'triple-dive': [3, 3], 'twin-beam': [2, 2], 'tachyon-cutter': [2, 2] };

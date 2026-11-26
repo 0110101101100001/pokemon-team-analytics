@@ -1,5 +1,5 @@
 import { memo, useCallback, useEffect, useMemo, useState } from 'react';
-import { LayoutGrid, List, Loader2, NotebookPen, Search, SlidersHorizontal, TriangleAlert, X } from 'lucide-react';
+import { Loader2, NotebookPen, Search, SlidersHorizontal, TriangleAlert, X } from 'lucide-react';
 import GameOptions from './GameOptions';
 import { BrushUnderline } from './InkDecor';
 import {
@@ -9,39 +9,11 @@ import { GAMES } from '../data/games';
 import { TYPE_NAMES, fetchAbilityNames, fetchMoveNames } from '../services/api';
 import { FIXED_FILTERS, GENERATIONS, createFilter, eggGroupLabel, filterKey, formatSlug } from '../utils/filters';
 import { useDebouncedValue } from '../hooks/useDebouncedValue';
-import { SORTS, VIEWS } from '../utils/pokedexView';
+import { SORTS } from '../utils/pokedexView';
+import ViewToggle from './layout/ViewToggle';
 
-const VIEW_ICONS = { grid: LayoutGrid, list: List };
 // No celular os selects de filtro dividem a linha em três (6 colunas, 2 cada); do sm em diante, uma coluna cada.
 const NARROW = 'col-span-2 sm:col-span-1 xl:w-40 xl:shrink-0';
-
-/** Grade ou Lista: dois botões com ícone e aria-pressed, no traço dos botões do header. */
-function ViewToggle({ value, onChange, className = '' }) {
-  return (
-    <div role="group" aria-label="Visualização" className={`flex h-9 shrink-0 overflow-hidden rounded-[3px] border-[1.5px] border-header-ink/55 bg-header-solid sm:h-10 ${className}`}>
-      {VIEWS.map((option) => {
-        const Icon = VIEW_ICONS[option.value];
-        const selected = option.value === value;
-        return (
-          <button
-            key={option.value}
-            type="button"
-            aria-pressed={selected}
-            aria-label={option.label}
-            title={option.label}
-            onClick={() => onChange(option.value)}
-            className={`relative inline-flex flex-1 cursor-pointer items-center justify-center text-header-ink sm:w-10 sm:flex-none transition-colors focus:outline-none focus-visible:z-10 focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-paint-pistachio/70 sm:w-10 ${
-              selected ? 'bg-header-ink/20' : 'hover:bg-header-ink/10'
-            }`}
-          >
-            <Icon className="h-4 w-4" strokeWidth={selected ? 2.5 : 2} aria-hidden="true" />
-            <BrushUnderline color="var(--header-underline)" active={selected} className="inset-x-2 bottom-0.5 h-[3px] w-[calc(100%-1rem)]" />
-          </button>
-        );
-      })}
-    </div>
-  );
-}
 
 const SEARCH_DEBOUNCE_MS = 150;
 

@@ -26,6 +26,20 @@ export default function SectionHeading({ title, subtitle, aside, rule = true, wi
   );
 }
 
+/**
+ * Contagem do subtítulo, igual em todas as abas: o número em destaque, a palavra no singular ou plural e, com uma
+ * busca, o termo entre aspas. Ex.: <ResultCount count={3} singular="golpe" plural="golpes" query="thunder" />.
+ */
+export function ResultCount({ count, singular, plural, query = '' }) {
+  const term = query.trim();
+  return (
+    <>
+      <span className="font-mono font-semibold tabular-nums text-ink">{count}</span> {count === 1 ? singular : plural}
+      {term && <> para <span className="font-serif italic">“{term}”</span></>}
+    </>
+  );
+}
+
 // Carimbo do cabeçalho: contorno ocre escuro, reto, na serifa de leitura em itálico.
 export const HEADING_PILL_CLASS =
   'inline-flex items-center rounded-[2px] border-[1.5px] border-ochre-deep px-2.5 py-1 font-reading text-sm italic leading-none text-ochre-deep';

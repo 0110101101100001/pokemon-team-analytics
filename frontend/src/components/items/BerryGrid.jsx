@@ -74,7 +74,7 @@ function BerryCard({ berry, onSelect }) {
 /** Grade das Berries: categoria, sabores, Natural Gift, firmeza e crescimento. O toque abre o efeito em batalha. */
 function BerryGrid({ berries, onSelect }) {
   if (berries.length === 0) {
-    return <EmptyState title="nenhuma Berry com esses filtros" />;
+    return <EmptyState title="nenhuma Berry com esses filtros" hint="Ajuste a busca, a função ou o tipo do Natural Gift." />;
   }
   return (
     <ul className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">

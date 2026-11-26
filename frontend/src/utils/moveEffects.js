@@ -2,7 +2,7 @@ import { GMAX_OUTCOMES } from '../data/gmaxMoves';
 import { SCREEN_BREAKERS, activeItem, isGrounded } from './damage';
 import { durationOf, withTimer } from './durations';
 import { baseMaxHp } from './dynamax';
-import { effectiveness } from './typeChart';
+import { effectiveness } from '../data/typeChart';
 import {
   MOLD_BREAKERS, PRIMAL_WEATHERS, WEATHER_ABILITIES, WEATHER_SUPPRESSORS, hasSecondaryEffect,
 } from '../data/battleModifiers';

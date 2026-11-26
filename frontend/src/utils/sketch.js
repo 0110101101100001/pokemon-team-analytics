@@ -27,6 +27,9 @@ const BEAM_OVERLAP_PENALTY = 20;
 // preferência suave por baixo do limite rígido de MAX_SHARED.
 const FINAL_OVERLAP_PENALTY = 6;
 const FINALISTS = 36;
+// Do zero (rascunho vazio), o primeiro Pokémon sai entre os OPENERS mais usados do tier: sem time, o ranking não
+// tem com o que combinar e escolheria pelo perfil de tipos, não pelo que funciona no meta.
+const OPENERS = 12;
 // Peso do encaixe no estilo ao lado da nota do teste do meta (0–100) na ordem final.
 const FIT_IN_RANKING = 25;
 
@@ -76,7 +79,7 @@ function makeState(team, picks, value, archetype, meta) {
 }
 
 // Os candidatos mais promissores para a próxima vaga de um estado.
-function expand(state, tierPool, options) {
+function expand(state, tierPool, options, branching = BRANCHING) {
   const { archetype, meta, maxPerType } = options;
   const { team } = state;
   const slotsAfter = TEAM_SIZE - team.length - 1;
@@ -95,7 +98,7 @@ function expand(state, tierPool, options) {
     })
     .filter(Boolean)
     .sort((a, b) => b.gain - a.gain)
-    .slice(0, BRANCHING);
+    .slice(0, branching);
 }
 
 // Os melhores estados, descontando a sobreposição com os já escolhidos para o feixe não virar um time só.
@@ -176,11 +179,11 @@ function toVariation(seed, { state, rating }, archetype, meta) {
 }
 
 /**
- * Times completos para o rascunho (1 a 5 Pokémon) em um estilo, com o meta do tier (ver attachRoles).
+ * Times completos para o rascunho (0 a 5 Pokémon; vazio = começar do zero) em um estilo, com o meta do tier (ver attachRoles).
  * Opções: `archetype`, `banned` (nomes de entrada), `maxPerType` (ex.: 2), `variants`, `minUsage` e
  * `rate(team)` → { score 0–100, … } (o teste do meta), que ordena as variações.
- * Devolve [{ title, members, holes, total, fit, roles, gauntlet }]; [] sem rascunho, com o rascunho cheio,
- * sem meta ou quando nenhum time cumpre as funções obrigatórias.
+ * Devolve [{ title, members, holes, total, fit, roles, gauntlet }]; [] com o rascunho cheio, sem meta ou quando
+ * nenhum time cumpre as funções obrigatórias.
  */
 export function sketchTeams(seed, pool, meta, {
   archetype = DEFAULT_ARCHETYPE,
@@ -190,7 +193,7 @@ export function sketchTeams(seed, pool, meta, {
   minUsage = 1,
   rate = null,
 } = {}) {
-  if (!meta || seed.length === 0 || seed.length >= TEAM_SIZE) return [];
+  if (!meta || seed.length >= TEAM_SIZE) return [];
 
   const seedSpecies = new Set(seed.map(speciesOf));
   const tierPool = tierPoolOf(pool, meta, minUsage, new Set(banned))
@@ -198,12 +201,14 @@ export function sketchTeams(seed, pool, meta, {
   if (tierPool.length === 0) return [];
 
   const options = { archetype, meta, maxPerType };
+  const usageOf = (entry) => meta.stats.get(meta.names.get(entry.name))?.usage ?? 0;
+  const openers = [...tierPool].sort((a, b) => usageOf(b) - usageOf(a)).slice(0, OPENERS);
   let beam = [makeState(seed, [], 0, archetype, meta)];
 
   for (let size = seed.length; size < TEAM_SIZE; size += 1) {
     const children = new Map();
     for (const state of beam) {
-      for (const { ranked, gain } of expand(state, tierPool, options)) {
+      for (const { ranked, gain } of (state.team.length === 0 ? expand(state, openers, options, OPENERS) : expand(state, tierPool, options))) {
         const child = makeState([...state.team, ranked.pokemon], [...state.picks, ranked], state.value + gain, archetype, meta);
         const known = children.get(child.key);
         if (!known || known.value < child.value) children.set(child.key, child);

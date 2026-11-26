@@ -29,13 +29,14 @@ export function evaluateTeam(members, ctx) {
 
 const statusMap = (evaluation) => new Map(evaluation.gauntlet.threats.map((threat) => [threat.name, threat.status]));
 
-function compareThreats(before, after) {
+/** Ameaças que subiram (`fixed`) e que caíram (`worsened`) de status entre duas avaliações, por uso. */
+export function compareThreats(before, after) {
   const was = statusMap(before);
   const fixed = [];
   const worsened = [];
   for (const threat of after.gauntlet.threats) {
     const change = STATUS_RANK[threat.status] - STATUS_RANK[was.get(threat.name) ?? 'none'];
-    const entry = { name: threat.name, usage: threat.usage, from: was.get(threat.name), to: threat.status };
+    const entry = { name: threat.name, id: threat.id, usage: threat.usage, from: was.get(threat.name), to: threat.status };
     if (change > 0) fixed.push(entry);
     if (change < 0) worsened.push(entry);
   }
@@ -210,7 +211,8 @@ const compositionKey = (team) => team.map(speciesOf).sort().join('|');
  */
 export function regenerateCard(members, otherCards, ctx) {
   const locked = members.filter((member) => member.locked);
-  if (locked.length === 0 || locked.length >= TEAM_SIZE) return null;
+  // Sem nenhum fixo a busca recomeça do zero (pelos mais usados do tier).
+  if (locked.length >= TEAM_SIZE) return null;
 
   const seed = locked.map((member) => ({ ...member.pokemon, set: member.set }));
   const current = compositionKey(teamOf(members));
@@ -247,6 +249,39 @@ export function regenerateCard(members, otherCards, ctx) {
   });
 }
 
+/**
+ * O card com o rascunho novo do builder: os membros do rascunho antigo saem, os do novo entram fixos no começo, e os
+ * que o card tinha adicionado ficam (primeiro os fixados pela pessoa), menos os da mesma espécie de alguém do rascunho.
+ * Se sobrar vaga, a busca do esboço completa o time. Devolve os 6 membros, ou null se não houver como completar.
+ * `seed` são os membros do builder (entradas com `set`).
+ */
+export function reseedMembers(members, seed, ctx) {
+  if (seed.length >= TEAM_SIZE) return null;
+  const seedSpecies = new Set(seed.map(speciesOf));
+  const seedMembers = seed.map((pokemon) => ({ pokemon, set: ctx.setOf(pokemon), locked: true, fromSeed: true }));
+  const kept = members
+    .filter((member) => !member.fromSeed && !seedSpecies.has(speciesOf(member.pokemon)))
+    .sort((a, b) => Number(b.locked) - Number(a.locked))
+    .slice(0, TEAM_SIZE - seed.length);
+  const partial = [...seedMembers, ...kept];
+  if (partial.length === TEAM_SIZE) return partial;
+
+  const [choice] = sketchTeams(partial.map((member) => ({ ...member.pokemon, set: member.set })), ctx.pool, ctx.meta, {
+    archetype: ctx.archetype,
+    banned: [...ctx.constraints.banned],
+    maxPerType: ctx.constraints.maxPerType,
+    minUsage: ctx.constraints.minUsage,
+    rate: ctx.rate,
+    variants: 1,
+  });
+  if (!choice) return null;
+  const team = choice.members.map((member) => member.pokemon);
+  const added = choice.members.filter((member) => !member.fromSeed).map(({ pokemon, reasons }) => (
+    { pokemon, set: ctx.setOf(pokemon), locked: false, fromSeed: false, explain: ctx.explain({ pokemon, reasons }, team) }
+  ));
+  return [...partial, ...added];
+}
+
 /* --------------------------------------------------------------- estado do card */
 
 /** Estado editável de um card a partir da variação gerada: os do rascunho começam travados. */
@@ -278,6 +313,16 @@ export function commitMembers(card, members, ctx, { change = true } = {}) {
 export function toggleLock(card, slotIndex, ctx) {
   const members = card.members.map((member, index) => (index === slotIndex ? { ...member, locked: !member.locked } : member));
   return { ...commitMembers(card, members, ctx, { change: false }), evaluation: card.evaluation };
+}
+
+/**
+ * Card com o rascunho novo (ver reseedMembers): as notas são refeitas e o retorno mostra o efeito da troca, mas o
+ * histórico recomeça, porque desfazer traria de volta o rascunho antigo. null se o card não puder ser completado.
+ */
+export function reseedCard(card, seed, ctx) {
+  const members = reseedMembers(card.members, seed, ctx);
+  if (!members) return null;
+  return { ...commitMembers(card, members, ctx), history: [], edited: card.edited };
 }
 
 /** Volta ao estado anterior exatamente como era (membros, sets e notas). */

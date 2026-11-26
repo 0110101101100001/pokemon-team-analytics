@@ -43,6 +43,11 @@ function SketchPlanForm({ plan, onChange, seed, pool, onRun, running, disabled }
     >
       <div>
         <span className="paper-label">Fixos</span>
+        {seed.length === 0 && (
+          <p className="font-reading text-xs italic text-smeargle-textDim/90">
+            Nenhum: o esboço começa do zero, pelos Pokémon mais usados do tier.
+          </p>
+        )}
         <ul className="flex flex-wrap items-center gap-1.5" aria-label="Pokémon fixos do rascunho">
           {seed.map((pokemon) => (
             <li key={pokemon.id} className="flex items-center gap-1 rounded-[3px] border border-umber/25 bg-paper py-0.5 pl-0.5 pr-2.5 font-reading text-xs font-semibold text-smeargle-text">

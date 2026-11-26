@@ -1,4 +1,5 @@
 import MEGA_LIST from '../data/megas.json';
+import { createTextMatcher } from './textMatch';
 
 // Megas e Primais de megas.json (scripts/build-megas.mjs), com a diferença de cada atributo para a forma base.
 
@@ -26,12 +27,8 @@ const MEGA_DEBUT_LABELS = { 6: '6ª geração · X / Y e ORAS', 9: '9ª geraçã
 /** Rótulo da estreia de uma Mega pela geração, ou null se não houver um próprio. */
 export const megaDebutLabel = (generation) => MEGA_DEBUT_LABELS[generation] ?? null;
 
-const searchable = (text) => text.toLowerCase().replace(/-/g, ' ');
-
-/** Filtra por texto (nome da Mega, da forma base ou da pedra) e por tipo da Mega. */
+/** Filtra por texto (nome da Mega, da forma base ou da pedra; busca de utils/textMatch.js) e por tipo da Mega. */
 export function filterMegas(megas, { term, type }) {
-  const query = searchable(term.trim());
-  return megas.filter((mega) =>
-    (!type || mega.types.includes(type))
-    && (!query || [mega.name, mega.base, mega.stone ?? ''].some((text) => searchable(text).includes(query))));
+  const matches = createTextMatcher(term);
+  return megas.filter((mega) => (!type || mega.types.includes(type)) && matches(mega.name, mega.base, mega.stone));
 }

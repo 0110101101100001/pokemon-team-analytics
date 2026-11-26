@@ -103,8 +103,21 @@ describe('sketchTeams', () => {
     expect(scores).toEqual([...scores].sort((a, b) => b - a));
   });
 
-  it('devolve [] para rascunho vazio, rascunho cheio, meta vazio ou estilo impossível', () => {
-    expect(sketchTeams([], POOL, META)).toEqual([]);
+  it('com o rascunho vazio, começa do zero por um dos 12 mais usados do tier', () => {
+    const result = sketchTeams([], POOL, META);
+    expect(result.length).toBeGreaterThan(0);
+    const usageOf = (entry) => META.stats.get(META.names.get(entry.name))?.usage ?? 0;
+    const openers = new Set([...POOL].filter((entry) => usageOf(entry) >= 1)
+      .sort((a, b) => usageOf(b) - usageOf(a)).slice(0, 12).map((entry) => entry.name));
+    for (const variation of result) {
+      expect(variation.members).toHaveLength(TEAM_SIZE);
+      expect(variation.members.every((member) => !member.fromSeed)).toBe(true);
+      expect(new Set(variation.members.map((member) => speciesOf(member.pokemon))).size).toBe(TEAM_SIZE);
+      expect(openers.has(variation.members[0].pokemon.name)).toBe(true);
+    }
+  });
+
+  it('devolve [] para rascunho cheio, meta vazio ou estilo impossível', () => {
     expect(sketchTeams(POOL.slice(0, TEAM_SIZE), POOL, META)).toEqual([]);
     expect(sketchTeams(SEED, POOL, null)).toEqual([]);
     expect(sketchTeams(SEED, POOL, attachRoles(buildMeta([], POOL), POOL, battleData))).toEqual([]);

@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useId, useRef } from 'react';
+import { Fragment, useCallback, useEffect, useId, useRef } from 'react';
 import { createPortal } from 'react-dom';
 import {
   BookMarked, Database, Heart, History, Palette, ShieldCheck, SlidersHorizontal, Swords, UserRound, X,
@@ -117,32 +117,38 @@ export default function AccountSettings({
               onKeyDown={handleTabKeys}
               className="flex overflow-x-auto overscroll-x-contain [scrollbar-width:thin] md:flex-col md:overflow-visible"
             >
-              {ACCOUNT_TABS.map(({ id, label, short }) => {
+              {ACCOUNT_TABS.map(({ id, label, short, group }) => {
                 const selected = id === tab;
                 const Icon = TAB_ICONS[id];
                 return (
-                  <button
-                    key={id}
-                    ref={(node) => (node ? tabRefs.current.set(id, node) : tabRefs.current.delete(id))}
-                    type="button"
-                    role="tab"
-                    id={`${ids}-aba-${id}`}
-                    aria-selected={selected}
-                    aria-controls={panelId}
-                    tabIndex={selected ? 0 : -1}
-                    onClick={() => onTabChange(id)}
-                    className={`relative flex min-h-11 shrink-0 cursor-pointer items-center justify-center gap-2 px-3 text-sm transition-colors md:flex-none md:justify-start md:px-5 md:text-base ${
-                      selected ? 'font-semibold text-ink' : 'text-ink-soft hover:text-ink'
-                    }`}
-                  >
-                    <Icon className="h-4 w-4 shrink-0" aria-hidden="true" />
-                    <span className="truncate md:hidden">{short ?? label}</span>
-                    <span className="hidden truncate md:inline">{label}</span>
-                    <span
-                      aria-hidden="true"
-                      className={`absolute bg-accent transition-opacity max-md:inset-x-3 max-md:bottom-0 max-md:h-[3px] md:inset-y-2 md:left-0 md:w-[3px] ${selected ? 'opacity-100' : 'opacity-0'}`}
-                    />
-                  </button>
+                  <Fragment key={id}>
+                    {group && (
+                      <span aria-hidden="true" className="hidden px-5 pb-1 pt-4 text-[10px] font-semibold uppercase tracking-[0.08em] text-brown md:block">
+                        {group}
+                      </span>
+                    )}
+                    <button
+                      ref={(node) => (node ? tabRefs.current.set(id, node) : tabRefs.current.delete(id))}
+                      type="button"
+                      role="tab"
+                      id={`${ids}-aba-${id}`}
+                      aria-selected={selected}
+                      aria-controls={panelId}
+                      tabIndex={selected ? 0 : -1}
+                      onClick={() => onTabChange(id)}
+                      className={`relative flex min-h-11 shrink-0 cursor-pointer items-center justify-center gap-2 px-3 text-sm transition-colors md:flex-none md:justify-start md:px-5 md:text-base ${
+                        selected ? 'font-semibold text-ink' : 'text-ink-soft hover:text-ink'
+                      }`}
+                    >
+                      <Icon className="h-4 w-4 shrink-0" aria-hidden="true" />
+                      <span className="truncate md:hidden">{short ?? label}</span>
+                      <span className="hidden truncate md:inline">{label}</span>
+                      <span
+                        aria-hidden="true"
+                        className={`absolute bg-accent transition-opacity max-md:inset-x-3 max-md:bottom-0 max-md:h-[3px] md:inset-y-2 md:left-0 md:w-[3px] ${selected ? 'opacity-100' : 'opacity-0'}`}
+                      />
+                    </button>
+                  </Fragment>
                 );
               })}
             </div>

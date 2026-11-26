@@ -6,17 +6,15 @@ import { MAX_MOVES } from '../../data/maxMoves';
 import { EXCLUSIVE_Z_MOVES, GENERIC_Z_MOVES } from '../../data/zMoves';
 import { resolveTrainerPokemon } from '../../utils/trainers';
 import EmptyState from '../EmptyState';
+import { createTextMatcher } from '../../utils/textMatch';
 
 const GRID = 'grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-3';
 const BY_BASE_POWER = 'Pelo golpe base';
 
-/** Filtra por nome e tipo, como a lista de golpes comuns. */
-export const matchesMoveFilters = (move, { term, type }) =>
-  (!type || move.type === type) && (!term || move.name.toLowerCase().replace(/-/g, ' ').includes(term));
-
-/** Os golpes especiais de cada aba, já filtrados: `max` (Max e G-Max) ou `z` (exclusivos e por tipo). */
-export function specialMovesOf(kind, filters) {
-  const keep = (list) => list.filter((move) => matchesMoveFilters(move, filters));
+/** Os golpes especiais de cada aba, filtrados por nome e tipo: `max` (Max e G-Max) ou `z` (exclusivos e por tipo). */
+export function specialMovesOf(kind, { term, type }) {
+  const matches = createTextMatcher(term);
+  const keep = (list) => list.filter((move) => (!type || move.type === type) && matches(move.name));
   return kind === 'max'
     ? { first: keep(GMAX_MOVE_LIST), second: keep(MAX_MOVES) }
     : { first: keep(EXCLUSIVE_Z_MOVES), second: keep(GENERIC_Z_MOVES) };
@@ -47,7 +45,7 @@ function SpecialMoves({ kind, filters, entryByName, onSelectPokemon }) {
   const { first, second } = useMemo(() => specialMovesOf(kind, filters), [kind, filters]);
 
   if (first.length + second.length === 0) {
-    return <EmptyState title="nenhum golpe com esses filtros" />;
+    return <EmptyState title="nenhum golpe com esses filtros" hint="Ajuste a busca ou o tipo." />;
   }
 
   if (kind === 'max') {

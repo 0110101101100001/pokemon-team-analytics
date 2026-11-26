@@ -68,7 +68,7 @@ function StateChips({ side, conditions, className = '' }) {
       {boosts.map(([stat, stage]) => (
         <li
           key={stat}
-          className={`${OUTLINE} ${stage > 0 ? 'border-olive-deep text-olive-ink' : 'border-vermilion-deep/70 text-vermilion-deep'}`}
+          className={`${OUTLINE} ${stage > 0 ? 'border-good/70 text-good' : 'border-danger/70 text-danger'}`}
         >
           {STAT_LABELS[stat]} {stage > 0 ? `+${stage}` : `−${-stage}`}
         </li>

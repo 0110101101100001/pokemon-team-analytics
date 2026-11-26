@@ -11,7 +11,7 @@ import PokemonSheet, { loadPokemonDrawer } from "./components/PokemonSheet";
 import { HeaderContext } from "./components/layout/headerContext";
 import { InkSplatter } from "./components/InkDecor";
 import PokedexSection from "./sections/PokedexSection";
-import { DEFAULT_SECTION, sectionFromPath } from "./navigation/sections";
+import { DEFAULT_SECTION, sectionFromPath, sectionHref } from "./navigation/sections";
 import { useHashOverlay, useHashRoute } from "./hooks/useHashPath";
 import { formatHash, navigateHash, parseHash } from "./navigation/hashRoute";
 import { isAccountTab } from "./components/account/accountTabs";
@@ -31,7 +31,7 @@ import { fetchSmogonNames } from "./services/smogonMeta";
 import { buildPokedexEntries } from "./utils/pokedex";
 import { buildSmogonBadgeMap } from "./utils/smogon";
 import { COMPARE_LIMIT, toggleCompared } from "./utils/compare";
-import { formatSlug } from "./utils/filters";
+import { createFilter, filterKey, formatSlug } from "./utils/filters";
 import { createBattleSet } from "./utils/stats";
 import { TEAM_SIZE, speciesOf, teamSlotFor } from "./utils/teamScore";
 
@@ -42,6 +42,7 @@ const ItemsSection = lazy(() => import("./sections/ItemsSection"));
 const TrainersSection = lazy(() => import("./sections/TrainersSection"));
 const TeamBuilderSection = lazy(() => import("./sections/TeamBuilderSection"));
 const DamageCalculatorSection = lazy(() => import("./sections/DamageCalculatorSection"));
+const TypesSection = lazy(() => import("./sections/TypesSection"));
 // O "Sobre" e a ficha (em PokemonSheet) só abrem por ação do usuário: ficam fora do pacote inicial.
 const AboutModal = lazy(() => import("./components/AboutModal"));
 const CompareModal = lazy(() => import("./components/compare/CompareModal"));
@@ -136,11 +137,19 @@ export default function App() {
     document.documentElement.style.setProperty("--section-wash", section.pigment);
   }, [section]);
 
-  // A guia do navegador leva o nome da ficha aberta ou da aba.
+  // A guia do navegador leva o nome da ficha aberta ou da aba; a aba com descrição própria troca a meta description.
   useEffect(() => {
-    const page = selectedPokemon ? formatSlug(selectedPokemon) : section.label;
+    const page = selectedPokemon ? formatSlug(selectedPokemon) : section.title ?? section.label;
     document.title = `${page} · ${APP_NAME}`;
   }, [section, selectedPokemon]);
+
+  const defaultDescription = useRef(null);
+  useEffect(() => {
+    const meta = document.querySelector('meta[name="description"]');
+    if (!meta) return;
+    defaultDescription.current ??= meta.getAttribute("content");
+    meta.setAttribute("content", section.description ?? defaultDescription.current);
+  }, [section]);
 
   const entryByName = useMemo(() => new Map(pokemonList.map((p) => [p.name, p])), [pokemonList]);
   const headerContext = useMemo(() => ({ slot: toolbarSlot, collapsed }), [toolbarSlot, collapsed]);
@@ -176,6 +185,18 @@ export default function App() {
     recordView(name);
   }, [sheet, hashWithPokemon, selectedPokemon, recordView]);
   const handleCloseModal = useCallback(() => sheet.close(hashWithPokemon(null)), [sheet, hashWithPokemon]);
+
+  // "Ver Pokémon desse tipo" (página Tipos): o filtro de tipo da própria Pokédex, no lugar de outro filtro de tipo,
+  // em Todos os Pokémon. Usa o estado de filtros que já existe; nada de parâmetro novo.
+  const { activeFilters: pokedexFilters, addFilter: addPokedexFilter, removeFilter: removePokedexFilter, setCollection } = pokedex;
+  const showPokemonOfType = useCallback((type) => {
+    for (const filter of pokedexFilters) {
+      if (filter.type === "type" && filter.value !== type) removePokedexFilter(filterKey(filter));
+    }
+    addPokedexFilter(createFilter("type", type));
+    setCollection("all");
+    navigateHash(sectionHref(DEFAULT_SECTION));
+  }, [pokedexFilters, addPokedexFilter, removePokedexFilter, setCollection]);
 
   // Sem login, o coração leva ao cadastro em vez de falhar em silêncio.
   const handleToggleFavorite = useCallback(
@@ -293,6 +314,8 @@ export default function App() {
         return <ItemsSection entryByName={entryByName} onSelectPokemon={handleSelect} />;
       case "trainers":
         return <TrainersSection entryByName={entryByName} onSelectPokemon={handleSelect} />;
+      case "types":
+        return <TypesSection onShowPokemon={showPokemonOfType} />;
       case "teamBuilder":
         return (
           <TeamBuilderSection

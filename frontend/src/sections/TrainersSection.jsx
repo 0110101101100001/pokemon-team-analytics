@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { TriangleAlert } from 'lucide-react';
+import LoadError from '../components/LoadError';
 import { ActiveFilters } from '../components/FiltersBar';
 import JumpIndex, { scrollToElement } from '../components/JumpIndex';
 import SmeargleLoader from '../components/SmeargleLoader';
@@ -7,7 +7,7 @@ import TrainerCard from '../components/trainers/TrainerCard';
 import TrainerModal from '../components/trainers/TrainerModal';
 import { HeaderSearch, HeaderSelect, OPTION_CLASS } from '../components/layout/HeaderControls';
 import HeaderToolbar from '../components/layout/HeaderToolbar';
-import SectionHeading, { HEADING_PILL_CLASS } from '../components/layout/SectionHeading';
+import SectionHeading, { HEADING_PILL_CLASS, ResultCount } from '../components/layout/SectionHeading';
 import { TYPE_NAMES } from '../services/api';
 import { fetchTrainers } from '../services/trainers';
 import { useDebouncedValue } from '../hooks/useDebouncedValue';
@@ -164,7 +164,7 @@ export default function TrainersSection({ entryByName, onSelectPokemon }) {
         title={HEADING_TITLE}
         subtitle={status === 'ready' ? (
           <>
-            Líderes, Elite 4 e campeões · <span className="font-mono font-semibold tabular-nums text-ink">{count}</span> treinador{count !== 1 ? 'es' : ''}
+            Líderes, Elite 4 e campeões · <ResultCount count={count} singular="treinador" plural="treinadores" query={debouncedQuery} />
           </>
         ) : 'Líderes, Elite 4 e campeões de cada região'}
         aside={<span className={HEADING_PILL_CLASS}>Toque em um card para ver os times</span>}
@@ -191,17 +191,11 @@ export default function TrainersSection({ entryByName, onSelectPokemon }) {
       {status === 'loading' && <SmeargleLoader label="Chamando os treinadores..." className="py-16" />}
 
       {status === 'error' && (
-        <div className="flex flex-col items-center gap-3 py-16 text-center">
-          <p className="flex items-center gap-2 font-reading text-sm text-vermilion">
-            <TriangleAlert className="h-4 w-4" aria-hidden="true" />
-            Não foi possível carregar os treinadores.
-          </p>
-          <button type="button" onClick={retry} className="btn-outline">Tentar de novo</button>
-        </div>
+        <LoadError message="Não foi possível carregar os treinadores." onRetry={retry} />
       )}
 
       {status === 'ready' && count === 0 && (
-        <EmptyState title="nenhum treinador com esses filtros" />
+        <EmptyState title="nenhum treinador com esses filtros" hint="Ajuste a busca ou tire algum filtro." />
       )}
 
       {jumpItems.length > 1 && <JumpIndex label="Ir para a região" items={jumpItems} onJump={jumpToRegion} />}

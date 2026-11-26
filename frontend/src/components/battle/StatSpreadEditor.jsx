@@ -13,8 +13,8 @@ const natureLabel = ({ name, plus, minus }) =>
   plus ? `${formatSlug(name)} (+${STAT_LABELS[plus]} −${STAT_LABELS[minus]})` : `${formatSlug(name)} (neutra)`;
 
 const totalClass = (nature, key) => {
-  if (nature.plus === key) return 'text-smeargle-ink-darkGreen';
-  if (nature.minus === key) return 'text-vermilion-deep';
+  if (nature.plus === key) return 'text-good';
+  if (nature.minus === key) return 'text-danger';
   return 'text-smeargle-text';
 };
 

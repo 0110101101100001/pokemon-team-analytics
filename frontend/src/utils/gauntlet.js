@@ -5,7 +5,7 @@ import { formTypes } from '../data/formItems';
 import { formatSlug } from './filters';
 import { probableSet } from './sketchSets';
 import { calcStats } from './stats';
-import { effectiveness } from './typeChart';
+import { effectiveness } from '../data/typeChart';
 
 /*
   Teste do meta: cada time completo contra as ameaças mais usadas do tier.

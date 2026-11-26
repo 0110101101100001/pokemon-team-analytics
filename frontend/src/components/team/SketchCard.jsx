@@ -4,26 +4,20 @@ import CopyShowdownButton from './CopyShowdownButton';
 import PokemonTypeBadge from '../PokemonTypeBadge';
 import FixProposal from './sketch/FixProposal';
 import MemberSlot from './sketch/MemberSlot';
+import SaveSketch from './sketch/SaveSketch';
 import SwapPanel from './sketch/SwapPanel';
 import { Delta } from './sketch/SwapOptionRow';
+import { STATUS, STATUS_ORDER } from './sketch/threatStatus';
+import { TOOL_BUTTON_CLASS, nextTask } from './sketch/shared';
 import { thumbnailSpriteUrl } from '../../services/api';
 import { formatSlug } from '../../utils/filters';
 import { setLine } from '../../utils/sketchExplain';
 import { fixesForSlot, checksOf, pickFix, worstThreat } from '../../utils/sketchEdit';
 import { ROLE_LABELS } from '../../utils/teamRoles';
 
-// Anéis da grade do teste do meta: cores da paleta (oliva, ocre, terracota) e um vinho escuro para "sem resposta".
-const STATUS = {
-  none: { label: 'sem resposta', ring: 'ring-danger', dot: 'bg-danger' },
-  weak: { label: 'fraca', ring: 'ring-vermilion', dot: 'bg-vermilion' },
-  ok: { label: 'ok', ring: 'ring-ochre', dot: 'bg-ochre' },
-  solid: { label: 'sólida', ring: 'ring-olive-deep', dot: 'bg-olive-deep' },
-};
-const STATUS_ORDER = ['none', 'weak', 'ok', 'solid'];
 /** Por quanto tempo o retorno da última edição (deltas e pulso na grade) fica visível. */
 const FEEDBACK_MS = 4000;
 
-const nextTask = () => new Promise((resolve) => { setTimeout(resolve, 0); });
 
 /** Bloco recolhível; <details> abre com clique, toque e teclado. */
 function Expandable({ summary, children, className = '' }) {
@@ -178,16 +172,19 @@ function PickReasons({ members }) {
   );
 }
 
-const toolButton = 'inline-flex min-h-9 cursor-pointer items-center gap-1.5 rounded-[3px] border border-ink/25 bg-paper px-3 text-xs font-semibold text-smeargle-text transition-colors hover:border-ink/55 hover:bg-olive/10 focus:outline-none focus-visible:ring-2 focus-visible:ring-paint-cobalt disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:bg-paper';
+const toolButton = TOOL_BUTTON_CLASS;
 
 /**
  * Um esboço editável: fixar e trocar membros, corrigir a pior ameaça, regenerar e desfazer, com as notas
  * recalculadas a cada edição. O estado (card) vive no painel; aqui ficam só menus, painel de troca e proposta.
  */
-function SketchCard({ index, card, ctx, checklist, busy, applying, disabled, onEdit, onRegenerate, onApply, onBuildTeam }) {
+function SketchCard({
+  index, card, ctx, checklist, busy, applying, disabled, tierLabel, canSave, onEdit, onRegenerate, onApply, onBuildTeam, onSave,
+}) {
   const { members, evaluation, edited, lastChange } = card;
   const added = members.filter((member) => !member.fromSeed);
   const getTeam = useCallback(() => onBuildTeam(card), [onBuildTeam, card]);
+  const saveAs = useCallback((name) => onSave(card, name), [onSave, card]);
   const fitPercent = Math.round(evaluation.fit.score * 100);
   const slotRefs = useRef([]);
   const [menuSlot, setMenuSlot] = useState(null);
@@ -315,7 +312,7 @@ function SketchCard({ index, card, ctx, checklist, busy, applying, disabled, onE
           />
         </div>
       )}
-      {notice && <p role="status" className="mt-2 rounded-[4px] border border-vermilion/30 bg-vermilion/5 p-2.5 font-reading text-xs text-smeargle-text">{notice}</p>}
+      {notice && <p role="status" className="mt-2 rounded-[4px] border border-danger/30 bg-danger/5 p-2.5 font-reading text-xs text-smeargle-text">{notice}</p>}
 
       <div className="mt-3 space-y-3">
         <div className="space-y-1">
@@ -353,7 +350,13 @@ function SketchCard({ index, card, ctx, checklist, busy, applying, disabled, onE
         </div>
       </div>
 
-      <div className="mt-4 flex flex-wrap justify-end gap-2">
+      <div className="mt-4 flex flex-wrap items-center justify-end gap-2">
+        <SaveSketch
+          defaultName={`${tierLabel} · ${evaluation.title}`.slice(0, 40)}
+          canSave={canSave}
+          disabled={disabled}
+          onSave={saveAs}
+        />
         <CopyShowdownButton getTeam={getTeam} disabled={disabled} />
         <button type="button" onClick={() => onApply(card)} disabled={disabled} className="btn-action !h-9 font-serif">
           {applying ? <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" /> : <PenLine className="h-4 w-4" aria-hidden="true" />}

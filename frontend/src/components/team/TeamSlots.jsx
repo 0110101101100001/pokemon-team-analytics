@@ -38,7 +38,7 @@ const TeamSlot = memo(function TeamSlot({ pokemon, selected, onSelect, onRemove 
         type="button"
         onClick={() => onRemove(pokemon.id)}
         aria-label={`Remover ${name}`}
-        className="absolute right-1 top-1 cursor-pointer rounded-full p-1 text-umber/60 transition-colors hover:bg-vermilion/15 hover:text-vermilion-deep focus:outline-none focus-visible:ring-2 focus-visible:ring-paint-cobalt"
+        className="absolute right-1 top-1 cursor-pointer rounded-full p-1 text-umber/60 transition-colors hover:bg-danger/15 hover:text-danger focus:outline-none focus-visible:ring-2 focus-visible:ring-paint-cobalt"
       >
         <X className="h-3.5 w-3.5" aria-hidden="true" />
       </button>

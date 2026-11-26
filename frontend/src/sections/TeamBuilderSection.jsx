@@ -1,6 +1,7 @@
 import { useCallback, useMemo, useState } from 'react';
-import { BookOpen, Crosshair, PenLine, ShieldHalf, Sparkles } from 'lucide-react';
+import { BookOpen, Crosshair, PenLine, Scale, ShieldHalf, Sparkles } from 'lucide-react';
 import PokemonPicker from '../components/battle/PokemonPicker';
+import CandidateCompare from '../components/team/CandidateCompare';
 import CollectionPicks from '../components/team/CollectionPicks';
 import CopyShowdownButton from '../components/team/CopyShowdownButton';
 import SectionHeading from '../components/layout/SectionHeading';
@@ -11,15 +12,28 @@ import TeamSlots from '../components/team/TeamSlots';
 import TeamSuggestions from '../components/team/TeamSuggestions';
 import TeamManagerModal from '../components/TeamManagerModal';
 import TeamTypeTable from '../components/TeamTypeTable';
-import { createBattleSet } from '../utils/stats';
+import { createBattleSet, normalizeBattleSet } from '../utils/stats';
 import { fromStoredTeam } from '../utils/savedTeams';
 import { TEAM_SIZE, speciesOf, teamSlotFor } from '../utils/teamScore';
 
-const PANELS = [
-  { key: 'coverage', label: 'cobertura dos golpes', icon: Crosshair },
-  { key: 'defense', label: 'fraquezas', icon: ShieldHalf },
-  { key: 'suggestions', label: 'sugestões', icon: Sparkles },
-  { key: 'sketch', label: 'esboço', icon: PenLine },
+// Abas em dois grupos, na ordem de uso: primeiro analisar o time como está, depois decidir quem entra
+// (o próximo Pokémon, a dúvida entre candidatos e, por fim, o time inteiro de uma vez).
+const PANEL_GROUPS = [
+  {
+    label: 'Analisar',
+    panels: [
+      { key: 'coverage', label: 'cobertura dos golpes', icon: Crosshair },
+      { key: 'defense', label: 'fraquezas', icon: ShieldHalf },
+    ],
+  },
+  {
+    label: 'Montar',
+    panels: [
+      { key: 'suggestions', label: 'sugestões', icon: Sparkles },
+      { key: 'compare', label: 'comparar', icon: Scale },
+      { key: 'sketch', label: 'esboço', icon: PenLine },
+    ],
+  },
 ];
 
 export default function TeamBuilderSection({ team, onTeamChange, pool, session, collections, entryByName }) {
@@ -34,6 +48,16 @@ export default function TeamBuilderSection({ team, onTeamChange, pool, session, 
   const addPokemon = useCallback((pokemon) => {
     onTeamChange((current) => (teamSlotFor(current, pokemon) === 'ok' ? [...current, { ...pokemon, set: createBattleSet() }] : current));
     setSelectedId(pokemon.id);
+  }, [onTeamChange]);
+
+  // Candidato escolhido na comparação: entra na vaga nova ou no lugar de quem sai, com o set que foi testado.
+  const placeCandidate = useCallback((pokemon, replaceIndex) => {
+    const member = { ...pokemon, set: pokemon.set ? normalizeBattleSet(pokemon.set) : createBattleSet() };
+    onTeamChange((current) => {
+      if (replaceIndex == null) return teamSlotFor(current, member) === 'ok' ? [...current, member] : current;
+      return current.map((existing, index) => (index === replaceIndex ? member : existing));
+    });
+    setSelectedId(member.id);
   }, [onTeamChange]);
 
   const removePokemon = useCallback((id) => {
@@ -64,9 +88,9 @@ export default function TeamBuilderSection({ team, onTeamChange, pool, session, 
   const openManager = useCallback(() => setManagerOpen(true), []);
   const closeManager = useCallback(() => setManagerOpen(false), []);
 
-  // Com o time completo não há o que sugerir; o esboço também precisa de um rascunho.
-  const isPanelDisabled = (key) =>
-    (key === 'suggestions' && isFull) || (key === 'sketch' && (isFull || team.length === 0));
+  // Com o time completo não há o que sugerir nem esboçar; com o time vazio, o esboço começa do zero.
+  // Comparar precisa de um time para comparar contra; com o time cheio, o candidato entra no lugar de alguém.
+  const isPanelDisabled = (key) => ((key === 'suggestions' || key === 'sketch') && isFull) || (key === 'compare' && team.length === 0);
   const activePanel = isPanelDisabled(panel) ? 'coverage' : panel;
 
   return (
@@ -123,26 +147,37 @@ export default function TeamBuilderSection({ team, onTeamChange, pool, session, 
         </div>
 
         <section className="paper-card p-4 pt-5 sm:p-5 sm:pt-6" aria-label="Análise do time">
-          <div role="tablist" className="isolate mb-4 flex flex-wrap gap-x-1 gap-y-2">
-            {PANELS.map(({ key, label, icon: Icon }) => (
-              <button
-                key={key}
-                type="button"
-                role="tab"
-                aria-selected={activePanel === key}
-                disabled={isPanelDisabled(key)}
-                onClick={() => setPanel(key)}
-                className="ink-tab"
+          <div role="tablist" aria-label="Painéis de análise do time" className="isolate mb-4 flex flex-wrap gap-x-4 gap-y-3">
+            {PANEL_GROUPS.map((group, groupIndex) => (
+              <div
+                key={group.label}
+                role="presentation"
+                className={`flex min-w-0 flex-col gap-0.5 ${groupIndex > 0 ? 'sm:border-l sm:border-ink/15 sm:pl-4' : ''}`}
               >
-                <Icon className="h-4 w-4" aria-hidden="true" />
-                {label}
-              </button>
+                <span aria-hidden="true" className="px-2.5 text-[10px] font-semibold uppercase tracking-[0.08em] text-brown">{group.label}</span>
+                <div role="presentation" className="flex flex-wrap gap-x-1 gap-y-2">
+                  {group.panels.map(({ key, label, icon: Icon }) => (
+                    <button
+                      key={key}
+                      type="button"
+                      role="tab"
+                      aria-selected={activePanel === key}
+                      disabled={isPanelDisabled(key)}
+                      onClick={() => setPanel(key)}
+                      className="ink-tab"
+                    >
+                      <Icon className="h-4 w-4" aria-hidden="true" />
+                      {label}
+                    </button>
+                  ))}
+                </div>
+              </div>
             ))}
           </div>
 
-          {team.length === 0 ? (
+          {team.length === 0 && activePanel !== 'sketch' ? (
             <p className="py-8 text-center font-reading text-sm italic text-smeargle-textDim/70">
-              A análise aparece aqui assim que o time tiver um Pokémon.
+              A análise aparece aqui assim que o time tiver um Pokémon. Ou abra o esboço para montar um time do zero.
             </p>
           ) : activePanel === 'coverage' ? (
             <MoveCoverage team={team} />
@@ -150,8 +185,10 @@ export default function TeamBuilderSection({ team, onTeamChange, pool, session, 
             <TeamTypeTable team={team} />
           ) : activePanel === 'suggestions' ? (
             <TeamSuggestions team={team} pool={pool} onAdd={addPokemon} />
+          ) : activePanel === 'compare' ? (
+            <CandidateCompare team={team} pool={pool} onPlace={placeCandidate} />
           ) : (
-            <SketchPanel team={team} pool={pool} onLoadTeam={loadSketch} />
+            <SketchPanel team={team} pool={pool} session={session} onLoadTeam={loadSketch} />
           )}
         </section>
       </div>
