@@ -31,6 +31,7 @@ import { teamSlotFor } from '../utils/teamScore';
 import { COMPARE_LIMIT } from '../utils/compare';
 import { BrushHighlight } from './InkDecor';
 import { defensiveProfile } from '../data/typeChart';
+import { activeMoveGame, gamesWithMoves, groupByGeneration, versionGroupsOf } from '../utils/moveGames';
 
 /* ---------------------------------------------------------------- dados estáticos */
 
@@ -54,31 +55,6 @@ const SMOGON_TIERS = [
   { value: 'gen9lc', label: 'Gen 9 LC' },
   { value: 'gen9doublesou', label: 'Gen 9 Doubles OU' },
 ];
-
-const MOVE_GENERATIONS = [
-  { value: 'gen9', label: 'Gen 9 (Scarlet/Violet)' },
-  { value: 'gen8', label: 'Gen 8 (Sw/Sh, PLA)' },
-  { value: 'gen7', label: 'Gen 7 (S/M, US/UM)' },
-  { value: 'gen6', label: 'Gen 6 (X/Y, ORAS)' },
-  { value: 'gen5', label: 'Gen 5 (B/W, B2/W2)' },
-  { value: 'gen4', label: 'Gen 4 (DPPt, HGSS)' },
-  { value: 'gen3', label: 'Gen 3 (RSE, FRLG)' },
-  { value: 'gen2', label: 'Gen 2 (GSC)' },
-  { value: 'gen1', label: 'Gen 1 (RBY)' },
-];
-
-// Ordem = prioridade: o primeiro version group onde o Pokémon tem golpes define o learnset.
-const GENERATION_VERSION_GROUPS = {
-  gen9: ['scarlet-violet'],
-  gen8: ['sword-shield', 'brilliant-diamond-and-shining-pearl', 'legends-arceus'],
-  gen7: ['ultra-sun-ultra-moon', 'sun-moon', 'lets-go-pikachu-lets-go-eevee'],
-  gen6: ['omega-ruby-alpha-sapphire', 'x-y'],
-  gen5: ['black-2-white-2', 'black-white'],
-  gen4: ['heartgold-soulsilver', 'platinum', 'diamond-pearl'],
-  gen3: ['emerald', 'firered-leafgreen', 'ruby-sapphire'],
-  gen2: ['crystal', 'gold-silver'],
-  gen1: ['yellow', 'red-blue'],
-};
 
 const LEARN_METHODS = [
   { value: 'level-up', label: 'Por Nível' },
@@ -149,18 +125,15 @@ const getCleanPokemonName = (name) => (name ? name.toLowerCase().trim() : '');
 
 const formatDexNumber = (id) => `#${String(id ?? 0).padStart(4, '0')}`;
 
-function resolveVersionGroup(moves, gen) {
-  const available = new Set(moves.flatMap((m) => m.version_group_details.map((v) => v.version_group.name)));
-  return GENERATION_VERSION_GROUPS[gen]?.find((g) => available.has(g)) ?? null;
-}
-
-function collectLearnset(moves, versionGroup) {
+// Golpes do Pokémon num jogo: `versionGroups` são os version groups do jogo (o base e as DLCs).
+function collectLearnset(moves, versionGroups) {
+  const groups = new Set(versionGroups);
   const seen = new Set();
   const learnset = [];
   for (const { move, version_group_details } of moves) {
     for (const vgd of version_group_details) {
       const method = vgd.move_learn_method.name;
-      if (vgd.version_group.name !== versionGroup || !LEARN_METHOD_SET.has(method)) continue;
+      if (!groups.has(vgd.version_group.name) || !LEARN_METHOD_SET.has(method)) continue;
       const level = method === 'level-up' ? vgd.level_learned_at : null;
       const id = `${move.name}-${method}-${level}`;
       if (seen.has(id)) continue;
@@ -420,7 +393,13 @@ export default function PokemonDrawer({
   const [movesVisited, setMovesVisited] = useState(false);
   const [movesetSearch, setMovesetSearch] = useState('');
   const [learnMethod, setLearnMethod] = useState('level-up');
-  const [selectedGen, setSelectedGen] = useState('gen9');
+  // Golpes da forma (o campo `moves` da PokéAPI): dizem em quais jogos o Pokémon está. null até carregar.
+  const [learnMoves, setLearnMoves] = useState(null);
+  // Jogo escolhido no filtro; vale enquanto o Pokémon estiver nele (senão, o mais novo em que ele está).
+  const [chosenGame, setChosenGame] = useState(null);
+  const moveGames = useMemo(() => gamesWithMoves(learnMoves, LEARN_METHOD_SET), [learnMoves]);
+  const activeGame = activeMoveGame(moveGames, chosenGame);
+  const moveGameGroups = useMemo(() => groupByGeneration(moveGames), [moveGames]);
 
   // Golpe, habilidade ou item aberto no modal de detalhes: { kind, name } | null
   const [infoEntry, setInfoEntry] = useState(null);
@@ -509,11 +488,11 @@ export default function PokemonDrawer({
     return () => controller.abort();
   }, [variety, currentFormName, speciesName, selectedSmogonTier, pokemonName, onSmogonDataFound]);
 
-  // O learnset (100–200 requisições) só é carregado quando a aba Movimentos é aberta.
+  // A lista de golpes da forma (e com ela os jogos do filtro) só é buscada quando a aba Movimentos é aberta.
   useEffect(() => {
-    if (!detail || !movesVisited) return;
+    if (!detail || !movesVisited) return undefined;
     let active = true;
-    setMovesetLoading(true);
+    setLearnMoves(null);
     // Megas e Gigantamax vêm da PokéAPI sem golpes: valem os da forma de origem
     // ("toxtricity-low-key-gmax" → "toxtricity-low-key") ou, sem ela, os da forma padrão.
     const sourceName = detail.moves.length ? null : detail.name.replace(/-gmax$/, '');
@@ -521,25 +500,35 @@ export default function PokemonDrawer({
     const movesOf = detail.moves.length || !learnSource
       ? Promise.resolve(detail.moves)
       : fetchPokemonDetail(learnSource).then((source) => source.moves).catch(() => []);
+    movesOf.then((pokemonMoves) => { if (active) setLearnMoves(pokemonMoves); });
+    return () => { active = false; };
+  }, [detail, movesVisited, baseFormName]);
 
-    movesOf.then((pokemonMoves) => {
-      const versionGroup = resolveVersionGroup(pokemonMoves, selectedGen);
-      return versionGroup ? collectLearnset(pokemonMoves, versionGroup) : [];
-    }).then((learnset) => Promise.all(learnset.map((entry) => fetchMove(entry.url).then((data) => ({
+  // O learnset do jogo ativo (100–200 requisições, com cache): só os golpes do Pokémon naquele jogo.
+  useEffect(() => {
+    if (!movesVisited) return undefined;
+    if (!learnMoves) {
+      setMovesetLoading(true);
+      return undefined;
+    }
+    let active = true;
+    setMovesetLoading(true);
+    const learnset = activeGame ? collectLearnset(learnMoves, versionGroupsOf(activeGame)) : [];
+    Promise.all(learnset.map((entry) => fetchMove(entry.url).then((data) => ({
       ...entry,
       damage_class: data?.damage_class?.name ?? 'status',
       type: data?.type?.name ?? 'normal',
       power: movePowerOf(data),
       accuracy: data?.accuracy ?? null,
       pp: data?.pp ?? null,
-    }))))).then((rows) => {
+    })))).then((rows) => {
       if (!active) return;
       setMoveset(rows);
       setMovesetLoading(false);
     });
 
     return () => { active = false; };
-  }, [detail, selectedGen, movesVisited, baseFormName]);
+  }, [learnMoves, activeGame, movesVisited]);
 
   const handleFormChange = useCallback(async (formName) => {
     const requestId = ++formRequestRef.current;
@@ -984,8 +973,21 @@ export default function PokemonDrawer({
             title="Movimentos"
             action={
               <div className="flex flex-wrap items-center gap-2">
-                <select value={selectedGen} onChange={(e) => setSelectedGen(e.target.value)} className={FIELD}>
-                  {MOVE_GENERATIONS.map((gen) => <option key={gen.value} value={gen.value}>{gen.label}</option>)}
+                {/* Só os jogos em que o Pokémon (ou a forma de origem) tem golpes, do mais novo ao mais antigo. */}
+                <select
+                  value={activeGame ?? ''}
+                  onChange={(e) => setChosenGame(e.target.value)}
+                  disabled={!learnMoves || moveGames.length === 0}
+                  aria-label="Jogo dos golpes"
+                  className={`${FIELD} disabled:cursor-not-allowed disabled:opacity-60`}
+                >
+                  {!learnMoves && <option value="">Carregando jogos...</option>}
+                  {learnMoves && moveGames.length === 0 && <option value="">Sem golpes registrados</option>}
+                  {moveGameGroups.map(({ generation, games }) => (
+                    <optgroup key={generation} label={`Geração ${generation}`}>
+                      {games.map((game) => <option key={game.value} value={game.value}>{game.label}</option>)}
+                    </optgroup>
+                  ))}
                 </select>
                 <label className="relative">
                   <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-umber" aria-hidden="true" />
